@@ -1,6 +1,6 @@
 /*
  * The Updates pages are for reading, so they leave the site's dark stage for quiet parchment: a pale page with a
- * faint grain, warm ink, and the header as a washed strip of its own parchment. They come in a light and a dark look,
+ * faint grain and warm ink, under the site's own header. They come in a light and a dark look,
  * set by `data-update-theme` on <html> (lib/update-theme.ts) and switched in the header.
  *
  * Everything here applies only while an Updates page is up: the page's own rules sit under `.updates-page`, and the
@@ -13,8 +13,6 @@ body:has(.updates-page),
   --up-bg: #fbf7ee;
   --up-raise: #f2ebda;
   --up-code: #f7f2e5;
-  --up-bar: #f6f0e2;
-  --up-bar-line: #e2d7bf;
   --up-line: #e2d7bf;
   --up-line-strong: #cdbfa3;
   --up-text: #3a2f24;
@@ -47,8 +45,8 @@ html[data-update-theme="dark"] body:has(.updates-page),
   --up-bg: #1c1712;
   --up-raise: #251f18;
   --up-code: #211b15;
+  /* The header strip, which only the dark look restyles. */
   --up-bar: #0f0c09;
-  --up-bar-line: #2c251d;
   --up-line: #3a3127;
   --up-line-strong: #52463a;
   --up-text: #e3d6be;
@@ -81,7 +79,7 @@ html:has(.updates-page) {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
-  padding: 64px 0 80px;
+  padding: 72px 0 80px;
   background: var(--up-bg) var(--up-glow) no-repeat;
   color: var(--up-text);
   font-family: var(--up-serif);
@@ -114,38 +112,38 @@ html:has(.updates-page) {
   border-radius: 3px;
 }
 
-/* The site header, as a washed strip of its parchment. By night it is darker than the page, and its veins show. */
-body:has(.updates-page) [data-site-header] {
+/*
+ * The site header is itself by day. By night it is a dark strip of the same parchment, darker than the page, with the
+ * veins showing. Its blues come from a filter over the whole bar, which the dark strip drops, so there the mark and
+ * the buttons take the filter themselves. The mark is drawn to multiply onto parchment, so there it is turned light
+ * and screened on.
+ */
+html[data-update-theme="dark"] body:has(.updates-page) [data-site-header] {
   background: var(--up-bar) !important;
   filter: none !important;
-  border-bottom: 1px solid var(--up-bar-line);
+  border-bottom-color: rgb(0 0 0 / 0.5);
 }
-body:has(.updates-page) .site-header-parchment {
+html[data-update-theme="dark"] body:has(.updates-page) .site-header-parchment {
   background: none;
-}
-body:has(.updates-page) .site-header-parchment img {
-  opacity: 0.2;
-  object-position: center 30%;
 }
 html[data-update-theme="dark"] body:has(.updates-page) .site-header-parchment img {
   opacity: 1;
+  object-position: center 30%;
   filter: brightness(0.56) contrast(3.2) brightness(0.24);
 }
-/* The header's blues come from a filter over the whole bar. The strip drops it, so the mark and the buttons take it themselves. */
-body:has(.updates-page) [data-site-brand],
-body:has(.updates-page) [data-site-header] > div:last-child > :not(.up-theme-toggle) {
+html[data-update-theme="dark"] body:has(.updates-page) [data-site-header] > div:last-child > :not(.up-theme-toggle) {
   filter: saturate(2) hue-rotate(330deg) contrast(1.1);
 }
-/* The mark is drawn to multiply onto parchment. On the dark strip it is turned light and screened on. */
 html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand] {
   filter: saturate(2) hue-rotate(330deg) contrast(1.1) invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
 }
-body:has(.updates-page) [data-site-header] .text-white\/60 {
-  color: var(--up-muted);
-}
 .up-theme-toggle {
   font-size: 14px;
+}
+/* On the header's warm parchment the switch takes the stronger ink. */
+body:has(.updates-page) [data-site-header] .up-theme-toggle {
+  color: var(--up-text);
 }
 .up-when-dark,
 html[data-update-theme="dark"] .up-when-light {
