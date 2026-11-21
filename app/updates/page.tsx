@@ -35,7 +35,7 @@ export default async function UpdatesPage() {
               </div>
               <div className="flex flex-col justify-center p-6 sm:p-8">
                 <time className="font-display text-sm tracking-[0.2em] uppercase text-accent-300/90">{formatPostDate(post.date)}</time>
-                <h2 className="mt-2 font-display text-2xl sm:text-3xl text-blue-50 transition-colors duration-150 group-hover:text-white">{post.title}</h2>
+                <h2 className="mt-2 font-display text-2xl sm:text-3xl text-action-50 transition-colors duration-150 group-hover:text-white">{post.title}</h2>
                 {post.description && <p className="mt-3 text-white/75">{post.description}</p>}
                 <span className="mt-5 font-display text-sm text-accent-200/80 transition-colors duration-150 group-hover:text-accent-200">Read On</span>
               </div>
