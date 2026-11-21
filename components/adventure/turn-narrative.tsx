@@ -14,6 +14,7 @@ import React, { useEffect } from "react"
 import { generatePracticeReport, getPracticeReportsForAdventure } from "@/app/_actions/adventure-reports"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import StoryviewButton from "@/components/adventure/storyview/storyview-button"
+import { WEB_NARRATION } from "@/lib/narration"
 import { Button } from "@d20/ui/button"
 import { Presence } from "@d20/ui/presence"
 import { Switch } from "@d20/ui/switch"
@@ -246,9 +247,11 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
       <div className="absolute bottom-8 left-8 w-auto pr-16 z-overlay">
         <div className="flex justify-center md:justify-start items-center gap-3 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
           {/* On xl+ the right-rail Storyview card is the entry point */}
-          <span className="xl:hidden">
-            <StoryviewButton />
-          </span>
+          {WEB_NARRATION && (
+            <span className="xl:hidden">
+              <StoryviewButton />
+            </span>
+          )}
           <span className="text-xs text-white/60">Show Original Replies</span>
           <div className="scale-75 pt-0.5">
             <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />

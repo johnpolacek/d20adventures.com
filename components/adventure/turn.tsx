@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import StoryviewRailPanel from "@/components/adventure/storyview/storyview-rail-panel"
+import { WEB_NARRATION } from "@/lib/narration"
 import { FloorPlanButton, FloorPlanRailPanel } from "@/components/floorplan/floor-plan-panel"
 import { Presence } from "@d20/ui/presence"
 import { useLiveFloor } from "@/components/floorplan/use-live-floor"
@@ -66,7 +67,7 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
             <FloorPlanRailPanel floor={floor} characters={characters} title={mapTitle} />
           </div>
         )}
-        <StoryviewRailPanel className="enter-right flex-none [--i:1]" />
+        {WEB_NARRATION && <StoryviewRailPanel className="enter-right flex-none [--i:1]" />}
         {!isSolo && (
           <div className={cn("enter-right min-h-0 [--i:2]", chatHeight ? "flex-none" : "flex-1")} style={chatHeight ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />

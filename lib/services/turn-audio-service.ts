@@ -4,6 +4,7 @@ import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { storyHash as hashStory, narratedParagraphs, type StorySegment, segmentsFromStory } from "@/lib/ai/story-segments"
 import { synthesizeSegment, TTS_MODEL } from "@/lib/ai/tts"
 import { budgetOpen, costOf, recordSpend } from "@/lib/gm-server/budget"
+import { WEB_NARRATION } from "@/lib/narration"
 import { assignVoices, type VoiceAssignment, voiceForSpeaker } from "@/lib/ai/tts-voices"
 import { pcmDurationSec, pcmToWav } from "@/lib/audio/wav"
 import { isAwsConfigured } from "@/lib/aws"
@@ -64,6 +65,8 @@ export function estimateNarrationCharge(newChars: number): number {
 
 export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; adventure: AdventureDoc; requestedBy: string; charge: TurnAudioChargeMode }): Promise<GenerateTurnAudioResult> {
   const { turn, adventure, requestedBy, charge } = opts
+  // The web game has no narration (lib/narration.ts), so none is made or paid for.
+  if (!WEB_NARRATION) return { ok: false, reason: "no-content" }
   const storyHash = hashStory(turn.story)
   const paragraphs = narratedParagraphs(turn.story)
   if (paragraphs.length === 0) {
@@ -258,6 +261,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
 // members, pausing auto mode instead when someone can't cover their share.
 // Never throws into the host action.
 export async function maybeTriggerStoryviewAutoGeneration(turnId: Id<"turns">): Promise<void> {
+  if (!WEB_NARRATION) return
   try {
     const turn = await convex.query(api.adventure.getTurnById, { turnId })
     if (!turn) return
