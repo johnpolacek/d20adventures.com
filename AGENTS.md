@@ -28,6 +28,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 - Where everyone starts is the encounter's 3D staging (`packages/stage/src/stagings`): an NPC whose intro reads as a close ambush is staged close to the party's spots. The rules read each encounter's floor from its generated plan, so run `pnpm stage:plans` after changing a set or a staging. `pnpm stage:plans:check` fails on a stale one.
 - The camera takes a view of the cast only from where nothing solid hides them (`packages/stage/src/spec/view.ts`, tested against the set as built in `spec/sight.ts`, then against what the GPU draws). `pnpm stage:check` prints a `sight:` line per staging and a `WARN hidden` for each view of someone that no camera position clears. Leaves count as see-through there, so check a warning against the real picture at `/dev/stage` before moving anyone.
 - Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Vercel deploys leave them out and the site serves them from the public bucket.
+- Run `pnpm images:sync` after adding or repainting a picture the content names, then commit `lib/images-manifest.json`. It stores light sizes of each picture in the public bucket, and `lib/images.ts` picks one for the slot. A picture without them is served whole. The site does not use `next/image`.
 
 ### Automation Policy
 

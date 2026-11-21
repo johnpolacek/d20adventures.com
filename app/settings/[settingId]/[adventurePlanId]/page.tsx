@@ -6,7 +6,7 @@ import AdventureHome from "@/components/views/adventure-home"
 import AdventurePreview from "@/components/views/adventure-preview"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
 import { getCachedSettingAdventures } from "@/lib/setting-cache"
-import { getImageUrl } from "@/lib/utils"
+import { shareImage } from "@/lib/images"
 import { getLocalWikiAdventureDefinition, isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
 import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { TurnCharacter } from "@/types/adventure"
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const plan = await published(settingId, adventurePlanId)
   if (!plan) return {}
   const description = plan.teaser || plan.overview
-  const images = plan.image ? [getImageUrl(plan.image)] : undefined
+  const images = plan.image ? [shareImage(plan.image)] : undefined
   return {
     title: `${plan.title} | D20 Adventures`,
     description,

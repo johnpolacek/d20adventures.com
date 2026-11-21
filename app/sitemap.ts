@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next"
 import { SITE_URL } from "@/lib/config"
+import { picture } from "@/lib/images"
 import { getCachedSettingAdventures } from "@/lib/setting-cache"
 import { getPosts } from "@/lib/updates"
-import { getImageUrl } from "@/lib/utils"
 import { getLocalWikiAdventureDefinition, LOCAL_WIKI_ADVENTURES } from "@/lib/wiki-adventures/local-runtime"
 
 // Every page meant for search: the fixed pages, each setting with its adventure list and its adventures' public pages,
@@ -26,7 +26,7 @@ async function settingPages(settingId: string): Promise<MetadataRoute.Sitemap> {
       const description = adventure.teaser || adventure.overview
       return {
         url: at(`/settings/${settingId}/${adventure.id}`),
-        images: adventure.image ? [getImageUrl(adventure.image)] : undefined,
+        images: adventure.image ? [picture(adventure.image).src] : undefined,
         videos: video
           ? [{ title: `${adventure.title} Gameplay`, description, thumbnail_loc: `https://i.ytimg.com/vi/${video}/hqdefault.jpg`, player_loc: `https://www.youtube.com/embed/${video}` }]
           : undefined,

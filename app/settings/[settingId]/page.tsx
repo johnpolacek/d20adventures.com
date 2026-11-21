@@ -3,7 +3,7 @@ import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
 import { getCachedSetting } from "@/lib/setting-cache"
-import { getImageUrl } from "@/lib/utils"
+import { headerImage } from "@/lib/images"
 import type { Setting } from "@/types/setting"
 
 export default async function SettingHome(props: { params: Promise<{ settingId: string }> }) {
@@ -22,7 +22,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-150 relative z-10">
-        <ImageHeader imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
+        <ImageHeader {...headerImage(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
           <div className="fixed bottom-[4vh] right-[4vh] z-20 space-y-4 flex flex-col items-end">
             <Link href={`/settings/${settingId}/edit`}>
@@ -58,7 +58,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
               <div className="flex flex-col pt-16">
                 <h4 className="text-xl font-display font-bold text-primary-200">{location.name}</h4>
 
-                <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(location.image)} title={location.name} imageAlt={location.name} />
+                <ImageHeader topBorder variant="semicompact" {...headerImage(location.image)} title={location.name} imageAlt={location.name} />
 
                 <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                   <div className="whitespace-pre-line">
@@ -86,7 +86,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                 {location.organizations.map((org) => (
                   <div key={org.name} className="relative mt-16">
-                    <ImageHeader topBorder variant="semicompact" imageUrl={getImageUrl(org.image)} title={org.name} imageAlt={org.name} />
+                    <ImageHeader topBorder variant="semicompact" {...headerImage(org.image)} title={org.name} imageAlt={org.name} />
                     <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
                       <p>{org.description}</p>
                     </div>

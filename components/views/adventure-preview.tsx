@@ -2,7 +2,9 @@ import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import Link from "next/link"
 import type { Character, Library, Place } from "@/asset-library/types"
-import { getImageUrl } from "@/lib/utils"
+import { isDev } from "@/lib/auth-utils"
+import { IMAGE_HOST } from "@/lib/config"
+import { headerImage } from "@/lib/images"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 // An adventure's public page: what it is, a gameplay video when it has one, and its cast and places from the asset
@@ -48,7 +50,10 @@ const titleCase = (title: string) =>
     .map((word, i, words) => (i > 0 && !words[i - 1].endsWith(":") && SMALL.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
     .join(" ")
 
-const portrait = (c: Character) => (c.figure?.thumb ? `${FIGURES}/${c.figure.id}/${c.figure.thumb}` : c.front)
+// On the site the library's pictures come straight from the bucket, not through the deploy. In development a figure
+// may exist only in the workspace, so the local address is kept.
+const served = (path: string) => (isDev() || !path.startsWith("/") ? path : `${IMAGE_HOST}${path}`)
+const portrait = (c: Character) => served(c.figure?.thumb ? `${FIGURES}/${c.figure.id}/${c.figure.thumb}` : c.front)
 const heading = "font-display text-xl font-bold text-primary-200 mt-14 mb-4"
 
 export default function AdventurePreview({ plan, settingId, library, video }: { plan: AdventurePlan; settingId: string; library: Library | null; video?: string }) {
@@ -59,7 +64,7 @@ export default function AdventurePreview({ plan, settingId, library, video }: { 
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-150 relative z-10">
-        <ImageHeader imageUrl={getImageUrl(plan.image)} title={plan.title} imageAlt={plan.title} />
+        <ImageHeader {...headerImage(plan.image)} title={plan.title} imageAlt={plan.title} />
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 px-6 pb-24">
           <div className="flex flex-wrap justify-center gap-2">
             <span className="bg-white/10 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
@@ -113,7 +118,7 @@ export default function AdventurePreview({ plan, settingId, library, video }: { 
               <ul className="grid sm:grid-cols-2 gap-4">
                 {places.map((p) => (
                   <li key={p.id} className="overflow-hidden rounded-lg border border-accent-200/20 bg-black/60">
-                    <img src={p.picture as string} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                    <img src={served(p.picture as string)} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
                     <div className="px-3 py-2 font-display text-white">{titleCase(p.title)}</div>
                   </li>
                 ))}

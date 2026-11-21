@@ -9,6 +9,8 @@ import { textShadow, textShadowSpread } from "./typography/styles"
 
 interface ImageHeaderProps {
   imageUrl: string
+  /** The same picture at several widths, so a phone does not fetch the widest. */
+  srcSet?: string
   children?: React.ReactNode
   title?: string
   subtitle?: string
@@ -18,7 +20,7 @@ interface ImageHeaderProps {
   topBorder?: boolean
 }
 
-export default function ImageHeader({ imageUrl, children, title, subtitle, imageAlt, variant = "default", topBorder }: ImageHeaderProps) {
+export default function ImageHeader({ imageUrl, srcSet, children, title, subtitle, imageAlt, variant = "default", topBorder }: ImageHeaderProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   return (
@@ -34,8 +36,15 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
           className={cn("object-cover transition-opacity duration-200 ease-out", imageLoaded ? "opacity-100" : "opacity-0")}
           fill
           src={imageUrl}
+          srcSet={srcSet}
+          // The header is never under 480px tall, so on a phone the picture is drawn wider than the screen.
+          sizes={srcSet && "max(100vw, 854px)"}
           alt={imageAlt || title || ""}
           onLoad={() => setImageLoaded(true)}
+          // A picture that arrived before the page woke up never fires its load event.
+          ref={(img) => {
+            if (img?.complete) setImageLoaded(true)
+          }}
         />
         {title && (
           <div className="absolute bottom-44 sm:bottom-54 px-4 w-full flex flex-col items-center">

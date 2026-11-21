@@ -8,9 +8,10 @@ type NativeImageProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src" | 
   priority?: boolean
   sizes?: string
   loading?: "eager" | "lazy"
+  ref?: React.Ref<HTMLImageElement>
 }
 
-export default function NativeImage({ src, alt, fill, priority, className, width, height, loading, sizes: _sizes, ...props }: NativeImageProps) {
+export default function NativeImage({ src, alt, fill, priority, className, width, height, loading, ...props }: NativeImageProps) {
   return (
     <img
       {...props}

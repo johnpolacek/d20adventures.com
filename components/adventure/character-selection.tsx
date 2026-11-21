@@ -10,7 +10,8 @@ import { Card, CardContent } from "@d20/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
 import { Presence } from "@d20/ui/presence"
-import { cn, getImageUrl } from "@/lib/utils"
+import { picture } from "@/lib/images"
+import { cn } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
 import { CharacterSheetModal } from "./character-sheet-modal"
@@ -91,7 +92,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
     <div
       className="min-h-screen relative"
       style={{
-        backgroundImage: `url(${getImageUrl(adventurePlan.image)})`,
+        backgroundImage: `url(${picture(adventurePlan.image).src})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -164,7 +165,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                       </div>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9]" />
-                    {character.image && <Image src={getImageUrl(character.image)} alt={character.name} fill className="object-cover" />}
+                    {character.image && <Image {...picture(character.image, "(min-width: 768px) 33vw, 100vw")} alt={character.name} fill className="object-cover" />}
                   </div>
                   <CardContent className="flex-1 flex flex-col">
                     <div className="relative z-10 flex-1 flex flex-col">

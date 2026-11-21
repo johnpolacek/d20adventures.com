@@ -7,7 +7,7 @@ import ImageHeader from "@d20/ui/image-header"
 import Image from "@d20/ui/native-image"
 import { partyLabel } from "@/components/views/adventure-preview"
 import { getCachedSetting, getCachedSettingAdventures } from "@/lib/setting-cache"
-import { getImageUrl } from "@/lib/utils"
+import { headerImage, picture } from "@/lib/images"
 import { getLocalWikiAdventureDefinition } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
@@ -39,7 +39,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
   return (
     <div className="flex min-h-screen flex-col relative">
       <div className="fade-in delay-150 relative z-10">
-        <ImageHeader variant="semicompact" imageUrl={getImageUrl(setting.image)} title={setting.name} subtitle="Adventures" imageAlt={setting.name} />
+        <ImageHeader variant="semicompact" {...headerImage(setting.image)} title={setting.name} subtitle="Adventures" imageAlt={setting.name} />
         <div className="max-w-4xl xl:max-w-6xl mx-auto -mt-12 relative z-10 whitespace-pre-line">
           <div className="mb-8 text-center">
             {featuredAdventure && (
@@ -48,7 +48,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                   <div className="relative aspect-video md:aspect-auto md:w-3/5 md:min-h-[380px]">
                     <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-black to-transparent z-[9] hidden md:block" />
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9] md:hidden" />
-                    <Image src={getImageUrl(featuredAdventure.image)} alt={featuredAdventure.title} fill className="object-cover" />
+                    <Image {...picture(featuredAdventure.image, "(min-width: 768px) 60vw, 100vw")} alt={featuredAdventure.title} fill className="object-cover" />
                   </div>
                   <div className="md:w-2/5 flex flex-col items-center justify-center gap-4 px-8 py-8">
                     <span className="text-accent-400/90 font-display text-sm font-bold tracking-widest">Featured Adventure</span>
@@ -91,7 +91,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                           {adventure.title}
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9]" />
-                        <Image src={getImageUrl(adventure.image)} alt={adventure.title} fill className="object-cover" />
+                        <Image {...picture(adventure.image, "(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw")} alt={adventure.title} fill className="object-cover" />
                       </div>
                       <CardContent className="flex-1 flex flex-col">
                         <div className="relative z-10 flex-1 flex flex-col">
