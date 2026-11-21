@@ -1,8 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import Image from "@d20/ui/native-image"
-import { PlainPage, plainCard, plainProse } from "@/components/layout/plain-page"
+import { PlainPage, plainProse } from "@/components/layout/plain-page"
 import { PostBody } from "@/components/updates/post-body"
 import { formatPostDate, getPost, getPosts, renderPost } from "@/lib/updates"
 
@@ -28,27 +27,17 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
   const post = await getPost((await params).slug)
   if (!post) notFound()
   return (
-    <PlainPage
-      title={post.title}
-      subtitle={
-        <>
-          <Link href="/updates" className="hover:text-amber-100">
+    <PlainPage card={false} width="max-w-3xl lg:max-w-4xl xl:max-w-5xl">
+      <div className="overflow-hidden rounded-lg border border-amber-200/20 bg-black/90 shadow-[0_18px_44px_#000a]">
+        <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
+          <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-amber-200/80 hover:text-amber-200">
             Updates
           </Link>
-          <span className="mx-3 text-amber-200/60">·</span>
-          <time>{formatPostDate(post.date)}</time>
-        </>
-      }
-      card={false}
-      width="max-w-3xl lg:max-w-4xl xl:max-w-5xl"
-    >
-      <div className={`overflow-hidden ${plainCard}`}>
-        {post.image && (
-          <div className="relative aspect-video">
-            <Image className="object-cover fade-in" fill={true} src={post.image} alt="" />
-          </div>
-        )}
-        <PostBody className={`update-body p-6 sm:p-10 lg:px-14 prose-lg prose-img:rounded-lg ${plainProse}`} html={renderPost(post)} />
+          <h1 className="mt-3 font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{post.title}</h1>
+          <time className="mt-3 block font-display text-sm tracking-[0.2em] uppercase text-amber-300/90">{formatPostDate(post.date)}</time>
+          <div className="stage-rule mt-8 h-1.5 w-full" />
+        </header>
+        <PostBody className={`update-body px-6 pt-8 pb-10 sm:px-10 lg:px-14 prose-lg prose-img:rounded-lg ${plainProse}`} html={renderPost(post)} />
         <div className="flex justify-end border-t border-amber-200/15 px-6 py-4 sm:px-10 lg:px-14">
           <a href={`/updates/${post.slug}/markdown`} download className="font-display text-sm text-amber-200/80 hover:text-amber-200">
             Download as Markdown

@@ -1,16 +1,16 @@
 ---
-title: "Real Figures on the Stage"
+title: "From 2D Art to Rigged Animated 3D Figures"
 date: 2026-11-20
 description: "How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong."
-image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage.webp"
+image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage-3d.webp"
 draft: true
 ---
 
-Until this week, everyone in [The Midnight Summons](https://d20adventures.com) was a painted card standing in a 3D forest. They looked fine until anything had to move. Now [Thalbern](https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern) walks into the scene, draws his bow and swings a sword, and [the owlbear](https://d20adventures.com/settings/realm-of-myr/assets?id=owlbear) comes crashing out of the trees.
+Until this week, characters in [The Midnight Summons](https://d20adventures.com) and other adventures were flat painted standee art. 
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/woods.webp" alt="Thalbern standing on a trail in the moonlit Valkarr woods" width="1600" height="900" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/owlbear-fight-3d.webp" alt="Thalbern's 3D figure facing the owlbear in the moonlit Valkarr woods, as the game shows it" width="1600" height="900" />
 
-I'm writing up the whole pipeline because I couldn't find a writeup like this when I started. Everything here is in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), and the full notes are in [asset-library/README.md](https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md). Steal whatever is useful.
+I researched what other people were doing, experimented myself and now I'm writing up the whole pipeline that I landed on. Everything here is in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), and the full notes are in [asset-library/README.md](https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md). Steal whatever is useful. Or by all means, tell me how I can do it better.
 
 ### The Short Version
 
