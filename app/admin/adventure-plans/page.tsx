@@ -84,12 +84,12 @@ export default async function AdminAdventurePlansPage() {
                     <span className="absolute right-3 top-3 rounded border border-accent-700 bg-accent-950/80 px-2 py-1 font-mono text-4xs uppercase text-accent-200">{adventure.status}</span>
                   </Link>
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-                    <p className="text-sm text-zinc-400">
+                    <div className="text-sm text-zinc-400">
                       {adventure.fileCount} files · {adventure.encounterCount} encounters ·{" "}
                       <Tip label={source.title}>
                         <span className="cursor-help underline decoration-dotted underline-offset-4">{source.label}</span>
                       </Tip>
-                    </p>
+                    </div>
                     <Button variant="epic" size="sm" className="px-5 py-1.5 text-xs" render={<Link href={href} />}>Open Chat Editor</Button>
                   </div>
                 </article>
