@@ -13,7 +13,7 @@ export default function HomePage() {
           <h2 className="text-4xl sm:text-6xl font-display text-center w-full mt-20 sm:mt-36 fade-in delay-100 relative z-10" style={textShadowSpreadLight}>
             <span className="block sm:inline">EXpeRienCe</span> <span className="inline-block scale-75 sm:scale-90 -mx-2 sm:mx-0">tHe</span> Thrill
           </h2>
-          <div className="flex flex-col items-center justify-center absolute bottom-[6vh] sm:bottom-[10vh] w-full flex justify-center z-10">
+          <div className="flex flex-col items-center justify-center absolute bottom-[calc(7.5rem+2vh)] md:bottom-[max(10vh,6rem)] w-full flex justify-center z-10">
             <h2 className="text-lg sm:text-2xl font-bold font-display text-center w-full fade-in delay-[180ms] relative z-10" style={textShadowSpreadLight}>
               Of tHe
             </h2>
