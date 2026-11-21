@@ -7,14 +7,16 @@ Goal: find the most shareable things in each week’s work and keep them as rank
 - Drafts are markdown files in the repo, not a Convex table. Every edit is a commit.
 - The miner runs `claude -p` headless on John’s subscription. No new provider sees the sessions.
 - Posts go out from John’s personal accounts.
-- Buffer stays on the free plan. Mastodon posts through its own free API.
+- Buffer stays on the free plan.
+- Mastodon waits. Revisit once X and Bluesky hold the cadence for a month.
+- The queue page edits files on localhost only.
 - Reddit posts are copied by hand from a text box on the queue page.
 
 ## Schedule it feeds
 
 From the 2026 schedule John pasted, starting at the low end:
 
-- X 1 to 2 a day, Bluesky 1, Mastodon 1, Reddit 1 a week, Wednesday.
+- X 1 to 2 a day, Bluesky 1, Reddit 1 a week, Wednesday.
 - An `/updates` post every 7 to 10 days, written first, feeding the short posts.
 - Saturday gets the week’s best visual for #ScreenshotSaturday.
 - Raise X once two weeks of approved drafts are banked.
@@ -32,15 +34,14 @@ Every post carries a number, a screenshot or a clip, or it doesn’t ship.
    - Keeps a marker of what it has read, so nothing is mined twice.
 2. **Drafts.** `content/queue/<slug>.md`, one per idea.
    - Frontmatter: `rank`, `status` (idea, drafted, approved, scheduled, posted), `asset`, `evidence`, `posted` URLs.
-   - Body sections per platform: X, Bluesky, Mastodon, Reddit, update post.
+   - Body sections per platform: X, Bluesky, Reddit, update post.
    - Written in the voice of `docs/writing-voice.md`.
-3. **Queue page.** `/admin/content`, editing on localhost only, since it writes files.
+3. **Queue page.** `/admin/content`. It writes files, so it edits on localhost only.
    - Ranked list, drag to reorder, status changes, copy edits.
    - A copy button per platform. Reddit’s text sits ready to paste.
    - Ideas can be merged into one update post.
 4. **Scheduler.** `pnpm content:schedule`.
    - X and Bluesky through Buffer’s API.
-   - Mastodon through its API with John’s token.
    - Writes the posted URLs back to the draft.
 
 ## Limits to work within
@@ -53,10 +54,5 @@ Every post carries a number, a screenshot or a clip, or it doesn’t ship.
 
 1. Miner, run by hand, writing candidates to `content/queue`.
 2. Queue page reading and writing those files.
-3. Scheduler for Buffer and Mastodon.
+3. Scheduler for Buffer.
 4. Weekly run documented, first week seeded from the 3D figures post.
-
-## Open
-
-- Which Mastodon instance and account.
-- Whether the queue page is ever needed on the live site, or localhost is enough.
