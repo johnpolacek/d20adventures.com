@@ -1,6 +1,6 @@
 # Asset library
 
-The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/dev/assets` in the workspace and `/settings/<setting>/assets` on the site.
+The workspace for the game's 3D assets: every character's files, the pipeline that makes them, the clips they play and the isometric looks of the places they stand in. The page that shows it all is `/settings/<setting>/assets`, the same link in the workspace and on the site.
 
 Written 2026-11-14, brought up to date 2026-11-15, the second time after The Midnight Summons got its looks and its two figures, and on 2026-11-16 when The Midnight Summons began to play in them. The game's own sets, stagings and paintings are untouched by anything here: a look the game plays in changes a copy of its set as it is built (Played in the game, below).
 
@@ -16,7 +16,7 @@ Written 2026-11-14, brought up to date 2026-11-15, the second time after The Mid
 | A look played in the game | `asset-library/play.ts`, the figures it ships in `shipped.ts` | yes |
 | Modelled trees for a look | `asset-library/trees.ts`, files in `public/stage/trees` | yes |
 | Scorecards | `asset-library/scorecards/` | yes |
-| The page | `asset-library/ui/library.tsx`, shown at `/dev/assets` and `/settings/<setting>/assets` | yes |
+| The page | `asset-library/ui/library.tsx`, shown at `/settings/<setting>/assets` | yes |
 | What the page lists | `asset-library/library.ts` | yes |
 | A live scene: the cut-away, figures in a stage | `asset-library/scene.ts`, `iso.ts`, `figures.ts` | yes |
 | The stage lab, for captures and spikes | `lab/stage-art/` (`viewer.tsx`, `lab.ts`, `capture.ts`) | yes |
@@ -78,7 +78,7 @@ A step whose file is already there is left alone. The model is the one step that
 | 3. Model | Tripo H3.1 on fal | 3 min | $0.60 | `tripo.json`, `source.glb` |
 | 4. Rig and detail levels | headless Blender | 8 sec | free | `rig.json`, `lod0.glb`, `lod1.glb`, `lod2.glb` |
 | 5. Shelf | `build.ts` | 1 sec | free | `figure.json`, `front.webp` |
-| 6. Review | `/dev/assets`, frame strips | 5 min | free | |
+| 6. Review | `/settings/realm-of-myr/assets`, frame strips | 5 min | free | |
 
 ## The way a shipped figure is made now
 
@@ -89,7 +89,7 @@ Thalbern's was the first, 2026-11-19, and the rest are made the same way. The st
 | 1. Brief | `characters/<id>/character.json`, by hand, with `"maker": "hi3d"`, `"face": "close"`, `"gloss": 0.5` and its `borrowed` clips | free | the card: what the hands hold goes in `stow` |
 | 2. Sheet, joints, close face | `pnpm assets <id>` | free | `sheet.png` and `joints.jpg` |
 | 3. Model and rig | `pnpm assets:pilot <id>`, then `--pay` | $2.10 and $0.20 | what it says: which way the model faces, how far an elbow went |
-| 4. Tune | edit the brief, `pnpm assets:pilot <id>` or `--redo=face` | free | the page, `/dev/assets?id=<id>` |
+| 4. Tune | edit the brief, `pnpm assets:pilot <id>` or `--redo=face` | free | the page, `/settings/realm-of-myr/assets?id=<id>` |
 | 5. Pictures | `pnpm assets:views <id> --out=<folder> --moves=<clip>@<seconds>` | free | `sheet.jpg`, beside the same pictures of the figure it replaces |
 | 6. Judge | a fresh agent, shown the target and one set of pictures | free | `scorecards/` |
 | 7. Ship | `SHIPPED` and `PLAYS` in `shipped.ts`, then `pnpm assets:sync <id>` | free | the scene, `/dev/stage?staging=<adventure>/<encounter>&look=play` |
@@ -205,7 +205,7 @@ Nor can it see a figure rigged back to front. The rig tells front from back by t
 
 ### 5. Shelf
 
-`figure.json` and `front.webp` are what `/dev/assets` reads. A character with a `figure.json` has a 3D mark on its card.
+`figure.json` and `front.webp` are what `/settings/realm-of-myr/assets` reads. A character with a `figure.json` has a 3D mark on its card.
 
 ### 5b. Card picture
 
@@ -220,7 +220,7 @@ Takes each figure's picture from the library's own page, as `thumb.webp`, for it
 In the library, alone in a lit room:
 
 ```
-http://localhost:3057/dev/assets?id=thalbern&lod=0&clip=Walk
+http://localhost:3057/settings/realm-of-myr/assets?id=thalbern&lod=0&clip=Walk
 ```
 
 A clip can be held and walked through a frame at a time, to catch the moment a fault shows. The Time row has a step back, Pause, a step forward, a slider through the clip and PNG, which saves the frame as it stands under the figure, the clip and the moment. K or Space holds and lets go. The arrows, or comma and full stop, step one frame of thirty a second, and ten with Shift. A held moment is in the address, `at=2.9` in seconds, so a fault can be sent as a link.
@@ -352,7 +352,7 @@ Environments are not generated. They are built from code, and 41 exist.
 Any set can be seen as built, and a set with a room can be seen as an isometric cut-away:
 
 ```
-http://localhost:3057/dev/assets?env=realm-of-myr/dragonbone-inn&view=iso
+http://localhost:3057/settings/realm-of-myr/assets?env=realm-of-myr/dragonbone-inn&view=iso
 http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-inn&tier=high&paint=0&iso=45,35,40,17&isolight=1.4,0.3,1.8
 ```
 
@@ -440,7 +440,7 @@ The owner, 2026-11-16: The Midnight Summons is played entirely in the new 3D pip
 
 ## The page
 
-`/dev/assets` is every character and every place in one page.
+`/settings/realm-of-myr/assets` is every character and every place in one page.
 
 - Three tabs: Places, Characters and Images. Places and Characters are grids of cards under the adventure each belongs to, with a search and a filter for what has a 3D figure or an Isometric view.
 - Characters are the cast of every staging, each person once, and the player hero looks. A card is marked 3D when its cast id is in a character's `cast`.
@@ -509,7 +509,7 @@ The owner, 2026-11-16, of the rod-hand Thalbern drawing a bow: "now his hand loo
 - `pnpm assets thalbern-pilot` paints its sheet (build.ts, free) and stops before the model. Do not give it `--pay`: that is build.ts's model and rig.
 - `pnpm assets:pilot thalbern-pilot --pay` (`pipeline/pilot.ts`): Tripo H3.1 on fal, the same quality as now, turned to face as the sheet does (`orientation: "align_image"`), $0.60. Then Meshy's rigging on fal (`meshy/rigging/multi-animation`): a Mixamo skeleton with fingers, and seven clips from Meshy's library of 680, $0.20 and $0.12 a clip, $1.04. A walk comes free. The answers are kept (`pilot-model.json`, `pilot-rig.json`), so running it again costs nothing.
 - Meshy sends each clip as its own model. They are merged into `lod0.glb` under the names the game plays: Idle (0), Walk, Shoot (224, Archery Shot), Swing (219, Right Hand Sword Slash), Dodge (158, Roll Dodge), Sidestep (156, Stand Dodge), Hit (178, Hit Reaction), Fall (187, Knock Down). Each plays on the spot: the hips keep their rise and fall and lose their way across the ground.
-- The library page shows it at `/dev/assets?id=thalbern-pilot`, with its own clips and not the written moves. The game loads a figure with its clips inside through `models.ts` as it is, but no weapon is put in its hands yet (`fight.ts` knows rig.py's bones alone), so it shoots and cuts with nothing.
+- The library page shows it at `/settings/realm-of-myr/assets?id=thalbern-pilot`, with its own clips and not the written moves. The game loads a figure with its clips inside through `models.ts` as it is, but no weapon is put in its hands yet (`fight.ts` knows rig.py's bones alone), so it shoots and cuts with nothing.
 - Its face is the generator's, without the sheet's paint (rig.py), and it has one detail level.
 - A second pilot, `thalbern-rodin` (`"maker": "rodin"` in its brief), is made another way again: Rodin Gen-2.5 on fal (`fal-ai/hyper3d/rodin/v2.5`) from the sheet's front and back, in an A-pose, 50,000 triangles, $0.40. Rodin takes up to five pictures in no set order, so the back can be given without a left. Hyper3D's rigging on fal (`hyper3d/rigging`), a human skeleton and up to ten of its stock clips kept on the spot, $0.20. Its stock is listed for free, and the run without `--pay` picks a clip for each of Idle, Walk, Shoot, Swing, Dodge, Hit and Fall by name and keeps them in `pilot-picks.json`, to be looked over and changed before paying. The rigging does not turn a model to face forward, so the run asks which way Rodin's faces before it pays for the rig (`pipeline/facing.ts`: the boots reach forward of the shins, as rig.py tells it). One not facing +z stops there, with the $0.20 unspent. `--facing=ok` sends it anyway.
 - Hyper3D's stock, listed 2026-11-16, is 113 clips for a person: dances, guns and sports, with no bow and no sword. So the picks were made by hand: a standing idle (90), a plain walk (89), a gun fired with both arms raised for Shoot (108), a throw for Swing (64), a fall backward (68), and two more, a fighting stance (Guard, 40) and a point forward (Point, 41). They show a raised arm and a folded one. They are not moves the game could play.
@@ -604,7 +604,7 @@ The owner, 2026-11-16, of the rod-hand Thalbern drawing a bow: "now his hand loo
     - The other hand. `hang` (`pilot.ts`) closes each joint of each finger, in every clip, by what it lacks of a hand at ease (22, 30 and 18 degrees from the knuckle out): Hi3D's fingers by up to 27 degrees. `--hang=off` builds without.
     - The elbow. `elbows` (`pilot.ts`) keeps an arm near straight bent 12 degrees at the least, the way an elbow bends, and takes most of its lean to the side out, with the hand facing as it did. The sword arm went 28 degrees past straight in the cut. An arm folded more than 60 degrees is left alone: the dodge's are folded right up. `--elbows=off` builds without.
     - Judged blind after these, on the cut alone: 1 of 2 for the move, the joints and the grip each. "Does the cut still read wrong? Yes": the blade is behind the hand as the blow is counted, the move ends with its tip at the floor and the head bowed, and "that fault belongs to the move itself".
-    - The eight cuts tried again, on this body with these mends (`thalbern-hi3d-cuts`, `/dev/assets?id=thalbern-hi3d-cuts`, six frames of each in `~/Desktop/thalbern-before-after/audition/`). Ranked blind by letter, out of 6: `Sword_Regular_A` with its recovery ("Cut A", an overhead wind-up and a diagonal cut down) 5.0, `Sword_Attack` ("Cut now") 4.5, `Sword_Regular_B` 3.5, `Sword_Dash` and the slash 3.0, `Sword_Regular_C` 2.0, the stab 1.5, the hook 1.0. The judge: the first is "within a judge's noise" of the second, which "has the best visible strike frame of any cut" and "loses only on the floor-scraping finish and the crouched end pose", and both are "clearly better than everything" below. The owner chose `Sword_Attack` over these by eye on 2026-11-17, and half a point does not overturn that: Swing is not changed. When each cut's sword hand is fastest, for `lands`: now 0.38 s, A 0.25, B 0.27, C 0.65, Dash 0.33.
+    - The eight cuts tried again, on this body with these mends (`thalbern-hi3d-cuts`, `/settings/realm-of-myr/assets?id=thalbern-hi3d-cuts`, six frames of each in `~/Desktop/thalbern-before-after/audition/`). Ranked blind by letter, out of 6: `Sword_Regular_A` with its recovery ("Cut A", an overhead wind-up and a diagonal cut down) 5.0, `Sword_Attack` ("Cut now") 4.5, `Sword_Regular_B` 3.5, `Sword_Dash` and the slash 3.0, `Sword_Regular_C` 2.0, the stab 1.5, the hook 1.0. The judge: the first is "within a judge's noise" of the second, which "has the best visible strike frame of any cut" and "loses only on the floor-scraping finish and the crouched end pose", and both are "clearly better than everything" below. The owner chose `Sword_Attack` over these by eye on 2026-11-17, and half a point does not overturn that: Swing is not changed. When each cut's sword hand is fastest, for `lands`: now 0.38 s, A 0.25, B 0.27, C 0.65, Dash 0.33.
 
 - Wollandora, the owlbear and Covert Cargo's cast, 2026-11-19 and 20 (the owner: "do the same thing for wollandora and the owlbear, then document the process and do all the characters for covert cargo"). Nine models, $2.30 each. The way is written up under The way a shipped figure is made now. Pictures of each beside its card and its sheet: `~/Desktop/d20-hi3d-figures/<id>-sheet.jpg`.
   - `wollandora-hi3d`: not shipped. Her face and hair are sharper than Rodin's. Her sheet is of the front alone, so the back is Hi3D's own, a plain dark cloak. And her bell sleeve is carried by the forearm: with the arm bent to her staff it stands out across her chest as dark sheets. Three things were found in it and mended for every figure (`pilot.ts`): cloth hung on finger and hand bones (`fingersOnly`), a fist closed further by `hang`, and the forearm's roll swinging what hangs under it. The sleeve itself is not mended. `SHIPPED` keeps `wollandora-rodin`.
@@ -618,7 +618,7 @@ The owner, 2026-11-16, of the rod-hand Thalbern drawing a bow: "now his hand loo
   - `elf-fighter`, `elf-archer` and `aelar` waited a night: the fal account ran out as the first of them was asked for (`HTTP 403 ... Exhausted balance`), with $13.80 of this batch's $20.70 spent and nothing charged for the three. Made 2026-11-20 with balance on the account, $6.90, each in about eleven minutes. All three are the card's person. The fighter's back has two shields, a small one over the large: the back sheet's. A lock of the archer's hair lies across her right eye in a close-up, modelled so. She and Aelar cut with a sword neither carries: the archer has a bow and Aelar a dagger at the belt.
   - Published 2026-11-20: `wollandora-hi3d`, `owlbear-hi3d`, `lyra-hi3d`, `poppen-hi3d`, `reinhard` and `silas`, 500 MB. Every figure of this batch and `thalbern-hi3d` has a `thumb.webp`. The three elves and every thumbnail followed the same day.
 
-- A figure no staging's cast stands for, as both pilots are, is listed on the page under Not in a Scene (`library.ts`). Before that, `/dev/assets?id=thalbern-rodin` opened nothing. A sync would publish it with the rest: leave the pilots out of one, or take their `figure.json` away first.
+- A figure no staging's cast stands for, as both pilots are, is listed on the page under Not in a Scene (`library.ts`). Before that, `/settings/realm-of-myr/assets?id=thalbern-rodin` opened nothing. A sync would publish it with the rest: leave the pilots out of one, or take their `figure.json` away first.
 - Hyper3D sends its clips back under their stock names and in the stock's order, not the order asked for. They are renamed by stock name.
 - `fal()` (`lab/stage-art/gen.ts`) writes each job's answer address to `lab/stage-art/raw/generations.log` as it is sent, so an answer that was paid for and lost to a dropped poll can still be fetched.
 - Not tried: a model made from several views by Tripo. fal's `tripo3d/h3.1/multiview-to-3d` reads its pictures in the order front, left, back and right, so a front and a back cannot be sent without a left. Neither fal's nor Tripo's docs say whether "left" is the figure's own left. Tripo's own API (`openapi.tripo3d.com`, a separate key) takes views by name, and rigs to Mixamo, VRM, Unity or Unreal skeletons for $0.25 (`/v3/animations/rig`).

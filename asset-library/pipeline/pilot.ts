@@ -36,7 +36,7 @@
 //   pilot/                             what came back: the rigged model, and one model per clip
 //   lod0.glb                           the rigged model with every clip in it, each by the name the game plays it by
 //   lod1.glb, lod2.glb                 the same with fewer triangles and smaller textures, for a crowd and for far off
-//   figure.json                        for the library page: /dev/assets?id=<id>
+//   figure.json                        for the library page: /settings/realm-of-myr/assets?id=<id>
 //
 // Each clip is made to play on the spot: the hips keep their height and lose their way across the ground, since the
 // stage moves a cast member itself.
@@ -2042,7 +2042,7 @@ async function main() {
   }
   await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
   await writeFile(`${dir}/figure.json`, `${JSON.stringify({ id, ...figure }, null, 2)}\n`)
-  say("shelf", `on the shelf: /dev/assets?id=${id}`)
+  say("shelf", `on the shelf: /settings/realm-of-myr/assets?id=${id}`)
 }
 
 main().catch((err) => {

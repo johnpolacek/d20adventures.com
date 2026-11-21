@@ -254,7 +254,7 @@ async function build(b: Brief) {
     }
   }
   await shelve(dir, b)
-  say("shelf", `on the shelf: /dev/assets?id=${b.cast[0]}`)
+  say("shelf", `on the shelf: /settings/realm-of-myr/assets?id=${b.cast[0]}`)
 }
 
 async function briefs() {

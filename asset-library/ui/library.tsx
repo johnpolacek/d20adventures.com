@@ -1,10 +1,9 @@
 "use client"
 
-// The asset library's page, shared by the workspace's own (/dev/assets) and the one anyone can open
-// (/settings/<setting>/assets). One bar stays under the site's header wherever the visitor is: the library's name, its
-// tabs and a search, then the filters of a grid or the way back from an asset. It opens on the places, each under the
-// adventure it belongs to, and the characters open on the party. A grid is narrowed by a search or a filter. A card
-// opens the asset itself, in the frame below the bar:
+// The asset library's page, at /settings/<setting>/assets in the workspace and on the site. One bar stays under the
+// site's header wherever the visitor is: the library's name, its tabs and a search, then the filters of a grid or
+// the way back from an asset. It opens on the places, each under the adventure it belongs to, and the characters
+// open on the party. A grid is narrowed by a search or a filter. A card opens the asset itself, in the frame below the bar:
 //   - a character with a 3D figure stands in a lit room, at any detail level and in any clip the game plays
 //     (asset-library/clips.ts), and one without shows its card;
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
@@ -29,7 +28,7 @@ export interface LibraryConfig {
   files: string
 }
 // And, for a scene, which character's figure stands for a cast id.
-const Config = createContext<LibraryConfig & { figures: Record<string, string> }>({ home: "/dev/assets", files: "/dev/assets/file/characters", figures: {} })
+const Config = createContext<LibraryConfig & { figures: Record<string, string> }>({ home: "/settings/realm-of-myr/assets", files: "/asset-library/characters", figures: {} })
 
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments" | "images"

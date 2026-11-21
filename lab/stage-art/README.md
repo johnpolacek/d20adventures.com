@@ -397,11 +397,11 @@ Skills copied from github.com/MengTo/Skills at 3cc9345, MIT, into `.agents/skill
 
 ## Asset library, 2026-11-14
 
-`/dev/assets` lists the figures on the shelf and shows one in a lit room, at each detail level and in each clip.
+`/settings/realm-of-myr/assets` lists the figures on the shelf and shows one in a lit room, at each detail level and in each clip.
 
 ```sh
 node --import tsx lab/stage-art/library.ts add garlan garlan-rig "Garlan Ironfist" "Sergeant of the Gate Watch" --generator="Tripo H3.1 on fal" --cost=0.6
-open "http://localhost:3057/dev/assets?id=garlan&lod=0&clip=Walk"
+open "http://localhost:3057/settings/realm-of-myr/assets?id=garlan&lod=0&clip=Walk"
 ```
 
 - The shelf is `public/stage-lab/figures/<id>/`: `figure.json`, three copies and the A-pose front it was made from. It is not in git, like the rest of `public/stage-lab`.
