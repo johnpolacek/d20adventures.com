@@ -1,6 +1,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react"
 import type { CSSProperties, ReactElement, ReactNode } from "react"
 import { Button } from "@d20/ui/button"
+import { prefersReducedMotion } from "@d20/ui/motion"
 import Image from "@d20/ui/native-image"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { PC, PCTemplate } from "@/types/character"
@@ -65,7 +66,7 @@ export function HeroRows({ children }: { children: ReactNode }) {
   }
   useEffect(() => {
     if (!gone.length) return
-    const timer = setTimeout(() => setGone([]), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : EXIT_MS)
+    const timer = setTimeout(() => setGone([]), prefersReducedMotion() ? 0 : EXIT_MS)
     return () => clearTimeout(timer)
   }, [gone])
   const list = rows.map((row) => cloneElement(row, { className: cn(row.props.className, "enter-rise"), style: { ...row.props.style, "--i": first.get(row.key) ?? 0 } as CSSProperties }))

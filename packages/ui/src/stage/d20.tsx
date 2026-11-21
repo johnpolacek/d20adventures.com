@@ -9,6 +9,7 @@
 
 import { useEffect, useId, useRef } from "react"
 import * as THREE from "three"
+import { prefersReducedMotion as still } from "../motion"
 
 export const D20_OUTLINE =
   "M10.4 73.4Q4.2 70.1 5.2 63.2L11.2 21.3Q12.2 14.4 19.1 13.0L60.9 4.4Q67.8 3.0 72.3 8.4L85.3 23.7Q89.8 29.1 91.4 35.9L94.2 48.6Q95.8 55.4 92.2 61.4L86.2 71.3Q82.6 77.3 76.8 81.3L59.8 93.0Q54.0 97.0 47.8 93.7Z"
@@ -110,13 +111,12 @@ function sheet(tone: Tone) {
   return canvas
 }
 
-const still = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches
 
 // A true icosahedron, shaded (flat facets and a soft fill light, no edge lines), at rest with one face square to the
 // viewer and a corner up, so a number laid over the middle sits on that face. Each change of `roll` tumbles it about a
 // random axis, slowing, back to rest over `seconds`. A `tone` turns the die gold or charred over half a second.
 // `numbered` paints each face's number on it: the die then waits tilted, with no face square to the viewer, turns
-// slowly while `idle`, and each roll brings it to rest on `face`.
+// slowly while `idle`, and each roll brings it to rest on `face`. `landed` puts it there at once: a tumble cut short.
 export function D20Solid({
   size,
   roll,
@@ -125,6 +125,7 @@ export function D20Solid({
   numbered = false,
   face,
   idle = false,
+  landed = false,
   className,
 }: {
   size: number
@@ -134,6 +135,7 @@ export function D20Solid({
   numbered?: boolean
   face?: number
   idle?: boolean
+  landed?: boolean
   className?: string
 }) {
   const host = useRef<HTMLDivElement>(null)
@@ -295,6 +297,9 @@ export function D20Solid({
   useEffect(() => {
     if (face && still()) show.current?.(face)
   }, [face, size, seconds, numbered])
+  useEffect(() => {
+    if (face && landed) show.current?.(face)
+  }, [landed, face, size, seconds, numbered])
   useEffect(() => {
     if (roll > 0) start.current?.(landing.current)
   }, [roll])

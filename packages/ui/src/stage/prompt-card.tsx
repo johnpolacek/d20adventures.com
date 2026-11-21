@@ -5,10 +5,10 @@
 // calls for and how it came out while the GM answers it, the GM writing (with a changing line of what it is up to), and
 // the end of the encounter.
 
-import { gsap } from "gsap"
 import { ArrowUp } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "../button"
+import { gsap, prefersReducedMotion } from "../motion"
 import { Presence, Swap } from "../presence"
 import { Textarea } from "../textarea"
 import { Tip } from "../tooltip"
@@ -16,6 +16,7 @@ import { cn, entrance, type MotionProps, staggered } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle } from "../sound/dice"
 import { Chevron, eyebrow, Pill } from "./hud"
+import type { RollPace } from "./roll-pace"
 import { RollResult } from "./roll-result"
 import { type DeathSavesView, keptDie, modeName, type RollAsk, type RollKind, type RollMode, type RollView, thrownView } from "./roll-view"
 import { type Standing, standingWords } from "./standing"
@@ -223,7 +224,7 @@ function D20({
       onRoll(n)
     }
     // With reduced motion the die shows its face at once.
-    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return settle()
+    if (prefersReducedMotion()) return settle()
     setTumble((k) => k + 1)
     hush.current = rattle()
     timer.current = setTimeout(settle, 1200)
@@ -281,6 +282,7 @@ function SingleRoll({
   made,
   resolving,
   result,
+  pace,
   onRoll,
   onContinue,
 }: {
@@ -292,6 +294,7 @@ function SingleRoll({
   made?: number[]
   resolving?: boolean
   result?: RollView
+  pace?: RollPace
   onRoll: (dice: number[]) => void
   onContinue?: () => void
 }) {
@@ -323,6 +326,7 @@ function SingleRoll({
         <RollResult
           compact={compact}
           roll={shown}
+          pace={pace}
           onRoll={() => {
             const thrown = Array.from({ length: roll.mode ? 2 : 1 }, (_, i) => forced?.[i] ?? 1 + Math.floor(Math.random() * 20))
             setMine(thrown)
@@ -452,6 +456,7 @@ export function PromptCard({
   draft: draftProp,
   onDraft,
   forcedRoll,
+  rollPace,
   demo = false,
   unworkable,
   className,
@@ -477,6 +482,8 @@ export function PromptCard({
   onDraft?: (text: string) => void
   // The player's d20s, fixed: a roll already made and kept, shown again, or a Stageview check's.
   forcedRoll?: number[]
+  // How fast the roll on the card plays. In full without it.
+  rollPace?: RollPace
   // A scripted demo: the reply can't be typed. The box stays disabled, with a note over it, until Suggest fills it in,
   // and the suggestion then can't be edited.
   demo?: boolean
@@ -546,7 +553,7 @@ export function PromptCard({
     const from = rowHeight.current
     const to = el.offsetHeight
     rowHeight.current = to
-    if (from === null || matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (from === null || prefersReducedMotion()) return
     const tl = gsap.timeline()
     if (from !== to) tl.fromTo(el, { height: from, overflow: "hidden" }, { height: to, duration: 0.2, ease: "power2.out", clearProps: "height,overflow" }, 0)
     if (rowKey !== "loading") tl.from(el.children, { opacity: 0, y: 6, duration: 0.18, stagger: 0.03, ease: "power2.out", clearProps: "opacity,transform" }, 0.05)
@@ -716,6 +723,7 @@ export function PromptCard({
             made={mode.made}
             resolving={mode.resolving}
             result={mode.result}
+            pace={rollPace}
             onRoll={onRoll}
             onContinue={onContinue}
           />

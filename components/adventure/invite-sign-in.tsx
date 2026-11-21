@@ -1,13 +1,10 @@
 "use client"
 
-import { useGSAP } from "@gsap/react"
-import gsap from "gsap"
+import { gsap, prefersReducedMotion, useGSAP } from "@d20/ui/motion"
 import { type ReactNode, useRef } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import AccountRequired from "@/components/nav/account-required"
 import type { AdventurePlan } from "@/types/adventure-plan"
-
-gsap.registerPlugin(useGSAP)
 
 // How long the intro waits for the cover painting before it enters without it.
 const ART_WAIT_MS = 400
@@ -31,7 +28,7 @@ export function LobbyIntro(props: { plan: AdventurePlan; children: ReactNode }) 
 
   useGSAP(
     () => {
-      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      if (prefersReducedMotion()) return
       const q = gsap.utils.selector(root)
       // Start values are set before the first paint. The timeline plays once the painting decodes, or after a short wait.
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out", overwrite: "auto" } })

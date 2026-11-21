@@ -1,8 +1,7 @@
 "use client"
 
 import { Heading } from "@d20/ui/typography/heading"
-import { useGSAP } from "@gsap/react"
-import gsap from "gsap"
+import { gsap, prefersReducedMotion, useGSAP } from "@d20/ui/motion"
 import { useOptimistic, useRef, useState, useTransition } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
 import { toast } from "@d20/ui/toast"
@@ -14,8 +13,6 @@ import { Label } from "@d20/ui/label"
 import { Swap } from "@d20/ui/presence"
 import { Textarea } from "@d20/ui/textarea"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-
-gsap.registerPlugin(useGSAP)
 
 const labelClass = "font-display text-sm tracking-label uppercase text-accent-300/90"
 const fieldClass = "h-auto py-2.5 border-accent-200/20 bg-black/60 text-base focus-visible:border-accent-200/50"
@@ -111,7 +108,7 @@ function ContactSent({ name }: { name: string }) {
 
   useGSAP(
     () => {
-      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      if (prefersReducedMotion()) return
       const q = gsap.utils.selector(root)
       gsap
         .timeline({ defaults: { ease: "power3.out" } })

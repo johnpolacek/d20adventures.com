@@ -2,6 +2,7 @@
 
 import type { AnimationEvent, CSSProperties, JSX, ReactElement, ReactNode } from "react"
 import { cloneElement, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { prefersReducedMotion } from "./motion"
 import { cn } from "./utils"
 
 /** How a part comes and goes. Each names an `enter-*` and an `exit-*` class in components/theme.css. */
@@ -36,7 +37,7 @@ function useExit(leaving: boolean, done: () => void) {
   })
   useEffect(() => {
     if (!leaving) return
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return finish.current()
+    if (prefersReducedMotion()) return finish.current()
     const timer = setTimeout(() => finish.current(), EXIT_LIMIT)
     return () => clearTimeout(timer)
   }, [leaving])

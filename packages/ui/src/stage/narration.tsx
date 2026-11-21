@@ -13,6 +13,7 @@ import { Tip } from "../tooltip"
 import { cn, entrance, type MotionProps } from "../utils"
 import { Chevron, eyebrow, panel } from "./hud"
 import { FeatureEntry } from "./roll-parts"
+import type { RollPace } from "./roll-pace"
 import { RollResult } from "./roll-result"
 import type { FeatureView, RollView } from "./roll-view"
 
@@ -40,6 +41,7 @@ export function Narration({
   heading,
   text,
   roll,
+  rollPace,
   feature,
   index,
   count,
@@ -60,6 +62,8 @@ export function Narration({
   text: string | undefined
   // The paragraph's dice roll, when it is one.
   roll?: RollView
+  // How fast that roll plays. In full without it.
+  rollPace?: RollPace
   // The paragraph's class feature used, when it is one.
   feature?: FeatureView
   index: number
@@ -77,6 +81,7 @@ export function Narration({
 }) {
   const [shown, setShown] = useState(text)
   const [shownRoll, setShownRoll] = useState(roll)
+  const [shownPace, setShownPace] = useState(rollPace)
   const [shownFeature, setShownFeature] = useState(feature)
   // The heading changes with its paragraph, so a new encounter's title never sits over the last one's closing words.
   const [shownHeading, setShownHeading] = useState(heading)
@@ -87,6 +92,7 @@ export function Narration({
     const swap = setTimeout(() => {
       setShown(text)
       setShownRoll(roll)
+      setShownPace(rollPace)
       setShownFeature(feature)
       setShownHeading(heading)
     }, SWAP_MS)
@@ -95,7 +101,7 @@ export function Narration({
       clearTimeout(swap)
       clearTimeout(show)
     }
-  }, [text, roll, feature, heading])
+  }, [text, roll, rollPace, feature, heading])
 
   const timed = step && autoMs !== undefined
   // The time runs only while the words are up, so a paragraph still fading in has not started.
@@ -159,7 +165,7 @@ export function Narration({
         </div>
         {shownRoll ? (
           <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
-            {visible && <RollResult key={`${index}-${shown}`} roll={shownRoll} compact={compact} />}
+            {visible && <RollResult key={`${index}-${shown}`} roll={shownRoll} compact={compact} pace={shownPace} />}
           </div>
         ) : shownFeature ? (
           <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>

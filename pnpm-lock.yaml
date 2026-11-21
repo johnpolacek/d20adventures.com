@@ -299,6 +299,9 @@ importers:
       '@d20/stage':
         specifier: workspace:*
         version: link:../stage
+      '@gsap/react':
+        specifier: 2.1.2
+        version: 2.1.2(gsap@3.15.1)(react@19.3.1)
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.3.1)

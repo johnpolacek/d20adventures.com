@@ -8,32 +8,60 @@
 // or 1 has no special look on a check or a save. A Death Saving Throw shows the hero's saves as marks. A die a lasting
 // spell adds or takes away is a term of its own, named for the spell: + 3 Bless, − 2 Bane.
 // A roll still to make turns slowly and says what the die has to show, and the dice are the button that makes it.
-// Reduced motion shows the result at once. On a screen too short for all that, the die sits to the left of its words,
-// and a compact roll is that at a smaller size.
+// The roll is one timeline: a quick pace runs it faster, and a tap cuts it short, first to the verdict and then to its
+// end. Reduced motion shows the result at once. On a screen too short for all that, the die sits to the left of its
+// words, and a compact roll is that at a smaller size.
 
-import { Fragment, useEffect, useRef, useState } from "react"
+import { Fragment, useRef, useState } from "react"
 import { Button } from "../button"
+import { gsap, prefersReducedMotion, useGSAP } from "../motion"
 import { Presence } from "../presence"
 import { cn } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "../sound/dice"
 import { eyebrow, useShort } from "./hud"
+import type { RollPace } from "./roll-pace"
 import { DeathSaveMarks, RollDetails } from "./roll-parts"
 import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollHeading, rollNeed, rollSpeech, verdictOf } from "./roll-view"
 import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS, ROLL_WAITING } from "./roll-tones"
 
-// When each part arrives, in ms from the start: the die lands, the total follows, then the verdict.
-const LAND = 1250
-const TOTAL = LAND + 350
-const VERDICT = TOTAL + 450
-export const ROLL_SECONDS = (VERDICT + 900) / 1000
+// When each part arrives, in seconds from the throw: the die lands, the total follows, then the verdict, which is
+// given a moment.
+const LAND = 1.25
+const TOTAL = LAND + 0.35
+const VERDICT = TOTAL + 0.45
+const HOLD = 0.9
+// A quick roll plays this many times faster.
+const QUICK = 1.75
+// A tap this soon after the throw is the throw's own, not one to cut the roll short.
+const TAP_AFTER = 0.25
+export const ROLL_SECONDS = VERDICT + HOLD
+
+/** How long a roll is on show at its pace. A Death Saving Throw is never quick, and a Critical Hit is quick only until
+ *  its die lands. */
+export function rollSeconds(roll: Pick<RollView, "kind" | "success" | "critical">, pace: RollPace = "full") {
+  if (pace === "full" || roll.kind === "death") return ROLL_SECONDS
+  return isCritical(roll) ? LAND / QUICK + ROLL_SECONDS - LAND : ROLL_SECONDS / QUICK
+}
 
 const CRITICAL = ROLL_CRITICAL
 // The light under a die still to land.
 const WAITING = ROLL_WAITING
 
 // `onRoll` makes a roll still to make, and `onVerdict` hears when the verdict is in.
-export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll: RollView | RollAsk; compact?: boolean; onRoll?: () => void; onVerdict?: () => void }) {
+export function RollResult({
+  roll,
+  compact = false,
+  pace = "full",
+  onRoll,
+  onVerdict,
+}: {
+  roll: RollView | RollAsk
+  compact?: boolean
+  pace?: RollPace
+  onRoll?: () => void
+  onVerdict?: () => void
+}) {
   // The die beside its words, not over them: a compact roll, and any roll on a short screen.
   const short = useShort()
   const row = compact || short
@@ -53,45 +81,85 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
   // The verdict's cue, read when it sounds: the engine's answer can change a verdict made on the card.
   const cue = useRef<Verdict>("success")
   cue.current = crit ? "critical-success" : made?.success ? "success" : "failure"
-  useEffect(() => {
-    if (natural === undefined) return
-    const done = () => {
-      setStep(3)
-      sound(cue.current)
-      verdictRef.current?.()
-    }
-    // The die shows its face itself when there is no tumble.
-    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return done()
-    setTumble((k) => k + 1)
-    const hush = rattle()
-    const timers = [
-      setTimeout(() => {
-        setStep(1)
-        hush()
-      }, LAND),
-      setTimeout(() => setStep(2), TOTAL),
-      setTimeout(done, VERDICT),
-    ]
-    return () => {
-      for (const t of timers) clearTimeout(t)
-      hush()
-    }
-  }, [natural, diceKey])
-
+  // The engine's answer can make a roll thrown on the card a Critical Hit, so this too is read as the die lands.
+  const critNow = useRef(crit)
+  critNow.current = crit
+  const speed = pace === "quick" && roll.kind !== "death" ? QUICK : 1
+  const root = useRef<HTMLDivElement>(null)
+  const run = useRef<gsap.core.Timeline | null>(null)
   // The total counts up from the die to itself as it arrives.
   const [counted, setCounted] = useState<number>()
-  useEffect(() => {
-    if (step !== 2 || natural === undefined || total === undefined) return
-    let raf = 0
-    const t0 = performance.now()
-    const frame = () => {
-      const t = Math.min(1, (performance.now() - t0) / 300)
-      setCounted(Math.round(natural + (total - natural) * t))
-      if (t < 1) raf = requestAnimationFrame(frame)
-    }
-    frame()
-    return () => cancelAnimationFrame(raf)
-  }, [step, natural, total])
+  useGSAP(
+    () => {
+      if (natural === undefined || total === undefined) return
+      const done = () => {
+        setStep(3)
+        sound(cue.current)
+        verdictRef.current?.()
+      }
+      // Nothing is hidden first, and the die shows its face itself when there is no tumble.
+      if (prefersReducedMotion()) return done()
+      setTumble((k) => k + 1)
+      const hush = rattle()
+      const q = gsap.utils.selector(root)
+      // What arrives later is out of sight until its moment.
+      gsap.set(q("[data-late]"), { autoAlpha: 0 })
+      const tl = gsap.timeline({ defaults: { overwrite: "auto", immediateRender: false } }).timeScale(speed)
+      run.current = tl
+      tl.addLabel("land", LAND)
+        .call(
+          () => {
+            setStep(1)
+            hush()
+            // A Critical Hit is given its full time from here.
+            if (critNow.current) tl.timeScale(1)
+          },
+          [],
+          "land"
+        )
+        .fromTo(q("[data-late=shock]"), { autoAlpha: 1, scale: 0.5 }, { autoAlpha: 0, scale: 2.1, duration: 0.55, ease: "power1.out" }, "land")
+        .fromTo(q("[data-roll=kept]"), { scale: 1.16 }, { scale: 1, duration: 0.34, ease: "back.out(2.6)", clearProps: "transform" }, "land")
+      const count = { n: natural }
+      tl.addLabel("total", TOTAL)
+        .call(() => setStep(2), [], "total")
+        .to(q("[data-late=term]"), { autoAlpha: 1, duration: 0.3, ease: "power1.out", clearProps: "opacity,visibility" }, "total")
+        .fromTo(q("[data-roll=total]"), { y: 6, scale: 0.9 }, { y: 0, scale: 1, duration: 0.35, ease: "back.out(1.7)", clearProps: "transform" }, "total")
+        .to(count, { n: total, duration: 0.3, ease: "none", onUpdate: () => setCounted(Math.round(count.n)) }, "total")
+      tl.addLabel("verdict", VERDICT)
+        .call(done, [], "verdict")
+        .fromTo(
+          q("[data-late=verdict]"),
+          { autoAlpha: 0, scale: 1.7, filter: "blur(5px)" },
+          { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 0.4, ease: "back.out(1.7)", clearProps: "opacity,visibility,transform,filter" },
+          "verdict"
+        )
+      const after = q("[data-late=after]")
+      if (after.length) tl.to(after, { autoAlpha: 1, duration: 0.2, ease: "power1.out", clearProps: "opacity,visibility" }, "verdict")
+      return () => {
+        hush()
+        run.current = null
+      }
+    },
+    { dependencies: [natural, diceKey], scope: root, revertOnUpdate: true }
+  )
+  // Rays fade in behind a Critical Hit and turn slowly. With reduced motion they are there and still.
+  const shining = crit && step >= 3
+  useGSAP(
+    () => {
+      const rays = gsap.utils.toArray<HTMLElement>("[data-roll=rays]", root.current)
+      if (!shining || !rays.length || prefersReducedMotion()) return
+      gsap.from(rays, { autoAlpha: 0, duration: 1.4, ease: "power1.out" })
+      gsap.to(rays, { rotation: 360, duration: 14, ease: "none", repeat: -1 })
+    },
+    { dependencies: [shining], scope: root, revertOnUpdate: true }
+  )
+  // A tap cuts the roll short: to the verdict, and a tap on the verdict to its end.
+  const skip = () => {
+    const tl = run.current
+    if (!tl || tl.progress() === 1 || tl.time() < TAP_AFTER) return
+    if (tl.time() < tl.labels.verdict) tl.seek("verdict", false)
+    else tl.progress(1)
+  }
 
   const verdict = made ? verdictOf(made) : ""
   const margin = made ? marginText(made) : ""
@@ -107,8 +175,9 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
   const waiting = !made && Boolean(onRoll)
   // A Death Saving Throw's marks: the saves so far before the roll, and after it once the verdict is in.
   const saves = roll.kind === "death" ? (made ? (step >= 3 ? made.deathSaves : undefined) : roll.deathSaves) : undefined
-  const term = (sign: string, n: number, label?: string, show = true) => (
-    <span className={cn("transition-opacity duration-300", show ? "opacity-100" : "opacity-0")}>
+  // A `late` term arrives with the total.
+  const term = (sign: string, n: number, label?: string, late = true) => (
+    <span data-late={late ? "term" : undefined}>
       <span className={cn("text-muted-foreground", compact ? "text-sm" : "text-base")}>{sign}</span>
       <span className={cn("ml-2", compact ? "text-base" : "text-xl", label && "text-accent")}>{n}</span>
       {label && <span className={cn(eyebrow, "ml-1 align-middle text-muted-foreground", compact && "text-4xs")}>{label}</span>}
@@ -133,7 +202,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
   )
 
   return (
-    <div className={cn("flex", compact ? "items-center gap-3" : row ? "items-center gap-5" : "flex-col items-center text-center")}>
+    <div ref={root} onClick={skip} className={cn("flex", compact ? "items-center gap-3" : row ? "items-center gap-5" : "flex-col items-center text-center")}>
       {made && <span className="sr-only">{rollSpeech(made)}</span>}
       {!row && (
         <div className="max-w-full" aria-hidden="true">
@@ -148,7 +217,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
         disabled={!onRoll || Boolean(made)}
         aria-label={made ? undefined : `Roll ${two ? "two d20s" : "the d20"} for ${first}'s ${askSpeech(roll)}`}
         aria-hidden={made ? true : undefined}
-        className={cn("relative flex shrink-0 justify-center disabled:cursor-default", compact ? "gap-1" : row ? "gap-2" : "mt-1 gap-3", waiting && "transition-transform enabled:hover:scale-105")}
+        className={cn("relative flex shrink-0 justify-center disabled:cursor-default", compact ? "gap-1" : row ? "gap-2" : "mt-1 gap-3", waiting && "transition-transform enabled:hover:scale-105", made && "pointer-events-none")}
       >
         {dice.map((n, i) => {
           const dropped = landed && two && i !== kept
@@ -166,11 +235,11 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
                   <span className="absolute bottom-2.5 left-1/2 h-4 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,#000d,transparent)]" style={{ width: size * 0.8 }} />
                 </>
               )}
-              {gold && step >= 3 && <span className="roll-rays absolute -inset-6 rounded-full" />}
+              {gold && step >= 3 && <span data-roll="rays" className="roll-rays absolute -inset-6 rounded-full" />}
               {waiting && <span className="roll-pulse pointer-events-none absolute top-0 left-0 rounded-full border border-accent/55" style={{ width: size, height: size }} />}
-              {lit && <span className="roll-shock pointer-events-none absolute top-0 left-0 rounded-full border-2" style={{ width: size, height: size, borderColor: tone }} />}
-              <span className={cn("absolute top-0 left-0 transition-[filter] duration-500", lit && "die-land")} style={{ filter: `${glow}drop-shadow(0 3px 6px #000c)` }}>
-                <D20Solid size={size} roll={tumble} seconds={LAND / 1000} tone={gold ? "gold" : undefined} numbered face={n || undefined} idle={!made} />
+              {made && i === kept && <span data-late="shock" className="pointer-events-none absolute top-0 left-0 rounded-full border-2" style={{ width: size, height: size, borderColor: tone }} />}
+              <span data-roll={i === kept ? "kept" : undefined} className="absolute top-0 left-0 transition-[filter] duration-500" style={{ filter: `${glow}drop-shadow(0 3px 6px #000c)` }}>
+                <D20Solid size={size} roll={tumble} seconds={LAND / speed} tone={gold ? "gold" : undefined} numbered face={n || undefined} idle={!made} landed={landed} />
               </span>
             </span>
           )
@@ -197,14 +266,16 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
           ) : (
             <>
               <span className={cn(compact ? "text-base" : "text-xl", !landed && "opacity-30")}>{landed ? natural : "?"}</span>
-              {roll.modifier !== undefined && term(mod < 0 ? "−" : "+", Math.abs(mod), undefined, step >= 2 || asked)}
-              {inspired !== undefined && term("+", inspired, "Inspiration", step >= 2)}
+              {roll.modifier !== undefined && term(mod < 0 ? "−" : "+", Math.abs(mod), undefined, !asked)}
+              {inspired !== undefined && term("+", inspired, "Inspiration")}
               {adds.map((a, i) => (
-                <Fragment key={i}>{term(a.amount < 0 ? "−" : "+", Math.abs(a.amount), a.from, step >= 2)}</Fragment>
+                <Fragment key={i}>{term(a.amount < 0 ? "−" : "+", Math.abs(a.amount), a.from)}</Fragment>
               ))}
-              <span className={cn("transition-opacity duration-300", step >= 2 ? "opacity-100" : "opacity-0")}>
+              <span data-late="term">
                 <span className={cn("text-muted-foreground", compact ? "text-sm" : "text-base")}>=</span>
-                <span className={cn("ml-2 font-bold text-accent", compact ? "text-2xl" : "text-4xl", step >= 2 && "roll-rise")}>{step >= 3 ? total : (counted ?? total)}</span>
+                <span data-roll="total" className={cn("ml-2 inline-block font-bold text-accent", compact ? "text-2xl" : "text-4xl")}>
+                  {step >= 3 ? total : (counted ?? natural)}
+                </span>
               </span>
             </>
           )}
@@ -220,22 +291,19 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
         {/* The verdict, slammed in between two rules, and by how much the roll made or missed its number. Silent until the die has landed. */}
         {made && (
           <>
-            <div className={cn("flex items-center", compact ? "mt-1 gap-3" : row ? "mt-2 gap-3" : "h-10 justify-center gap-3.5", step >= 3 ? "opacity-100" : "opacity-0")}>
-              {!row && <span className="h-px w-12 shrink" style={{ background: `linear-gradient(90deg, transparent, ${tone})` }} />}
+            <div className={cn("flex items-center", compact ? "mt-1 gap-3" : row ? "mt-2 gap-3" : "h-10 justify-center gap-3.5")}>
+              {!row && <span data-late="after" className="h-px w-12 shrink" style={{ background: `linear-gradient(90deg, transparent, ${tone})` }} />}
               <span
-                className={cn(
-                  "shrink-0 whitespace-nowrap font-display font-bold tracking-wide uppercase",
-                  compact ? "text-xs" : row ? "text-base" : crit ? "text-xl" : "text-2xl",
-                  step >= 3 && "roll-slam"
-                )}
+                data-late="verdict"
+                className={cn("inline-block shrink-0 whitespace-nowrap font-display font-bold tracking-wide uppercase", compact ? "text-xs" : row ? "text-base" : crit ? "text-xl" : "text-2xl")}
                 style={{ color: tone, textShadow: `0 0 ${row ? 10 : 20}px ${tone}8c` }}
               >
                 {verdict}
               </span>
-              {!row && <span className="h-px w-12 shrink" style={{ background: `linear-gradient(270deg, transparent, ${tone})` }} />}
-              {row && margin && <span className={cn("min-w-0 truncate font-serif text-muted-foreground italic", compact ? "text-3xs" : "text-xs")}>{margin}</span>}
+              {!row && <span data-late="after" className="h-px w-12 shrink" style={{ background: `linear-gradient(270deg, transparent, ${tone})` }} />}
+              {row && margin && <span data-late="after" className={cn("min-w-0 truncate font-serif text-muted-foreground italic", compact ? "text-3xs" : "text-xs")}>{margin}</span>}
             </div>
-            {!row && <div className={cn("min-h-[18px] font-serif text-xs leading-[18px] text-muted-foreground italic", step >= 3 ? "enter-fade" : "opacity-0")}>{margin}</div>}
+            {!row && <div data-late="after" className="min-h-[18px] font-serif text-xs leading-[18px] text-muted-foreground italic">{margin}</div>}
           </>
         )}
         {saves && (

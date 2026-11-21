@@ -363,30 +363,9 @@
   animation: d20-land 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
-/* A roll result: a ring beats out from the waiting die and another is thrown out as it lands with a small jump in
-   size, the total rises in, the verdict slams in, and rays turn slowly behind a Critical Hit. */
-@keyframes roll-rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes roll-slam {
-  from {
-    opacity: 0;
-    transform: scale(1.7);
-    filter: blur(5px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-}
+/* A roll result: a ring beats out from the waiting die, and rays sit behind a Critical Hit. The roll itself, from the
+   landing to the verdict, is a GSAP timeline in @d20/ui/stage/roll-result. A die on the contest card lands with a
+   small jump in size. */
 @keyframes roll-pulse {
   from {
     opacity: 0.9;
@@ -397,16 +376,6 @@
     transform: scale(1.3);
   }
 }
-@keyframes roll-shock {
-  from {
-    opacity: 1;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2.1);
-  }
-}
 @keyframes die-land {
   from {
     transform: scale(1.16);
@@ -414,27 +383,6 @@
   to {
     transform: scale(1);
   }
-}
-@keyframes roll-rays {
-  from {
-    opacity: 0;
-    transform: rotate(0);
-  }
-  10% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: rotate(360deg);
-  }
-}
-.roll-rise {
-  display: inline-block;
-  animation: roll-rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1) both;
-}
-.roll-slam {
-  display: inline-block;
-  animation: roll-slam 0.4s cubic-bezier(0.2, 1.3, 0.4, 1) both;
 }
 .roll-pulse {
   animation: roll-pulse 2.2s ease-out infinite;
@@ -459,9 +407,6 @@
 .gm-musing-out {
   animation: gm-musing-out 0.35s ease-in both;
 }
-.roll-shock {
-  animation: roll-shock 0.55s ease-out both;
-}
 .die-land {
   animation: die-land 0.34s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
@@ -470,20 +415,21 @@
   .gm-musing-out {
     animation: none;
   }
-  .roll-pulse,
-  .roll-shock {
+  .roll-pulse {
     animation: none;
     opacity: 0;
   }
-  .roll-slam,
-  .die-land {
+  .die-land,
+  .plate-in,
+  .d20-tumble,
+  .d20-flip,
+  .d20-land {
     animation: none;
   }
 }
 .roll-rays {
   background: repeating-conic-gradient(from 0deg, #ffd88a40 0deg 5deg, transparent 5deg 18deg);
   mask-image: radial-gradient(circle, #000 30%, transparent 70%);
-  animation: roll-rays 14s linear infinite;
 }
 
 /* Stageview surfaces, in the website's materials: black paper for panels, the blue stone of its buttons, navy for

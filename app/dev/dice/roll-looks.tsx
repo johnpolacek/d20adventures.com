@@ -18,7 +18,7 @@ import { type CardCharacter, type CardMode, type CardRoll, PromptCard } from "@d
 import { ReactionCard, StandingOrders } from "@d20/ui/stage/reaction-card"
 import { heroReactions } from "@d20/ui/stage/reaction-view"
 import { FeatureEntry } from "@d20/ui/stage/roll-parts"
-import { ROLL_SECONDS, RollResult } from "@d20/ui/stage/roll-result"
+import { RollResult, rollSeconds } from "@d20/ui/stage/roll-result"
 import type { FeatureView, RollAsk, RollView } from "@d20/ui/stage/roll-view"
 import { type OrderEntry, TurnOrder } from "@d20/ui/stage/turn-order"
 
@@ -446,6 +446,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
 export function RollLooks() {
   const [take, setTake] = useState(0)
   const [compact, setCompact] = useState(false)
+  const [quick, setQuick] = useState(false)
   const [paragraph, setParagraph] = useState(0)
   const story: { text: string; roll?: RollView; feature?: FeatureView }[] = [
     { text: "The owlbear crashes through the hedge." },
@@ -465,6 +466,9 @@ export function RollLooks() {
           <Pill active={compact} onClick={() => setCompact((c) => !c)}>
             Compact
           </Pill>
+          <Pill active={quick} onClick={() => setQuick((q) => !q)}>
+            Quick
+          </Pill>
           <Pill variant="primary" className="px-6" onClick={() => setTake((t) => t + 1)}>
             Roll All Again
           </Pill>
@@ -474,7 +478,7 @@ export function RollLooks() {
       <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6">
         {ROLLS.map(([title, roll]) => (
           <Box key={title} title={title} className={`${panel} ${compact ? "px-3 py-2" : "px-5 py-4"}`}>
-            <RollResult key={take} roll={roll} compact={compact} />
+            <RollResult key={take} roll={roll} compact={compact} pace={quick ? "quick" : "full"} />
           </Box>
         ))}
         <Box title="Attack · Ask" className={`${panel} px-5 py-4`}>
@@ -576,12 +580,13 @@ export function RollLooks() {
               heading="Round 2 · The Owlbear"
               text={story[paragraph].text}
               roll={story[paragraph].roll}
+              rollPace={quick ? "quick" : "full"}
               feature={story[paragraph].feature}
               index={paragraph}
               count={story.length}
               compact={compact}
               step
-              autoMs={Math.round((story[paragraph].roll ? ROLL_SECONDS + 1.5 : readingSeconds(story[paragraph].text, 200)) * 1000)}
+              autoMs={Math.round((story[paragraph].roll ? rollSeconds(story[paragraph].roll, quick ? "quick" : "full") + 1.5 : readingSeconds(story[paragraph].text, 200)) * 1000)}
               onReplay={() => setParagraph(0)}
               onBack={() => setParagraph((n) => Math.max(0, n - 1))}
               onNext={() => setParagraph((n) => Math.min(story.length - 1, n + 1))}

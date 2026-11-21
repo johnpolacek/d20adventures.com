@@ -1,5 +1,6 @@
 "use client"
 
+import { prefersReducedMotion } from "./motion"
 import type { Motion } from "./presence"
 import { type AnimationEvent, type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from "react"
 
@@ -67,7 +68,7 @@ export function useLeaving<T>(
   useEffect(() => {
     if (!leaving) return
     const keys = leaving.split("\n")
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return drop(keys)
+    if (prefersReducedMotion()) return drop(keys)
     const timer = setTimeout(() => drop(keys), EXIT_LIMIT)
     return () => clearTimeout(timer)
   }, [leaving])

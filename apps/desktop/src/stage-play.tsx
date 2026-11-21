@@ -27,7 +27,9 @@ import type { UnworkableSpell } from "@d20/gm-core/sheet/creature-gated-spells"
 import { type CardCharacter, type CardMode, type CardRoll, type CardSuggestion, PromptCard } from "@d20/ui/stage/prompt-card"
 import { ReactionCard, useExpired } from "@d20/ui/stage/reaction-card"
 import { heroReactions, type StandingOrders } from "@d20/ui/stage/reaction-view"
-import { ROLL_SECONDS } from "@d20/ui/stage/roll-result"
+import { prefersReducedMotion } from "@d20/ui/motion"
+import { rollPace } from "@d20/ui/stage/roll-pace"
+import { rollSeconds } from "@d20/ui/stage/roll-result"
 import { featureView, type RollView, rollView } from "@d20/ui/stage/roll-view"
 import { Bubbles, Plate } from "@d20/ui/stage/stage-dialogue"
 import { passedOver, passedWords, standingOf } from "@d20/ui/stage/standing"
@@ -178,11 +180,13 @@ const FADE_MS = 1600
 const CONTINUE_WPM = 200
 // After the narrator's last word, the pause before the story moves on.
 const AFTER_VOICE_MS = 1200
+// The moment a roll's verdict is given before the story moves on, in seconds, by the roll's pace.
+const ROLL_REST = { full: 1.5, quick: 0.9 }
 function Painting({ src, shown, onLoad, onError }: { src: string; shown: boolean; onLoad: () => void; onError: () => void }) {
   const img = useRef<HTMLImageElement>(null)
   useEffect(() => {
     const el = img.current
-    if (!el || !shown || matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (!el || !shown || prefersReducedMotion()) return
     const drift = el.animate([{ transform: "scale(1.04) translate(-1.2%, 0.6%)" }, { transform: "scale(1.13) translate(1.2%, -0.8%)" }], {
       duration: 70_000,
       iterations: Number.POSITIVE_INFINITY,
@@ -382,6 +386,10 @@ export function StagePlay(props: {
   const roller = rolled ? turn?.characters.find((c) => c.id === rolled.character) : undefined
   const rollerPortrait = roller ? portrait(roller) : undefined
   const roll = useMemo<RollView | undefined>(() => (rolled && turn ? rollView(rolled, turn.characters, rollerPortrait) : undefined), [rolled, turn?.characters, rollerPortrait])
+  // The roll that opens an encounter plays in full, and the ones after it are quick.
+  const paces = turn ? `${save?.adventure._id}:${turn.encounterId}` : ""
+  const pace = roll && turn ? rollPace(paces, `${turn._id}:${paragraph}`) : "full"
+  const rollTime = roll ? rollSeconds(roll, pace) + ROLL_REST[pace] : 0
   const used = paragraphs[paragraph]?.feature
   const feature = useMemo(() => (used && turn ? featureView(used, turn.characters) : undefined), [used, turn?.characters])
   // The narrator reads the words in the panel. A roll or a class feature shows its own card, so it is not read.
@@ -850,13 +858,13 @@ export function StagePlay(props: {
     if (!auto || !reading || busy || !text.length || voiced === "speaking") return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
-    const seconds = voiced === "done" ? AFTER_VOICE_MS / 1000 : paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "")
+    const seconds = voiced === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, text, paragraphs, paragraph, voiced])
+  }, [auto, reading, busy, text, rollTime, paragraph, voiced])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
   // A roll waits as it does in auto.
-  const continueMs = busy || !text.length || voiced === "speaking" ? undefined : voiced === "done" ? AFTER_VOICE_MS : Math.round((paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
+  const continueMs = busy || !text.length || voiced === "speaking" ? undefined : voiced === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
@@ -1019,6 +1027,9 @@ export function StagePlay(props: {
   const answer = held && heldTurn?.story.slice(held.from).find((b): b is RollBeat => b.kind === "roll" && b.character === held.actor.id)
   const result = useMemo(() => (answer && heldTurn ? rollView(answer, heldTurn.characters) : undefined), [answer, heldTurn?.characters])
   let mode: CardMode | null = null
+  // The pace of the roll on the card, which is a roll of its own beside the story's.
+  const cardRoller = (held?.actor ?? cardActor)?.id
+  const cardPace = turn && cardRoller ? rollPace(paces, `${held?.turn ?? turn._id}:card:${cardRoller}`) : "full"
   if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy, ...(result ? { result } : {}) }
   else if (busy) mode = playing(turn?._id, actor, aiActor, portrait)
   else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
@@ -1103,9 +1114,10 @@ export function StagePlay(props: {
   // Played on its own, the card moves on once the verdict has had a moment and the GM has answered.
   useEffect(() => {
     if (!auto || !held || props.busy) return
-    const timer = setTimeout(() => leaveRef.current(), Math.max(1500, held.at + (ROLL_SECONDS + 1.5) * 1000 - Date.now()))
+    const seconds = rollSeconds(result ?? { kind: held.roll.kind, success: false }, cardPace) + ROLL_REST[cardPace]
+    const timer = setTimeout(() => leaveRef.current(), Math.max(1500, held.at + seconds * 1000 - Date.now()))
     return () => clearTimeout(timer)
-  }, [auto, held, props.busy])
+  }, [auto, held, props.busy, result, cardPace])
   // Where the party has been on the city map, up to the turn on screen.
   const encountersSoFar = (save?.turns ?? [])
     .filter((t) => (t.order ?? 0) <= (shown?.order ?? 0))
@@ -1199,6 +1211,7 @@ export function StagePlay(props: {
                 heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
                 roll={roll}
+                rollPace={pace}
                 feature={feature}
                 index={paragraph}
                 count={text.length}
@@ -1246,6 +1259,7 @@ export function StagePlay(props: {
                 draft={draft}
                 onDraft={setDraft}
                 forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
+                rollPace={cardPace}
                 unworkable={unworkable?.key === `${turn?._id}:${cardActor?.id}` ? unworkable.list : undefined}
               />
             )}
