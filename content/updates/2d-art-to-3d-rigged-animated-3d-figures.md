@@ -15,13 +15,16 @@ I researched what other people were doing, experimented myself and now I'm writi
 
 A figure now costs $2.30 and about fifteen minutes, most of it waiting:
 
-- Write a short brief for the character. Free.
-- Have an image model paint a pose sheet, front and back. Free.
-- Find the joints on the sheet with [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker). Free.
-- Send the front and back to [Hi3D v3.0 on fal](https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d) for the model. $2.10.
-- Rig it with [Hyper3D](https://hyper3d.ai) to a human skeleton with fingers. $0.20.
-- Copy free animation clips onto it from [Quaternius](https://quaternius.com) and [Mesh2Motion](https://mesh2motion.org). Free.
-- Clean it up in headless Blender, make three detail levels, and judge it blind. Free.
+| # | Step | Cost |
+| --- | --- | ---: |
+| 1 | Write a short brief for the character. | Free |
+| 2 | Have an image model paint a pose sheet, front and back. | Free |
+| 3 | Find the joints on the sheet with [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker). | Free |
+| 4 | Send the front and back to [Hi3D v3.0 on fal](https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d) for the model. | $2.10 |
+| 5 | Rig it with [Hyper3D](https://hyper3d.ai) to a human skeleton with fingers. | $0.20 |
+| 6 | Copy free animation clips onto it from [Quaternius](https://quaternius.com) and [Mesh2Motion](https://mesh2motion.org). | Free |
+| 7 | Clean it up in headless Blender, make three detail levels, and judge it blind. | Free |
+| | **Total** | **$2.30** |
 
 The only steps that cost money are the model and the rig. Every answer gets saved, so nothing is paid for twice and every later rebuild is free.
 
@@ -35,7 +38,7 @@ What makes a good sheet: arms held away from the body with background showing be
 
 This is the prompt that paints the sheet, with the character's front and back cards attached:
 
-```prompt
+```prompt Pose Sheet Prompt
 The attached images are the front and the back of a painted game character: [WHO THEY ARE]. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
 
 Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
@@ -55,7 +58,7 @@ I didn't know which generator to use, so I tried a bunch of them on Thalbern. Tr
 
 To keep myself honest, every round gets judged blind. A fresh agent is shown the character's card, the pose sheet and the same fifteen pictures of the figure each time, and told nothing about what changed. Judges differ by about a point, so a one point gain is noise. What the judge is really good for is a list of faults by name, which tells you what to fix next.
 
-```prompt
+```prompt Blind Judge Prompt
 You are judging a 3D game character against its target. Attached are the target (the character's card and the pose sheet the model was made from) and fifteen pictures of the figure: face close-ups, front, back, three-quarter views and two action poses. You have not seen any earlier version. Do not guess what changed.
 
 Score each from 0 to 2, in halves, for a total out of 10:
@@ -77,7 +80,7 @@ Rodin scored a 4. Hi3D as it came also scored a 4, but for different reasons. It
 
 For the face, the build crops the head off the sheet, makes it bigger and sharper, then lays those pixels back onto the front of the model's head and fades them out toward the ears:
 
-```prompt
+```prompt Face Upscale Prompt
 The attached image is a small, soft crop of a studio photograph: one person's head, seen from directly in front on a grey background. Make one square image that is the SAME photograph of the SAME head at far higher resolution, as if the original had been taken with a much better camera.
 
 Keep everything where it is: the same framing and crop, the head the same size and in the same place, the same face, expression, eyes, brows, nose, mouth, ears, hair and whatever is worn in the hair, the same soft even light, the same grey background. Change no proportion and move no feature.
@@ -123,7 +126,7 @@ Since the pipeline worked on Thalbern, the characters for Covert Cargo, the next
 
 I built all of this with Claude Code. If you want to build something like it, hand your coding agent this:
 
-```prompt
+```prompt Agent Prompt
 Read asset-library/README.md in https://github.com/johnpolacek/d20adventures.com. It describes a pipeline that turns a painted character card into a rigged, animated 3D figure: a pose sheet from an image model, joints found with MediaPipe, a model from Hi3D v3.0 on fal, a rig from Hyper3D, clips borrowed from free libraries, cleanup in headless Blender, and a blind judge.
 
 Build the smallest version of it for my project. Start with one character and the free steps only: the brief, the pose sheet and the joints. Show me the sheet before anything that costs money runs. Save every paid answer so it is never paid for twice.
@@ -131,7 +134,7 @@ Build the smallest version of it for my project. Start with one character and th
 
 And if you just want to look around the code:
 
-```prompt
+```prompt Code Tour Prompt
 Clone https://github.com/johnpolacek/d20adventures.com and walk me through how asset-library/pipeline/build.ts and pilot.ts make a 3D figure, step by step, with what each step costs.
 ```
 

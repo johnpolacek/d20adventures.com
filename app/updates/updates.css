@@ -440,9 +440,15 @@ body:has(.updates-page) main + footer {
 .up-prose iframe {
   margin: 32px 0 36px;
 }
+/* Tables: in a frame of their own. A right-hand column is figures, and a last row in bold is the total. */
+.up-table {
+  margin: 28px 0 32px;
+  overflow-x: auto;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+}
 .up-prose table {
   width: 100%;
-  margin: 28px 0 32px;
   border-collapse: collapse;
   font-family: var(--up-ui);
   font-size: 15px;
@@ -462,6 +468,36 @@ body:has(.updates-page) main + footer {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--up-faint);
+}
+.up-prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+.up-prose :is(th, td)[align="right"] {
+  text-align: right;
+  white-space: nowrap;
+}
+.up-prose td[align="right"] {
+  font-family: var(--up-mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--up-faint);
+}
+.up-prose td.up-cell-num {
+  width: 2.5em;
+  padding-right: 0;
+  font-family: var(--up-mono);
+  font-size: 13px;
+  color: var(--up-faint);
+}
+.up-prose td.up-cell-money {
+  color: var(--up-accent);
+}
+.up-prose tbody tr:last-child:has(strong) td {
+  border-top: 1px solid var(--up-line-strong);
+  background: var(--up-raise);
+}
+.up-prose td a {
+  text-decoration-color: var(--up-line-strong);
 }
 
 /* Figures: a picture, numbered, with its alt text as the caption. A tall one is held narrower. */

@@ -122,6 +122,15 @@ function figures(html: string): string {
   })
 }
 
+/** A table scrolls sideways in its own frame. Its number cells and its money cells are marked, to be set as figures. */
+function tables(html: string): string {
+  return html
+    .replace(/<table>/g, '<div class="up-table"><table>')
+    .replace(/<\/table>/g, "</table></div>")
+    .replace(/<td([^>]*)>(\d+)<\/td>/g, '<td$1 class="up-cell-num">$2</td>')
+    .replace(/<td([^>]*)>((?:<strong>)?\$[\d.,]+(?:<\/strong>)?)<\/td>/g, '<td$1 class="up-cell-money">$2</td>')
+}
+
 // Reading speed, in words a minute.
 const READING_SPEED = 200
 
@@ -130,8 +139,9 @@ export function renderPost(post: Update): RenderedPost {
   const tokens = markdown.lexer(post.body)
   const depths = tokens.flatMap((token) => (token.type === "heading" ? [token.depth as number] : []))
   run = { top: depths.length ? Math.min(...depths) : 2, sections: [] }
-  const html = figures(markdown.parser(tokens)).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-play">$2</a>')
-  const words = post.body.replace(/<[^>]+>|\]\([^)]*\)/g, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
+  const html = tables(figures(markdown.parser(tokens))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-play">$2</a>')
+  // Tags, link addresses and the lines that open and close a fenced block are not read.
+  const words = post.body.replace(/<[^>]+>|\]\([^)]*\)|^```.*$/gm, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
   return { html, sections: run.sections, minutes: Math.max(1, Math.round(words / READING_SPEED)) }
 }
 
