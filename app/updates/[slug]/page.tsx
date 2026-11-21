@@ -35,7 +35,7 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
           </Link>
           <h1 className="mt-3 font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{post.title}</h1>
           <time className="mt-3 block font-display text-sm tracking-[0.2em] uppercase text-amber-300/90">{formatPostDate(post.date)}</time>
-          <div className="stage-rule mt-8 h-1.5 w-full" />
+          <div className="mt-8 h-px w-full bg-gradient-to-r from-amber-200/0 via-amber-200/45 to-amber-200/0" />
         </header>
         <PostBody className={`update-body px-6 pt-8 pb-10 sm:px-10 lg:px-14 prose-lg prose-img:rounded-lg ${plainProse}`} html={renderPost(post)} />
         <div className="flex justify-end border-t border-amber-200/15 px-6 py-4 sm:px-10 lg:px-14">
