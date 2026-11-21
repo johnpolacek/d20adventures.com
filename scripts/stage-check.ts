@@ -90,13 +90,16 @@ function checkSightlines(key: string, set: ReturnType<typeof parseSet>, sight: S
     )
   const show = (v: ReturnType<typeof viewCost>) => `hidden ${v.hidden.toFixed(2)}, out ${v.out.toFixed(2)}, cover ${v.cover.toFixed(2)}`
   let moved = 0
+  // Two who stand either side of a wall cannot share a picture, which is the place and not a fault: they are counted.
+  let apart = 0
   const hidden: string[] = []
   const all = process.env.STAGE_SIGHT === "all"
   for (const v of views) {
     const r = clearView({ shot: v.shot, cast, ids: v.ids, sight, box: set.camera, rooms: set.rooms, aspect: 1.6, seen })
     const after = cost(r.shot, v.ids)
     if (r.moved) moved++
-    if (after.hidden > 0.2) hidden.push(`${v.kind} ${v.name}${r.moved ? " (moved)" : ""}: ${show(after)}`)
+    if (after.hidden > 0.2 && v.kind === "pair") apart++
+    else if (after.hidden > 0.2) hidden.push(`${v.kind} ${v.name}${r.moved ? " (moved)" : ""}: ${show(after)}`)
     if (all && r.moved) {
       // What the solver changed: how far round it swung, how much nearer or farther, and how much higher.
       const first = frameShot(v.shot, cast)
@@ -113,7 +116,7 @@ function checkSightlines(key: string, set: ReturnType<typeof parseSet>, sight: S
       )
     }
   }
-  console.log(`  sight: ${views.length} views, ${moved} moved, ${hidden.length} hidden`)
+  console.log(`  sight: ${views.length} views, ${moved} moved, ${hidden.length} hidden${apart ? `, ${apart} pairs with no view of both` : ""}`)
   for (const h of hidden) console.log(`  WARN hidden ${h}`)
 }
 

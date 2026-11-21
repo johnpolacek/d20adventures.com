@@ -15,8 +15,10 @@ const TOP = SLICE * SLICES
 // Past this many cells the grid keeps to the middle of its ground.
 const MAX_CELLS = 1_500_000
 
-// Materials the eye passes through or over: grass and ferns, mist, light, glass, water, flame.
-const THROUGH = new Set<MaterialSpec["type"]>(["grass", "meadow", "mist", "glow", "fire", "orb", "glass", "water", "card"])
+// Materials the eye passes through or over: grass and ferns, leaves, mist, light, glass, water, flame. Someone hiding
+// in a thicket is seen between its leaves, and a crown is leaves with sky between them: what a bush or a bough really
+// hides is for the GPU to say (Stage.drawn).
+const THROUGH = new Set<MaterialSpec["type"]>(["grass", "meadow", "foliage", "mist", "glow", "fire", "orb", "glass", "water", "card"])
 
 export interface Sight {
   x0: number
@@ -161,9 +163,9 @@ export function solidAt(s: Sight, x: number, y: number, z: number) {
   return (s.bits[j * s.w + i] & (1 << k)) !== 0
 }
 
-// Whether the way from one point to another is clear. It stops `short` of the far end: what is looked at may lean on
-// something, or stand in it.
-export function clearLine(s: Sight, from: Point3, to: Point3, short = 0.35) {
+// Whether the way from one point to another is clear. It stops `short` of the far end, and passes whatever is within
+// arm's reach of `about`, the one looked at: a dealer stands with his back in his shelves, and someone leans on a post.
+export function clearLine(s: Sight, from: Point3, to: Point3, short = 0.35, about?: { x: number; z: number }) {
   const dx = to[0] - from[0]
   const dy = to[1] - from[1]
   const dz = to[2] - from[2]
@@ -171,10 +173,14 @@ export function clearLine(s: Sight, from: Point3, to: Point3, short = 0.35) {
   const n = Math.ceil((len - short) / (CELL * 0.5))
   for (let i = 0; i <= n; i++) {
     const t = (i * CELL * 0.5) / len
-    if (solidAt(s, from[0] + dx * t, from[1] + dy * t, from[2] + dz * t)) return false
+    const x = from[0] + dx * t
+    const z = from[2] + dz * t
+    if (about && Math.hypot(x - about.x, z - about.z) < REACH) continue
+    if (solidAt(s, x, from[1] + dy * t, z)) return false
   }
   return true
 }
+const REACH = 0.5
 
 // Whether a camera stands clear: not in anything solid, nor so near that the lens cuts into it. What merely stands
 // close and fills the picture is counted as cover, by what it hides.
@@ -257,7 +263,7 @@ export function viewCost(s: Sight, lens: Lens, figures: readonly Seen[]) {
       const vz = p[2] - pz
       const depth = vx * fx + vy * fy + vz * fz
       if (depth < 0.3 || Math.abs((vx * rx + vz * rz) / (depth * tanX)) > 0.94 || Math.abs((vx * ux + vy * uy + vz * uz) / (depth * tanY)) > 0.94) outside++
-      if (!clearLine(s, lens.position, p)) lost++
+      if (!clearLine(s, lens.position, p, 0.35, c)) lost++
     }
     hid.worst = Math.max(hid.worst, lost / points.length)
     hid.sum += lost / points.length
