@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { ReadingPage } from "@/components/layout/reading-page"
+import { LedgerPage } from "@/components/layout/ledger-page"
 import { PostContents } from "@/components/updates/post-contents"
 
 export type LegalSection = { title: string; body: ReactNode }
@@ -17,7 +17,7 @@ const sectionId = (title: string) =>
 export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro?: ReactNode; sections: LegalSection[] }) {
   const contents = sections.map((section) => ({ id: sectionId(section.title), title: section.title }))
   return (
-    <ReadingPage
+    <LedgerPage
       title={title}
       subtitle={`Updated ${updated}`}
       aside={
@@ -41,6 +41,6 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
           </section>
         ))}
       </div>
-    </ReadingPage>
+    </LedgerPage>
   )
 }

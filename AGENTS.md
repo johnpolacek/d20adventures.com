@@ -22,6 +22,7 @@ Auto-commit local changes whenever confident that the code is good and there are
 - Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`. `lib/wiki-adventures` compiles and validates them. `data/adventure-plans/*.json` is the old format, referenced only by the `scripts/migrate-*` scripts.
 - `app/` is the Next.js site. Server actions live in `app/_actions`, and `proxy.ts` is the Clerk middleware.
 - `convex/` is the database and its functions. `convex/_generated` is written by `npx convex codegen`, so never edit it.
+- Ledger is the look of the pages that are read, not played: quiet parchment, in light and dark. Updates, Terms, Privacy, Licenses and Contact wear it through `components/layout/ledger-page.tsx`. Its styles are `app/updates/updates.css` (classes begin `up-`), and `/ui` shows it.
 - `app/dev` and `lab/stage-art` are dev pages and experiments, not shipped features.
 - `plans/` holds open multi-session plans. `plans/srd-rules.md` is the staged move to the full SRD 5.2.1 rules. `plans/stage-motion.md` is the stage UI's move to GSAP motion, and says how a part's `enter-*` class is played there.
 

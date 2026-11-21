@@ -189,7 +189,7 @@ textarea:-webkit-autofill {
   }
 }
 
-/* The header carries the reading look's light and dark switch on every page. Only a page in that look shows it (app/updates/updates.css). */
+/* The header carries Ledger's light and dark switch on every page. Only a page in Ledger shows it (app/updates/updates.css). */
 .up-theme-switch {
   display: none;
 }

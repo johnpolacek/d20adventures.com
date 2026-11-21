@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { srdAttribution } from "@d20/srd/attribution"
-import { ReadingPage } from "@/components/layout/reading-page"
+import { LedgerPage } from "@/components/layout/ledger-page"
 
 export const metadata: Metadata = { title: "Licenses | D20 Adventures" }
 
@@ -9,7 +9,7 @@ const parts = srdAttribution.split(/(https:\/\/\S+?)(?=\.(?:\s|$))/)
 
 export default function LicensesPage() {
   return (
-    <ReadingPage title="Licenses">
+    <LedgerPage title="Licenses">
       <div className="up-prose">
         <p>
           {parts.map((part, i) =>
@@ -23,6 +23,6 @@ export default function LicensesPage() {
           )}
         </p>
       </div>
-    </ReadingPage>
+    </LedgerPage>
   )
 }

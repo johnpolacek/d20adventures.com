@@ -423,9 +423,9 @@ function FieldsDemo() {
   )
 }
 
-// The reading look of the Updates, Terms, Privacy, Licenses and Contact pages: parchment, ink, and the same rank of
+// Ledger, the look of the Updates, Terms, Privacy, Licenses and Contact pages: parchment, ink, and the same rank of
 // buttons in its own colours. Light and dark side by side.
-function ReadingSample({ theme }: { theme: "light" | "dark" }) {
+function LedgerSample({ theme }: { theme: "light" | "dark" }) {
   return (
     <div data-up-theme={theme} className="up-surface overflow-hidden">
       <p className="up-label">{theme === "light" ? "Light" : "Dark"}</p>
@@ -447,7 +447,7 @@ function ReadingSample({ theme }: { theme: "light" | "dark" }) {
           <span className="up-num">01</span>The Gate
         </Heading>
         <p>
-          Rain hammers the slate roofs of Kordavos. The guard wants <a href="#reading">three silver</a> for the toll, and{" "}
+          Rain hammers the slate roofs of Kordavos. The guard wants <a href="#ledger">three silver</a> for the toll, and{" "}
           <code>another</code> for the trouble.
         </p>
         <figure className="up-prompt">
@@ -491,13 +491,13 @@ function ReadingSample({ theme }: { theme: "light" | "dark" }) {
         </div>
         <div className="up-form">
           <div className="up-form-row">
-            <Label plain htmlFor={`ui-reading-name-${theme}`} className="up-label">
+            <Label plain htmlFor={`ui-ledger-name-${theme}`} className="up-label">
               Name
             </Label>
-            <Input plain id={`ui-reading-name-${theme}`} defaultValue="Thalbern" className="up-field" />
+            <Input plain id={`ui-ledger-name-${theme}`} defaultValue="Thalbern" className="up-field" />
           </div>
         </div>
-        <a href="#reading" className="up-btn is-primary is-lg up-play">
+        <a href="#ledger" className="up-btn is-primary is-lg up-play">
           Play The Gate
         </a>
       </div>
@@ -505,11 +505,11 @@ function ReadingSample({ theme }: { theme: "light" | "dark" }) {
   )
 }
 
-function ReadingDemo() {
+function LedgerDemo() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <ReadingSample theme="light" />
-      <ReadingSample theme="dark" />
+      <LedgerSample theme="light" />
+      <LedgerSample theme="dark" />
     </div>
   )
 }
@@ -533,7 +533,7 @@ function SwitchDemo() {
 const tiles: Tile[] = [
   { name: "Typography", full: true, demo: <TypographyDemo /> },
   { name: "Narration", full: true, demo: <NarrationDemo /> },
-  { name: "Reading", full: true, demo: <ReadingDemo /> },
+  { name: "Ledger", full: true, demo: <LedgerDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
   { name: "Button", full: true, demo: <ButtonDemo /> },
   {

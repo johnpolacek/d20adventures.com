@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Showcase } from "./showcase"
-// The Updates pages' reading look, shown in its own box on the Reading tile.
+// Ledger, the look of the pages that are read, shown in its own box on the Ledger tile.
 import "../updates/updates.css"
 
 export const metadata: Metadata = {

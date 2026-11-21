@@ -8,7 +8,7 @@ import { Presence, Swap } from "@d20/ui/presence"
 import { useTokens } from "@/lib/context/TokenContext"
 import TokenCount from "./token-count"
 
-/** The header's account corner: Sign In and Sign Up, or the player's tokens and menu. A page in the reading look hides the two buttons. */
+/** The header's account corner: Sign In and Sign Up, or the player's tokens and menu. A page in Ledger hides the two buttons. */
 export default function AuthButtons() {
   const { tokensRemaining } = useTokens()
   const { user, isSignedIn } = useUser()

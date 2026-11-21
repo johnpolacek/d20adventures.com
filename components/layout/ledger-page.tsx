@@ -6,17 +6,20 @@ import "@/app/updates/updates.css"
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-update-mono", weight: ["400", "500"], display: "swap" })
 
 /**
- * Puts a page in the reading look: quiet parchment in place of the site's dark stage, in a light and a dark look.
- * The site header and footer follow whatever page wears it (the `body:has(.updates-page)` rules in updates.css).
+ * Ledger is the site's look for pages that are read, not played: quiet parchment in place of the dark stage, in a
+ * light and a dark look. Updates, Terms, Privacy, Licenses and Contact wear it, and /ui shows it.
+ *
+ * This puts a page in Ledger. The site header and footer follow whatever page wears it (the `body:has(.updates-page)`
+ * rules in app/updates/updates.css, where its classes begin `up-`).
  */
-export function ReadingShell({ children }: { children: ReactNode }) {
+export function LedgerShell({ children }: { children: ReactNode }) {
   return <div className={`updates-page ${mono.variable}`}>{children}</div>
 }
 
-/** A plain page in the reading look: its title, an optional line under it, then its content in one column. `aside` sits beside the column on a wide window. */
-export function ReadingPage({ title, subtitle, aside, children }: { title: string; subtitle?: ReactNode; aside?: ReactNode; children: ReactNode }) {
+/** A plain page in Ledger: its title, an optional line under it, then its content in one column. `aside` sits beside the column on a wide window. */
+export function LedgerPage({ title, subtitle, aside, children }: { title: string; subtitle?: ReactNode; aside?: ReactNode; children: ReactNode }) {
   return (
-    <ReadingShell>
+    <LedgerShell>
       <div className="up-layout">
         {aside}
         <article className="up-main">
@@ -27,6 +30,6 @@ export function ReadingPage({ title, subtitle, aside, children }: { title: strin
           {children}
         </article>
       </div>
-    </ReadingShell>
+    </LedgerShell>
   )
 }

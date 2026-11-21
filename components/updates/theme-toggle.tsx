@@ -26,7 +26,7 @@ export function useUpdateLook(): Look | undefined {
 }
 
 /**
- * The reading look's light and dark switch: both looks side by side, with a raised thumb under the current one.
+ * Ledger's light and dark switch: both looks side by side, with a raised thumb under the current one.
  * The stylesheet places the thumb from the look on <html>, so it is right before React wakes.
  */
 export function UpdateThemeToggle() {

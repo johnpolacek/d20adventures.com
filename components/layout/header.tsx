@@ -62,7 +62,7 @@ export default function Header() {
         </Presence>
       </div>
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
-        {/* Shown only on a page in the reading look, which also draws this header as a quiet strip (app/updates/updates.css). */}
+        {/* Shown only on a page in Ledger, which also draws this header as a quiet strip (app/updates/updates.css). */}
         <UpdateThemeToggle />
         <AdminNavItem />
         <AuthButtons />

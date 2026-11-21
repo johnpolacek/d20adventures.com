@@ -1,9 +1,10 @@
 /*
- * The Updates pages are for reading, so they leave the site's dark stage for quiet parchment: a pale page with a
- * faint grain, warm ink, and the header as a washed strip of its own parchment. They come in a light and a dark look,
- * set by `data-update-theme` on <html> (lib/update-theme.ts) and switched in the header.
+ * Ledger: the look of the pages that are read, not played. They leave the site's dark stage for quiet parchment: a
+ * pale page with a faint grain, warm ink, and the header as a washed strip of its own parchment. It began on the
+ * Updates pages, which is why its classes begin `up-`. It comes in a light and a dark look, set by `data-update-theme`
+ * on <html> (lib/update-theme.ts) and switched in the header. A page wears it through components/layout/ledger-page.tsx.
  *
- * Everything here applies only while an Updates page is up: the page's own rules sit under `.updates-page`, and the
+ * Everything here applies only while a page in Ledger is up: the page's own rules sit under `.updates-page`, and the
  * rules for the shared header, footer and body under `body:has(.updates-page)`. `.up-surface` carries the same look
  * into a box of its own, as on /ui, with `data-up-theme` to fix it light or dark.
  */
@@ -89,7 +90,7 @@ html:has(.updates-page) {
   line-height: 1.7;
   font-optical-sizing: auto;
 }
-/* A box of the reading look, padded as a card. */
+/* A box of Ledger, padded as a card. */
 .up-surface {
   min-height: 0;
   padding: 24px;
@@ -181,7 +182,7 @@ body:has(.updates-page) [data-site-header] .text-white\/60 {
 body:has(.updates-page) .up-theme-switch {
   display: inline-grid;
 }
-/* Sign In and Sign Up stay off a page for reading. A signed-in player still sees their tokens and menu. */
+/* Sign In and Sign Up stay off a page in Ledger. A signed-in player still sees their tokens and menu. */
 body:has(.updates-page) [data-auth-signed-out] {
   display: none;
 }

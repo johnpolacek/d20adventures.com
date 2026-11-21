@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { ReadingShell } from "@/components/layout/reading-page"
+import { LedgerShell } from "@/components/layout/ledger-page"
 
-/** The Updates pages are for reading, so they wear the reading look. */
+/** The Updates pages are for reading, so they wear Ledger. */
 export default function UpdatesLayout({ children }: { children: ReactNode }) {
-  return <ReadingShell>{children}</ReadingShell>
+  return <LedgerShell>{children}</LedgerShell>
 }
