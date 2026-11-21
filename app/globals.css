@@ -188,3 +188,6 @@ textarea:-webkit-autofill {
   line-height: 1.6;
   color: rgb(255 255 255 / 0.85);
 }
+.update-body :is(h2, h3, h4) {
+  color: var(--color-indigo-200);
+}
