@@ -17,6 +17,8 @@ export type LocalWikiAdventureDefinition = {
   promptSlug: string
   /** Shown first and full width on the setting's adventure listing. */
   featured?: boolean
+  /** The YouTube id of a gameplay video, shown on the adventure's preview page. */
+  video?: string
 }
 
 export type LocalWikiContentRef = {

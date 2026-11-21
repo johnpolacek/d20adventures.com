@@ -5,17 +5,12 @@ import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
 import ImageHeader from "@d20/ui/image-header"
 import Image from "@d20/ui/native-image"
+import { partyLabel } from "@/components/views/adventure-preview"
 import { getCachedSetting, getCachedSettingAdventures } from "@/lib/setting-cache"
 import { getImageUrl } from "@/lib/utils"
 import { getLocalWikiAdventureDefinition } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
-
-function partyLabel(party: AdventurePlan["party"]) {
-  if (party[0] === 1 && party[1] === 1) return "Single Player"
-  if (party[0] === party[1]) return `${party[0]} Players`
-  return `${party[0]}-${party[1]} Players`
-}
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
@@ -48,7 +43,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
         <div className="max-w-4xl xl:max-w-6xl mx-auto -mt-12 relative z-10 whitespace-pre-line">
           <div className="mb-8 text-center">
             {featuredAdventure && (
-              <Link href={`/settings/${settingId}/${featuredAdventure.id}/character-select`} className="enter-rise block relative z-10 pt-8 [--i:5]">
+              <Link href={`/settings/${settingId}/${featuredAdventure.id}`} className="enter-rise block relative z-10 pt-8 [--i:5]">
                 <Card variant="pick" className="w-full border-amber-400/50 scale-[0.98] md:flex-row transition-[scale,box-shadow,background-color] duration-200">
                   <div className="relative aspect-video md:aspect-auto md:w-3/5 md:min-h-[380px]">
                     <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-black to-transparent z-[9] hidden md:block" />
@@ -68,7 +63,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                     </div>
                     <div className="text-gray-300 text-base line-clamp-5">{featuredAdventure.teaser || featuredAdventure.overview}</div>
                     <Button variant="epic" className="pointer-events-none mt-2">
-                      Play
+                      View Adventure
                     </Button>
                   </div>
                 </Card>
@@ -79,7 +74,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                 {otherAdventures.map((adventure, index) => (
                   <Link
                     key={adventure.id}
-                    href={`/settings/${settingId}/${adventure.id}/character-select`}
+                    href={`/settings/${settingId}/${adventure.id}`}
                     className="enter-rise block h-full"
                     // The page fades in after a short wait, so the cards start their rise then.
                     style={{ "--i": 6 + Math.min(index, 6) } as CSSProperties}
@@ -103,7 +98,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                           <div className="text-gray-300 text-base -mt-2 flex-1 line-clamp-4">{adventure.teaser || adventure.overview}</div>
                           <div className="mt-4 mb-6 w-full flex justify-center">
                             <Button variant="epic" size="sm" className="text-sm pointer-events-none">
-                              Play
+                              View Adventure
                             </Button>
                           </div>
                         </div>

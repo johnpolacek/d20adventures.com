@@ -13,21 +13,14 @@
 
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import type { Library } from "@/asset-library/types"
+import { loadLibrary } from "@/asset-library/load"
 import { AssetLibrary } from "@/asset-library/ui/library"
-import { isDev } from "@/lib/auth-utils"
 
 export const metadata: Metadata = { title: "Asset Library · The Realm of Myr", robots: { index: false, follow: false } }
 
-async function published(): Promise<Library | null> {
-  const cdn = process.env.CLOUDFRONT_DOMAIN
-  const res = cdn ? await fetch(`${cdn}/asset-library/library.json`, { next: { revalidate: 60 } }).catch(() => null) : null
-  return res?.ok ? ((await res.json()) as Library) : null
-}
-
 export default async function SettingAssets(props: { params: Promise<{ settingId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const { settingId } = await props.params
-  const library = isDev() ? await (await import("@/asset-library/library")).buildLibrary() : await published()
+  const library = await loadLibrary()
   if (!library || library.setting !== settingId) notFound()
   return <AssetLibrary library={library} config={{ home: `/settings/${settingId}/assets`, files: "/asset-library/characters" }} params={await props.searchParams} />
 }

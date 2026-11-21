@@ -1,16 +1,54 @@
 import { introTurn } from "@d20/gm-core/story/turn"
+import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { loadLibrary } from "@/asset-library/load"
 import AdventureHome from "@/components/views/adventure-home"
+import AdventurePreview from "@/components/views/adventure-preview"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
-import { isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
+import { getCachedSettingAdventures } from "@/lib/setting-cache"
+import { getImageUrl } from "@/lib/utils"
+import { getLocalWikiAdventureDefinition, isLocalWikiAdventure } from "@/lib/wiki-adventures/local-runtime"
 import { loadWikiAdventurePlanView } from "@/lib/wiki-adventures/plan-view"
 import type { TurnCharacter } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
+
+type Params = Promise<{ settingId: string; adventurePlanId: string }>
+
+// A published adventure, from the same cache as the setting's adventure list.
+async function published(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
+  const adventures = await getCachedSettingAdventures(settingId).catch(() => [])
+  return adventures.find((a) => a.id === adventurePlanId && !a.draft) ?? null
+}
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { settingId, adventurePlanId } = await params
+  const plan = await published(settingId, adventurePlanId)
+  if (!plan) return {}
+  const description = plan.teaser || plan.overview
+  const images = plan.image ? [getImageUrl(plan.image)] : undefined
+  return {
+    title: `${plan.title} | D20 Adventures`,
+    description,
+    openGraph: { title: plan.title, description, images },
+    twitter: { card: "summary_large_image", title: plan.title, description, images },
+  }
+}
 
 export default async function AdventureHomePage(props: { params: Promise<{ settingId: string; adventurePlanId: string }>; searchParams?: Promise<{ selectedCharacter?: string }> }) {
   const { settingId, adventurePlanId } = await props.params
   const searchParams = await props.searchParams
   const selectedCharacterId = searchParams?.selectedCharacter
+
+  // With no hero chosen this is the adventure's public page.
+  if (!selectedCharacterId) {
+    const plan = await published(settingId, adventurePlanId)
+    if (plan) {
+      const library = await loadLibrary().catch(() => null)
+      const video = getLocalWikiAdventureDefinition(settingId, adventurePlanId)?.video
+      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} />
+    }
+  }
+
   let adventurePlan: AdventurePlan | null = null
   try {
     adventurePlan = isLocalWikiAdventure(settingId, adventurePlanId) ? await loadWikiAdventurePlanView(settingId, adventurePlanId) : await loadAdventurePlanFromStorage(settingId, adventurePlanId)
@@ -19,7 +57,7 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     return <div>Error loading adventure data.</div>
   }
 
-  // Check if we have multiple premade characters and no selection - redirect to character selection
+  // An adventure that is not published has no public page, so it goes straight to character selection.
   if (!selectedCharacterId) {
     redirect(`/settings/${settingId}/${adventurePlanId}/character-select`)
   }
