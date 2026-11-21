@@ -21,13 +21,25 @@ const watchLook = (notify: () => void) => {
 }
 
 /**
- * The Updates pages' light and dark switch: both looks side by side, the current one raised.
- * The stylesheet raises it from the look on <html>, so it is right before React wakes.
+ * The Updates pages' light and dark switch: both looks side by side, with a raised thumb under the current one.
+ * The stylesheet places the thumb from the look on <html>, so it is right before React wakes.
  */
 export function UpdateThemeToggle() {
   const current = useSyncExternalStore(watchLook, readLook, () => undefined)
   const choose = (look: Look) => {
-    document.documentElement.dataset.updateTheme = look
+    const root = document.documentElement
+    if (readLook() === look) return
+    const change = () => {
+      root.dataset.updateTheme = look
+    }
+    // The whole window crossfades to the new look (the `up-look-change` rules in app/updates/updates.css), where the
+    // browser can and the reader has not asked for less motion. Elsewhere the look just changes.
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      change()
+    } else {
+      root.classList.add("up-look-change")
+      document.startViewTransition(change).finished.finally(() => root.classList.remove("up-look-change"))
+    }
     try {
       localStorage.setItem(UPDATE_THEME_KEY, look)
     } catch {
