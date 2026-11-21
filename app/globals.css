@@ -13,6 +13,37 @@
   --font-mono: var(--font-syne-mono), ui-monospace, monospace;
   --font-serif: var(--font-literata), Georgia, serif;
 
+  /* The wiki adventure editor's warm theme: ink for its dark grounds and text, gold for its brass lines and light
+     panels. Only the editor uses these. */
+  --color-editor-gold-50: #fff5dd;
+  --color-editor-gold-100: #eee2c6;
+  --color-editor-gold-125: #f0d79c;
+  --color-editor-gold-150: #e6d6b8;
+  --color-editor-gold-175: #d9caab;
+  --color-editor-gold-200: #d9c292;
+  --color-editor-gold-225: #d8bd81;
+  --color-editor-gold-250: #c9b891;
+  --color-editor-gold-300: #b9a77f;
+  --color-editor-gold-325: #bfa46f;
+  --color-editor-gold-400: #9f8c64;
+  --color-editor-gold-500: #7b6948;
+  --color-editor-gold-550: #845b2c;
+  --color-editor-gold-600: #6c5738;
+  --color-editor-gold-650: #5b4631;
+  --color-editor-gold-750: #4a3822;
+  --color-editor-gold-800: #3d2c1a;
+  --color-editor-ink-50: #f4ead7;
+  --color-editor-ink-400: #8f877b;
+  --color-editor-ink-550: #6c604f;
+  --color-editor-ink-650: #5b5145;
+  --color-editor-ink-700: #4a4237;
+  --color-editor-ink-750: #3a3630;
+  --color-editor-ink-800: #302a22;
+  --color-editor-ink-850: #24211d;
+  --color-editor-ink-900: #22180e;
+  --color-editor-ink-925: #181713;
+  --color-editor-ink-950: #0d0c0b;
+
   @keyframes float {
     0%,
     100% {

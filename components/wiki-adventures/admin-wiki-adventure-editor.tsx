@@ -161,11 +161,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#141312] pt-10 text-stone-100">
-      <header className="shrink-0 border-b border-[#3a3630] bg-[#1b1a18] px-6 pt-4 pb-3 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+    <div className="flex h-screen flex-col overflow-hidden bg-editor-ink-925 pt-10 text-stone-100">
+      <header className="shrink-0 border-b border-editor-ink-750 bg-editor-ink-925 px-6 pt-4 pb-3 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
         <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-[#e6d6b8] md:text-3xl">{state.manifest.title}</h1>
+            <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-editor-gold-150 md:text-3xl">{state.manifest.title}</h1>
             <div className="flex shrink-0 items-center gap-1.5">
               <HeaderCountBadge value={sectionCount} label="sections" />
               <HeaderCountBadge value={encounterCount} label="encounters" />
@@ -175,14 +175,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <Link
               href="/admin"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-[color,border-color,scale] duration-150 ease-snap hover:border-[#d8bd81] hover:text-[#f0d79c] active:scale-[0.96]"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-editor-ink-650 bg-editor-ink-850 px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-editor-gold-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-225 hover:text-editor-gold-125 active:scale-[0.96]"
             >
               <ShieldCheck className="size-3.5" />
               Admin
             </Link>
             <Link
               href="/admin/adventure-plans"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-[color,border-color,scale] duration-150 ease-snap hover:border-[#d8bd81] hover:text-[#f0d79c] active:scale-[0.96]"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-editor-ink-650 bg-editor-ink-850 px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-editor-gold-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-225 hover:text-editor-gold-125 active:scale-[0.96]"
             >
               <ClipboardList className="size-3.5" />
               Plans
@@ -194,7 +194,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       {/* The columns follow the sidebar being in the page, so they hold while it leaves. */}
       <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_400px] xl:has-[>[data-sections-sidebar]]:grid-cols-[320px_minmax(0,1fr)_400px]">
         <Presence show={sectionsSidebarOpen} motion="left" initial={false} asChild>
-          <aside data-sections-sidebar className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
+          <aside data-sections-sidebar className="min-h-0 overflow-hidden border-b border-editor-ink-750 bg-editor-ink-925 xl:border-r xl:border-b-0">
             <WikiNavigator
               wiki={wiki}
               selectedPath={selectedPath}
@@ -208,7 +208,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </aside>
         </Presence>
 
-        <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
+        <section className="min-h-0 min-w-0 overflow-hidden border-b border-editor-ink-750 bg-editor-ink-850 xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
             <div key={paneKey} className="enter-fade">
               {selectedPage?.kind === "encounter" && selectedScene ? (
@@ -238,11 +238,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </section>
 
-        <aside className="relative min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,rgba(132,91,44,.18),transparent_34%),linear-gradient(180deg,#1d1914_0%,#12110f_58%,#0d0c0b_100%)]">
+        <aside className="relative min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,color-mix(in_srgb,var(--color-editor-gold-550)_18%,transparent),transparent_34%),linear-gradient(180deg,var(--color-editor-ink-925)_0%,var(--color-editor-ink-950)_58%,var(--color-editor-ink-950)_100%)]">
           <div className="flex h-full min-h-0 flex-col">
-            <div className="flex h-10 shrink-0 items-center gap-2 bg-[#15120f]/80 px-5">
-              <MessageSquare className="size-3.5 text-[#f0d79c]" />
-              <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#f0d79c]">Chat</h2>
+            <div className="flex h-10 shrink-0 items-center gap-2 bg-editor-ink-925/80 px-5">
+              <MessageSquare className="size-3.5 text-editor-gold-125" />
+              <h2 className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-editor-gold-125">Chat</h2>
             </div>
 
             {hasChatStarted && (
@@ -251,7 +251,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   <div key={index} className={message.role === "admin" ? "enter-rise flex justify-end" : "enter-rise flex justify-start"}>
                     <div
                       className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
-                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-primary-800/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
+                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-primary-800/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-editor-ink-50"
                       }`}
                     >
                       {message.content}
@@ -267,7 +267,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <div className={hasChatStarted ? "shrink-0 px-5 pb-4" : "flex min-h-0 flex-1 items-center px-5 py-8"}>
               <div className={hasChatStarted ? "enter-drop w-full" : "w-full"}>
                 {!hasChatStarted && (
-                  <p className="mb-4 text-center font-serif text-xl leading-7 text-[#f4ead7]" style={{ textWrap: "balance" }}>
+                  <p className="mb-4 text-center font-serif text-xl leading-7 text-editor-ink-50" style={{ textWrap: "balance" }}>
                     Begin a chat session to update this adventure plan
                   </p>
                 )}
@@ -278,7 +278,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
                   rows={5}
                   disabled={busy}
-                  className="min-h-32 resize-none rounded-md border-[#6c604f] bg-[#171512] px-4 py-3 font-serif text-base leading-6 text-[#f4ead7] shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-[#d8bd81] focus-visible:ring-[#d8bd81]/35"
+                  className="min-h-32 resize-none rounded-md border-editor-ink-550 bg-editor-ink-925 px-4 py-3 font-serif text-base leading-6 text-editor-ink-50 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-editor-gold-225 focus-visible:ring-editor-gold-225/35"
                 />
                 <Button
                   size="sm"
@@ -296,8 +296,8 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             </div>
 
             <Drawer side="bottom">
-              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] duration-150 ease-snap hover:bg-[#14110e] active:bg-[#1b1712] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45">
-                <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">
+              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-editor-ink-950/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] duration-150 ease-snap hover:bg-editor-ink-925 active:bg-editor-ink-925 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-editor-gold-225/45">
+                <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-editor-gold-225">
                   <Clock3 className="size-3.5" />
                   Revision Log
                 </span>
@@ -306,13 +306,13 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                 </Swap>
               </DrawerTrigger>
               {/* The sheet sits over the right column on wide screens, where the trigger lives. */}
-              <DrawerContent className="max-h-[62vh] overflow-hidden bg-[#0b0a09]/98 data-[side=bottom]:rounded-none data-[side=bottom]:border-t-0 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] xl:ml-auto xl:w-[400px]">
+              <DrawerContent className="max-h-[62vh] overflow-hidden bg-editor-ink-950/98 data-[side=bottom]:rounded-none data-[side=bottom]:border-t-0 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] xl:ml-auto xl:w-[400px]">
                 <div className="flex h-12 shrink-0 items-center justify-between px-5">
                   <div>
-                    <DrawerTitle className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Revision Log</DrawerTitle>
+                    <DrawerTitle className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-editor-gold-225">Revision Log</DrawerTitle>
                     <DrawerDescription className="font-mono text-[10px] uppercase tracking-[.12em] text-stone-600">{state.revisions.length} saved revisions</DrawerDescription>
                   </div>
-                  <DrawerClose className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] duration-150 ease-snap hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45">
+                  <DrawerClose className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] duration-150 ease-snap hover:text-editor-ink-50 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-editor-gold-225/45">
                     close
                   </DrawerClose>
                 </div>
@@ -331,11 +331,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 function TypingIndicator() {
   return (
     <output className="flex justify-start" aria-label="Response is being processed">
-      <div className="inline-flex items-center gap-1.5 rounded-[1.35rem] rounded-bl-none bg-[#1a1713] px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,.16)]">
+      <div className="inline-flex items-center gap-1.5 rounded-[1.35rem] rounded-bl-none bg-editor-ink-925 px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,.16)]">
         {[0, 1, 2].map((index) => (
           <span
             key={index}
-            className="size-2 rounded-full bg-[#d8bd81] motion-safe:animate-bounce"
+            className="size-2 rounded-full bg-editor-gold-225 motion-safe:animate-bounce"
             style={{
               animationDelay: `${index * 140}ms`,
               animationDuration: "820ms",
@@ -392,7 +392,7 @@ function SceneEncounterEditor({
       {scene.pages.map((page) => {
         const file = files.find((item) => item.path === page.path)
         return (
-          <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-[#d8bd81]/45 ring-offset-4 ring-offset-[#201d18]" : "scroll-mt-6"}>
+          <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-editor-gold-225/45 ring-offset-4 ring-offset-editor-ink-850" : "scroll-mt-6"}>
             <ModulePageEditor file={file} files={files} manifest={manifest} encounters={encounters} page={page} disabled={disabled} hideEncounterContext onSave={onSave} />
           </div>
         )
@@ -403,12 +403,12 @@ function SceneEncounterEditor({
 
 function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar }: { scene: ModuleSection["scenes"][number]; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   return (
-    <header className="bg-[#181713] px-6 py-5">
+    <header className="bg-editor-ink-925 px-6 py-5">
       <div className="flex items-start gap-4">
         <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
         <div className="min-w-0 flex-1">
-          <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{scene.title}</h2>
+          <span className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-editor-gold-150">{scene.title}</h2>
         </div>
       </div>
     </header>
@@ -424,7 +424,7 @@ function ShowSectionsButton({ show, onClick }: { show: boolean; onClick: () => v
           variant="plain"
           type="button"
           onClick={onClick}
-          className="grid size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-[#b9a77f] hover:bg-[#211f1b] active:scale-[0.96]"
+          className="grid size-7 place-items-center rounded-md border border-editor-ink-700 bg-editor-ink-950 p-px text-editor-gold-225 shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-300 hover:bg-editor-ink-850 active:scale-[0.96]"
           aria-label="Show adventure sections sidebar"
         >
           <Menu className="size-4" strokeWidth={1.35} />
@@ -436,8 +436,8 @@ function ShowSectionsButton({ show, onClick }: { show: boolean; onClick: () => v
 
 function HeaderCountBadge({ value, label }: { value: number; label: string }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-[#4a4237] bg-[#24211d] px-2 font-mono text-[10px] font-bold uppercase tracking-[.12em] text-stone-300">
-      <Swap id={value} as="span" className="text-xs text-[#d8bd81]">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-editor-ink-700 bg-editor-ink-850 px-2 font-mono text-[10px] font-bold uppercase tracking-[.12em] text-stone-300">
+      <Swap id={value} as="span" className="text-xs text-editor-gold-225">
         {value}
       </Swap>
       {label}
@@ -467,12 +467,12 @@ function RevisionHistory({
           <div key={revision.id} className="enter-rise" style={{ "--i": index } as React.CSSProperties}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="truncate font-serif text-xl font-semibold leading-tight text-[#f4ead7] text-balance">{revision.summary}</div>
+                <div className="truncate font-serif text-xl font-semibold leading-tight text-editor-ink-50 text-balance">{revision.summary}</div>
                 <div className="mt-2 font-mono text-[10px] uppercase tracking-[.14em] text-stone-600">
                   {revision.source} · {new Date(revision.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="rounded bg-[#1a1713] px-1.5 py-0.5 font-mono text-[10px] uppercase text-stone-500 shadow-[inset_0_0_0_1px_rgba(216,189,129,.18)]">{revision.validation.status}</div>
+              <div className="rounded bg-editor-ink-925 px-1.5 py-0.5 font-mono text-[10px] uppercase text-stone-500 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-editor-gold-225)_18%,transparent)]">{revision.validation.status}</div>
             </div>
             <div className="mt-2 line-clamp-2 break-all font-mono text-[10px] text-stone-600">{revision.changedPaths.join(", ")}</div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -565,9 +565,9 @@ function ModulePageEditor({
     return (
       <div className="mx-auto max-w-6xl">
         <article
-          className={hideEncounterContext ? "overflow-hidden text-[#22180e]" : "overflow-hidden rounded-md bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]"}
+          className={hideEncounterContext ? "overflow-hidden text-editor-ink-900" : "overflow-hidden rounded-md bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_var(--color-editor-gold-300)]"}
         >
-          <div className="relative bg-[#231f1a]">
+          <div className="relative bg-editor-ink-850">
             <ImageUpload
               id={`wiki-image-${file.path}`}
               value={image}
@@ -582,13 +582,13 @@ function ModulePageEditor({
             </div>
           </div>
 
-          <div className={hideEncounterContext ? "bg-[#d9caab] px-7 py-7" : "px-7 py-7 lg:px-10 lg:py-9"}>
-            <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Encounter {encounter?.id ?? ""}</div>
+          <div className={hideEncounterContext ? "bg-editor-gold-175 px-7 py-7" : "px-7 py-7 lg:px-10 lg:py-9"}>
+            <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-editor-gold-650">Encounter {encounter?.id ?? ""}</div>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               disabled={disabled}
-              className="mt-3 border-[#b9a77f] bg-[#efe2bd] text-3xl font-bold text-[#22180e] shadow-[0_3px_10px_rgba(58,43,20,.08)]"
+              className="mt-3 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900 shadow-[0_3px_10px_color-mix(in_srgb,var(--color-editor-gold-800)_8%,transparent)]"
             />
 
             {!hideEncounterContext && (
@@ -599,7 +599,7 @@ function ModulePageEditor({
             )}
 
             <Presence show={Boolean(page?.summary)} motion="fade" asChild>
-              {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-[#4a3822]">{page.summary}</p>}
+              {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-editor-gold-750">{page.summary}</p>}
             </Presence>
 
             <div className="mt-8 space-y-8">
@@ -627,8 +627,8 @@ function ModulePageEditor({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="overflow-hidden bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_#b9a77f]">
-        <div className="relative bg-[#231f1a]">
+      <div className="overflow-hidden bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_var(--color-editor-gold-300)]">
+        <div className="relative bg-editor-ink-850">
           <ImageUpload
             id={`wiki-image-${file.path}`}
             value={image}
@@ -643,13 +643,13 @@ function ModulePageEditor({
           </div>
         </div>
         <div className="p-6">
-          <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-[#5b4631]">Adventure {manifest.planId}</div>
-          <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-[#b9a77f] bg-[#eee2c6] text-3xl font-bold text-[#22180e]" />
-          <p className="mt-4 text-sm leading-6 text-[#4a3822]">{page?.summary || file.path}</p>
+          <div className="font-mono text-[11px] font-bold uppercase tracking-[.16em] text-editor-gold-650">Adventure {manifest.planId}</div>
+          <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900" />
+          <p className="mt-4 text-sm leading-6 text-editor-gold-750">{page?.summary || file.path}</p>
         </div>
       </div>
 
-      <div className="rounded-md bg-[#d9caab] p-6 text-[#22180e] shadow-[0_18px_60px_rgba(0,0,0,.18),inset_0_0_0_1px_#b9a77f]">
+      <div className="rounded-md bg-editor-gold-175 p-6 text-editor-ink-900 shadow-[0_18px_60px_rgba(0,0,0,.18),inset_0_0_0_1px_var(--color-editor-gold-300)]">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
       </div>
     </div>
@@ -700,10 +700,10 @@ function CharacterProfileEditor({
   useDebouncedAutoSave(file.path, nextContent, file.content, disabled, onSave)
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#d9caab] text-[#22180e] shadow-[0_24px_80px_rgba(0,0,0,.22)]">
+      <div className="overflow-hidden rounded-md border border-editor-gold-300 bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.22)]">
         <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="bg-[#201b15] p-5 lg:border-r lg:border-[#b9a77f]">
-            <div className="overflow-hidden rounded-md border border-[#b9a77f] bg-[#14110e] shadow-[0_16px_48px_rgba(0,0,0,.28)]">
+          <div className="bg-editor-ink-900 p-5 lg:border-r lg:border-editor-gold-300">
+            <div className="overflow-hidden rounded-md border border-editor-gold-300 bg-editor-ink-925 shadow-[0_16px_48px_rgba(0,0,0,.28)]">
               <ImageUpload
                 id={`wiki-character-image-${file.path}`}
                 value={image}
@@ -718,15 +718,15 @@ function CharacterProfileEditor({
 
           <div className="p-6 lg:p-7">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded border border-[#9f8c64] bg-[#efe2bd] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-[#5b4631]">Character</span>
+              <span className="rounded border border-editor-gold-400 bg-editor-gold-100 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-editor-gold-650">Character</span>
             </div>
 
-            <Input value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="mt-3 border-[#b9a77f] bg-[#f1e4bf] text-3xl font-bold text-[#22180e]" />
+            <Input value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="mt-3 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900" />
 
             {(details.length > 0 || abilities.length > 0) && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {[...details, ...abilities].map((detail) => (
-                  <span key={detail} className="rounded border border-[#b9a77f] bg-[#eee2c6] px-2.5 py-1 font-mono text-[11px] uppercase tracking-[.12em] text-[#5b4631]">
+                  <span key={detail} className="rounded border border-editor-gold-300 bg-editor-gold-100 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[.12em] text-editor-gold-650">
                     {detail}
                   </span>
                 ))}
@@ -760,12 +760,12 @@ function AttributeGrid({ attributes }: { attributes: Record<string, unknown> }) 
   const entries = Object.entries(attributes).filter(([, value]) => typeof value === "number" || typeof value === "string")
   if (entries.length === 0) return null
   return (
-    <div className="mt-4 rounded-md border border-[#4d4235] bg-[#15120f] p-3">
-      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Attributes</div>
+    <div className="mt-4 rounded-md border border-editor-ink-700 bg-editor-ink-925 p-3">
+      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-editor-gold-225">Attributes</div>
       <div className="grid grid-cols-3 gap-2">
         {entries.map(([key, value]) => (
-          <div key={key} className="rounded border border-[#3b332a] bg-[#211c17] px-2 py-2 text-center">
-            <div className="font-serif text-2xl font-bold leading-none text-[#f1e4bf]">{String(value)}</div>
+          <div key={key} className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-2 text-center">
+            <div className="font-serif text-2xl font-bold leading-none text-editor-gold-100">{String(value)}</div>
             <div className="mt-1 truncate font-mono text-[9px] uppercase tracking-[.12em] text-stone-500">{key.slice(0, 3)}</div>
           </div>
         ))}
@@ -777,9 +777,9 @@ function AttributeGrid({ attributes }: { attributes: Record<string, unknown> }) 
 function CharacterDetail({ title, value }: { title: string; value: unknown }) {
   if (typeof value !== "string" || !value.trim()) return null
   return (
-    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
-      <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
-      <p className="text-base leading-7 text-[#3d2c1a]">{value}</p>
+    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
+      <h3 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-editor-gold-650">{title}</h3>
+      <p className="text-base leading-7 text-editor-gold-800">{value}</p>
     </section>
   )
 }
@@ -787,11 +787,11 @@ function CharacterDetail({ title, value }: { title: string; value: unknown }) {
 function CharacterList({ title, values }: { title: string; values: string[] }) {
   if (values.length === 0) return null
   return (
-    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
-      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-editor-gold-650">{title}</h3>
       <div className="flex flex-wrap gap-2">
         {values.map((value) => (
-          <span key={value} className="rounded border border-[#b9a77f] bg-[#f6eac9] px-2.5 py-1 text-sm text-[#3d2c1a]">
+          <span key={value} className="rounded border border-editor-gold-300 bg-editor-gold-100 px-2.5 py-1 text-sm text-editor-gold-800">
             {value}
           </span>
         ))}
@@ -803,13 +803,13 @@ function CharacterList({ title, values }: { title: string; values: string[] }) {
 function CharacterObjectList({ title, values }: { title: string; values: Array<{ name?: unknown; description?: unknown }> }) {
   if (values.length === 0) return null
   return (
-    <section className="rounded border border-[#b9a77f] bg-[#eee2c6] p-4">
-      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-editor-gold-650">{title}</h3>
       <div className="space-y-3">
         {values.map((value, index) => (
           <div key={`${String(value.name ?? title)}-${index}`} className="pb-2 last:pb-0">
-            <div className="font-serif text-lg font-bold leading-tight text-[#24180d]">{String(value.name ?? "Untitled")}</div>
-            {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-[#4a3822]">{value.description}</p>}
+            <div className="font-serif text-lg font-bold leading-tight text-editor-ink-900">{String(value.name ?? "Untitled")}</div>
+            {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-editor-gold-750">{value.description}</p>}
           </div>
         ))}
       </div>
@@ -832,39 +832,39 @@ function CharacterMixedList({ title, values }: { title: string; values: Array<st
 function EncounterNpcEditor({ refs, npcLookup }: { refs: EditableNpcRef[]; npcLookup: Map<string, NpcLookupRecord> }) {
   return (
     <div className="space-y-4">
-      {refs.length === 0 && <p className="text-sm text-[#5b4631]">No NPCs assigned to this encounter. Ask the authoring chat to add or connect an NPC.</p>}
+      {refs.length === 0 && <p className="text-sm text-editor-gold-650">No NPCs assigned to this encounter. Ask the authoring chat to add or connect an NPC.</p>}
       {refs.map((ref, index) => {
         const npc = npcLookup.get(ref.id)
         const image = npcImageUrl(npc?.image ?? "")
         const details = [npc?.gender, npc?.race, npc?.archetype].filter(Boolean).join(" ")
         return (
-          <div key={index} className="rounded-md border border-[#b29d70] bg-[#f1e4bf] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.42)]">
+          <div key={index} className="rounded-md border border-editor-gold-325 bg-editor-gold-100 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.42)]">
             <div className="grid gap-5 sm:grid-cols-[176px_minmax(0,1fr)]">
-              <div className="size-[176px] overflow-hidden rounded border border-[#9d8759] bg-[#d9caab] shadow-sm">
+              <div className="size-[176px] overflow-hidden rounded border border-editor-gold-400 bg-editor-gold-175 shadow-sm">
                 {image ? (
                   <Image src={image} alt={npc?.name ?? "NPC"} width={176} height={176} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#d3c19b] font-mono text-3xl font-bold uppercase text-[#6a5635]">{initials(npc?.name ?? "NPC")}</div>
+                  <div className="flex h-full w-full items-center justify-center bg-editor-gold-175 font-mono text-3xl font-bold uppercase text-editor-gold-600">{initials(npc?.name ?? "NPC")}</div>
                 )}
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h4 className="truncate font-serif text-2xl font-bold leading-tight text-[#24180d]">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
-                    <p className="mt-1 font-mono text-[11px] uppercase tracking-[.14em] text-[#6c5738]">{details || "NPC reference"}</p>
+                    <h4 className="truncate font-serif text-2xl font-bold leading-tight text-editor-ink-900">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
+                    <p className="mt-1 font-mono text-[11px] uppercase tracking-[.14em] text-editor-gold-600">{details || "NPC reference"}</p>
                   </div>
                 </div>
                 {npc?.summary ? (
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#4a3822]">{npc.summary}</p>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-editor-gold-750">{npc.summary}</p>
                 ) : (
-                  <p className="mt-3 text-sm italic text-[#6f5b3c]">No NPC sheet details found for this reference.</p>
+                  <p className="mt-3 text-sm italic text-editor-gold-600">No NPC sheet details found for this reference.</p>
                 )}
               </div>
             </div>
-            <div className="mt-4 rounded border border-[#c9b891] bg-[#eadbb9] p-3">
-              <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">Encounter Role</div>
-              <p className="mt-2 text-sm leading-6 text-[#4a3822]">{ref.behavior || "No behavior note yet. Ask the authoring chat to revise this NPC's role in the encounter."}</p>
-              {ref.initialInitiative && <p className="mt-2 font-mono text-[10px] uppercase tracking-[.14em] text-[#7b6948]">Initial initiative: {ref.initialInitiative}</p>}
+            <div className="mt-4 rounded border border-editor-gold-250 bg-editor-gold-100 p-3">
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-editor-gold-600">Encounter Role</div>
+              <p className="mt-2 text-sm leading-6 text-editor-gold-750">{ref.behavior || "No behavior note yet. Ask the authoring chat to revise this NPC's role in the encounter."}</p>
+              {ref.initialInitiative && <p className="mt-2 font-mono text-[10px] uppercase tracking-[.14em] text-editor-gold-500">Initial initiative: {ref.initialInitiative}</p>}
             </div>
           </div>
         )
@@ -954,9 +954,9 @@ function WikiNavigator({
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,#171612_0%,#11100d_100%)]">
-      <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] border-b border-[#302a22] bg-[#0f0e0c]/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
-        <div className="grid place-items-center text-[#8f877b]">
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,var(--color-editor-ink-925)_0%,var(--color-editor-ink-950)_100%)]">
+      <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] border-b border-editor-ink-800 bg-editor-ink-950/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
+        <div className="grid place-items-center text-editor-ink-400">
           <Search className="size-4" />
         </div>
         <Input
@@ -964,14 +964,14 @@ function WikiNavigator({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Find Encounter"
-          className="min-w-0 border-x border-[#302a22] bg-transparent px-3 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-[#17130f]"
+          className="min-w-0 border-x border-editor-ink-800 bg-transparent px-3 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-editor-ink-925"
         />
         <Tip label="Hide sections">
           <Button
             variant="plain"
             type="button"
             onClick={onCollapse}
-            className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 ease-snap hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+            className="hidden place-items-center bg-transparent px-2 py-0.5 text-editor-gold-225 transition-[background-color,color,scale] duration-150 ease-snap hover:bg-editor-ink-900 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-editor-gold-225/45 xl:grid"
             aria-label="Hide adventure sections sidebar"
           >
             <PanelLeftClose className="size-full" strokeWidth={0.75} />
@@ -992,7 +992,7 @@ function WikiNavigator({
                 <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
               )}
               <section className="mb-4">
-                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Module Outline</h3>
+                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-editor-gold-325">Module Outline</h3>
                 <div className="space-y-3">
                   {wiki.moduleSections.map((section, sectionIndex) => (
                     <div key={section.title}>
@@ -1045,7 +1045,7 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
       type="button"
       onClick={onClick}
       className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        active ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
+        active ? "bg-editor-ink-850 text-editor-gold-50 shadow-[inset_1px_0_0_color-mix(in_srgb,var(--color-editor-gold-225)_72%,transparent),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-editor-ink-900 hover:text-editor-gold-100"
       } ${level === "section" ? "min-h-10" : "min-h-8"}`}
     >
       <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-bold" : "font-mono text-[10px] font-bold uppercase tracking-[.14em]"}`}>{label}</span>
@@ -1057,7 +1057,7 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
 function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pages: WikiPage[]; selectedPath: string; onSelect: (path: string) => void }) {
   return (
     <section className="mb-4">
-      <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">{title}</h3>
+      <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-editor-gold-325">{title}</h3>
       <div className="space-y-0.5">
         {pages.map((page) => (
           <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
@@ -1076,7 +1076,7 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
       type="button"
       onClick={() => onSelect(page.path)}
       className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
+        isSelected ? "bg-editor-ink-850 text-editor-gold-50 shadow-[inset_1px_0_0_color-mix(in_srgb,var(--color-editor-gold-225)_72%,transparent),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-editor-ink-900 hover:text-editor-gold-100"
       } ${level === "encounter" ? "min-h-8" : "min-h-9"}`}
     >
       <span className="min-w-0">
@@ -1092,15 +1092,15 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
 function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   if (!page) return null
   return (
-    <header className="bg-[#181713] px-6 py-5">
+    <header className="bg-editor-ink-925 px-6 py-5">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
-            <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
+            <span className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-mono text-[11px] text-stone-500">{page.id}</span>}
           </div>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{page.title}</h2>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-editor-gold-150">{page.title}</h2>
           <p className="mt-1 line-clamp-2 max-w-4xl text-sm text-stone-400">{page.summary || page.path}</p>
         </div>
       </div>
@@ -1368,7 +1368,7 @@ function titleFromId(id: string) {
 function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-[#5b4631]">{title}</h3>
+      <h3 className="mb-3 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-editor-gold-650">{title}</h3>
       {children}
     </section>
   )
@@ -1392,8 +1392,8 @@ function useDebouncedAutoSave(path: string, content: string, persistedContent: s
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#6c5738]">{label}</div>
-      <div className="mt-1 truncate font-serif text-2xl font-bold leading-tight text-[#24180d]">{value}</div>
+      <div className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-editor-gold-600">{label}</div>
+      <div className="mt-1 truncate font-serif text-2xl font-bold leading-tight text-editor-ink-900">{value}</div>
     </div>
   )
 }
@@ -1402,8 +1402,8 @@ function Field({ label, value, onChange, disabled, tone = "dark" }: { label: str
   const paper = tone === "paper"
   return (
     <Label plain className="block space-y-1">
-      <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-[#b9a77f] bg-[#eee2c6] text-[#22180e]" : undefined} />
+      <span className={`font-mono text-xs uppercase ${paper ? "text-editor-gold-650" : "text-stone-300"}`}>{label}</span>
+      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-editor-gold-300 bg-editor-gold-100 text-editor-ink-900" : undefined} />
     </Label>
   )
 }
@@ -1428,13 +1428,13 @@ function Block({
   const paper = tone === "paper"
   return (
     <Label plain className="block space-y-1">
-      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-[#5b4631]" : "text-stone-300"}`}>{label}</span>}
+      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-editor-gold-650" : "text-stone-300"}`}>{label}</span>}
       <Textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
         disabled={disabled}
-        className={paper ? "border-[#b9a77f] bg-[#efe2bd] font-serif text-base leading-7 text-[#22180e] shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_2px_8px_rgba(58,43,20,.08)]" : undefined}
+        className={paper ? "border-editor-gold-300 bg-editor-gold-100 font-serif text-base leading-7 text-editor-ink-900 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_2px_8px_color-mix(in_srgb,var(--color-editor-gold-800)_8%,transparent)]" : undefined}
       />
     </Label>
   )
