@@ -57,7 +57,7 @@ const sections: LegalSection[] = [
     body: (
       <ul>
         <li>Players in your game see your hero and what you type.</li>
-        <li>Services that help run the site: Clerk for sign-in, Convex for data, Vercel for hosting, Amazon Web Services for files, SendGrid for email and Google reCAPTCHA for spam checks.</li>
+        <li>Services that help run the site: Clerk for sign-in, Convex for data, Vercel for hosting, Amazon Web Services for files, Resend and SendGrid for email, and Google reCAPTCHA for spam checks.</li>
         <li>Anyone the law requires us to share it with, or when needed to protect people.</li>
         <li>A new owner, if D20 Adventures is ever sold. This policy would still apply.</li>
       </ul>

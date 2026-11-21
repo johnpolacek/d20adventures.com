@@ -1,6 +1,5 @@
 "use server"
 
-import sgMail from "@sendgrid/mail"
 import { z } from "zod"
 import { verifyCaptcha } from "./verifyCaptcha"
 
@@ -12,56 +11,50 @@ const contactFormSchema = z.object({
   captchaToken: z.string().optional(),
 })
 
-type ContactFormData = z.infer<typeof contactFormSchema>
+// The sender's domain must be verified in Resend.
+const FROM = process.env.EMAIL_FROM ?? "D20 Adventures <hello@d20adventures.com>"
 
-export async function sendContactEmail(data: ContactFormData) {
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
+
+export async function sendContactEmail(data: z.input<typeof contactFormSchema>) {
   try {
-    // Validate the input data
-    const validatedData = contactFormSchema.parse(data)
+    const { name, email, message, subject, captchaToken } = contactFormSchema.parse(data)
 
-    // Verify captcha if token is provided
-    if (validatedData.captchaToken) {
+    // With a secret set, every message must pass reCAPTCHA. Leaving out the token does not skip it.
+    if (process.env.RECAPTCHA_SECRET_KEY) {
       try {
-        await verifyCaptcha(validatedData.captchaToken)
+        if (!captchaToken) throw new Error("missing token")
+        await verifyCaptcha(captchaToken)
       } catch (error) {
         console.error("Error verifying captcha:", error)
-        return {
-          success: false as const,
-          error: "reCAPTCHA verification failed. Please try again.",
-        }
+        return { success: false as const, error: "reCAPTCHA verification failed. Please try again." }
       }
     }
 
-    // Configure SendGrid
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: FROM,
+        to: process.env.CONTACT_EMAIL,
+        reply_to: email,
+        subject,
+        text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+        html: `<h2>New Contact Form Submission</h2>
+<p><strong>Name:</strong> ${escapeHtml(name)}</p>
+<p><strong>Email:</strong> ${escapeHtml(email)}</p>
+<p><strong>Message:</strong></p>
+<p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>`,
+      }),
+    })
 
-    // Prepare the email
-    const msg = {
-      to: process.env.CONTACT_EMAIL!,
-      from: process.env.SENDGRID_SENDER!, // Must be verified sender in SendGrid
-      replyTo: validatedData.email,
-      subject: validatedData.subject,
-      text: `Name: ${validatedData.name}\nEmail: ${validatedData.email}\n\nMessage:\n${validatedData.message}`,
-      html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${validatedData.name}</p>
-        <p><strong>Email:</strong> ${validatedData.email}</p>
-        <p><strong>Message:</strong></p>
-        <p>${validatedData.message.replace(/\n/g, "<br>")}</p>
-      `,
+    if (!response.ok) {
+      console.error("Error sending contact email:", response.status, await response.text())
+      return { success: false as const, error: "Your message could not be sent. Please try again later." }
     }
-
-    // Send the email
-    await sgMail.send(msg)
-
-    return {
-      success: true as const,
-    }
+    return { success: true as const }
   } catch (error) {
     console.error("Error sending contact email:", error)
-    return {
-      success: false as const,
-      error: error instanceof Error ? error.message : "Failed to send email",
-    }
+    return { success: false as const, error: error instanceof Error ? error.message : "Failed to send email" }
   }
 }

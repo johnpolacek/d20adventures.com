@@ -13,8 +13,7 @@ async function checkEnvironmentVariables() {
   const requiredEnvVars = {
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
     RECAPTCHA_SECRET_KEY: process.env.RECAPTCHA_SECRET_KEY,
-    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-    SENDGRID_SENDER: process.env.SENDGRID_SENDER,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
     CONTACT_EMAIL: process.env.CONTACT_EMAIL,
   } as const
 
@@ -58,14 +57,9 @@ export default async function ContactPage() {
               isMissing: missingVars.includes("RECAPTCHA_SECRET_KEY"),
             },
             {
-              key: "SENDGRID_API_KEY",
-              description: "Your SendGrid API key",
-              isMissing: missingVars.includes("SENDGRID_API_KEY"),
-            },
-            {
-              key: "SENDGRID_SENDER",
-              description: "Verified sender email in SendGrid",
-              isMissing: missingVars.includes("SENDGRID_SENDER"),
+              key: "RESEND_API_KEY",
+              description: "From resend.com, with d20adventures.com verified",
+              isMissing: missingVars.includes("RESEND_API_KEY"),
             },
             {
               key: "CONTACT_EMAIL",
