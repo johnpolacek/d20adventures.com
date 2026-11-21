@@ -39,6 +39,14 @@ async function checkEnvironmentVariables() {
 export default async function ContactPage() {
   const { isConfigured, missingVars } = await checkEnvironmentVariables()
 
+  if (!isConfigured && process.env.NODE_ENV !== "development") {
+    return (
+      <PlainPage title="Contact">
+        <p>The contact form is unavailable right now. Please try again later.</p>
+      </PlainPage>
+    )
+  }
+
   if (!isConfigured) {
     return (
       <div className="container max-w-2xl py-8 md:py-12">

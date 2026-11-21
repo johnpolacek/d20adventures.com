@@ -32,6 +32,7 @@ export default async function WaitlistPage() {
   ].filter((item) => item.isMissing)
 
   if (missingEnvVars.length > 0) {
+    if (process.env.NODE_ENV !== "development") notFound()
     return (
       <div className="container max-w-2xl py-8 md:py-12">
         <ConfigCard title="Waitlist Setup Required" description="The waitlist feature needs configuration before it can be used for notifications." configItems={missingEnvVars} />
