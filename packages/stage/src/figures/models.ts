@@ -327,6 +327,12 @@ export class Models {
       triangles,
     })
   }
+  // Seconds between a figure's footfalls as it walks at `gait` metres a second: half its walk cycle, at the rate the
+  // walk plays. Null for one with no walk of its own.
+  stepSeconds(id: string, gait: number) {
+    const clip = (this.on ? this.items.get(id) : undefined)?.walk?.getClip()
+    return clip ? clip.duration / 2 / THREE.MathUtils.clamp(gait / STRIDE, 0.4, 2.2) : null
+  }
   // The clip a figure plays for a kind of move, if it has one.
   moveFor(id: string, kind: "melee" | "ranged" | "dodge") {
     const m = this.on ? this.items.get(id) : undefined

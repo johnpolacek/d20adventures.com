@@ -32,6 +32,8 @@ export interface CastMember {
   down?: boolean
   // Standing up on something raised (a roof, a balcony), in metres.
   y?: number
+  // What they sound like when no person (the staging's `voice`).
+  voice?: "beast"
 }
 
 const LEAN = THREE.MathUtils.degToRad(60)

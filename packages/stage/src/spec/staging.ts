@@ -60,6 +60,8 @@ const castMember = z
     down: z.boolean().optional(),
     // Standing this many metres up, on something raised: a roof, a balcony, a wall walk. Walks keep the height.
     y: num(0, 60).optional(),
+    // What they sound like when no person: a beast growls as it comes on and strikes, and cries out when struck.
+    voice: z.enum(["beast"]).optional(),
   })
   .strict()
 

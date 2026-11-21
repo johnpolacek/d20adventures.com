@@ -124,6 +124,7 @@
       "name": "The forest drake",
       "role": "Caged drake",
       "height": 3,
+      "voice": "beast",
       "art": {
         "front": "/stage/fixtures/welcome-to-kordavos/forest-drake-front.webp",
         "back": "/stage/fixtures/welcome-to-kordavos/forest-drake-back.webp",

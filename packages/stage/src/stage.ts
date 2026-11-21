@@ -2,7 +2,7 @@ import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
-import { type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind } from "./effects"
+import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import { Models } from "./figures/models"
@@ -228,6 +228,11 @@ export class Stage {
   private readyResolve: (() => void) | null = null
   readonly firstFrame: Promise<void>
   private effectListeners = new Set<(e: EffectEvent) => void>()
+  // Seconds since each seen walker's last footfall, who came on stage and has yet to walk on, and who sinks into cover
+  // once their walk ends.
+  private trod = new Map<string, number>()
+  private cameOn = new Set<string>()
+  private sinking = new Set<string>()
 
   constructor(
     private o: StageOptions,
@@ -372,7 +377,10 @@ export class Stage {
     this.models = new Models(this.cast, this.shared, this.standees, renderer)
     this.world.add(this.models.group)
     this.effects = new Effects({
-      hit: (id, color, strength) => this.hit(id, color, strength),
+      hit: (id, color, strength) => {
+        this.hit(id, color, strength)
+        this.body(id, "struck")
+      },
       event: (e) => {
         for (const l of this.effectListeners) l(e)
       },
@@ -934,6 +942,7 @@ export class Stage {
       })
     }
     if (!this.followed.has(id) && (this.framed.has(id) || this.inView(c))) this.followed.set(id, { x: c.x, z: c.z })
+    if (this.cameOn.delete(id)) this.body(id, "enter", speed)
     // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
     const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
     return new Promise<void>((resolve) => {
@@ -980,8 +989,8 @@ export class Stage {
   // Take a cast member off the stage (hidden, still placed) or bring them back.
   setOnStage(id: string, on: boolean) {
     this.member(id)
-    if (on) this.standees.offstage.delete(id)
-    else this.standees.offstage.add(id)
+    if (on && this.standees.offstage.delete(id)) this.cameOn.add(id)
+    else if (!on) this.standees.offstage.add(id)
   }
   isOnStage(id: string) {
     return !this.standees.offstage.has(id)
@@ -997,6 +1006,7 @@ export class Stage {
     }
     // Nobody is seen to fall: they are down when the picture comes back. A 3D figure has a fall of its own, and is seen.
     if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id) && !this.models.active(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
+    if (down && !instant && this.motion && !this.standees.down.has(id)) this.body(id, "fall")
     this.standees.lay(id, down, instant)
     if (instant) this.models.settle(id)
   }
@@ -1012,6 +1022,12 @@ export class Stage {
   // someone already hidden when the scene is shown.
   setLow(id: string, low: boolean, instant = false) {
     this.member(id)
+    // The sinking is heard as it happens: at once for someone standing still, and at the end of a walk to cover.
+    if (low && !instant && this.motion && !this.standees.low.has(id) && this.models.active(id)) {
+      if (this.moves.has(id)) this.sinking.add(id)
+      else this.body(id, "crouch")
+    }
+    if (!low) this.sinking.delete(id)
     if (low) this.standees.low.add(id)
     else this.standees.low.delete(id)
     if (instant) {
@@ -1035,6 +1051,8 @@ export class Stage {
     c.x = p.x
     c.z = p.z
     c.walking = false
+    this.cameOn.delete(id)
+    this.sinking.delete(id)
     if (facing !== undefined) this.faceCast(id, facing)
   }
   // The picture dips to dark and comes back, as it does when the camera cuts. Resolves while it is dark, which is when
@@ -1148,6 +1166,8 @@ export class Stage {
         c.walking = false
         m.resolve()
         this.moves.delete(id)
+        // A walk of several legs goes straight on to the next, so they sink only where no leg follows.
+        if (!this.moves.has(id) && this.sinking.delete(id) && this.standees.low.has(id)) this.body(id, "crouch")
         continue
       }
       const step = Math.min(dist, m.speed * dt)
@@ -1156,7 +1176,20 @@ export class Stage {
       c.ry = Math.atan2(dx, dz)
       c.walking = true
       c.gait = m.speed
+      // A footfall each time a foot of the figure's walk comes down, the first half a step in. One with no walk of
+      // its own steps as someone of its height would: further for the tall and for the quick.
+      const every = this.models.stepSeconds(id, m.speed) ?? (c.height * (0.16 + 0.18 * Math.min(m.speed, 3))) / m.speed
+      const since = (this.trod.get(id) ?? every / 2) + dt
+      this.trod.set(id, since >= every ? 0 : since)
+      if (since >= every && this.isOnStage(id)) this.body(id, "step", m.speed)
     }
+  }
+  // Tells the listeners what a cast member's body does (effects.ts `BodyEvent`).
+  private body(id: string, act: BodyAct, pace = 0) {
+    if (!this.effectListeners.size) return
+    const c = this.member(id)
+    const near = this.camera.position.distanceTo(V(c.x, (c.y ?? 0) + c.height / 2, c.z))
+    for (const l of this.effectListeners) l({ type: "body", act, id, height: c.height, pace, near, voice: c.voice })
   }
 
   // UI laid over part of the canvas (a docked panel): shots compose in the uncovered area, and the scene continues
@@ -1516,10 +1549,14 @@ export class Stage {
     const move = range ? this.models.moveFor(from, range) : null
     const toward = typeof to === "string" ? (this.cast.some((c) => c.id === to) ? this.castAt(to) : undefined) : to ? this.point(to) : undefined
     const lands = move ? this.models.act(from, move, toward) : null
+    if (range) this.body(from, "strike")
     if (lands) await new Promise((r) => setTimeout(r, lands * 1000))
     if (miss && typeof to === "string") {
       const dodge = this.models.moveFor(to, "dodge")
-      if (dodge) this.models.act(to, dodge, this.castAt(from))
+      if (dodge) {
+        this.models.act(to, dodge, this.castAt(from))
+        this.body(to, "dodge")
+      }
     }
     return this.fire(kind, from, to, element, miss)
   }

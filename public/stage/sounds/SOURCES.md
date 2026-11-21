@@ -5,9 +5,9 @@ the packs below, unpacked into one folder, and sets their levels.
 
 ## Effects (`fx`)
 
-- `blade`, `fire`, `spell`: "80 CC0 RPG SFX", https://opengameart.org/content/80-cc0-rpg-sfx
+- `blade`, `fire`, `spell`, `growl`, `hurt`: "80 CC0 RPG SFX", https://opengameart.org/content/80-cc0-rpg-sfx
 - `hit`, `thunk`: "100 CC0 SFX", https://opengameart.org/content/100-cc0-sfx
-- `cloth`, `coins`, `key`, `book`, `draw`: Kenney, "50 RPG sound effects", https://opengameart.org/content/50-rpg-sound-effects
+- `cloth`, `coins`, `key`, `book`, `draw`, `step`: Kenney, "50 RPG sound effects", https://opengameart.org/content/50-rpg-sound-effects
 
 ## Ambience (`ambience`)
 

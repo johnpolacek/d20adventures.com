@@ -1,11 +1,11 @@
 "use client"
 
-import type { EffectEvent, Element, PropKind } from "@d20/stage"
+import type { BodyEvent, EffectEvent, Element, PropKind } from "@d20/stage"
 import { audio, play, preload, whoosh } from "./engine"
 
 // The stage's effects as sound: recorded takes for blades, blows, fire and spells (CC0, see public/stage/sounds/SOURCES.md),
 // and made air for what has no recording, a flight or a swing that misses. All soft and short. Nothing pitched, so no
-// effect ever chimes.
+// effect ever chimes. A character's own body is heard as well: footfalls, a fall, a beast's growl (`bodySound`).
 
 const takes = (cue: string, n: number) => Array.from({ length: n }, (_, i) => `/stage/sounds/fx/${cue}-${i + 1}.mp3`)
 const FX = {
@@ -19,6 +19,9 @@ const FX = {
   key: takes("key", 1),
   book: takes("book", 1),
   draw: takes("draw", 1),
+  step: takes("step", 5),
+  growl: takes("growl", 3),
+  hurt: takes("hurt", 2),
 }
 // The files are brought to one level (scripts/sound-assets.ts). This sets them under the dice.
 const LEVEL = 0.28
@@ -58,7 +61,42 @@ const PROPS: Partial<Record<PropKind, string[]>> = {
   map: FX.cloth,
 }
 
+// What a character's body does, as sound. Each is sized to the one who makes it: someone big is lower, slower and a
+// little louder, and anyone far from the camera is fainter. A person makes no sound of their own beyond their steps,
+// their fall and their clothes. A beast growls as it comes on and as it strikes, and cries out when struck.
+function bodySound(e: BodyEvent) {
+  // 1 for someone of a person's height. The Owlbear is near 1.8.
+  const size = Math.min(2.2, Math.max(0.6, e.height / 1.8))
+  // Full within a few metres, half by nine, and never gone: the camera is often far from the one who acts.
+  const far = 1 / (1 + (e.near / 9) ** 2)
+  const level = LEVEL * (0.35 + 0.65 * far)
+  const beast = e.voice === "beast"
+  switch (e.act) {
+    case "step": {
+      // A creeping step is barely there, and a run lands harder.
+      const tread = e.pace < 0.8 ? 0.4 : e.pace > 2 ? 1.2 : 0.8
+      return void play(FX.step, "fx", { gain: 0.5 * tread * size * level, rate: 1 / Math.sqrt(size), vary: 0.08, muffle: 2400 / size })
+    }
+    case "fall":
+      // The body lands a moment after it starts to go, with their clothes.
+      void play(FX.hit, "fx", { gain: 0.8 * size * level, rate: 0.62 / Math.sqrt(size), muffle: 650, delay: 0.42 })
+      return void play(FX.cloth, "fx", { gain: 0.5 * level, muffle: 2600, delay: 0.3 })
+    case "crouch":
+      return void play(FX.cloth, "fx", { gain: 0.45 * level, muffle: 2800 })
+    case "dodge":
+      return swish(0.05 * (0.35 + 0.65 * far), 1700, 600, 0.2)
+    case "enter":
+    case "strike":
+      if (beast) void play(FX.growl, "fx", { gain: (e.act === "enter" ? 0.55 : 0.75) * level, rate: 0.9 / Math.sqrt(size), vary: 0.06, muffle: 1700 })
+      return
+    case "struck":
+      if (beast) void play(FX.hurt, "fx", { gain: 0.6 * level, rate: 0.85 / Math.sqrt(size), vary: 0.06, muffle: 2000, delay: 0.06 })
+      return
+  }
+}
+
 export function effectSound(e: EffectEvent) {
+  if (e.type === "body") return bodySound(e)
   if (e.type === "prop") return void play(PROPS[e.kind] ?? FX.cloth, "fx", { gain: 0.8 * LEVEL })
   const { kind, phase, struck } = e
   if (phase === "start") {

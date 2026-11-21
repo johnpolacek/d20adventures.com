@@ -34,6 +34,22 @@ export interface EffectEnd {
 export type EffectEvent =
   | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean }
   | { type: "prop"; kind: PropKind; passed: boolean }
+  | BodyEvent
+// What a cast member's own body does, for the same host: a footfall as they are seen to walk, a fall, sinking into
+// cover, walking on, the move of an attack, getting out of one's way, and being struck. `height` in metres says how big
+// they are, `pace` how fast they walk in metres a second, `near` how far they are from the camera, and `voice` what
+// they are when no person.
+export type BodyAct = "step" | "fall" | "crouch" | "enter" | "strike" | "dodge" | "struck"
+export type Voice = "beast"
+export interface BodyEvent {
+  type: "body"
+  act: BodyAct
+  id: string
+  height: number
+  pace: number
+  near: number
+  voice?: Voice
+}
 export interface EffectHost {
   // A cast member struck: a flash of colour on their card and a shake.
   hit(id: string, color: string, strength: number): void

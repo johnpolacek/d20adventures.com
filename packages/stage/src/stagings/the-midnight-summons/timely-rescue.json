@@ -35,6 +35,7 @@
       "name": "Owlbear",
       "role": "Beast of the deep woods",
       "height": 3.3,
+      "voice": "beast",
       "art": {
         "front": "/stage/fixtures/the-midnight-summons/owlbear-front.webp",
         "back": "/stage/fixtures/the-midnight-summons/owlbear-back.webp",

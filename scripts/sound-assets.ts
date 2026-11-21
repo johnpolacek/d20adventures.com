@@ -27,6 +27,10 @@ const FX: Record<string, string[]> = {
   key: ["kenney-rpg/OGG/metalClick.ogg"],
   book: ["kenney-rpg/OGG/bookOpen.ogg"],
   draw: ["kenney-rpg/OGG/drawKnife3.ogg"],
+  // The lowest of the pack's footsteps and creature takes: the game plays them slower still for something big.
+  step: ["kenney-rpg/OGG/footstep00.ogg", "kenney-rpg/OGG/footstep01.ogg", "kenney-rpg/OGG/footstep02.ogg", "kenney-rpg/OGG/footstep08.ogg", "kenney-rpg/OGG/footstep09.ogg"],
+  growl: ["oga-80-rpg/creature_monster_03.ogg", "oga-80-rpg/creature_monster_04.ogg", "oga-80-rpg/creature_roar_02.ogg"],
+  hurt: ["oga-80-rpg/creature_hurt_01.ogg", "oga-80-rpg/creature_hurt_02.ogg"],
 }
 const FX_LEVEL = -24
 
