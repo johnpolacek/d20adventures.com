@@ -1,0 +1,102 @@
+# Builds the desktop app for Intel Macs, Windows and Linux. The Apple Silicon build stays on the owner's Mac:
+# `pnpm desktop:release` makes it, publishes the release, then starts this workflow with the release's tag, and each
+# build here is added to that release. Started by hand with no tag, the builds are kept as workflow artifacts only.
+name: Desktop builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to add the builds to (desktop-vX.Y.Z). Empty keeps them as artifacts."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-x64
+            os: macos-latest
+            target: x86_64-apple-darwin
+            bundle: app
+          - name: windows-x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundle: nsis
+          - name: linux-x64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundle: appimage
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libdbus-1-dev libssl-dev libxdo-dev build-essential
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      # The root postinstall runs Convex codegen, which needs a deployment. The app build does not use it.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build
+        run: pnpm --filter @d20/desktop tauri build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }}
+
+      - name: Package
+        shell: bash
+        run: |
+          set -eu
+          bundle="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"
+          mkdir -p out
+          case "${{ matrix.bundle }}" in
+            app)
+              app="$bundle/macos/D20 Adventures.app"
+              # Same free ad-hoc signature as the Apple Silicon build.
+              codesign --force --deep --sign - "$app"
+              ditto -c -k --keepParent "$app" "out/D20-Adventures-${{ matrix.name }}.zip"
+              ;;
+            nsis)
+              cp "$bundle"/nsis/*-setup.exe "out/D20-Adventures-${{ matrix.name }}-setup.exe"
+              ;;
+            appimage)
+              cp "$bundle"/appimage/*.AppImage "out/D20-Adventures-${{ matrix.name }}.AppImage"
+              ;;
+          esac
+          ls -la out
+
+      - name: Add to release
+        if: inputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" out/* --clobber
+
+      - name: Keep as artifact
+        if: inputs.tag == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: D20-Adventures-${{ matrix.name }}
+          path: out/*

@@ -20,4 +20,9 @@ codesign --force --deep --sign - "$APP"
 rm -f "$ZIP"
 ditto -c -k --keepParent "$APP" "$ZIP"
 
-gh release create "$TAG" "$ZIP" --title "D20 Adventures $VERSION" --notes "Install: curl -fsSL https://d20adventures.com/install.sh | sh" --latest
+gh release create "$TAG" "$ZIP" --title "D20 Adventures $VERSION" --notes "Mac or Linux: curl -fsSL https://d20adventures.com/install.sh | sh
+Windows: irm https://d20adventures.com/install.ps1 | iex" --latest
+
+# The Intel Mac, Windows and Linux builds run on GitHub and join this release when done.
+gh workflow run desktop-builds.yml -f tag="$TAG" || echo "Could not start the other builds. Run: gh workflow run desktop-builds.yml -f tag=$TAG" >&2
+echo "Released $TAG for Apple Silicon. The other builds join it in about 20 minutes: gh run list -w desktop-builds.yml"

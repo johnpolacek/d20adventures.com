@@ -9,14 +9,17 @@ export const dynamic = "force-dynamic"
 export const metadata = { title: "Become a Playtester | D20 Adventures" }
 
 const repo = "https://github.com/johnpolacek/d20adventures.com"
-const installCommand = "curl -fsSL https://d20adventures.com/install.sh | sh"
 const soloDemo = "/settings/realm-of-myr/the-midnight-summons"
 const installSource = `${repo}/blob/main/public/install.sh`
-const setupPrompt = `Set me up as a D20 Adventures playtester on this Mac.
+const setupPrompt = `Set me up as a D20 Adventures playtester on this computer.
 
-1. Check that this is an Apple Silicon Mac with Node.js 24 or newer. If not, tell me how to fix it and stop.
-2. Read the install script before running it: https://d20adventures.com/install.sh
-3. Run it: ${installCommand}
+1. Check that Node.js 24 or newer is installed. If not, tell me how to install it and stop.
+2. Read the install script for this system before running it:
+   Mac or Linux: https://d20adventures.com/install.sh
+   Windows: https://d20adventures.com/install.ps1
+3. Run it:
+   Mac or Linux: curl -fsSL https://d20adventures.com/install.sh | sh
+   Windows, in PowerShell: irm https://d20adventures.com/install.ps1 | iex
 4. Open D20 Adventures. It shows a code to link it to my account: help me approve it at https://d20adventures.com/desktop/link, and sign up there first if I have no account.
 5. Help me start The Midnight Summons.
 6. Show me how to invite a friend to my game, and how to send feedback when something breaks.
@@ -40,7 +43,7 @@ export default async function PlaytestPage() {
           <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
             <h1 className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text font-display text-4xl leading-tight text-transparent drop-shadow-[0_2px_6px_#f59e0b55] sm:text-5xl">{joined ? "You’re a Playtester" : "Become a Playtester"}</h1>
             <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
-              Run a tabletop adventure with an AI Game Master. Host it on your Mac, and your friends join from the web. D20 Adventures is in alpha, so expect rough edges.
+              Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so expect rough edges.
             </p>
           </header>
 
