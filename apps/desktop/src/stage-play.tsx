@@ -62,6 +62,8 @@ type View = Aim | null
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
 const STROLL = 0.6
+// How long a reveal holds on the way in before the one revealed steps out, in milliseconds.
+const REVEAL_BEAT = 1400
 // Whether a character is kept low on the stage: hidden by the Hide action, or about to roll for it, having gone to cover.
 const keptLow = (c: Character) => isHidden(c) || c.rollRequired?.rollType === "Hide (Stealth)"
 // A way off for someone who leaves with no exit of their own: about ten metres away from the heroes, or as near that way
@@ -473,8 +475,14 @@ export function StagePlay(props: {
     return [...authored.filter((e) => !told.some((t) => t.cast === e.cast)), ...told]
   }, [stage, text, paragraphs, castOf])
   const arriving = reading ? cues.find((e) => e.at === paragraph) : undefined
+  // The entrances played on this stage, by cast and paragraph. A stage built at a scene change can be ready only once
+  // the reader is on the entrance's paragraph, with everyone standing in place: the entrance is still walked.
+  const entered = useRef(new Set<string>())
+  const enteredOn = useRef(stage)
   useEffect(() => {
     if (!stage) return
+    if (enteredOn.current !== stage) entered.current.clear()
+    enteredOn.current = stage
     for (const e of cues) {
       const home = stage.staging?.cast.find((c) => c.id === e.cast)
       // A place is read as a mark: a mark can share its name with the one who stands there, as the Owlbear's does.
@@ -482,13 +490,25 @@ export function StagePlay(props: {
       const to = spots.get(e.cast)?.at ?? spot(home?.at)
       const from = spot(e.from)
       if (!home || !to || !from) continue
+      const key = `${e.cast}:${e.at}`
       if (reading && e.at >= 0 && paragraph < e.at) {
+        entered.current.delete(key)
         stage.placeCast(e.cast, from)
         stage.setOnStage(e.cast, false)
+      } else if (reading && paragraph === e.at && !entered.current.has(key)) {
+        entered.current.add(key)
+        stage.placeCast(e.cast, from, to)
+        stage.setOnStage(e.cast, true)
+        // An entrance with a shot of its own is a reveal: the camera holds on the way in a moment before they come out.
+        // A rerun of this effect does not call it off. Stepping back, or a new stage, does.
+        const walk = () => {
+          if (enteredOn.current === stage && entered.current.has(key)) void stage.moveCast(e.cast, to, { speed: e.speed }).then(() => stage.faceCast(e.cast, home.facing))
+        }
+        if (e.shot) setTimeout(walk, REVEAL_BEAT)
+        else walk()
       } else if (!stage.isOnStage(e.cast)) {
         stage.setOnStage(e.cast, true)
-        if (reading && paragraph === e.at) void stage.moveCast(e.cast, to, { speed: e.speed }).then(() => stage.faceCast(e.cast, home.facing))
-        else stage.placeCast(e.cast, to, home.facing)
+        stage.placeCast(e.cast, to, home.facing)
       }
     }
   }, [stage, cues, spots, reading, paragraph])
