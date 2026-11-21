@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { Castle, Feather, Github, type LucideIcon, ScrollText } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { CopyBlock } from "./copy-block"
 import { JoinButtons } from "./join-buttons"
@@ -97,9 +96,9 @@ export default async function PlaytestPage() {
               ) : (
                 <JoinButtons />
               )}
-              <Button variant="epic" className="shrink-0" render={<Link href={soloDemo} />}>
-                Play the Solo Demo
-              </Button>
+              <Link href={soloDemo} className="shrink-0 pt-3 font-display text-amber-200/85 underline decoration-amber-200/40 underline-offset-4 hover:text-amber-200 hover:decoration-amber-200">
+                Or Play the Solo Demo
+              </Link>
             </div>
           </div>
 
