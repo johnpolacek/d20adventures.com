@@ -1,6 +1,13 @@
 {
   "version": 2,
   "skills": {
+    "animaxxing": {
+      "source": "johnpolacek/animaxxing-skills",
+      "commit": "8ddf542ec239b018ba43ce0878842205c529b1c6",
+      "sourceType": "github",
+      "skillPath": "skills/animaxxing/SKILL.md",
+      "computedHash": "1eea598b1e18d1fe593bcebb1f5038cb96b750e771c9362dfacc6929fa5d5b86"
+    },
     "clerk": {
       "source": "clerk/skills",
       "sourceType": "github",

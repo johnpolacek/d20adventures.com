@@ -1,0 +1,854 @@
+# Recipe: component motion
+
+A full-screen menu, an interruptible entrance with a different exit, native `<dialog>` enter and exit, an accordion panel, a sliding tab indicator, and a button that shows loading, success, and failure. The app keeps its markup, styling, and state (`aria-expanded`, `inert`, the focus trap, `hidden`, `open`, `aria-selected`); builders only move inline styles between states the app has chosen, and teardown restores them.
+
+Lifecycle: the framework controller creates each builder once the component is mounted, calls `open`, `close`, or `moveTo` when app state changes, and `revert` on unmount. Partial setup rolls back per [effect restoration](../effect-restoration.md).
+
+Dependencies: `gsap`.
+
+```ts
+import gsap from "gsap";
+
+/* Swap for the project's helper if it has one. */
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return true;
+  const choice = document.documentElement.dataset.motion;
+  if (choice === "reduced") return true;
+  if (choice === "full") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export type Teardown = () => void;
+type Register = (fn: () => void) => void;
+
+/**
+ * Runs setup in its own GSAP context. `dispose` registers stops that run before
+ * the context reverts; `after` registers restores that run after it. Teardown
+ * runs once, attempts every step, and rolls back a setup that threw.
+ */
+function own(setup: (dispose: Register, after: Register) => void): Teardown {
+  const ctx = gsap.context(() => {});
+  const disposers: Array<() => void> = [];
+  const restores: Array<() => void> = [];
+  let done = false;
+  const teardown = () => {
+    if (done) return;
+    done = true;
+    let failure: unknown;
+    const attempt = (fn: () => void) => {
+      try {
+        fn();
+      } catch (error) {
+        failure ??= error;
+      }
+    };
+    disposers.splice(0).reverse().forEach(attempt);
+    attempt(() => ctx.revert());
+    restores.splice(0).reverse().forEach(attempt);
+    if (failure) throw failure;
+  };
+  let failure: { error: unknown } | undefined;
+  // Catch inside add: GSAP restores its current context only when add returns.
+  ctx.add(() => {
+    try {
+      setup((fn) => disposers.push(fn), (fn) => restores.push(fn));
+    } catch (error) {
+      failure = { error };
+    }
+  });
+  if (failure) {
+    teardown();
+    throw failure.error;
+  }
+  return teardown;
+}
+
+/** Records inline properties and returns a restore that also resets GSAP's cached transform. */
+function snapshotStyles(elements: HTMLElement[], props: string[]): () => void {
+  const saved = elements.map((element) => props.map((prop) =>
+    [element.style.getPropertyValue(prop), element.style.getPropertyPriority(prop)] as const));
+  return () =>
+    elements.forEach((element, i) => {
+      gsap.set(element, { clearProps: props.filter((prop) => !prop.startsWith("--")).join(",") });
+      props.forEach((prop, j) => {
+        const [value, priority] = saved[i]?.[j] ?? ["", ""];
+        if (value) element.style.setProperty(prop, value, priority);
+        else element.style.removeProperty(prop);
+      });
+    });
+}
+
+/** Adds a listener and registers its removal. */
+function listen<K extends keyof HTMLElementEventMap>(
+  dispose: Register,
+  target: HTMLElement,
+  type: K,
+  handler: (event: HTMLElementEventMap[K]) => void,
+): void {
+  target.addEventListener(type, handler as EventListener);
+  dispose(() => target.removeEventListener(type, handler as EventListener));
+}
+
+/** One timeline in flight per component: the next kills the running one and tweens from current values. */
+function relay() {
+  let current: gsap.core.Timeline | undefined;
+  return {
+    next(): gsap.core.Timeline {
+      current?.kill();
+      current = gsap.timeline({ defaults: { overwrite: "auto" } });
+      return current;
+    },
+    kill(): void {
+      current?.kill();
+    },
+  };
+}
+
+type Edge = "top" | "bottom" | "left" | "right";
+```
+
+## menuOverlay
+
+A full-screen panel wipes in from one edge, then its links stagger in; closing reverses from wherever the open reached. At rest the panel is `visibility: hidden`, so its links leave the tab order and accessibility tree; the wipe is a `clip-path` inset, so the panel never moves.
+
+The app owns the trigger's `aria-expanded`, `inert` on the rest of the page, the focus trap, and Escape. It calls `open()` after setting that state and focuses into the panel on completion. To close, it returns focus to the trigger first, then calls `close()`: each exiting link turns `visibility: hidden` and would drop focus to `<body>`. Keep the panel laid out, never `display: none` or `hidden`.
+
+```css
+.menu { position: fixed; inset: 0; z-index: 40; visibility: hidden; }
+```
+
+```ts
+export type MenuOverlayOptions = {
+  /** Selector, within the panel, for the items that stagger in. */
+  links?: string;
+  /** The edge the panel wipes in from. */
+  from?: Edge;
+  duration?: number;
+  stagger?: number;
+};
+
+export type MenuOverlay = {
+  /** Wipes the panel in, then staggers the links. Move focus inside when it completes. */
+  open(): gsap.core.Timeline;
+  /** Links out, then the wipe back, from wherever the open is. Return focus to the trigger when it completes. */
+  close(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+/** Pixels the links rise from and return to. */
+const LINK_Y = 16;
+
+export function menuOverlay(
+  panel: HTMLElement,
+  { links = "a", from = "top", duration = 0.5, stagger = 0.05 }: MenuOverlayOptions = {},
+): MenuOverlay {
+  const run = relay();
+  /** Percent of the panel still clipped, on the edge opposite `from`. Tweened as a number so a computed clip never has to be parsed. */
+  const clip = { inset: 100 };
+  const insets: Record<Edge, () => string> = {
+    top: () => `inset(0% 0% ${clip.inset}% 0%)`,
+    bottom: () => `inset(${clip.inset}% 0% 0% 0%)`,
+    left: () => `inset(0% ${clip.inset}% 0% 0%)`,
+    right: () => `inset(0% 0% 0% ${clip.inset}%)`,
+  };
+  const paint = () => {
+    panel.style.clipPath = insets[from]();
+  };
+  let items: HTMLElement[] = [];
+  const revert = own((dispose, after) => {
+    after(snapshotStyles([panel], ["visibility", "clip-path"]));
+    dispose(run.kill);
+    gsap.set(panel, { visibility: "hidden" });
+    paint();
+    items = Array.from(panel.querySelectorAll<HTMLElement>(links));
+    after(snapshotStyles(items, ["opacity", "visibility", "transform", "translate"]));
+    gsap.set(items, { autoAlpha: 0, y: LINK_Y });
+  });
+  return {
+    open() {
+      const tl = run.next().set(panel, { visibility: "visible" });
+      if (prefersReducedMotion()) return tl.set(clip, { inset: 0, onUpdate: paint }).set(items, { autoAlpha: 1, y: 0 });
+      return tl
+        .to(clip, { inset: 0, duration, ease: "power3.inOut", onUpdate: paint })
+        .to(items, { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out", stagger }, "-=0.2");
+    },
+    close() {
+      const tl = run.next();
+      if (prefersReducedMotion()) {
+        return tl.set(items, { autoAlpha: 0, y: LINK_Y }).set(clip, { inset: 100, onUpdate: paint }).set(panel, { visibility: "hidden" });
+      }
+      return tl
+        .to(items, { autoAlpha: 0, y: LINK_Y, duration: 0.2, ease: "power2.in", stagger: { each: stagger / 2, from: "end" } })
+        .to(clip, { inset: 100, duration: duration * 0.8, ease: "power3.inOut", onUpdate: paint }, "-=0.1")
+        .set(panel, { visibility: "hidden" });
+    },
+    revert,
+  };
+}
+```
+
+Links become focusable as each arrives; put a close control that must work at once outside the `links` selector.
+
+`menuOverlay` rebuilds a timeline per call, so its close always retraces the open. For an exit that differs from the entrance, use `enterExit`.
+
+## enterExit
+
+One timeline holds a different entrance and exit, split by a pause: `open()` plays the entrance to the pause and `close()` plays on into the exit. Interruptions stay continuous. Closing mid-entrance reverses it, and reopening mid-exit reverses back to the open rest. With GSAP 3.15+, `easeReverse` sets the reversal's own ease, so a `back.out` entrance can retreat on a quick `power3.in`. Without it, a reversed tween runs its ease backwards, and overshoot eases turn sluggish.
+
+The caller writes both halves. The entrance uses `fromTo` from the closed state, including `autoAlpha: 0` on the container, so time 0 is closed. The exit uses `to`, starting from the open rest. After the exit finishes, the playhead returns to 0 and the next `open()` replays the entrance. The builder skips `overwrite`: a reused timeline must own its targets, because an overwrite would kill its tweens for good. The app owns state and focus, as with `menuOverlay`.
+
+```ts
+export type EnterExitOptions = {
+  /** Reverse ease for every tween in both halves; GSAP 3.15+. Leave unset on older GSAP. */
+  easeReverse?: string | boolean;
+  /** Speed of a reversed entrance. Above 1 gets out of the way faster. */
+  reverseSpeed?: number;
+  /** Called at the open rest, including a reopen that reversed out of the exit. */
+  onOpen?: () => void;
+  /** Called at the closed rest, from a reversed entrance or a finished exit. */
+  onClose?: () => void;
+};
+
+export type EnterExitPhase = "closed" | "opening" | "open" | "closing";
+
+export type EnterExit = {
+  /** Plays the entrance, or turns an exit in flight back to the open rest. */
+  open(): void;
+  /** Plays the exit from the open rest, or reverses an entrance in flight. */
+  close(): void;
+  phase(): EnterExitPhase;
+  revert: Teardown;
+};
+
+export function enterExit(
+  enter: (tl: gsap.core.Timeline) => void,
+  exit: (tl: gsap.core.Timeline) => void,
+  { easeReverse, reverseSpeed = 1.5, onOpen, onClose }: EnterExitOptions = {},
+): EnterExit {
+  let tl: gsap.core.Timeline | undefined;
+  let openAt = 0;
+  let phase: EnterExitPhase = "closed";
+  const opened = () => {
+    phase = "open";
+    tl?.timeScale(1);
+    onOpen?.();
+  };
+  const closed = () => {
+    phase = "closed";
+    tl?.timeScale(1);
+    onClose?.();
+  };
+  // Reverting the context reverts the timeline, restoring every target's inline styles.
+  const revert = own(() => {
+    const timeline = gsap.timeline({
+      paused: true,
+      defaults: easeReverse === undefined ? {} : { easeReverse },
+      // A finished exit rewinds to the entrance's closed start, without firing callbacks.
+      onComplete: () => {
+        timeline.pause(0);
+        closed();
+      },
+      onReverseComplete: closed,
+    });
+    tl = timeline;
+    enter(timeline);
+    openAt = timeline.duration();
+    // Fires in both directions: forward at the end of the entrance, backward when a reopen reverses the exit.
+    timeline.addPause(openAt, () => void (phase === "open" || opened()));
+    exit(timeline);
+    // Paint the closed state now: before GSAP's first tick, a context defers the entrance's immediate render a frame.
+    timeline.render(0, true, true);
+  });
+  const reduced = (to: number, done: () => void) => {
+    tl?.pause(to);
+    done();
+  };
+  return {
+    open() {
+      if (!tl || phase === "open" || phase === "opening") return;
+      if (prefersReducedMotion()) return reduced(openAt, opened);
+      if (phase === "closed") tl.timeScale(1).play(0);
+      // Closing: an entrance being reversed plays forward again; an exit reverses to the pause.
+      else if (tl.time() < openAt) tl.timeScale(1).play();
+      else tl.timeScale(1).reverse();
+      phase = "opening";
+    },
+    close() {
+      if (!tl || phase === "closed" || phase === "closing") return;
+      if (prefersReducedMotion()) return reduced(0, closed);
+      if (phase === "open") tl.timeScale(1).play();
+      // Opening: an entrance reverses at `reverseSpeed`; a reopen from the exit plays on into it.
+      else if (tl.time() < openAt) tl.timeScale(reverseSpeed).reverse();
+      else tl.timeScale(1).play();
+      phase = "closing";
+    },
+    phase: () => phase,
+    revert,
+  };
+}
+```
+
+```ts
+// Example: a menu whose links spring in and tumble out.
+const panel = document.querySelector<HTMLElement>(".menu")!;
+const items = panel.querySelectorAll<HTMLElement>("a");
+const menu = enterExit(
+  (tl) =>
+    tl
+      .fromTo(panel, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2 })
+      .fromTo(items, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: "back.out(2)", stagger: 0.05 }, "<0.1"),
+  (tl) =>
+    tl
+      .to(items, { y: () => window.innerHeight, rotation: () => gsap.utils.random(-30, 30), duration: 0.6, ease: "power2.in", stagger: 0.03 })
+      .to(panel, { autoAlpha: 0, duration: 0.2 }, "-=0.2"),
+  { easeReverse: "power3.in", onClose: () => toggle.focus() },
+);
+```
+
+- Values are recorded on first play. Function-based values, such as the random rotations above, are drawn once. Revert and rebuild to re-roll them or to re-measure after a resize.
+- Under reduced motion, `open()` and `close()` jump to the pause or to 0 and still call `onOpen` and `onClose`.
+- A reversed entrance never plays its exit; reserve an exit-only cue, such as a sound, for the full close.
+
+## dialogMotion
+
+`open()` calls `showModal()`, fades the backdrop, and scales the panel in (or slides it from an edge for a drawer). With `from`, the panel opens as a circle growing out of that element, usually the button that opened it, and closes back into it: a clip, so the text inside never stretches. `close(returnValue)` runs the exit, then `dialog.close(returnValue)`, so `returnValue`, the `close` event, and native focus return behave as usual. Escape's `cancel` runs the exit instead of closing instantly. GSAP cannot reach `::backdrop`, so the builder tweens `--dialog-backdrop` on the dialog for the CSS to read; `::backdrop` inherits it in current browsers.
+
+```css
+dialog::backdrop { background: rgb(0 0 0 / 0.5); opacity: var(--dialog-backdrop, 1); }
+/* A drawer: the app positions it; the builder only slides it. */
+dialog.drawer { margin: 0 0 0 auto; height: 100%; max-height: none; }
+```
+
+```ts
+export type DialogPlacement = "center" | Edge;
+export type DialogMotionOptions = {
+  /** `center` scales in; an edge slides the dialog in from that side. */
+  placement?: DialogPlacement;
+  /** Opens out of this element and closes back into it, in place of `placement`'s move. */
+  from?: Element;
+  duration?: number;
+};
+
+export type DialogMotion = {
+  /** Calls `showModal()` unless already open, then animates the backdrop and panel in. */
+  open(): gsap.core.Timeline;
+  /** Animates out, then calls `dialog.close(returnValue)`. */
+  close(returnValue?: string): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+const DIALOG_PROPS = ["opacity", "transform", "translate", "clip-path", "--dialog-backdrop"];
+const ONSTAGE = { opacity: 1, x: 0, y: 0, xPercent: 0, yPercent: 0, scale: 1, "--dialog-backdrop": 1 };
+const OFFSTAGE: Record<DialogPlacement, gsap.TweenVars> = {
+  center: { scale: 0.96, y: 8 },
+  top: { yPercent: -100 },
+  bottom: { yPercent: 100 },
+  left: { xPercent: -100 },
+  right: { xPercent: 100 },
+};
+
+/**
+ * Circles in the dialog's own coordinates: a dot at the element's center, and one from the same
+ * center large enough to reach the dialog's farthest corner. Measured at each call, so a moved
+ * trigger still lines up.
+ */
+function iris(dialog: HTMLElement, from: Element) {
+  const d = dialog.getBoundingClientRect();
+  const b = from.getBoundingClientRect();
+  const x = b.left + b.width / 2 - d.left;
+  const y = b.top + b.height / 2 - d.top;
+  const reach = Math.max(...[[0, 0], [d.width, 0], [0, d.height], [d.width, d.height]].map(([cx, cy]) => Math.hypot(cx! - x, cy! - y)));
+  const circle = (r: number) => `circle(${r}px at ${x}px ${y}px)`;
+  return { closed: circle(Math.min(b.width, b.height) / 2), open: circle(reach) };
+}
+
+export function dialogMotion(dialog: HTMLDialogElement, { placement = "center", from, duration = 0.3 }: DialogMotionOptions = {}): DialogMotion {
+  const run = relay();
+  const hidden = { opacity: 0, "--dialog-backdrop": 0 };
+  const exit = placement === "center" ? { scale: 0.98 } : OFFSTAGE[placement];
+  let rest = () => {};
+  const close = (returnValue?: string) => {
+    const tl = run.next();
+    if (!dialog.open) return tl;
+    const finish = () => {
+      if (dialog.open) dialog.close(returnValue);
+    };
+    if (prefersReducedMotion()) return tl.call(finish);
+    if (from) {
+      // Back into the element it came from, then gone. At rest the clip is cleared; start from the full circle.
+      const shape = iris(dialog, from);
+      if (!dialog.style.clipPath) gsap.set(dialog, { clipPath: shape.open });
+      return tl
+        .to(dialog, { clipPath: shape.closed, "--dialog-backdrop": 0, duration: duration * 1.2, ease: "power3.in" })
+        .set(dialog, { opacity: 0 })
+        .call(finish);
+    }
+    return tl.to(dialog, { ...hidden, ...exit, duration: duration * 0.7, ease: "power2.in" }).call(finish);
+  };
+  const revert = own((dispose, after) => {
+    rest = snapshotStyles([dialog], DIALOG_PROPS);
+    after(rest);
+    dispose(run.kill);
+    // Browsers let a page cancel Escape once per user activation; an uncancelable
+    // cancel closes at once and the close listener below still tidies up.
+    listen(dispose, dialog, "cancel", (event) => {
+      if (!event.cancelable) return;
+      event.preventDefault();
+      close();
+    });
+    // Every close, animated or not, ends at the dialog's own styles. The event is a
+    // task after close(); a reopen already in flight by then keeps its start state.
+    listen(dispose, dialog, "close", () => {
+      if (dialog.open) return;
+      run.kill();
+      rest();
+    });
+  });
+  return {
+    open() {
+      const tl = run.next();
+      if (!dialog.open) {
+        // Hidden before its first paint; focus still lands inside because opacity keeps the contents focusable.
+        gsap.set(dialog, from ? hidden : { ...hidden, ...OFFSTAGE[placement] });
+        dialog.showModal();
+        // Measured once it is laid out: the clip starts as a dot on the element.
+        if (from && !prefersReducedMotion()) gsap.set(dialog, { opacity: 1, clipPath: iris(dialog, from).closed });
+      }
+      if (prefersReducedMotion()) return tl.set(dialog, ONSTAGE);
+      if (from) {
+        // The circle opens past the farthest corner, then the clip clears, so nothing clips at rest.
+        return tl
+          .to(dialog, { opacity: 1, clipPath: iris(dialog, from).open, "--dialog-backdrop": 1, duration: duration * 2, ease: "power3.inOut" })
+          .set(dialog, { clearProps: "clipPath" });
+      }
+      return tl.to(dialog, { ...ONSTAGE, duration, ease: "power3.out" });
+    },
+    close,
+    revert,
+  };
+}
+```
+
+A direct close (a `<form method="dialog">` submit, the app's own `dialog.close()`) is instant and still ends clean; route it through `close(value)` to animate. `revert` never closes the dialog; the app owns `open`.
+
+## disclosure
+
+An accordion panel grows from 0 to its content height and back: the one sanctioned layout tween. Rules: one panel per builder; the end height is measured at call time (`height: "auto"`); `overflow: hidden` clips while moving and while closed; once open, the inline height and overflow clear so content can reflow. A server-rendered inline `height: 0` is dropped at open rest, never restored. Siblings move only because layout moves them.
+
+The app owns the trigger's `aria-expanded` and the panel's `hidden`: show the panel, then `open()`; `close()`, then apply `hidden` on completion so closed content leaves the tab order. A panel not rendered at build is collapsed inline, so unhiding it paints nothing until `open()`. Panel padding shows at height 0; pad an inner element. Give the panel `display: flow-root`, or first and last child margins jump at both ends of the tween.
+
+```ts
+export type DisclosureOptions = { duration?: number; ease?: string };
+
+export type Disclosure = {
+  /** After the app shows the panel: grows from the current height to the content height, then clears the inline height. */
+  open(): gsap.core.Timeline;
+  /** Collapses to 0 and leaves `height: 0; overflow: hidden` inline. Apply `hidden` when it completes. */
+  close(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+const COLLAPSED = { height: 0, overflow: "hidden" };
+
+export function disclosure(panel: HTMLElement, { duration = 0.3, ease = "power2.inOut" }: DisclosureOptions = {}): Disclosure {
+  const run = relay();
+  const saved = { height: panel.style.height, overflow: panel.style.overflow };
+  /** Open rest: content-sized. The app's own values come back, except a pre-collapsed pair from the server. */
+  const settleOpen = () => {
+    const collapsed = saved.height !== "" && parseFloat(saved.height) === 0;
+    gsap.set(panel, { clearProps: "height,overflow" });
+    if (saved.height && !collapsed) panel.style.height = saved.height;
+    if (saved.overflow && !collapsed) panel.style.overflow = saved.overflow;
+  };
+  const revert = own((dispose, after) => {
+    after(snapshotStyles([panel], ["height", "overflow"]));
+    dispose(run.kill);
+    // Hidden, or inside a closed <details>: collapse now so showing it reveals nothing early.
+    const rendered = panel.checkVisibility ? panel.checkVisibility() : panel.getClientRects().length > 0;
+    if (!rendered) gsap.set(panel, COLLAPSED);
+  });
+  return {
+    open() {
+      const tl = run.next();
+      if (prefersReducedMotion()) return tl.call(settleOpen);
+      // The sanctioned layout tween: "auto" measures the content when the tween starts.
+      return tl.set(panel, { overflow: "hidden" }).to(panel, { height: "auto", duration, ease }).call(settleOpen);
+    },
+    close() {
+      const tl = run.next();
+      if (prefersReducedMotion()) return tl.set(panel, COLLAPSED);
+      return tl.set(panel, { overflow: "hidden" }).to(panel, { height: 0, duration, ease });
+    },
+    revert,
+  };
+}
+```
+
+With `<details>`, wrap the content after `<summary>` in one panel element and keep its own `open` state: prevent the summary's default, set `open` before `open()`, and clear it when `close()` completes (see Wiring). Skip this where CSS already animates `::details-content`.
+
+## tabIndicator
+
+An underline or pill slides onto the selected tab with `x` and `scaleX` from its own resting box, so its CSS keeps color, thickness, and radius. Physical measurement handles RTL. A `ResizeObserver` on the list and tabs re-fits it when widths change.
+
+The app owns `aria-selected`, the roving `tabindex`, and arrow keys, and calls `moveTo(tab)` when selection changes (or on focus, for focus-activated tabs). At build the indicator sits under the `aria-selected="true"` tab, if any.
+
+```css
+.tablist { position: relative; }
+.tab-indicator { position: absolute; inset-inline-start: 0; bottom: 0; width: 40px; height: 2px; background: currentColor; }
+```
+
+```ts
+export type TabIndicatorOptions = {
+  duration?: number;
+  ease?: string;
+  /** The leading edge reaches the new tab first and the trailing edge catches up, so the indicator stretches as it travels. */
+  stretch?: boolean;
+};
+
+export type TabIndicator = {
+  /** Slides and resizes the indicator onto `tab`. Call it when the selected tab changes. */
+  moveTo(tab: HTMLElement): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+export function tabIndicator(
+  indicator: HTMLElement,
+  tablist: HTMLElement,
+  { duration = 0.3, ease = "power3.out", stretch = false }: TabIndicatorOptions = {},
+): TabIndicator {
+  const run = relay();
+  let active: HTMLElement | undefined;
+  let sliding = false;
+  /** Transforms from the indicator's resting box onto the tab's, in viewport coordinates. */
+  const fit = (tab: HTMLElement) => {
+    const box = indicator.getBoundingClientRect();
+    const target = tab.getBoundingClientRect();
+    // With the origin at the left edge, only x moves that edge and only scaleX changes the width.
+    const left = box.left - Number(gsap.getProperty(indicator, "x"));
+    const width = box.width / Number(gsap.getProperty(indicator, "scaleX"));
+    return { x: target.left - left, scaleX: target.width / width };
+  };
+  const revert = own((dispose, after) => {
+    after(snapshotStyles([indicator], ["transform", "translate", "transform-origin"]));
+    dispose(run.kill);
+    gsap.set(indicator, { transformOrigin: "0% 50%" });
+    active = tablist.querySelector<HTMLElement>('[aria-selected="true"]') ?? undefined;
+    if (active) gsap.set(indicator, fit(active));
+    let primed = false;
+    const resize = new ResizeObserver(() => {
+      // The first delivery only reports initial sizes; the indicator is already placed.
+      if (!primed) {
+        primed = true;
+        return;
+      }
+      if (!active) return;
+      // A tab that changes size as it becomes selected, such as a bolder label, must not cut the slide short: retarget it.
+      if (sliding) slide(active);
+      else run.next().set(indicator, fit(active));
+    });
+    resize.observe(tablist);
+    tablist.querySelectorAll<HTMLElement>('[role="tab"]').forEach((tab) => resize.observe(tab));
+    dispose(() => resize.disconnect());
+  });
+  /** Tweens from wherever the indicator is onto `tab`. */
+  function slide(tab: HTMLElement): gsap.core.Timeline {
+    active = tab;
+    const tl = run.next();
+    if (prefersReducedMotion()) return tl.set(indicator, fit(tab));
+    sliding = true;
+    const done = () => void (sliding = false);
+    if (!stretch) return tl.to(indicator, { ...fit(tab), duration, ease, onComplete: done });
+    // Stretch: span from the edge it leaves to the far edge of the new tab, then let the tail catch up.
+    const from = indicator.getBoundingClientRect();
+    const to = tab.getBoundingClientRect();
+    const end = fit(tab);
+    const width = to.width / end.scaleX;
+    const left = to.left - end.x;
+    const span = { x: Math.min(from.left, to.left) - left, scaleX: (Math.max(from.right, to.right) - Math.min(from.left, to.left)) / width };
+    return tl
+      .to(indicator, { ...span, duration: duration * 0.55, ease: "power2.in" })
+      .to(indicator, { ...end, duration: duration * 0.75, ease: "back.out(1.6)", onComplete: done });
+  }
+  return {
+    moveTo: slide,
+    revert,
+  };
+}
+```
+
+Revert before the tabs change and rebuild after the new ones render; the observer only knows tabs present at build.
+
+
+## panelSwap
+
+Tab panels swap with the direction of travel, so a tab to the right brings its panel in from the right. Pair it with `tabIndicator`: the indicator and the panel move the same way.
+
+```css
+.panels { display: grid; }
+.panels > [role="tabpanel"] { grid-area: 1 / 1; }
+.panels > [role="tabpanel"]:not(.on) { visibility: hidden; }
+```
+
+```ts
+export type PanelSwapOptions = { distance?: number; duration?: number };
+
+/**
+ * Tab panels swap with the direction of travel: the old panel slides away and the new one comes in from
+ * the side the indicator moved toward. Stack the panels in one grid cell so the area keeps the tallest's
+ * height. Pass `direction` 1 for a tab to the right, -1 for one to the left. Hidden panels stay hidden
+ * through `autoAlpha`, so only the shown one is in the accessibility tree.
+ */
+export function panelSwap(
+  outgoing: HTMLElement | null,
+  incoming: HTMLElement,
+  direction: 1 | -1,
+  { distance = 36, duration = 0.4 }: PanelSwapOptions = {},
+): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  if (outgoing === incoming) return tl;
+  if (prefersReducedMotion()) {
+    if (outgoing) tl.set(outgoing, { autoAlpha: 0 });
+    return tl.set(incoming, { autoAlpha: 1 });
+  }
+  if (outgoing) tl.to(outgoing, { x: -direction * distance, autoAlpha: 0, duration: duration * 0.5, ease: "power2.in", overwrite: true });
+  return tl
+    // The new panel waits until the old one has mostly gone, so the two texts never overlap to read.
+    .fromTo(incoming, { x: direction * distance, autoAlpha: 0 }, { x: 0, autoAlpha: 1, duration, ease: "back.out(1.4)", overwrite: true }, outgoing ? duration * 0.45 : 0)
+    .set(outgoing ? [incoming, outgoing] : [incoming], { clearProps: "x,transform" });
+}
+```
+
+## Wiring
+
+```ts
+// Example: the app's handlers; the builders were created by the framework controller at settled.
+toggle.addEventListener("click", () => {
+  const opening = toggle.getAttribute("aria-expanded") !== "true";
+  toggle.setAttribute("aria-expanded", String(opening));
+  main.inert = opening;
+  if (opening) menu.open().eventCallback("onComplete", () => firstLink.focus());
+  else menu.close().eventCallback("onComplete", () => toggle.focus());
+});
+
+openButton.addEventListener("click", () => modal.open());
+okButton.addEventListener("click", () => modal.close("ok")); // Escape is handled for you.
+
+trigger.addEventListener("click", () => {
+  const opening = trigger.getAttribute("aria-expanded") !== "true";
+  trigger.setAttribute("aria-expanded", String(opening));
+  if (opening) {
+    panel.hidden = false;
+    accordion.open();
+  } else accordion.close().eventCallback("onComplete", () => (panel.hidden = true));
+});
+
+// <details>: keep its own state, animate around it.
+summary.addEventListener("click", (event) => {
+  event.preventDefault();
+  if (details.open) detailsMotion.close().eventCallback("onComplete", () => (details.open = false));
+  else {
+    details.open = true;
+    detailsMotion.open();
+  }
+});
+
+tablist.addEventListener("click", (event) => {
+  const tab = (event.target as Element).closest<HTMLElement>('[role="tab"]');
+  if (tab) selectTab(tab); // the app's own selection; it calls indicator.moveTo(tab)
+});
+```
+
+## stateButton
+
+A button that shows its work: pressed, its label lifts away and a spinner turns while the app waits; on success the spinner finishes its turn before a check draws itself; on failure the button shakes and the label comes back. Then it settles to its label. The button never changes size: the label stays in place to hold its width, at `opacity: 0`, while the icons sit over it.
+
+The app owns the request and calls the builder's methods as it goes. The builder sets `aria-busy` while loading and announces the result through a visually hidden status beside the button, since a check or a shake says nothing to a screen reader.
+
+```html
+<button class="send" type="submit"><span data-state-label>Send</span></button>
+```
+
+```ts
+export type StateButtonOptions = {
+  /** The text that lifts away. Defaults to `[data-state-label]` inside the button. */
+  label?: HTMLElement;
+  /** Seconds the check or the error holds before the label returns. */
+  hold?: number;
+  /** Seconds per spinner turn. */
+  turn?: number;
+  /** Sparks that burst from the button on success; 0 for none. */
+  sparks?: number;
+};
+export type StateButton = {
+  loading(): gsap.core.Timeline;
+  /** Finishes the spin, draws the check as the button pops and sparks burst, announces `message`, then returns to the label. */
+  success(message?: string): gsap.core.Timeline;
+  /** Stops the spin, draws a cross, shakes, announces `message`, and returns to the label. */
+  error(message?: string): gsap.core.Timeline;
+  /** Straight back to the label. */
+  reset(): gsap.core.Timeline;
+  revert: Teardown;
+};
+
+const SPINNER = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-dasharray="42 100"/></svg>`;
+const CHECK = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"/></svg>`;
+const CROSS = `<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M7 7 17 17"/><path d="M17 7 7 17"/></svg>`;
+/** Swings for the error shake, narrowing to rest. */
+const SWINGS = [1, -0.8, 0.55, -0.3, 0.12, 0];
+
+export function stateButton(
+  button: HTMLElement,
+  { label = button.querySelector<HTMLElement>("[data-state-label]") ?? undefined, hold = 1.4, turn = 0.8, sparks = 8 }: StateButtonOptions = {},
+): StateButton {
+  if (!label) throw new Error("stateButton needs a [data-state-label] element inside the button");
+  const target = label;
+  const reduced = prefersReducedMotion();
+  const runs = relay();
+  let spin: gsap.core.Tween | undefined;
+  let spinner!: HTMLElement;
+  let check!: HTMLElement;
+  let cross!: HTMLElement;
+  let status!: HTMLElement;
+  let mark!: SVGPolylineElement;
+
+  const revert = own((dispose, after) => {
+    // The label's style attribute comes back exactly, including none at all. Registered first, so it runs last.
+    const labelStyle = target.getAttribute("style");
+    after(() => {
+      gsap.set(target, { clearProps: "opacity,visibility,transform,translate" });
+      // Read the attribute first: Chrome can write a just-cleared inline style back as style="" after a removal.
+      void target.getAttribute("style");
+      if (labelStyle === null) target.removeAttribute("style");
+      else target.setAttribute("style", labelStyle);
+    });
+    after(snapshotStyles([button], ["position", "transform", "translate"]));
+    const busy = button.getAttribute("aria-busy");
+    after(() => (busy === null ? button.removeAttribute("aria-busy") : button.setAttribute("aria-busy", busy)));
+    if (getComputedStyle(button).position === "static") button.style.position = "relative";
+    const icon = (html: string) => {
+      const holder = document.createElement("span");
+      holder.setAttribute("aria-hidden", "true");
+      Object.assign(holder.style, { position: "absolute", inset: "0", display: "grid", placeItems: "center", pointerEvents: "none", visibility: "hidden", opacity: "0" });
+      holder.innerHTML = html;
+      button.append(holder);
+      after(() => holder.remove());
+      return holder;
+    };
+    spinner = icon(SPINNER);
+    check = icon(CHECK);
+    mark = check.querySelector("polyline")!;
+    cross = icon(CROSS);
+    status = document.createElement("span");
+    status.setAttribute("role", "status");
+    Object.assign(status.style, { position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" });
+    button.after(status);
+    after(() => status.remove());
+    dispose(() => {
+      runs.kill();
+      spin?.kill();
+      gsap.killTweensOf([button, target, spinner, check, mark, cross, ...cross.querySelectorAll("path")]);
+      button.querySelectorAll("[data-state-spark]").forEach((spark) => spark.remove());
+    });
+  });
+
+  const length = 20;
+  /** The label returns and every icon goes. */
+  const settle = (tl: gsap.core.Timeline, at: number | string) =>
+    tl
+      .to([spinner, check, cross], { autoAlpha: 0, duration: reduced ? 0 : 0.2 }, at)
+      .fromTo(target, { autoAlpha: 0, y: reduced ? 0 : 10 }, { autoAlpha: 1, y: 0, duration: reduced ? 0 : 0.35, ease: "back.out(1.8)" }, "<0.05")
+      .call(() => button.removeAttribute("aria-busy"));
+
+  return {
+    loading() {
+      const tl = runs.next();
+      button.setAttribute("aria-busy", "true");
+      status.textContent = "";
+      tl.to(target, { autoAlpha: 0, y: reduced ? 0 : -10, duration: reduced ? 0 : 0.2, ease: "power2.in" }).to(spinner, { autoAlpha: 1, duration: reduced ? 0 : 0.2 }, "<0.1");
+      spin?.kill();
+      if (!reduced) spin = gsap.fromTo(spinner, { rotation: 0 }, { rotation: 360, duration: turn, ease: "none", repeat: -1 });
+      return tl;
+    },
+    success(message = "Done") {
+      const tl = runs.next();
+      status.textContent = message;
+      // Finish the turn in progress at the same speed, so the spinner never jumps.
+      const left = spin ? (1 - spin.progress()) * turn : 0;
+      spin?.kill();
+      if (!reduced) tl.to(spinner, { rotation: 360, duration: left, ease: "none" });
+      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 })
+        .set(mark, { attr: { "stroke-dasharray": length, "stroke-dashoffset": reduced ? 0 : length } })
+        .set(check, { autoAlpha: 1 })
+        .to(mark, { attr: { "stroke-dashoffset": 0 }, duration: reduced ? 0 : 0.4, ease: "power2.out" });
+      if (!reduced) {
+        // The button pops as the check lands, and sparks burst from its edge.
+        const at = tl.duration() - 0.4;
+        tl.to(button, { keyframes: { scale: [1, 1.08, 0.98, 1] }, duration: 0.5, ease: "power1.out" }, at);
+        const box = button.getBoundingClientRect();
+        const reach = Math.max(box.width, box.height) / 2;
+        for (let i = 0; i < sparks; i++) {
+          const spark = document.createElement("i");
+          spark.setAttribute("aria-hidden", "true");
+          spark.dataset.stateSpark = "";
+          const angle = (i / sparks) * 360;
+          Object.assign(spark.style, {
+            position: "absolute", left: "50%", top: "50%", width: "14px", height: "2px", marginLeft: "-7px", marginTop: "-1px",
+            borderRadius: "2px", background: "currentColor", pointerEvents: "none", opacity: "0",
+          });
+          button.append(spark);
+          const [dx, dy] = [Math.cos((angle * Math.PI) / 180), Math.sin((angle * Math.PI) / 180)];
+          tl.fromTo(
+            spark,
+            { rotation: angle, x: dx * reach * 0.6, y: dy * reach * 0.35, scaleX: 0.4, opacity: 1 },
+            { x: dx * (reach + 26), y: dy * (box.height / 2 + 26), scaleX: 1.4, opacity: 0, duration: 0.55, ease: "power3.out", onComplete: () => spark.remove() },
+            at + 0.05,
+          );
+        }
+      }
+      return settle(tl, `+=${hold}`);
+    },
+    error(message = "That didn't work. Try again.") {
+      const tl = runs.next();
+      status.textContent = message;
+      spin?.kill();
+      // The spinner snaps into a cross: each stroke draws in turn, then the button shakes its head.
+      const strokes = Array.from(cross.querySelectorAll("path"));
+      tl.to(spinner, { autoAlpha: 0, duration: reduced ? 0 : 0.15 })
+        .set(strokes, { attr: { "stroke-dasharray": 15, "stroke-dashoffset": reduced ? 0 : 15 } })
+        .set(cross, { autoAlpha: 1 });
+      if (!reduced) {
+        tl.to(strokes, { attr: { "stroke-dashoffset": 0 }, duration: 0.18, ease: "power2.out", stagger: 0.1 });
+        const width = 9;
+        for (const swing of SWINGS) tl.to(button, { x: swing * width, rotation: swing * 2.5, duration: 0.5 / SWINGS.length, ease: "sine.inOut" }, ">");
+      }
+      return settle(tl, `+=${hold * 0.6}`);
+    },
+    reset() {
+      const tl = runs.next();
+      spin?.kill();
+      status.textContent = "";
+      return settle(tl, 0);
+    },
+    revert,
+  };
+}
+```
+
+The check's stroke is drawn by its dash offset, with no plugin. The spinner turns only while loading and stops on success, error, reset, or revert; it never runs ambient. Under reduced motion nothing spins, draws, or shakes: the label swaps out and back, and the status still announces the result.
+
+## Controller contract
+
+| Builder | Create | Returns | Reduced motion |
+|---|---|---|---|
+| `menuOverlay` | Settled, once the panel is laid out | `{ open, close, revert }` | Panel and links appear or vanish whole; both timelines complete |
+| `enterExit` | Settled, once the targets are laid out; rebuild after a resize that changes measured values | `{ open, close, phase, revert }` | Jumps to the open or closed rest; `onOpen` and `onClose` still fire |
+| `dialogMotion` | Settled, once per `<dialog>` | `{ open, close, revert }` | `open()` shows at once; `close()` closes on the next tick |
+| `disclosure` | Settled, once per panel | `{ open, close, revert }` | Height snaps; inline height still clears once open |
+| `tabIndicator` | Settled, once tab widths are final | `{ moveTo, revert }` | Jumps onto the tab |
+| `panelSwap` | On each tab change, after the selection state | Timeline | Swaps visibility at once |
+| `stateButton` | Settled, once the button is mounted; call `loading`, `success`, `error`, or `reset` as the request runs | `{ loading, success, error, reset, revert }` | Label swaps at once, nothing spins or shakes; the status still announces |
+
+- State first, motion second, in the same task: set `aria-expanded`, `inert`, `hidden`, or `open`, then call the builder. Hang the closing state change on the returned timeline's `onComplete`, or `enterExit`'s `onClose`; every timeline completes, under reduced motion too.
+- `open()` and `close()` may interrupt each other; the next call tweens from where things are. Nothing here navigates, changes attributes, or moves focus, except `dialogMotion`'s `showModal()` and `close()`.
+- A menu in the persistent shell belongs to the shell's controller, not a page's GSAP context; a context reverted at unmount would strip its rest styles.
+- Revert before the panel, dialog, or tabs are removed from the DOM.
