@@ -1,100 +1,163 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "clerk": {
       "source": "clerk/skills",
       "sourceType": "github",
-      "computedHash": "d013f024ec5d70f0207a5718ab2af641414466eb607a81dd5cb4fdafeef51d48"
+      "computedHash": "8eb3d45fc2c0267bc9e6c367cbd6eb63661df5b9ca975281f44686096d70ef0e"
     },
     "clerk-nextjs-patterns": {
       "source": "clerk/skills",
       "sourceType": "github",
-      "computedHash": "f540cdf890ed9eb3267f136bcd6dfb486de2e05dc09d2cdfce4726fb99b5801c"
+      "computedHash": "e7bac7032ebf208141041fb88e02135fd726d0ff123225668f9262357ae87382"
     },
     "convex": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",
-      "computedHash": "de7a20d081cd19bf8bce4038bd62d038a0a88f218f85afb35320d09b052fb534"
+      "computedHash": "b010d4c483390104d0eb02930a06abb948e98220b2bfb044ea8ffc2fcdc83a2c"
     },
     "convex-best-practices": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",
-      "computedHash": "3b24d2afbb5859e3a3640c1e47e2ac9ace81e9737ec76b891951999361c92ab1"
+      "computedHash": "08131794d58da6f4f291bc25907ccda46b18be10ae8002aefcd9196a7078eecd"
     },
     "convex-functions": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",
-      "computedHash": "a08fd9695ad0558ec12a312136d6a1483df04fcb5548207a99ce7d14c0df251a"
+      "computedHash": "909b4fc3d7f37acd921b3668052d3d88d5ca1e2a6973174653214652c5e76db5"
     },
     "convex-realtime": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",
-      "computedHash": "aa08a2856778c09aa8c0f5eef431fc102115e04461d7d3f86e6ce97b5848b52f"
+      "computedHash": "15cf4ea1c28b3143279b8ac35867553f137f3080a4033c8d72c3e17259af4f29"
     },
     "convex-schema-validator": {
       "source": "waynesutton/convexskills",
       "sourceType": "github",
-      "computedHash": "97b7965f2bc665f1848196813c79e32bff2d8b58b3a701b313c4a96f0bf5ac95"
+      "computedHash": "816a3ce852a40ef076a4590310b2ffa812948c1855698f4879a8e1454d38229d"
+    },
+    "gsap-core": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-core/SKILL.md",
+      "computedHash": "dfc8ba849fa8b81c8cc60964ee2a5fa8db4b2a2611801cf549a5b267b8284fa5"
+    },
+    "gsap-frameworks": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-frameworks/SKILL.md",
+      "computedHash": "25f2f1f85c3d7a6431623c50e894af58213cc96d4e6660564be80ca011b883f6"
+    },
+    "gsap-nextjs": {
+      "source": "johnpolacek/animaxxing-skills",
+      "commit": "8ddf542ec239b018ba43ce0878842205c529b1c6",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-nextjs/SKILL.md",
+      "computedHash": "e5e57ccd09e52b0ba75b552b0aaa42f204cb6d2b39df8e6fd8b486ff669ee7fc"
+    },
+    "gsap-performance": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-performance/SKILL.md",
+      "computedHash": "4dd4382cad329927a248fbe55c426901f2bf4f5c598db6ef5ec38c19861b829f"
+    },
+    "gsap-plugins": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-plugins/SKILL.md",
+      "computedHash": "328b52a98e9704c0349ba2cee23a6a92376c06b6b1fd3e60e5c20395b55e25e8"
+    },
+    "gsap-react": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-react/SKILL.md",
+      "computedHash": "35fd08f2cbfc945f1a8cdd39e232882a19e27781a4043ee1bc71f65432f03389"
+    },
+    "gsap-scrolltrigger": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-scrolltrigger/SKILL.md",
+      "computedHash": "c29c5a0fb1506a7f577fe68282eafc6df14b8d2b8ecd24f1f05836f5a0957b67"
+    },
+    "gsap-timeline": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-timeline/SKILL.md",
+      "computedHash": "622140f48b7aa6bcf2f4d4c050b8fa20effa533688a1650854f5ffc1be169a0b"
+    },
+    "gsap-utils": {
+      "source": "greensock/gsap-skills",
+      "commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-utils/SKILL.md",
+      "computedHash": "d05b56284eea0118d481b8c673aff27cae66199282995bfe78315785f561002d"
     },
     "next-best-practices": {
       "source": "vercel-labs/next-skills",
       "sourceType": "github",
-      "computedHash": "515ba75178bd44875812d9a560bdf14651f86709f89cf1d4f209638e879807f3"
+      "computedHash": "9ea546a01ce0f1e93a6d3895b8f1d81177ec08257457d6a3848060b50b203191"
     },
     "next-upgrade": {
       "source": "vercel-labs/next-skills",
       "sourceType": "github",
-      "computedHash": "be6bbf6ab1dc2cc6f2505cea52d497920c04f5b532c0846ee201f6029b803fb0"
+      "computedHash": "fb7b48d7df05f71daa1eb812bb84aa8f9af786000c0a3c8733db4a3bdea23334"
     },
     "threejs-fundamentals": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "e08d49571071f0f54ef2a76fdfcb96c16673e4fda478067727def4659feb80ca"
+      "computedHash": "8adc51050433d120a784e6421281cdad3b3d83de0b16823de655c8acfbbfb6ff"
     },
     "threejs-geometry": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "4e5757bf80a329810545c237e557e362fa14fd3a3e6a567ec1d75435be6b2dda"
+      "computedHash": "59674f3b106390008952b1d5df17e821a37bb265decfc2c9fd495ba521e81fd5"
     },
     "threejs-interaction": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "988d235b7ebd85276a584c6f81ce7c801280ebc45b401017b334136dc8a7ec82"
+      "computedHash": "3b8abb07adfe5a1e4763cec8e1ce3dc438637e4bd72341bfe523fe9ba066db7e"
     },
     "threejs-lighting": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "9303d1b8a9704e88415e5a98c98ad7b6e0f654f8029a3606af7947c0efcb86cc"
+      "computedHash": "d660e713407a0f5502b447ebed190d729c45928590915dec2f50ae2756d558e1"
     },
     "threejs-loaders": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "f2cceed635fd7a2119acf6e5b1a2fcba63a0e52cf2514c1830a69e4744554fcc"
+      "computedHash": "7d88d87264974c91cb6ea0abec0ee769986fc59d0eb08488a23cbf83c31c7413"
     },
     "threejs-materials": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "201cf0f3720c0ea9e415e6376b8ad389aa86b483875e87ca0e51aa2770c856aa"
+      "computedHash": "05645b76bde334e9101597aab782dd620a6f171b2ba9bc15e6af69e314a7615e"
     },
     "threejs-postprocessing": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "48e04ff507582a18e0d509c2738b9d9466881b00e8ca2600727910a0d52abf75"
+      "computedHash": "97337a096e9d7e6aba7d42aeff3790166fc3ba457132b98aadf9e387a4d6e27d"
     },
     "threejs-shaders": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "649ceb058edfb5cfd51e80fb3a6c57aca9bab4a9d3a03f6077aa9502be0c0771"
+      "computedHash": "c44d0e32fc15efff9e8fe44e1707bbd63eda161da95c1a942d6a6c64c03dc0b8"
     },
     "threejs-textures": {
       "source": "cloudai-x/threejs-skills",
       "sourceType": "github",
-      "computedHash": "772a0bfc1d64cfcbc5347d206584a8fa412983201ad7a2cfb8766097b4936db9"
+      "computedHash": "0eef19cc1e500c796a0ecb8ed76a520d960069a173eb191a66ef0e20a722f6cf"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
-      "computedHash": "3462ec83f862abb2d532953df33a4dbf87f4616849da5d4b5cc7c13601aaf997"
+      "computedHash": ""
     }
   }
 }
