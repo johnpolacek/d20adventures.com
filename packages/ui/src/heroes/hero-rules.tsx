@@ -85,7 +85,7 @@ function Picks({
 function Sub({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
     <div className={cn("mt-3", className)}>
-      <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-white/50">{label}</div>
+      <div className="mb-1.5 font-mono text-4xs uppercase tracking-wide text-white/50">{label}</div>
       {children}
     </div>
   )
@@ -320,7 +320,7 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
               const raises = scores.increase.from.includes(ability)
               return (
                 <div key={ability} className="grid gap-1 text-center">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-white/60">{ABILITY_NAMES[ability].slice(0, 3)}</span>
+                  <span className="font-mono text-4xs uppercase tracking-wide text-white/60">{ABILITY_NAMES[ability].slice(0, 3)}</span>
                   <select
                     aria-label={ABILITY_NAMES[ability]}
                     className={cn(fieldClass, "px-1 text-center")}

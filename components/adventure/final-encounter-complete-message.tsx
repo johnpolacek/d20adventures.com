@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import React from "react"
 import { getAdventurePlan } from "@/app/_actions/get-adventure-plan"
@@ -58,7 +59,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
                   )}
                   {/* Adventure Details */}
                   <div className="space-y-2">
-                    <h3 className="text-xl font-display font-bold text-accent-400">{nextAdventurePlan.title}</h3>
+                    <Heading variant="h3">{nextAdventurePlan.title}</Heading>
                     {nextAdventurePlan.teaser && <p className="text-sm text-white leading-relaxed pb-2">{nextAdventurePlan.teaser}</p>}
                   </div>
                   {/* Play Button */}

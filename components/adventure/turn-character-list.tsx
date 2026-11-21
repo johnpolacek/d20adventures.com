@@ -84,13 +84,13 @@ export default function TurnCharacterList() {
                     </Presence>
                   </div>
                   {character.archetype !== "Monster" && (
-                    <div className="text-xxs sm:text-xs font-display">
+                    <div className="text-3xs sm:text-xs font-display">
                       {character.gender} {character.race} {character.archetype}
                     </div>
                   )}
 
                   {standing && (
-                    <div className="text-xxs sm:text-xs font-mono flex items-center gap-2 mt-0.5">
+                    <div className="text-3xs sm:text-xs font-mono flex items-center gap-2 mt-0.5">
                       {standing.kind === "hero" ? (
                         <span className="text-primary-100">
                           {standing.hitPoints}/{standing.maximum} HP{standing.temporary ? ` +${standing.temporary} Temporary` : ""} · AC {standing.armorClass}
@@ -104,7 +104,7 @@ export default function TurnCharacterList() {
                     </div>
                   )}
                   <Presence show={Boolean(conditions)} motion="fade" asChild>
-                    <div className="text-xxs sm:text-xs italic text-accent-200/90">{conditions}</div>
+                    <div className="text-3xs sm:text-xs italic text-accent-200/90">{conditions}</div>
                   </Presence>
 
                   {characters.length > 1 && !isDead && (
@@ -122,7 +122,7 @@ export default function TurnCharacterList() {
                 </Presence>
 
                 {isPlayerCharacter && !isDead && (
-                  <div className="text-xxs sm:text-xs text-accent-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
+                  <div className="text-3xs sm:text-xs text-accent-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
                     YOU
                   </div>
                 )}

@@ -76,5 +76,5 @@ export function HeroRows({ children }: { children: ReactNode }) {
 // The small label after a seated hero: who plays them.
 export function HeroTag(props: { tone: "you" | "ai" | "player"; children: ReactNode }) {
   const tones = { you: "bg-accent-800 text-accent-200", ai: "bg-sky-900 text-sky-200", player: "bg-primary-700 text-primary-200" }
-  return <span className={cn("max-w-28 shrink-0 truncate rounded-sm px-2 py-0.5 font-mono text-xs font-bold tracking-wider", tones[props.tone])}>{props.children}</span>
+  return <span className={cn("max-w-28 shrink-0 truncate rounded-sm px-2 py-0.5 font-mono text-xs font-bold tracking-wide", tones[props.tone])}>{props.children}</span>
 }

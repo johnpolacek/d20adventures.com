@@ -47,7 +47,7 @@ export function RotatePrompt({ className, style, onAnimationEnd }: MotionProps) 
         <circle cx="32" cy="44" r="2" fill="currentColor" />
       </svg>
       <div className="font-serif text-2xl text-accent">Turn your phone sideways</div>
-      <p className="max-w-xs font-sans text-[11px] tracking-[0.2em] uppercase text-soft-foreground">The adventure plays in landscape.</p>
+      <p className="max-w-xs font-sans text-3xs tracking-label uppercase text-soft-foreground">The adventure plays in landscape.</p>
     </div>
   )
 }

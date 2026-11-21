@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { standingOf, standingWords, WOUND_TONE } from "@d20/ui/stage/standing"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@d20/ui/dialog"
@@ -43,7 +44,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
 
               {/* Health Status - visible condition */}
               <div>
-                <Label plain className="text-xs font-mono text-white uppercase tracking-wider">Condition</Label>
+                <Label plain className="text-xs font-mono text-white uppercase tracking-wide">Condition</Label>
                 <div className="flex items-center gap-2">
                   {standing && <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : WOUND_TONE.Dead }}>{standingWords(standing).split(",")[0]}</span>}
                 </div>
@@ -52,7 +53,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
 
               {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <Label plain className="text-xs font-mono text-white uppercase tracking-wider">Effects</Label>
+                  <Label plain className="text-xs font-mono text-white uppercase tracking-wide">Effects</Label>
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">
@@ -70,7 +71,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
           {/* Observable Information */}
           {character.appearance && (
             <div>
-              <h3 className="text-lg font-display text-white mb-2">Appearance</h3>
+              <Heading variant="h4" as="h3" className="mb-2">Appearance</Heading>
               <p className="text-sm text-white">{character.appearance}</p>
             </div>
           )}
@@ -78,7 +79,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
           {/* Visible Equipment Only */}
           {character.equipment && character.equipment.length > 0 && (
             <div>
-              <h3 className="text-lg font-display text-white mb-2">Visible Equipment</h3>
+              <Heading variant="h4" as="h3" className="mb-2">Visible Equipment</Heading>
               <div className="space-y-2">
                 {character.equipment
                   .filter(
@@ -126,7 +127,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
           {/* Observable Skills/Abilities */}
           {character.skills && character.skills.length > 0 && (
             <div>
-              <h3 className="text-lg font-display text-white mb-2">Observable Traits</h3>
+              <Heading variant="h4" as="h3" className="mb-2">Observable Traits</Heading>
               <div className="flex flex-wrap gap-1">
                 {character.skills
                   .filter(

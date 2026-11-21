@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import { Maximize2, MessageSquare } from "lucide-react"
 import { useParams } from "next/navigation"
@@ -107,7 +108,7 @@ function ChatMessageList({
                 <div className={`mt-1 text-xs text-white/60 ${isMine ? "text-right" : "text-left"}`}>
                   <span className="text-primary-300">{m.username}</span>
                   {m.characterName && <span className="ml-2 italic opacity-80">{m.characterName}</span>}
-                  <span className="ml-2 opacity-80 text-xs font-mono tracking-tightest">{new Date(m.createdAt).toLocaleTimeString()}</span>
+                  <span className="ml-2 opacity-80 text-xs font-mono tracking-tight">{new Date(m.createdAt).toLocaleTimeString()}</span>
                 </div>
               </div>
             </div>
@@ -357,7 +358,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
               nested controls — expand to page through history. */}
           <Button variant="plain" type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left transition-opacity duration-100 active:opacity-80" aria-label="Expand chat">
             <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
-              <h3 className="font-display text-sm font-bold text-accent-300">Game Chat</h3>
+              <Heading variant="h5" as="h3">Game Chat</Heading>
               <Maximize2 className="h-4 w-4 text-zinc-300 transition-colors duration-150 group-hover:text-accent-200" aria-hidden />
             </div>
             <ChatMessageList

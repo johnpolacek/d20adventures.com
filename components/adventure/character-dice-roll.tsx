@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { DeathSaveMarks } from "@d20/ui/stage/roll-parts"
 import { againstLabel } from "@d20/ui/stage/roll-view"
 import DiceRoll from "@/components/adventure/dice-roll"
@@ -37,18 +38,18 @@ export default function CharacterDiceRoll({
         <div className="absolute bottom-0 sm:bottom-auto sm:top-0 right-0 w-full sm:w-1/3 h-1/3 sm:h-full bg-gradient-to-t sm:bg-gradient-to-l from-black to-transparent" />
       </div>
       <div className="px-4 py-6 flex flex-col gap-4 text-center items-center justify-start w-full sm:w-1/2 absolute bottom-0 sm:relative sm:left-1/2">
-        <h4 className="text-sm">
+        <Heading variant="h5" as="h4">
           {title} {rollResult === null ? "Needed" : ""}
-        </h4>
-        <h3 className="text-2xl text-accent-300">{rollType}</h3>
-        {kind === "attack" && target && <div className="font-mono text-xs text-primary-100 -mt-3 uppercase tracking-wider">→ {target}</div>}
-        <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
+        </Heading>
+        <Heading variant="h2" as="h3">{rollType}</Heading>
+        {kind === "attack" && target && <div className="font-mono text-xs text-primary-100 -mt-3 uppercase tracking-wide">→ {target}</div>}
+        <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wide">
           {againstLabel(kind)} {difficulty}
           {shownModifier !== null && <span className={shownModifier < 0 ? "text-red-400" : "text-green-400"}>{shownModifier < 0 ? `  ${shownModifier}` : `  +${shownModifier}`}</span>}
         </div>
         {kind === "death" && <DeathSaveMarks saves={{ successes: character.deathSaves?.successes ?? 0, failures: character.deathSaves?.failures ?? 0 }} compact />}
         {mode !== "normal" && (
-          <div className="font-mono text-xs text-accent-200 -mt-3 uppercase tracking-wider">
+          <div className="font-mono text-xs text-accent-200 -mt-3 uppercase tracking-wide">
             {mode === "advantage" ? "Advantage" : "Disadvantage"}
             {reasons?.length ? <span className="block normal-case tracking-normal text-primary-300">{reasons.join(", ")}</span> : null}
           </div>

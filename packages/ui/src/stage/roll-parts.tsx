@@ -25,7 +25,7 @@ function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus:
           key={i}
           className={cn(
             "inline-grid place-items-center self-center rounded-hud border border-foreground/30 bg-black/35 font-serif font-semibold leading-none text-accent-soft",
-            compact ? "h-4 min-w-4 px-0.5 text-[10px]" : "h-5 min-w-5 px-1 text-[12px]"
+            compact ? "h-4 min-w-4 px-0.5 text-4xs" : "h-5 min-w-5 px-1 text-2xs"
           )}
         >
           {d}
@@ -43,7 +43,7 @@ function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus:
   )
 }
 
-const line = (compact: boolean) => cn("flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-serif text-foreground", compact ? "text-[11px]" : "text-[13px]")
+const line = (compact: boolean) => cn("flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-serif text-foreground", compact ? "text-3xs" : "text-xs")
 
 function DamageLines({ damage, compact }: { damage: DamageView[]; compact: boolean }) {
   return (
@@ -74,7 +74,7 @@ export function HarmLines({ harm, compact }: { harm: HarmView[]; compact: boolea
 export function DeathSaveMarks({ saves, compact = false, label = true }: { saves: DeathSavesView; compact?: boolean; label?: boolean }) {
   const marks = (count: number, tone: string, name: string) => (
     <span className="inline-flex items-center gap-1">
-      {label && <span className={cn(eyebrow, "text-muted-foreground", compact && "text-[8px]")}>{name}</span>}
+      {label && <span className={cn(eyebrow, "text-muted-foreground", compact && "text-4xs")}>{name}</span>}
       {[0, 1, 2].map((i) => (
         <span
           key={i}

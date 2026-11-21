@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { useState } from "react"
 import { startAdventure } from "@/app/_actions/start-adventure"
 import { Button } from "@d20/ui/button"
@@ -37,15 +38,15 @@ export function StartAdventureButton({ canStartAdventure, partyIsFull, isSignedI
   return (
     <Swap id={state}>
       {state === "waiting" ? (
-        <h3 className="font-display mb-6 text-2xl opacity-70 text-center">
+        <Heading variant="h2" as="h3" className="mb-6 opacity-70 text-center">
           Waiting for more players...
           <div className="font-mono text-sm text-primary-200">
             ({currentPartySize}/{minParty} minimum)
           </div>
-        </h3>
+        </Heading>
       ) : state === "full" ? (
         <div className="space-y-4 text-center">
-          <h3 className="font-display mb-4 text-2xl text-green-400">Party Complete!</h3>
+          <Heading variant="h2" as="h3" className="mb-4 text-green-400">Party Complete!</Heading>
           <p className="text-lg text-white/80 mb-6">All party slots filled. Ready to begin the adventure?</p>
           <Button variant="epic" size="lg" className="text-xl py-4 px-8" onClick={handleStartAdventure} disabled={isStarting}>
             {isStarting ? "Starting Adventure..." : "Start Adventure"}
@@ -54,7 +55,7 @@ export function StartAdventureButton({ canStartAdventure, partyIsFull, isSignedI
       ) : (
         // Party is not full, but minimum is met
         <div className="space-y-4 mb-12 text-center">
-          <h3 className="font-display mb-4 text-2xl text-green-400">Ready to Start!</h3>
+          <Heading variant="h2" as="h3" className="mb-4 text-green-400">Ready to Start!</Heading>
           <p className="text-white/80 mb-6">
             Minimum party size reached ({currentPartySize}/{maxParty}).
             <br />

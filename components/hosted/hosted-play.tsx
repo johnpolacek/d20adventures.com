@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
 import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
@@ -106,7 +107,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
           <div className="absolute inset-0 z-panel grid place-items-center bg-background/70">
             <section className={cn(panel, "enter-pop w-[min(480px,92vw)] p-8 text-center")}>
               <div className={eyebrow}>{state.hostOnline ? "Waiting for the host to start" : "The host is offline"}</div>
-              <h1 className="mt-3 font-display text-4xl">{state.adventure.title}</h1>
+              <Heading variant="h1" className="mt-3">{state.adventure.title}</Heading>
             </section>
           </div>
         )}

@@ -90,7 +90,7 @@ export function ReactionCard({
     ;(choice === "take" ? onTake : onPass)?.()
   }
   const clock = (
-    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-roll-failure" : "text-foreground", compact ? "text-[13px]" : "text-[15px]")} aria-hidden="true">
+    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-roll-failure" : "text-foreground", compact ? "text-xs" : "text-sm")} aria-hidden="true">
       {seconds}s
     </span>
   )
@@ -114,7 +114,7 @@ export function ReactionCard({
             </span>
             {clock}
           </div>
-          <p className={cn("font-serif text-foreground", compact ? "mt-1 line-clamp-2 text-[12px] leading-snug" : "mt-2 text-[15px] leading-[1.5]")}>{text}</p>
+          <p className={cn("font-serif text-foreground", compact ? "mt-1 line-clamp-2 text-2xs leading-snug" : "mt-2 text-sm leading-[1.5]")}>{text}</p>
           <Countdown left={left} compact={compact} />
           <div className={cn("flex items-center justify-end gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-3")}>
             <Pill disabled={Boolean(chosen)} active={chosen === "pass"} onClick={() => pick("pass")}>
@@ -162,7 +162,7 @@ export function StandingOrders({
           const order = picked[row.id] ?? row.order
           return (
             <div key={row.id} role="radiogroup" aria-label={row.name} className={cn("flex flex-wrap items-center gap-x-3 gap-y-1.5", compact && "gap-x-2")}>
-              <span className="min-w-[8.5rem] font-serif text-[13px] text-foreground">{row.name}</span>
+              <span className="min-w-[8.5rem] font-serif text-xs text-foreground">{row.name}</span>
               <span className="flex gap-1">
                 {ORDERS.map((o) => (
                   <Pill
@@ -170,7 +170,7 @@ export function StandingOrders({
                     role="radio"
                     aria-checked={order === o.id}
                     active={order === o.id}
-                    className="px-2 py-1 text-[10px]"
+                    className="px-2 py-1 text-4xs"
                     onClick={() => {
                       if (order === o.id) return
                       const changed = { ...picked, [row.id]: o.id }

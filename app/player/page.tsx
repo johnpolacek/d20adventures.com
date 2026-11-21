@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import PlayerSetUsernameForm from "@/components/forms/player-set-username-form"
@@ -18,9 +19,9 @@ export default async function PlayerPage() {
   return (
     <FullPageImage>
       <div className="relative z-10 p-12 mt-12 max-w-lg mx-auto w-full">
-        <h2 style={textShadow} className="text-2xl sm:text-4xl text-center font-bold text-accent-400 font-display mb-8">
+        <Heading variant="h2" className="text-center mb-8" style={textShadow}>
           Choose a Username
-        </h2>
+        </Heading>
         <PlayerSetUsernameForm userId={user.id} />
       </div>
     </FullPageImage>

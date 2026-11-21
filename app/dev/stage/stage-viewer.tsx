@@ -172,7 +172,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
       <div ref={containerRef} className="absolute inset-0" {...onPointer} />
       {!ready && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0d0b09]">
-          <div className="text-2xl tracking-[0.18em] text-[#f2c97a]">{(title || setKey).toUpperCase()}</div>
+          <div className="text-2xl tracking-label text-[#f2c97a]">{(title || setKey).toUpperCase()}</div>
           <div className="mt-3 text-sm opacity-70">{status}</div>
         </div>
       )}
@@ -180,23 +180,23 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
         <>
           <div
             ref={bubbleRef}
-            className="pointer-events-none absolute top-0 left-0 z-20 max-w-[260px] rounded-lg border border-[#e6c89660] bg-[#f4ead6] px-3 py-1.5 text-[13px] text-[#2a1f14] shadow-lg"
+            className="pointer-events-none absolute top-0 left-0 z-20 max-w-[260px] rounded-lg border border-[#e6c89660] bg-[#f4ead6] px-3 py-1.5 text-xs text-[#2a1f14] shadow-lg"
           >
             {speaker.name}
           </div>
           <div className="absolute right-4 bottom-4 z-20 flex w-[340px] items-center gap-3 rounded-md border border-[#e6c89640] bg-[#0e0a06d0] p-2 backdrop-blur-sm">
             {speaker.portrait && <img src={speaker.portrait} alt="" className="h-20 w-20 rounded object-cover object-top" />}
             <div className="text-xs">
-              <div className="text-[15px] text-[#f2c97a]">{speaker.name}</div>
+              <div className="text-sm text-[#f2c97a]">{speaker.name}</div>
               <div className="opacity-70">{speaker.role}</div>
             </div>
           </div>
         </>
       )}
       {ready && !hidden && stage && (
-        <div className="absolute top-3 left-3 z-20 max-w-[520px] space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm">
+        <div className="absolute top-3 left-3 z-20 max-w-[520px] space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-3xs leading-snug backdrop-blur-sm">
           <div className="flex items-baseline gap-2">
-            <span className="text-[14px] tracking-[0.06em] text-[#f2c97a]">{title}</span>
+            <span className="text-sm tracking-wide text-[#f2c97a]">{title}</span>
             <span className="opacity-60">{stagingKey ?? setKey}</span>
           </div>
           <div className="flex flex-wrap gap-1">
@@ -281,7 +281,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 </Button>
               </div>
               {stats && (
-                <div className="font-mono text-[10px] opacity-75">
+                <div className="font-mono text-4xs opacity-75">
                   {stats.fps} fps · {stats.calls} calls · {(stats.triangles / 1e6).toFixed(2)}M tris · {stats.people} people / {stats.cards} cards · dpr {stats.dpr} · paint {stats.paintHeight}px ·{" "}
                   {stats.programs} programs
                 </div>

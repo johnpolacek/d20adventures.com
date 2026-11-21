@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "@d20/ui/toast"
@@ -25,7 +26,7 @@ export function AdminConfigMessage() {
             <ShieldUser className="w-8 h-8 text-accent-600" />
           </div>
         </div>
-        <h3 className="text-lg font-medium text-center">Configure Admin Access</h3>
+        <Heading variant="h4" as="h3" className="text-center">Configure Admin Access</Heading>
         <p className="text-sm text-white/60 text-center text-balance">
           To access admin features, you need to add your Clerk User ID to the <code className="px-1.5 py-0.5 rounded-md bg-zinc-800">ADMIN_USER_IDS</code> environment variable.
         </p>

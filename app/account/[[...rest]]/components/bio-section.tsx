@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import { useState } from "react"
 import { Button } from "@d20/ui/button"
@@ -28,7 +29,7 @@ export function BioSection() {
 
   return (
     <div className="rounded-lg border p-4">
-      <h2 className="text-lg font-semibold mb-4">Your Bio</h2>
+      <Heading variant="h4" as="h2" className="mb-4">Your Bio</Heading>
       <Textarea placeholder="Tell us about yourself..." value={bio} onChange={(e) => setBio(e.target.value)} className="mb-4" rows={4} />
       <Button onClick={saveBio} disabled={isSaving}>
         {isSaving ? "Saving..." : "Save Bio"}

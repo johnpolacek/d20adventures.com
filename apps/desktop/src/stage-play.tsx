@@ -1236,7 +1236,7 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on && Boolean(ended && !busy && !reading)} motion="rise" asChild>
             <div className={`${panel} absolute bottom-28 left-1/2 z-raised -translate-x-1/2 p-6 text-center`}>
-              <div className="text-[10px] tracking-[.3em] text-accent">THE END</div>
+              <div className="text-4xs tracking-label text-accent">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
               {owed.length > 0 && (
                 <div className="mb-3 flex flex-wrap justify-center gap-2">

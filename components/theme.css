@@ -2,8 +2,50 @@
    dice and roll animations, and the Stageview surface textures. Each app sets its own fonts and base rules, and keeps
    `.fade-in` last in its own stylesheet. */
 @theme {
-  --text-xxxs: 0.5rem;
-  --text-xxs: 0.625rem;
+  /* One type scale for the site, the desktop app and the stage. Both roots are 18px, so each step is a round pixel size,
+     written here in rem: 4xs 10px, 3xs 11, 2xs 12, xs 13, sm 15, base 18, lg 20, xl 24, 2xl 28, 3xl 34, 4xl 40.
+     10px is the floor: nothing is set smaller. Sizes outside the scale are not available. */
+  --text-*: initial;
+  --text-4xs: 0.5556rem;
+  --text-4xs--line-height: 1.4;
+  --text-3xs: 0.6111rem;
+  --text-3xs--line-height: 1.4;
+  --text-2xs: 0.6667rem;
+  --text-2xs--line-height: 1.45;
+  --text-xs: 0.7222rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.8333rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55;
+  --text-lg: 1.1111rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.3333rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.5556rem;
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 1.8889rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 2.2222rem;
+  --text-4xl--line-height: 1.15;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
+
+  /* Four letter spacings: tight for large display type, normal, wide for buttons and small display type, and label for
+     small uppercase labels and eyebrows. */
+  --tracking-*: initial;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.06em;
+  --tracking-label: 0.16em;
 
   --color-primary-50: #CBC8E5;
   --color-primary-100: #BEBADE;

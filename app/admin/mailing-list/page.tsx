@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { MailingListSubscriberTable } from "@/components/admin/mailing-list/mailing-list-subscriber-table"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { Card, CardContent, CardHeader, CardTitle } from "@d20/ui/card"
@@ -36,7 +37,7 @@ export default async function AdminMailingListPage() {
       <AdminBreadcrumb items={[{ label: "Mailing List" }]} />
 
       <div className="mb-8">
-        <h1 className="text-4xl font-bold">Mailing List Subscribers</h1>
+        <Heading variant="h1">Mailing List Subscribers</Heading>
         <p className="text-white/60">View and manage newsletter subscribers</p>
       </div>
 

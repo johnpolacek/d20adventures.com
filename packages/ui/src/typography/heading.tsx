@@ -1,26 +1,27 @@
-import { cva, type VariantProps } from "class-variance-authority"
 import type * as React from "react"
 import { cn } from "../utils"
 
-const headingVariants = cva("text-balance font-extrabold", {
-  variants: {
-    variant: {
-      h1: "text-4xl sm:text-5xl md:text-7xl scale-x-110 tracking-wide",
-      h2: "text-3xl sm:text-5xl font-extrabold",
-      h3: "text-2xl sm:text-4xl font-extrabold",
-      h4: "text-xl sm:text-2xl font-bold",
-      h5: "text-lg sm:text-xl font-bold",
-      h6: "text-base sm:text-lg font-bold",
-    },
-  },
-  defaultVariants: {
-    variant: "h1",
-  },
-})
+// The heading levels of the site and the desktop app. Each level is one size and one colour:
+//   h1  a page's title
+//   h2  a section of a page
+//   h3  a part of a section
+//   h4  a panel or card's heading, in white
+//   h5  a small heading inside a panel, in white
+//   h6  a label over a group, in small mono capitals
+// Titles and sections are gold. The stage HUD sets its own type and does not use these.
+export const headingClasses = {
+  h1: "font-display text-4xl font-bold leading-tight tracking-wide text-accent-300 sm:text-5xl",
+  h2: "font-display text-2xl font-bold leading-tight text-accent-300 sm:text-3xl",
+  h3: "font-display text-xl font-bold leading-snug text-accent-300 sm:text-2xl",
+  h4: "font-display text-lg font-bold leading-snug text-white",
+  h5: "font-display text-base font-bold leading-snug text-white",
+  h6: "font-mono text-2xs font-normal uppercase tracking-label text-primary-200",
+} as const
 
-type HeadingVariant = "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
+export type HeadingVariant = keyof typeof headingClasses
 
-interface HeadingProps extends Omit<React.HTMLAttributes<HTMLHeadingElement>, "className">, Omit<VariantProps<typeof headingVariants>, "as"> {
+interface HeadingProps extends Omit<React.HTMLAttributes<HTMLHeadingElement>, "className"> {
+  /** The look. The tag is the same level unless `as` says otherwise. */
   variant: HeadingVariant
   as?: HeadingVariant
   className?: string
@@ -28,17 +29,5 @@ interface HeadingProps extends Omit<React.HTMLAttributes<HTMLHeadingElement>, "c
 
 export function Heading({ className, variant, as, ...props }: HeadingProps) {
   const Tag = as || variant
-
-  return (
-    <Tag
-      className={cn(
-        "font-display",
-        headingVariants({
-          variant,
-          className,
-        })
-      )}
-      {...props}
-    />
-  )
+  return <Tag className={cn("text-balance", headingClasses[variant], className)} {...props} />
 }

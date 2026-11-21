@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { SignInButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
 import { Button } from "@d20/ui/button"
@@ -15,7 +16,7 @@ export default async function AccountPage() {
           <Card className="max-w-xl mx-auto">
             <CardContent className="flex flex-col items-center gap-6 py-16">
               <div className="text-center space-y-2">
-                <h2 className="text-2xl font-semibold">Sign in to Access Your Account</h2>
+                <Heading variant="h2">Sign in to Access Your Account</Heading>
                 <p className="text-white/60">Create an account or sign in to manage your profile</p>
               </div>
               <SignInButton mode="modal">

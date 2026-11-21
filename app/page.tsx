@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import RedirectHandler from "@/components/nav/redirect-handler"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
@@ -10,16 +11,16 @@ export default function HomePage() {
       <RedirectHandler />
       <div className="flex min-h-[max(100vh,100vw)] lg:min-h-screen flex-col relative">
         <HomeAdventure>
-          <h2 className="text-4xl sm:text-6xl font-display text-center w-full mt-20 sm:mt-36 fade-in delay-100 relative z-10" style={textShadowSpreadLight}>
+          <Heading variant="h1" as="h2" className="text-4xl sm:text-6xl text-center w-full mt-20 sm:mt-36 fade-in delay-100 relative z-10" style={textShadowSpreadLight}>
             <span className="block sm:inline">EXpeRienCe</span> <span className="inline-block scale-75 sm:scale-90 -mx-2 sm:mx-0">tHe</span> Thrill
-          </h2>
+          </Heading>
           <div className="flex flex-col items-center justify-center absolute bottom-[calc(7.5rem+2vh)] md:bottom-[max(10vh,6rem)] w-full flex justify-center z-10">
-            <h2 className="text-lg sm:text-2xl font-bold font-display text-center w-full fade-in delay-[180ms] relative z-10" style={textShadowSpreadLight}>
+            <Heading variant="h4" as="h2" className="text-lg sm:text-2xl text-center w-full fade-in delay-[180ms] relative z-10" style={textShadowSpreadLight}>
               Of tHe
-            </h2>
-            <h2 className="text-6xl sm:text-9xl font-display text-center w-full fade-in delay-[260ms] relative z-10 -mt-1 sm:-mt-4 mb-2 sm:mb-0" style={textShadowSpreadLight}>
+            </Heading>
+            <Heading variant="h1" as="h2" className="text-6xl sm:text-9xl text-center w-full fade-in delay-[260ms] relative z-10 -mt-1 sm:-mt-4 mb-2 sm:mb-0" style={textShadowSpreadLight}>
               D20
-            </h2>
+            </Heading>
 
             <PlaytesterCta />
           </div>

@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { User } from "@clerk/nextjs/server"
 import type { CSSProperties } from "react"
 import { clerkClient } from "@clerk/nextjs/server"
@@ -26,7 +27,7 @@ export default async function AdminAdventuresPage() {
     <div className="container py-8">
       <AdminBreadcrumb items={[{ label: "Adventures" }]} />
       <div className="mb-8">
-        <h1 className="text-4xl font-bold font-display text-accent-400">Adventures</h1>
+        <Heading variant="h1">Adventures</Heading>
         <p className="font-mono text-primary-300">Manage and view adventure information</p>
       </div>
       <Table>

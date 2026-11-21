@@ -55,7 +55,7 @@ export function HeroCreatorLab() {
         }}
         onClose={() => setRound((n) => n + 1)}
       />
-      {said && <pre className="absolute bottom-2 left-2 z-alert max-h-40 max-w-[40rem] overflow-auto whitespace-pre-wrap bg-black/80 p-2 font-mono text-[10px] text-white/80">{said}</pre>}
+      {said && <pre className="absolute bottom-2 left-2 z-alert max-h-40 max-w-[40rem] overflow-auto whitespace-pre-wrap bg-black/80 p-2 font-mono text-4xs text-white/80">{said}</pre>}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { srdAttribution } from "@d20/srd/attribution"
 import { Trash2, X } from "lucide-react"
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
@@ -51,7 +52,7 @@ function RemoveButton(props: { confirming: boolean; label: string; confirmLabel:
       aria-label={props.confirming ? props.confirmLabel : props.label}
       onBlur={props.onBlur}
       onClick={props.onClick}
-      className={cn(props.confirming ? "px-2 font-mono text-xxs" : "w-7 px-0", props.className)}
+      className={cn(props.confirming ? "px-2 font-mono text-3xs" : "w-7 px-0", props.className)}
     >
       <span key={props.confirming ? "confirm" : "ask"} className="enter-pop grid place-items-center">
         {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
@@ -139,9 +140,9 @@ function CardRemove(props: {
           className="absolute inset-0 grid scale-[.985] place-items-center rounded-xl bg-black/75 backdrop-blur-sm"
         >
           <div className="enter-pop flex flex-col items-center text-center">
-            <h3 id="remove-title" className="font-display text-3xl text-white">
+            <Heading variant="h2" as="h3" id="remove-title">
               Archive {props.title}?
-            </h3>
+            </Heading>
             <div className="mt-6 flex items-center gap-4">
               <Button variant="outline" autoFocus onClick={onCancel} className="px-6 font-display">
                 Cancel
@@ -223,7 +224,7 @@ function SavedCard(props: {
         <div className="absolute top-8 left-8 flex items-stretch gap-6">
           <img src={cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-raised ring-1 ring-white/20" />
           <div className="flex flex-col items-start">
-            <h3 className="font-display text-4xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{props.title}</h3>
+            <Heading variant="h1" as="h3" className="[text-shadow:0_2px_12px_#000]">{props.title}</Heading>
             {props.kicker && <div className={cn(siteLabel, "mt-1")}>{props.kicker}</div>}
             <div className="font-display text-xl text-accent-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
             <span className={buttonClassName("epic", undefined, "mt-auto text-sm")} style={buttonStyle("epic")}>
@@ -463,9 +464,9 @@ export function AdventuresPage(props: {
                   The Realm of Myr
                 </Chip>
               </div>
-              <h3 className="font-display text-[clamp(2rem,4vw,3rem)] font-bold leading-none text-accent-300" style={textShadowSpread}>
+              <Heading variant="h3" className="text-[clamp(2rem,4vw,3rem)]" style={textShadowSpread}>
                 {featured.title}
-              </h3>
+              </Heading>
               <Rule className="w-48" />
               <p className="max-w-[60ch] text-base text-zinc-300">{featured.teaser}</p>
               <Details a={featured} />
@@ -610,7 +611,7 @@ export function CharactersPage(props: {
                     disabled={props.busy}
                     onClick={() => props.onPaint!(h)}
                     aria-label={`Paint ${h.name}`}
-                    className={buttonClassName("outline", "xs", "absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
+                    className={buttonClassName("outline", "xs", "absolute top-2 right-2 px-2 py-0.5 font-mono text-3xs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
                   >
                     <span key={props.painting === h.id ? "busy" : "idle"} className="enter-fade">
                       {props.painting === h.id ? "Painting…" : "Paint"}

@@ -67,8 +67,8 @@ export default function AdventurePreview({ plan, settingId, library, video }: { 
         <ImageHeader {...headerImage(plan.image)} title={plan.title} imageAlt={plan.title} />
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 px-6 pb-24">
           <div className="flex flex-wrap justify-center gap-2">
-            <span className="bg-white/10 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
-            {premade && <span className="bg-accent-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>}
+            <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
+            {premade && <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>}
           </div>
           <div className="flex flex-wrap justify-center gap-4 my-8">
             <Link href={`/settings/${settingId}/${plan.id}/character-select`}>

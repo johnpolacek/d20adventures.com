@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
 import { Eye } from "lucide-react"
 import Link from "next/link"
@@ -103,9 +104,9 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
 
       <div className="container max-w-5xl mx-auto px-6 sm:px-8 pt-24 sm:pt-28 pb-8 relative z-10">
         <div className="text-center mb-3 rounded border border-white/15 bg-black/35 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-sm">
-          <h1 style={textShadowSpreadLight} className="text-3xl md:text-4xl font-bold font-display mb-1 text-white leading-tight">
+          <Heading variant="h2" as="h1" className="mb-1" style={textShadowSpreadLight}>
             {adventurePlan.title}
-          </h1>
+          </Heading>
           <p style={textShadow} className="max-w-3xl mx-auto relative z-10 text-primary-50 text-sm md:text-base !text-balance">
             {adventurePlan.teaser}
           </p>

@@ -55,7 +55,7 @@ export function Scene(props: Omit<SceneOptions, "onProgress" | "onPick"> & { onN
   return (
     <>
       <div ref={host} className={`absolute inset-0 transition-opacity duration-300 ${status ? "opacity-0" : "opacity-100"}`} />
-      {status && <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-[13px] text-[#e9dcc3] opacity-70">{status}</div>}
+      {status && <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-[#e9dcc3] opacity-70">{status}</div>}
     </>
   )
 }

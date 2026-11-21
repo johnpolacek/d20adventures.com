@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 // The floor plan's two entry points on the turn page, in the grid map panel's chrome: FloorPlanButton is the floating
 // "Map" button below xl, FloorPlanRailPanel the card docked in the right rail. Both expand to the same fullscreen view.
 
@@ -40,10 +41,10 @@ function FloorPlanOverlay({
     <div className={cn("fixed inset-0 z-alert flex flex-col bg-black/95", className)} style={style} onAnimationEnd={onAnimationEnd}>
       <header className="relative flex flex-none items-center justify-center px-5 py-5">
         <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[1px] -translate-y-1/2 bg-[url('/images/app/art/texture-line.png')] bg-blend-lighten opacity-50" />
-        <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
+        <Heading variant="h4" as="h2" className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 px-6 py-1.5 text-center contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:ring-8">
           <Parchment />
           <span style={textShadow}>{title || floor.location || floor.title}</span>
-        </h2>
+        </Heading>
         <Button
           variant="plain"
           type="button"
@@ -89,7 +90,7 @@ export function FloorPlanRailPanel({ className, ...props }: PlanProps & { classN
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-accent-300">{props.title || props.floor.location || props.floor.title}</h3>
+          <Heading variant="h5" as="h3" className="truncate">{props.title || props.floor.location || props.floor.title}</Heading>
           <Button variant="plain" type="button" onClick={() => setOpen(true)} className="rounded p-1 text-zinc-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-accent-200 active:scale-90" aria-label="Expand map">
             <Maximize2 className="h-4 w-4" />
           </Button>

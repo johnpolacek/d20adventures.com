@@ -71,8 +71,8 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
   const margin = roll.kind === "death" ? marginText(roll) : ""
   const term = (sign: string, n: number) => (
     <>
-      <span className="text-[12px] text-muted-foreground">{sign}</span>
-      <span className="text-[14px]">{n}</span>
+      <span className="text-2xs text-muted-foreground">{sign}</span>
+      <span className="text-sm">{n}</span>
     </>
   )
   return (
@@ -87,36 +87,36 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
         <div className={cn(eyebrow, "overflow-hidden text-ellipsis whitespace-nowrap")}>{rollHeading(roll, roll.character)}</div>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
           <div className="flex items-baseline gap-x-1.5 whitespace-nowrap font-serif tabular-nums text-foreground">
-            <span className="text-[14px]">{roll.natural}</span>
+            <span className="text-sm">{roll.natural}</span>
             {roll.modifier !== undefined && term(roll.modifier < 0 ? "−" : "+", Math.abs(roll.modifier))}
             {roll.inspired !== undefined && (
               <>
                 {term("+", roll.inspired)}
-                <span className="font-sans text-[8px] tracking-[0.2em] text-muted-foreground uppercase">Inspiration</span>
+                <span className="font-sans text-4xs tracking-label text-muted-foreground uppercase">Inspiration</span>
               </>
             )}
             {(roll.adds ?? []).map((a, i) => (
               <Fragment key={i}>
                 {term(a.amount < 0 ? "−" : "+", Math.abs(a.amount))}
-                <span className="font-sans text-[8px] tracking-[0.2em] text-muted-foreground uppercase">{a.from}</span>
+                <span className="font-sans text-4xs tracking-label text-muted-foreground uppercase">{a.from}</span>
               </Fragment>
             ))}
-            <span className="text-[12px] text-muted-foreground">=</span>
-            <span className="text-[19px] font-bold text-accent">{roll.total}</span>
-            <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-muted-foreground uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>
-            <span className="text-[14px]">{roll.versus ?? roll.dc}</span>
+            <span className="text-2xs text-muted-foreground">=</span>
+            <span className="text-base font-bold text-accent">{roll.total}</span>
+            <span className="ml-1.5 font-sans text-4xs tracking-label text-muted-foreground uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>
+            <span className="text-sm">{roll.versus ?? roll.dc}</span>
           </div>
           <span className="flex shrink-0 items-center gap-2">
-            {mode && <span className="font-serif text-[12px] font-semibold text-accent">{mode}</span>}
+            {mode && <span className="font-serif text-2xs font-semibold text-accent">{mode}</span>}
             <span
-              className="rounded-hud border px-1.5 py-0.5 font-display text-[10px] font-bold tracking-[0.06em] uppercase"
+              className="rounded-hud border px-1.5 py-0.5 font-display text-4xs font-bold tracking-wide uppercase"
               style={{ color: tone, borderColor: tone, boxShadow: `${crit ? `0 0 10px ${tone}55, ` : ""}inset 0 0 6px ${tone}33`, textShadow: `0 0 6px ${tone}55` }}
             >
               {verdict}
             </span>
           </span>
         </div>
-        {margin && <div className="mt-1 font-serif text-[12px] text-muted-foreground italic">{margin}</div>}
+        {margin && <div className="mt-1 font-serif text-2xs text-muted-foreground italic">{margin}</div>}
         {roll.kind === "death" && roll.deathSaves && (
           <div className="mt-1.5">
             <DeathSaveMarks saves={roll.deathSaves} compact />
@@ -131,7 +131,7 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
 // Between the turns of one scene: a rule with the turn's place in it, 2 of 5.
 function Divider({ n, of }: { n: number; of: number }) {
   return (
-    <div className="my-3 flex items-center gap-3 font-sans text-[9px] tracking-[0.26em] text-muted-foreground uppercase">
+    <div className="my-3 flex items-center gap-3 font-sans text-4xs tracking-label text-muted-foreground uppercase">
       <span className="h-px flex-1 bg-foreground/15" />
       {n} of {of}
       <span className="h-px flex-1 bg-foreground/15" />
@@ -165,7 +165,7 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Say something"
         aria-label="Table chat message"
-        className="min-w-0 flex-1 rounded-hud border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
+        className="min-w-0 flex-1 rounded-hud border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-xs text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
       />
       <Pill type="submit" disabled={sending || !draft.trim()}>
         Send
@@ -188,20 +188,20 @@ function Story({ turns }: { turns: JournalTurn[] }) {
     const late = joined(scene[0].number)
     return (
       <section key={scene[0].number} className={cn("mb-6", (late || at < 8) && "enter-rise")} style={late ? undefined : staggered(at)}>
-        <h3 className="text-center font-display text-[17px] text-[#f3d6a6]">{scene[0].title}</h3>
+        <h3 className="text-center font-display text-base text-[#f3d6a6]">{scene[0].title}</h3>
         <Ornament className="mt-1 mb-3 scale-75" />
         {scene.map((t, n) => (
           <article key={t.number}>
             {scene.length > 1 && <Divider n={n + 1} of={scene.length} />}
             {t.reply && (
-              <div className="mb-2 border-l border-primary/50 pl-3 font-serif text-[13px] text-muted-foreground italic">
-                <span className="not-italic text-[9px] tracking-[0.2em] text-accent uppercase">{t.reply.name}</span>
+              <div className="mb-2 border-l border-primary/50 pl-3 font-serif text-xs text-muted-foreground italic">
+                <span className="not-italic text-4xs tracking-label text-accent uppercase">{t.reply.name}</span>
                 <div>{t.reply.text}</div>
               </div>
             )}
             {t.paragraphs.map((p, i) =>
               typeof p === "string" ? (
-                <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-soft-foreground", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
+                <p key={i} className={cn("mb-2.5 font-serif text-xs leading-[1.65] text-soft-foreground", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
                   {p}
                 </p>
               ) : "roll" in p ? (
@@ -224,7 +224,7 @@ function Chat({ chat, scroller }: { chat: ChatLine[]; scroller: RefObject<HTMLDi
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight
   }, [chat.length, scroller])
   return chat.map((m, i) => (
-    <p key={i} className={cn("mb-2 text-[12px] leading-relaxed", joined(i) && "enter-rise")}>
+    <p key={i} className={cn("mb-2 text-2xs leading-relaxed", joined(i) && "enter-rise")}>
       <span className="font-serif text-[#f3d6a6]">{m.from}</span> <span className="text-soft-foreground">{m.text}</span>
     </p>
   ))

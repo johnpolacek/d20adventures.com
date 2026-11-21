@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { type CSSProperties, useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { textShadow } from "@d20/ui/typography/styles"
@@ -52,7 +53,7 @@ function PartySlotAvatar({
         )}
         <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/10" />
       </div>
-      <span className={cn("text-[10px] font-mono tracking-wider uppercase", labelClass)}>{label}</span>
+      <span className={cn("text-4xs font-mono tracking-wide uppercase", labelClass)}>{label}</span>
       <span className="text-xs text-white/80 max-w-20 truncate">{name ? name.split(" ")[0] : null}</span>
     </>
   )
@@ -127,9 +128,9 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
   return (
     <div className="flex flex-col items-center w-full max-w-6xl px-4">
       <Card variant="feature" className="w-full max-w-2xl">
-        <h2 style={textShadow} className="text-3xl sm:text-4xl font-display font-bold text-accent-300 text-balance mb-2">
+        <Heading variant="h2" className="text-balance mb-2" style={textShadow}>
           Choose Your Party
-        </h2>
+        </Heading>
         <p className="text-sm text-white/60 tabular-nums mb-3">
           {partySize} of {minParty}–{maxParty} party members
         </p>
@@ -177,7 +178,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors duration-150">
                   +
                 </div>
-                <span className="text-[10px] font-mono tracking-wider uppercase text-white/40">Open</span>
+                <span className="text-4xs font-mono tracking-wide uppercase text-white/40">Open</span>
                 <span className="text-xs text-transparent select-none">&nbsp;</span>
               </Button>
             </Tip>
@@ -231,9 +232,9 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
 
       <Presence show={showCompanions} motion="fade" asChild>
         <div className="w-full flex flex-col items-center mt-10">
-          <h3 style={textShadow} className="text-2xl font-display font-bold text-sky-200 text-balance mb-1">
+          <Heading variant="h2" as="h3" className="text-balance mb-1" style={textShadow}>
             AI Companions
-          </h3>
+          </Heading>
           <p className="text-sm text-white/70 text-pretty text-center max-w-2xl mb-2">Companions are played by the game, taking their own turns in character alongside you.</p>
           <Button variant="ghost" size="sm" className="mb-6 text-sm text-sky-300/80 hover:text-sky-200" onClick={() => setShowCompanions(false)} disabled={isCreating}>
             Hide

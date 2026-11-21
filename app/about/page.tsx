@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { PlainPage, plainProse } from "@/components/layout/plain-page"
@@ -15,7 +16,7 @@ export default function AboutPage() {
       <div className={plainProse}>
         <p className="mt-0 text-lg text-white/90">D20 Adventures is a place to play 5e fantasy adventures with an AI Game Master, solo or with friends.</p>
 
-        <h2>How It Plays</h2>
+        <Heading variant="h2">How It Plays</Heading>
         <ul>
           <li>Make a hero and step into a written adventure.</li>
           <li>Type what you do. The Game Master calls for rolls and tells you what happens.</li>
@@ -23,18 +24,18 @@ export default function AboutPage() {
           <li>The rules follow the SRD 5.2.1.</li>
         </ul>
 
-        <h2>Where To Play</h2>
+        <Heading variant="h2">Where To Play</Heading>
         <ul>
           <li>On this website, signed in with your account.</li>
           <li>In the desktop app, with games saved on your computer.</li>
         </ul>
 
-        <h2>Open Source</h2>
+        <Heading variant="h2">Open Source</Heading>
         <p>
           The code and the adventures are on <a href={repo}>GitHub</a>. You can run it yourself or write your own adventure.
         </p>
 
-        <h2>Early Days</h2>
+        <Heading variant="h2">Early Days</Heading>
         <p>
           The game is in alpha. <Link href="/playtest">Become a playtester</Link>, follow the <Link href="/updates">updates</Link>, or <Link href="/contact">get in touch</Link>.
         </p>

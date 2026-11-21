@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
@@ -41,13 +42,13 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
           <p>{setting.description}</p>
           {setting.technology && (
             <>
-              <h4 className="text-xl font-display font-bold text-primary-200 mt-6 mb-1">Technology</h4>
+              <Heading variant="h3" as="h4" className="mt-6 mb-1">Technology</Heading>
               <p>{setting.technology}</p>
             </>
           )}
           {setting.magic && (
             <>
-              <h4 className="text-xl font-display font-bold text-primary-200 mt-6 mb-1">Magic</h4>
+              <Heading variant="h3" as="h4" className="mt-6 mb-1">Magic</Heading>
               <p>{setting.magic}</p>
             </>
           )}
@@ -56,7 +57,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
           {setting.locations.map((location, index) => (
             <div key={index} className="w-full relative">
               <div className="flex flex-col pt-16">
-                <h4 className="text-xl font-display font-bold text-primary-200">{location.name}</h4>
+                <Heading variant="h3" as="h4">{location.name}</Heading>
 
                 <ImageHeader topBorder variant="semicompact" {...headerImage(location.image)} title={location.name} imageAlt={location.name} />
 
@@ -67,7 +68,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                   {location.history && (
                     <>
-                      <h5 className="text-lg font-display font-bold text-primary-200 mt-4 mb-1">History</h5>
+                      <Heading variant="h4" as="h5" className="mt-4 mb-1">History</Heading>
                       <div className="whitespace-pre-line">
                         <p>{location.history}</p>
                       </div>
@@ -76,7 +77,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
                   {location.inhabitants && (
                     <>
-                      <h5 className="text-lg font-display font-bold text-primary-200 mt-4 mb-1">Inhabitants</h5>
+                      <Heading variant="h4" as="h5" className="mt-4 mb-1">Inhabitants</Heading>
                       <div className="whitespace-pre-line">
                         <p>{location.inhabitants}</p>
                       </div>

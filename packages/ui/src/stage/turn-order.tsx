@@ -163,7 +163,7 @@ export function TurnOrder({
                         className={cn(
                           "absolute inset-x-0 bottom-0 bg-background/85 font-sans tabular-nums leading-tight",
                           hero ? "text-foreground" : "tracking-wide text-roll-failure",
-                          compact ? "text-[8px]" : active ? "text-[11px]" : "text-[9px]"
+                          compact ? "text-4xs" : active ? "text-3xs" : "text-4xs"
                         )}
                       >
                         {band}
@@ -178,7 +178,7 @@ export function TurnOrder({
                       <svg viewBox="0 0 20 23" className="absolute inset-0 h-full w-full drop-shadow-[0_1px_2px_#000c]">
                         <path d="M10 1 19 4v7c0 6-4 9.5-9 11C5 20.5 1 17 1 11V4Z" fill="#1c1410" stroke="#e3b67c" strokeWidth="1.2" />
                       </svg>
-                      <span className={cn("relative font-serif font-semibold tabular-nums leading-none text-accent-soft", compact ? "text-[7px]" : "text-[10px]")}>{hero.armorClass}</span>
+                      <span className={cn("relative font-serif font-semibold tabular-nums leading-none text-accent-soft", compact ? "text-4xs" : "text-4xs")}>{hero.armorClass}</span>
                     </span>
                   )}
                 </Presence>
@@ -195,8 +195,8 @@ export function TurnOrder({
                     aria-hidden="true"
                     // Unhurt goes unsaid. It keeps its room, so the portrait does not shift at the first wound.
                     className={cn(
-                      "font-sans tracking-[0.12em] uppercase leading-none [text-shadow:0_1px_3px_#000]",
-                      compact ? "mt-0.5 text-[6px]" : "mt-1 text-[8px]",
+                      "font-sans tracking-label uppercase leading-none [text-shadow:0_1px_3px_#000]",
+                      compact ? "mt-0.5 text-4xs" : "mt-1 text-4xs",
                       s.word === "Unhurt" && "invisible"
                     )}
                     style={{ color: WOUND_TONE[s.word] }}
@@ -218,19 +218,19 @@ export function TurnOrder({
       </div>
       {label && (
         <Swap id={label} asChild>
-          <div className={cn("font-display tracking-[0.08em] text-accent-soft [text-shadow:0_1px_8px_#000,0_0_2px_#000]", compact ? "mt-1 text-[13px]" : "mt-2 text-[19px]")}>{label}</div>
+          <div className={cn("font-display tracking-wide text-accent-soft [text-shadow:0_1px_8px_#000,0_0_2px_#000]", compact ? "mt-1 text-xs" : "mt-2 text-base")}>{label}</div>
         </Swap>
       )}
       <Presence show={Boolean(label && labelled?.conditions)} motion="fade" initial={false} asChild>
         {label && labelled?.conditions && (
-          <div className={cn("font-serif text-foreground italic [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "text-[10px]" : "text-[13px]")}>{labelled.conditions}</div>
+          <div className={cn("font-serif text-foreground italic [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "text-4xs" : "text-xs")}>{labelled.conditions}</div>
         )}
       </Presence>
       <Presence show={Boolean(passed)} motion="fade" initial={false} asChild>
         {passed && (
           <div className={cn("flex items-baseline gap-2 [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "mt-0.5" : "mt-1")}>
-            <span className={cn("font-sans font-medium tracking-[0.26em] text-muted-foreground uppercase", compact ? "text-[7px]" : "text-[9px]")}>Passed Over</span>
-            <span className={cn("font-serif text-roll-failure", compact ? "text-[10px]" : "text-[13px]")}>{passed}</span>
+            <span className={cn("font-sans font-medium tracking-label text-muted-foreground uppercase", compact ? "text-4xs" : "text-4xs")}>Passed Over</span>
+            <span className={cn("font-serif text-roll-failure", compact ? "text-4xs" : "text-xs")}>{passed}</span>
           </div>
         )}
       </Presence>

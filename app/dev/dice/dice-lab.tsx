@@ -116,8 +116,8 @@ function Take({ name, note, children }: { name: string; note: string; children: 
     <div className="stage-grain flex flex-col items-center gap-4 rounded-md border border-foreground/25 bg-panel/95 px-6 pt-6 pb-5">
       <div className="grid h-[130px] place-items-center">{children}</div>
       <div className="text-center">
-        <div className="font-display text-[18px] text-[#f3d6a6]">{name}</div>
-        <div className="mt-1 max-w-[200px] font-serif text-[12px] leading-snug text-muted-foreground">{note}</div>
+        <div className="font-display text-base text-[#f3d6a6]">{name}</div>
+        <div className="mt-1 max-w-[200px] font-serif text-2xs leading-snug text-muted-foreground">{note}</div>
       </div>
     </div>
   )
@@ -130,10 +130,10 @@ export function DiceLab() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-8 flex items-end justify-between gap-6">
           <div>
-            <div className="font-sans text-[9px] font-medium tracking-[0.26em] text-accent uppercase">Stageview · roll card</div>
-            <h1 className="mt-1.5 font-display text-[30px]">The d20</h1>
+            <div className="font-sans text-4xs font-medium tracking-label text-accent uppercase">Stageview · roll card</div>
+            <h1 className="mt-1.5 font-display text-2xl">The d20</h1>
           </div>
-          <Pill variant="primary" className="rounded-full px-6 py-2 font-display text-[13px] font-bold tracking-[0.12em]" onClick={() => setGo((g) => g + 1)}>
+          <Pill variant="primary" className="rounded-full px-6 py-2 font-display text-xs font-bold tracking-label" onClick={() => setGo((g) => g + 1)}>
             Roll all
           </Pill>
         </div>

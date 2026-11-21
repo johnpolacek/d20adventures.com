@@ -288,8 +288,8 @@ export function LabViewer({ params }: { params: Params }) {
       <div ref={ref} className="absolute inset-0" />
       {!stage && <div className="absolute inset-0 z-10 flex items-center justify-center text-sm opacity-70">{status}</div>}
       {stage && !hidden && (
-        <div className="absolute top-3 left-3 z-20 max-w-[560px] space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm">
-          <div className="text-[14px] tracking-[0.06em] text-[#f2c97a]">Stage art lab</div>
+        <div className="absolute top-3 left-3 z-20 max-w-[560px] space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-3xs leading-snug backdrop-blur-sm">
+          <div className="text-sm tracking-wide text-[#f2c97a]">Stage art lab</div>
           <div className="flex flex-wrap gap-1">
             {shots.map(([k, label], i) => (
               <button

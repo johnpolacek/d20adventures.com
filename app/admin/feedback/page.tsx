@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { Metadata } from "next"
 import type { CSSProperties } from "react"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
@@ -19,7 +20,7 @@ export default async function AdminFeedbackPage() {
   return (
     <div className="container py-8">
       <AdminBreadcrumb items={[{ label: "Feedback" }]} />
-      <h1 className="mb-6 text-4xl font-bold">Feedback</h1>
+      <Heading variant="h1" className="mb-6">Feedback</Heading>
       {rows.length === 0 && <p className="text-white/60">None yet.</p>}
       <ul className="grid gap-4">
         {rows.map((row, index) => (

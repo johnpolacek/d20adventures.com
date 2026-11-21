@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { PlainPage, plainProse } from "@/components/layout/plain-page"
@@ -14,10 +15,10 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         {intro && <div className="text-lg text-white/90 [&>p:first-child]:mt-0">{intro}</div>}
         {sections.map((section, i) => (
           <section key={section.title}>
-            <h2>
+            <Heading variant="h2">
               <span className="mr-3 text-accent-300/70">{i + 1}.</span>
               {section.title}
-            </h2>
+            </Heading>
             {section.body}
           </section>
         ))}

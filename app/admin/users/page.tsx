@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { User } from "@clerk/nextjs/server"
 import { clerkClient } from "@clerk/nextjs/server"
 import { AdminUserList } from "@/components/admin/user-list"
@@ -35,7 +36,7 @@ export default async function AdminUsersPage() {
       <AdminBreadcrumb items={[{ label: "Users" }]} />
 
       <div className="mb-8">
-        <h1 className="text-4xl font-bold">Users</h1>
+        <Heading variant="h1">Users</Heading>
         <p className="text-white/60">Manage and view user information</p>
       </div>
 

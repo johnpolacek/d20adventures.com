@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
 import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
@@ -133,7 +134,7 @@ export function HeroCreator(props: {
         <Swap id={step} motion={back ? "left" : "right"} exit={back ? "right" : "left"} className="flex flex-col gap-5">
           {step === "pick" && (
             <>
-              <h2 className="font-display text-3xl font-bold text-accent-300">New Hero</h2>
+              <Heading variant="h2">New Hero</Heading>
               <Swap id={!menu || !pick ? "loading" : "menu"} className="flex flex-col gap-5">
                 {!menu || !pick ? (
                   <p className="text-white/70 italic">Loading…</p>
@@ -179,7 +180,7 @@ export function HeroCreator(props: {
           {step === "rules" && kit && pick && choices && (
             <>
               <div>
-                <h2 className="font-display text-3xl font-bold text-accent-300">{idea.name.trim()}</h2>
+                <Heading variant="h2">{idea.name.trim()}</Heading>
                 <p className="mt-1 text-white/80">
                   {view
                     ? `Level 1 ${view.speciesName} ${view.className} · ${view.backgroundName} · Hit Points ${view.hitPoints.maximum} · Armor Class ${view.armorClass} · Speed ${view.speed} ft.`

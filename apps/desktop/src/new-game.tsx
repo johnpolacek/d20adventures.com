@@ -357,12 +357,12 @@ export function NewGame(props: {
                       {p.hero && (
                         <div className="absolute top-3 left-3 flex gap-1">
                           {props.onEdit && (
-                            <Button variant="outline" size="xs" className="font-mono text-xxs" disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
+                            <Button variant="outline" size="xs" className="font-mono text-3xs" disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
                               Edit
                             </Button>
                           )}
                           {props.onPaint && (
-                            <Button variant="outline" size="xs" className="font-mono text-xxs" disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                            <Button variant="outline" size="xs" className="font-mono text-3xs" disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
                               <span key={props.painting === p.id ? "busy" : "idle"} className="enter-fade">
                                 {props.painting === p.id ? "Painting…" : "Paint"}
                               </span>
@@ -371,7 +371,7 @@ export function NewGame(props: {
                           <Button
                             variant={deleting === p.id ? "destructive" : "outline"}
                             size="xs"
-                            className="font-mono text-xxs"
+                            className="font-mono text-3xs"
                             disabled={props.busy}
                             aria-label={deleting === p.id ? `Confirm deleting ${p.name}` : `Delete ${p.name}`}
                             onBlur={() => setDeleting(null)}

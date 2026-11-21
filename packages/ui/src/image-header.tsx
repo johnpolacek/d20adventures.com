@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import type React from "react"
 import { useState } from "react"
 import Parchment from "./graphics/parchment"
@@ -49,17 +50,17 @@ export default function ImageHeader({ imageUrl, srcSet, children, title, subtitl
         {title && (
           <div className="absolute bottom-44 sm:bottom-54 px-4 w-full flex flex-col items-center">
             {children}
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-display text-center mt-12" style={textShadowSpread}>
+            <Heading variant="h2" className="text-center mt-12" style={textShadowSpread}>
               {title}
-            </h2>
+            </Heading>
           </div>
         )}
         <div className="absolute bottom-32 sm:bottom-36 left-0 right-0 flex justify-center">
           {subtitle && (
-            <h3 className="relative border border-white/20 rounded-sm bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 font-display sm:text-lg md:text-xl font-bold px-6 sm:px-8 py-1 sm:py-2 ring-4 sm:ring-8 ring-black z-[11] contrast-[1.2] saturate-[.4]">
+            <Heading variant="h3" className="relative border border-white/20 rounded-sm bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 px-6 sm:px-8 py-1 sm:py-2 ring-4 sm:ring-8 ring-black z-[11] contrast-[1.2] saturate-[.4]">
               <Parchment />
               <span style={textShadow}>{subtitle}</span>
-            </h3>
+            </Heading>
           )}
         </div>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-1/3" />

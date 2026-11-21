@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { ReactNode } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
@@ -20,11 +21,11 @@ export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", c
         <article className={`mx-auto ${width}`}>
           {title && (
             <header className="mb-8 flex flex-col items-center text-center">
-              <h1 className="font-display text-5xl sm:text-6xl text-action-50" style={textShadowSpreadLight}>
+              <Heading variant="h1" className="text-action-50" style={textShadowSpreadLight}>
                 {title}
-              </h1>
+              </Heading>
               {subtitle && (
-                <p className="mt-3 font-display text-sm tracking-[0.2em] uppercase text-accent-200" style={textShadowSpreadLight}>
+                <p className="mt-3 font-display text-sm tracking-label uppercase text-accent-200" style={textShadowSpreadLight}>
                   {subtitle}
                 </p>
               )}

@@ -122,7 +122,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-display text-lg text-white">{option.name}</div>
-                    <div className="text-xxs font-mono uppercase tracking-wide text-primary-200">{option.source === "premade" ? "Premade" : "Saved"}</div>
+                    <div className="text-3xs font-mono uppercase tracking-wide text-primary-200">{option.source === "premade" ? "Premade" : "Saved"}</div>
                   </div>
                   <div className="text-sm text-white/70">
                     {option.race} {option.archetype}

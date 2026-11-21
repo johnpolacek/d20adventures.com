@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
@@ -21,10 +22,10 @@ export default function NotFound() {
           <span>4</span>
         </div>
 
-        <p className="mt-8 font-display text-sm sm:text-base tracking-[0.3em] text-accent-300/90 uppercase">Natural 1</p>
-        <h1 className="mt-2 font-display text-3xl sm:text-5xl" style={textShadowSpreadLight}>
+        <p className="mt-8 font-display text-sm sm:text-base tracking-label text-accent-300/90 uppercase">Natural 1</p>
+        <Heading variant="h2" as="h1" className="mt-2" style={textShadowSpreadLight}>
           Lost in the Wilds
-        </h1>
+        </Heading>
         <p className="mt-4 max-w-md text-lg text-white/70 text-balance">This path leads nowhere. The page you seek is on no map we know.</p>
 
         <Button variant="epic" size="lg" className="mt-10" render={<Link href="/" />}>

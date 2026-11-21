@@ -459,7 +459,7 @@ export function RollLooks() {
       <div className="flex items-end justify-between gap-6">
         <div>
           <div className={eyebrow}>Stageview · rules combat</div>
-          <h2 className="mt-1.5 font-display text-[26px]">Rolls and Characters</h2>
+          <h2 className="mt-1.5 font-display text-2xl">Rolls and Characters</h2>
         </div>
         <div className="flex gap-2">
           <Pill active={compact} onClick={() => setCompact((c) => !c)}>

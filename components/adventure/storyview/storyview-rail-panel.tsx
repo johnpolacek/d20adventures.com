@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 // Right-rail Storyview card (desktop): previews the opening of this turn's
 // narrative in the display face, cropped with a fade, and opens the cinematic
 // Storyview overlay. Sibling of the Map and Encounter rail cards; the floating
@@ -113,12 +114,12 @@ export default function StoryviewRailPanel({ className }: { className?: string }
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-primary-100">Storyview</h3>
+          <Heading variant="h5" as="h3" className="truncate">Storyview</Heading>
           <div className="flex items-center gap-2">
             {isOwner && (
               <Tip label="Automatically narrate each turn; the token cost is split among all players.">
                 <Label plain className="flex cursor-pointer items-center gap-1.5">
-                  <span className="text-[10px] uppercase tracking-wide text-zinc-400">Auto</span>
+                  <span className="text-4xs uppercase tracking-wide text-zinc-400">Auto</span>
                   <Switch checked={autoEnabled} onCheckedChange={toggleAuto} aria-label="Toggle auto-narration" />
                 </Label>
               </Tip>
@@ -142,7 +143,7 @@ export default function StoryviewRailPanel({ className }: { className?: string }
           </div>
           <div className="flex items-center gap-2 px-4 pb-3 pt-1">
             <Clapperboard className="h-4 w-4 flex-none text-primary-200/90" />
-            <p className="text-[11px] text-zinc-400">Play this turn cinematically</p>
+            <p className="text-3xs text-zinc-400">Play this turn cinematically</p>
           </div>
         </Button>
         <Presence show={Boolean(paused || showReady || showPreparing)} motion="fade" asChild>

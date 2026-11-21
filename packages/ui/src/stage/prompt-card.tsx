@@ -126,7 +126,7 @@ function GmMusing({ note }: { note?: string }) {
   }, [note])
   const line = note ?? MUSINGS[order[at % order.length]]
   return (
-    <div key={line} className={cn("mt-1.5 font-serif text-[14px] text-accent-soft italic", leaving ? "gm-musing-out" : "gm-musing-in")}>
+    <div key={line} className={cn("mt-1.5 font-serif text-sm text-accent-soft italic", leaving ? "gm-musing-out" : "gm-musing-in")}>
       {line}
     </div>
   )
@@ -137,7 +137,7 @@ const candlelit =
   "stage-grain rounded-xl border border-accent/20 bg-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_color-mix(in_srgb,var(--color-accent)_20%,transparent)] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,color-mix(in_srgb,var(--color-accent)_15%,transparent),transparent_70%)]"
 // A hero's choices: ghost pills in the serif.
 const choice =
-  "rounded-full border border-foreground/20 px-4 py-1.5 font-serif text-[16px] text-foreground/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-accent hover:bg-accent/10 hover:text-accent"
+  "rounded-full border border-foreground/20 px-4 py-1.5 font-serif text-sm text-foreground/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-accent hover:bg-accent/10 hover:text-accent"
 
 // The hero whose turn it is, a gold ring breaking the card's top edge, with the rest of the party in smaller rings
 // beside it to switch to.
@@ -254,7 +254,7 @@ function D20({
     >
       <D20Solid size={compact ? 64 : 92} roll={tumble} numbered face={face ?? undefined} idle={face === null && !disabled} className={cn("absolute inset-0", done && "die-land")} />
       <Presence show={face === null && !auto} motion="fade" initial={false} asChild>
-        <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : "-bottom-3.5")}>Roll</span>
+        <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-4xs" : "-bottom-3.5")}>Roll</span>
       </Presence>
     </Button>
   )
@@ -264,7 +264,7 @@ const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
 
 function Total({ natural, modifier }: { natural: number | null; modifier: number }) {
   return (
-    <div className="mt-2 font-serif text-[13px] text-accent-soft tabular-nums">
+    <div className="mt-2 font-serif text-xs text-accent-soft tabular-nums">
       {natural === null ? "\u00a0" : `${natural} ${modifier < 0 ? "\u2212" : "+"} ${Math.abs(modifier)} = ${natural + modifier}`}
     </div>
   )
@@ -318,7 +318,7 @@ function SingleRoll({
   return (
     <div>
       <div className={eyebrow}>{dice === null ? `${title} Needed` : title}</div>
-      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-foreground">{prompt}</p>}
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-sm leading-[1.5] text-foreground">{prompt}</p>}
       <div className={cn("mx-auto max-w-[440px] text-left", compact ? "mt-1.5" : "mt-3")}>
         <RollResult
           compact={compact}
@@ -386,15 +386,15 @@ function ContestRoll({
   }
   const side = (name: string, skill: string, detail: string) => (
     <>
-      <div className="text-[9px] tracking-[0.2em] text-accent uppercase">{name}</div>
-      <div className={cn("font-display text-[#f3d6a6]", compact ? "text-base" : "mt-0.5 text-[22px]")}>{skill}</div>
-      <div className="mb-2.5 text-[10px] tracking-wider text-muted-foreground uppercase">{detail}</div>
+      <div className="text-4xs tracking-label text-accent uppercase">{name}</div>
+      <div className={cn("font-display text-[#f3d6a6]", compact ? "text-base" : "mt-0.5 text-xl")}>{skill}</div>
+      <div className="mb-2.5 text-4xs tracking-wide text-muted-foreground uppercase">{detail}</div>
     </>
   )
   return (
     <div>
       <div className={eyebrow}>Contest</div>
-      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-foreground">{prompt}</p>}
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-sm leading-[1.5] text-foreground">{prompt}</p>}
       <div className={cn("flex items-start justify-center", compact ? "mt-1 gap-4" : "mt-3 gap-7")}>
         {roll.versus && (
           <>
@@ -409,7 +409,7 @@ function ContestRoll({
         <div className="flex flex-col items-center">
           {side(actor.name.split(" ")[0], roll.skill, signed(roll.modifier))}
           {roll.mode && (
-            <div className="-mt-1.5 mb-2 max-w-[200px] truncate font-serif text-[12px] text-muted-foreground italic">
+            <div className="-mt-1.5 mb-2 max-w-[200px] truncate font-serif text-2xs text-muted-foreground italic">
               <span className="font-semibold text-accent not-italic">{modeName(roll.mode)}</span>
               {roll.reasons?.length ? ` · ${roll.reasons.join(", ")}` : ""}
             </div>
@@ -431,7 +431,7 @@ function ContestRoll({
           <Total natural={natural} modifier={roll.modifier} />
         </div>
       </div>
-      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase transition-opacity duration-150", total === null ? "opacity-0" : total >= roll.dc ? "text-roll-success" : "text-roll-failure")}>
+      <div className={cn("mt-1 h-4 text-3xs tracking-label uppercase transition-opacity duration-150", total === null ? "opacity-0" : total >= roll.dc ? "text-roll-success" : "text-roll-failure")}>
         {total === null ? "" : `${total} against ${roll.dc} · ${total >= roll.dc ? "success" : "failure"}`}
       </div>
     </div>
@@ -578,7 +578,7 @@ export function PromptCard({
           <p
             className={cn(
               mode.prompt.length <= 60 ? "font-display text-accent [text-shadow:0_1px_6px_#000]" : "font-serif text-foreground",
-              compact ? "my-1 line-clamp-3 text-[14px] leading-snug" : cn("mb-4 leading-[1.35]", mode.prompt.length <= 60 ? "text-[22px]" : "text-[19px]")
+              compact ? "my-1 line-clamp-3 text-sm leading-snug" : cn("mb-4 leading-[1.35]", mode.prompt.length <= 60 ? "text-xl" : "text-base")
             )}
           >
             {mode.prompt}
@@ -592,7 +592,7 @@ export function PromptCard({
                       key={i}
                       aria-hidden
                       style={{ animationDelay: `${i * 200}ms` }}
-                      className={cn(choice, "flex w-[30%] animate-pulse items-center justify-center not-italic hover:border-foreground/20 hover:bg-transparent", compact && "px-3 py-0.5 text-[12px]")}
+                      className={cn(choice, "flex w-[30%] animate-pulse items-center justify-center not-italic hover:border-foreground/20 hover:bg-transparent", compact && "px-3 py-0.5 text-2xs")}
                     >
                       &nbsp;
                       <span className="h-[0.5em] w-2/3 rounded-full bg-foreground/15" />
@@ -607,7 +607,7 @@ export function PromptCard({
                         className={cn(
                           choice,
                           "max-w-full truncate active:scale-[0.97]",
-                          compact && "px-3 py-0.5 text-[12px]",
+                          compact && "px-3 py-0.5 text-2xs",
                           draft === s.text && "border-accent bg-accent/10 text-accent",
                           rising && "enter-rise"
                         )}
@@ -641,7 +641,7 @@ export function PromptCard({
               placeholder={demo && !draft ? "" : `What does ${actor.name.split(" ")[0]} say and do?`}
               className={cn(
                 "field-sizing-content block max-h-32 min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-left font-serif text-foreground placeholder:text-muted-foreground/60 focus:outline-none disabled:cursor-not-allowed",
-                compact ? "text-[13px]" : "text-[16px]"
+                compact ? "text-xs" : "text-sm"
               )}
             />
             <Button
@@ -659,7 +659,7 @@ export function PromptCard({
             </Button>
             <Presence show={demo && !draft} motion="fade" initial={false} asChild>
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                <span className={cn("font-sans font-medium tracking-[0.22em] text-accent/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
+                <span className={cn("font-sans font-medium tracking-label text-accent/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-4xs" : "text-3xs")}>
                   Demo only · Click Suggest for a reply
                 </span>
               </div>
@@ -667,7 +667,7 @@ export function PromptCard({
           </div>
           <Presence show={Boolean(warning)} motion="rise" asChild>
             {warning && (
-              <div role="alert" className={cn("rounded-lg border border-accent/30 bg-black/50 text-left font-serif text-foreground", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
+              <div role="alert" className={cn("rounded-lg border border-accent/30 bg-black/50 text-left font-serif text-foreground", compact ? "mt-1.5 px-3 py-2 text-2xs" : "mt-2.5 px-4 py-3 text-sm")}>
                 <p>
                   {warning}. {actor.name.split(" ")[0]} would spend a spell slot for nothing.
                 </p>
@@ -693,7 +693,7 @@ export function PromptCard({
                 </Pill>
               )}
               {onSkip && (
-                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-muted-foreground transition-colors duration-150 hover:text-foreground">
+                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-3xs tracking-wide text-muted-foreground transition-colors duration-150 hover:text-foreground">
                   Skip
                 </Button>
               )}
@@ -735,14 +735,14 @@ export function PromptCard({
           )}
           <div className="min-w-0">
             <div className={cn(eyebrow, "animate-pulse")}>{mode.who.name}&apos;s turn</div>
-            {mode.note && <div className="mt-1 font-serif text-[13px] text-soft-foreground italic">{mode.note}</div>}
+            {mode.note && <div className="mt-1 font-serif text-xs text-soft-foreground italic">{mode.note}</div>}
           </div>
         </div>
       )}
       {mode.kind === "done" && (
         <>
           <div className={eyebrow}>Encounter complete</div>
-          <div className={cn("font-display text-[#f3d6a6]", compact ? "text-lg" : "mt-1 text-[24px]")}>{mode.next}</div>
+          <div className={cn("font-display text-[#f3d6a6]", compact ? "text-lg" : "mt-1 text-xl")}>{mode.next}</div>
         </>
       )}
     </section>

@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { ChevronsRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
@@ -25,13 +26,13 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
       <CardContent className="flex flex-col items-center gap-4 sm:py-4">
         <div className="text-center space-y-2">
           <div className="flex justify-center">
-            <div className="text-xxs text-primary-100 bg-primary-800/80 rounded-lg px-3 py-1 font-display font-bold -mt-2">
+            <div className="text-3xs text-primary-100 bg-primary-800/80 rounded-lg px-3 py-1 font-display font-bold -mt-2">
               Current {(adventure.runType ?? "campaign") === "practice" ? "Practice Run" : "Campaign"}
             </div>
           </div>
-          <h3 style={textShadowSpread} className="text-2xl sm:text-3xl font-bold text-accent-300 font-display">
+          <Heading variant="h2" as="h3" style={textShadowSpread}>
             {adventure.title}
-          </h3>
+          </Heading>
           {userCharacter && (
             <div className="flex items-center gap-4 justify-center">
               <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary-300">

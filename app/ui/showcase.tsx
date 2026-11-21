@@ -51,6 +51,30 @@ const families = [
   { name: "Mono", note: "Syne Mono · labels and tags", className: "font-mono text-lg" },
 ]
 
+// The steps of the type scale, written out so Tailwind keeps the classes.
+const typeScale = [
+  { name: "4xs", px: "10px", className: "text-4xs" },
+  { name: "3xs", px: "11px", className: "text-3xs" },
+  { name: "2xs", px: "12px", className: "text-2xs" },
+  { name: "xs", px: "13px", className: "text-xs" },
+  { name: "sm", px: "15px", className: "text-sm" },
+  { name: "base", px: "18px", className: "text-base" },
+  { name: "lg", px: "20px", className: "text-lg" },
+  { name: "xl", px: "24px", className: "text-xl" },
+  { name: "2xl", px: "28px", className: "text-2xl" },
+  { name: "3xl", px: "34px", className: "text-3xl" },
+  { name: "4xl", px: "40px", className: "text-4xl" },
+]
+
+const tracking = [
+  { name: "tight", className: "font-display text-2xl tracking-tight", sample: "The Sealed Door" },
+  { name: "normal", className: "text-base tracking-normal", sample: "The Sealed Door" },
+  { name: "wide", className: "font-display text-sm tracking-wide", sample: "Continue" },
+  { name: "label", className: "font-mono text-2xs uppercase tracking-label text-accent", sample: "Level Up" },
+]
+
+const headingUse = { h1: "h1 · page", h2: "h2 · section", h3: "h3 · part", h4: "h4 · panel", h5: "h5 · small", h6: "h6 · label" }
+
 function TypographyDemo() {
   return (
     <div className="grid gap-8 lg:grid-cols-2">
@@ -63,18 +87,38 @@ function TypographyDemo() {
             <span className={f.className}>The Gates of Kordavos Open at Dawn</span>
           </div>
         ))}
-        <div className="flex flex-col gap-1">
-          <span className={siteLabel}>Sizes below xs</span>
-          <span className="text-xxs font-mono">text-xxs · Premade Characters</span>
-          <span className="text-xxxs font-mono">text-xxxs · 1 to 4 Players</span>
+        <div className="flex flex-col gap-2">
+          <span className={siteLabel}>
+            Scale <span className="normal-case tracking-normal text-white/50">one for site, app and stage · 10px floor</span>
+          </span>
+          {typeScale.map((t) => (
+            <div key={t.name} className="flex items-baseline gap-4">
+              <span className="w-24 shrink-0 font-mono text-2xs text-white/50">
+                {t.name} · {t.px}
+              </span>
+              <span className={cn("truncate font-sans", t.className)}>Kordavos at Dawn</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className={siteLabel}>Letter Spacing</span>
+          {tracking.map((t) => (
+            <div key={t.name} className="flex items-baseline gap-4">
+              <span className="w-24 shrink-0 font-mono text-2xs text-white/50">{t.name}</span>
+              <span className={t.className}>{t.sample}</span>
+            </div>
+          ))}
         </div>
       </div>
       <div className="flex flex-col gap-4">
         <span className={siteLabel}>Heading</span>
         {(["h1", "h2", "h3", "h4", "h5", "h6"] as const).map((v) => (
-          <Heading key={v} variant={v} as="h3" className="leading-tight">
-            {v.toUpperCase()} Kordavos
-          </Heading>
+          <div key={v} className="flex items-baseline gap-4">
+            <span className="w-24 shrink-0 font-mono text-2xs text-white/50">{headingUse[v]}</span>
+            <Heading variant={v} as="h3">
+              Kordavos
+            </Heading>
+          </div>
         ))}
         <span className={cn(siteLabel, "mt-4")}>Shadows over art</span>
         <div className="flex flex-col items-center gap-2 rounded-lg bg-[url(/images/app/backgrounds/d20-hero.webp)] bg-cover bg-center p-6">
@@ -95,10 +139,10 @@ function NarrationDemo() {
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-4 font-serif text-lg leading-relaxed text-white/90">
       <div className="text-center">
-        <div className="font-mono text-xs uppercase tracking-widest text-accent-400/80">Scene One</div>
-        <h3 className="font-display text-3xl text-accent-300" style={textShadow}>
+        <div className="font-mono text-xs uppercase tracking-label text-accent-400/80">Scene One</div>
+        <Heading variant="h2" as="h3" style={textShadow}>
           The Gate
-        </h3>
+        </Heading>
       </div>
       <Ornament />
       <p className={dropCap}>
@@ -193,7 +237,7 @@ function ColorsDemo() {
             {p.swatches.map((c) => (
               <div key={c.label} className="flex flex-col gap-1">
                 <div className={cn("h-12 rounded-md ring-1 ring-white/15 ring-inset", c.className)} />
-                <span className="font-mono text-xxs text-white/70">{c.label}</span>
+                <span className="font-mono text-3xs text-white/70">{c.label}</span>
               </div>
             ))}
           </div>
@@ -397,9 +441,9 @@ function ReadingSample({ theme }: { theme: "light" | "dark" }) {
         </span>
       </div>
       <div className="up-prose">
-        <h2>
+        <Heading variant="h2">
           <span className="up-num">01</span>The Gate
-        </h2>
+        </Heading>
         <p>
           Rain hammers the slate roofs of Kordavos. The guard wants <a href="#reading">three silver</a> for the toll, and{" "}
           <code>another</code> for the trouble.
@@ -746,7 +790,7 @@ const tiles: Tile[] = [
 export function Showcase() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-24 pb-12">
-      <h1 className="font-mono text-2xl uppercase tracking-widest text-white">D20 / UI</h1>
+      <Heading variant="h2" as="h1">D20 / UI</Heading>
       <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile, i) => (
           <section

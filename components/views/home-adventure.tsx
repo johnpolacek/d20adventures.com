@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { type ReactNode, useEffect, useState } from "react"
@@ -43,9 +44,9 @@ export default function HomeAdventure({ children }: { children: ReactNode }) {
     <Swap id={active ? "welcome" : "hero"} motion={active ? "rise" : "fade"} exit="fade" className="z-10">
       {active?.activeAdventure ? (
         <div className="mt-32 sm:mt-48 w-screen relative z-10">
-          <h2 className="text-4xl sm:text-6xl font-display text-center w-full mb-8" style={textShadowSpreadLight}>
+          <Heading variant="h1" as="h2" className="text-4xl sm:text-6xl text-center w-full mb-8" style={textShadowSpreadLight}>
             Welcome Back
-          </h2>
+          </Heading>
           <ActiveAdventureCard adventure={active.activeAdventure} userId={active.userId} />
           <div className="flex justify-center items-center gap-8 py-12">
             <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800" render={<Link href={user?.username ? `/player/${user.username}` : "/player"} />}>Your Player Page</Button>

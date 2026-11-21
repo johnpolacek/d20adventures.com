@@ -170,7 +170,7 @@ export function Narration({
             className={cn(
               "font-serif text-foreground transition-opacity duration-150",
               visible ? "opacity-100" : "opacity-0",
-              compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]",
+              compact ? "text-2xs leading-snug" : "text-sm leading-[1.65]",
               timed && "cursor-pointer"
             )}
             onClick={timed ? () => setPaused((p) => !p) : undefined}
@@ -215,7 +215,7 @@ export function Narration({
               <Button
                 variant="epic"
                 size="xs"
-                className={cn("relative ml-1 overflow-hidden", compact ? "px-4 py-0.5 text-[11px]" : "-my-[3px] border-[3px] py-2 text-[11px]/4")}
+                className={cn("relative ml-1 overflow-hidden", compact ? "px-4 py-0.5 text-3xs" : "-my-[3px] border-[3px] py-2 text-3xs/4")}
                 style={compact ? undefined : epicReducedButtonStyle}
                 onClick={() => {
                   setPaused(false)

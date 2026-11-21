@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { SignInButton, useUser } from "@clerk/nextjs"
 import { useCallback, useEffect, useState } from "react"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
@@ -101,7 +102,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
       <Presence show={isLoaded} asChild>
         <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-foreground")}>
           <div className={eyebrow}>D20 Adventures · Desktop</div>
-          <h1 className="mt-3 font-display text-3xl leading-tight">{linked ? "Linked" : "Link this computer"}</h1>
+          <Heading variant="h2" as="h1" className="mt-3">{linked ? "Linked" : "Link This Computer"}</Heading>
           <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-accent/80 to-transparent" />
 
           <Swap id={!isSignedIn ? "sign-in" : linked ? "linked" : pending ? "pending" : "code"} motion="rise" exit="fade">
@@ -147,7 +148,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                   placeholder="ABCD-EFGH"
                   autoComplete="off"
                   spellCheck={false}
-                  className="stage-parchment w-full rounded-hud px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="stage-parchment w-full rounded-hud px-4 py-3 text-center font-display text-2xl tracking-label text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
                   Continue
@@ -170,7 +171,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                     <li className="stage-navy flex items-center justify-between gap-4 rounded-hud border border-foreground/20 px-3 py-2">
                       <div className="min-w-0">
                         <div className="truncate font-serif">{device.name}</div>
-                        <div className="text-[11px] text-muted-foreground">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
+                        <div className="text-3xs text-muted-foreground">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
                       </div>
                       <Pill onClick={() => revoke(device.id)}>Unlink</Pill>
                     </li>

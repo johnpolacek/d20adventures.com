@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import { playableHero } from "@d20/gm-core/character/hero-draft"
 import Link from "next/link"
@@ -318,7 +319,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         </section>
         {/* Start Adventure Button for signed-in users with a character */}
         <Presence show={Boolean(isSignedIn && userCharacter && guestOfHost)} motion="fade" asChild>
-          <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>
+          <Heading variant="h2" as="h3" className="mb-6 opacity-70 text-center">Waiting for the host to start...</Heading>
         </Presence>
         <Presence show={Boolean(isSignedIn && userCharacter && !guestOfHost)} motion="fade">
           <StartAdventureButton

@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react"
 import * as React from "react"
 import { Button } from "@d20/ui/button"
@@ -117,7 +118,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
   return (
     <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-display font-bold text-primary-200">Locations</h3>
+        <Heading variant="h3">Locations</Heading>
         <Button onClick={addLocation} size="sm" disabled={isSaving}>
           <Plus className="w-4 h-4 mr-2" />
           Add Location
@@ -204,7 +205,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-lg font-display font-bold text-primary-200">Organizations</h4>
+                      <Heading variant="h4">Organizations</Heading>
                       <Button onClick={() => addOrganization(locationIndex)} size="sm" variant="outline" disabled={isSaving}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Organization

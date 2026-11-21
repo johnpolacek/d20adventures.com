@@ -81,7 +81,7 @@ export default function StoryviewOverlay({
   return createPortal(
     <div className={cn("fixed inset-0 z-screen flex flex-col bg-black", className)} style={style} onAnimationEnd={onAnimationEnd}>
       <div className="flex items-center justify-between px-6 py-4">
-        <p className="font-display text-sm tracking-widest text-primary-200/80 uppercase">Storyview</p>
+        <p className="font-display text-sm tracking-label text-primary-200/80 uppercase">Storyview</p>
         <div className="flex items-center gap-3">
           <Presence show={Boolean(newTurnAvailable)} motion="pop" asChild>
             <Button variant="outline" size="sm" className="text-xs" onClick={close}>

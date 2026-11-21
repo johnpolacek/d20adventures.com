@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button, buttonClassName } from "@d20/ui/button"
@@ -236,9 +237,9 @@ export function FeedbackLink({ account: a }: { account: Account }) {
 export function LinkGate({ account: a }: { account: Account }) {
   return (
     <div className={cn(cardVariants({ variant: "quiet" }), "w-[min(28rem,92vw)] px-8 py-9 text-center text-white")}>
-      <h1 className="font-display text-3xl font-bold leading-tight text-accent-400" style={textShadowSpreadLight}>
+      <Heading variant="h2" as="h1" style={textShadowSpreadLight}>
         Link your account
-      </h1>
+      </Heading>
       <Rule className="mx-auto mt-5 mb-6 w-48" />
       <Swap id={a.link ? "code" : "start"}>
         {a.link ? (

@@ -55,7 +55,7 @@ export default async function AdminAdventurePlansPage() {
     <div className="min-h-screen bg-[#08071a]">
       <div className="container pt-24 pb-12 md:pt-32 md:pb-16">
         <div className="mx-auto max-w-6xl">
-          <Heading variant="h3" as="h1" className="mb-2 text-accent-400">
+          <Heading variant="h3" as="h1" className="mb-2">
             Adventure Plans
           </Heading>
           <p className="mb-8 text-white/60">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
@@ -76,12 +76,12 @@ export default async function AdminAdventurePlansPage() {
                       <div className="absolute inset-0 bg-gradient-to-br from-lime-950 to-black" />
                     )}
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12">
-                      <h2 className="font-display text-xl text-accent-300">{adventure.title}</h2>
+                      <Heading variant="h3" as="h2">{adventure.title}</Heading>
                       <p className="mt-1 font-mono text-xs text-zinc-400">
                         {adventure.settingId}/{adventure.planId}
                       </p>
                     </div>
-                    <span className="absolute right-3 top-3 rounded border border-accent-700 bg-accent-950/80 px-2 py-1 font-mono text-[10px] uppercase text-accent-200">{adventure.status}</span>
+                    <span className="absolute right-3 top-3 rounded border border-accent-700 bg-accent-950/80 px-2 py-1 font-mono text-4xs uppercase text-accent-200">{adventure.status}</span>
                   </Link>
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <p className="text-sm text-zinc-400">

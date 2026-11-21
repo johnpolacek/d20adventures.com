@@ -23,10 +23,10 @@ export default function AuthButtons() {
       <div className="flex items-center overflow-hidden">
         <div className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
           {/* Placeholder buttons that match the signed-out state */}
-          <Button className="text-[11px] sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case opacity-0" variant="emboss">
+          <Button className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case opacity-0" variant="emboss">
             Sign In
           </Button>
-          <Button className="text-[11px] sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case opacity-0" variant="emboss">
+          <Button className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case opacity-0" variant="emboss">
             Sign Up
           </Button>
         </div>
@@ -56,12 +56,12 @@ export default function AuthButtons() {
         ) : (
           <div className="flex gap-2 sm:gap-4 whitespace-nowrap sm:px-2">
             <SignInButton mode="modal">
-              <Button id="signinButton" className="text-[11px] sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
+              <Button id="signinButton" className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
                 Sign In
               </Button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <Button id="signupButton" className="text-[11px] sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
+              <Button id="signupButton" className="text-3xs sm:text-sm py-1 px-2 sm:px-4 my-2 tracking-tight sm:tracking-normal font-display normal-case" variant="emboss">
                 Sign Up
               </Button>
             </SignUpButton>

@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import type { CSSProperties } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
@@ -51,14 +52,14 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                     <Image {...picture(featuredAdventure.image, "(min-width: 768px) 60vw, 100vw")} alt={featuredAdventure.title} fill className="object-cover" />
                   </div>
                   <div className="md:w-2/5 flex flex-col items-center justify-center gap-4 px-8 py-8">
-                    <span className="text-accent-400/90 font-display text-sm font-bold tracking-widest">Featured Adventure</span>
-                    <h2 style={textShadow} className="text-white font-display text-3xl xl:text-4xl leading-tight">
+                    <span className="text-accent-400/90 font-display text-sm font-bold tracking-label">Featured Adventure</span>
+                    <Heading variant="h2" style={textShadow}>
                       {featuredAdventure.title}
-                    </h2>
+                    </Heading>
                     <div className="flex flex-wrap justify-center gap-2">
-                      <span className="bg-white/10 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(featuredAdventure.party)}</span>
+                      <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(featuredAdventure.party)}</span>
                       {featuredAdventure.premadePlayerCharacters && featuredAdventure.premadePlayerCharacters.length > 0 && (
-                        <span className="bg-accent-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
+                        <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
                       )}
                     </div>
                     <div className="text-zinc-300 text-base line-clamp-5">{featuredAdventure.teaser || featuredAdventure.overview}</div>
@@ -82,9 +83,9 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
                     <Card variant="pick" className="w-full h-full transition-[scale,box-shadow,background-color] duration-200">
                       <div className="pb-2 relative aspect-video w-full">
                         <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
-                          <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(adventure.party)}</span>
+                          <span className="bg-black/80 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(adventure.party)}</span>
                           {adventure.premadePlayerCharacters && adventure.premadePlayerCharacters.length > 0 && (
-                            <span className="bg-accent-500/90 text-black text-xxs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
+                            <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>
                           )}
                         </div>
                         <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-xl z-10">
@@ -114,7 +115,7 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
           </div>
 
           <div className="text-center">
-            <h4 className="inline-block text-xl font-bold bg-black/50 px-8 py-2 rounded text-base text-accent-400/90 font-display my-4 text-center tracking-wider">Setting Overview</h4>
+            <Heading variant="h3" as="h4" className="inline-block bg-black/50 px-8 py-2 rounded my-4 text-center">Setting Overview</Heading>
           </div>
           <div className="px-8 max-w-4xl mx-auto">
             <p>{setting.description}</p>

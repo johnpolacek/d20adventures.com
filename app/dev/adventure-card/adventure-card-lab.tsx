@@ -224,7 +224,7 @@ function Marquee() {
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/60" />
       <div className="relative px-10 pt-14 pb-6">
         <h3 className="font-display text-[clamp(3rem,7vw,6.5rem)] leading-[0.95] text-white [text-shadow:0_4px_24px_#000]">{save.title}</h3>
-        <div className="mt-10 flex items-center gap-8 border-t border-white/20 pt-4 font-mono text-xs tracking-widest text-white/80 uppercase">
+        <div className="mt-10 flex items-center gap-8 border-t border-white/20 pt-4 font-mono text-xs tracking-label text-white/80 uppercase">
           <span className="text-accent-300">● Playing</span>
           <span>Round {save.round}</span>
           <span>{save.turnTitle}</span>
@@ -339,7 +339,7 @@ function TitleCard() {
       <Remove className="absolute top-6 right-6" />
       <div className="relative flex flex-col items-center text-center">
         <Thumb className="w-14" />
-        <div className="mt-5 font-display text-sm tracking-[0.4em] text-white/70 uppercase">{save.title}</div>
+        <div className="mt-5 font-display text-sm tracking-label text-white/70 uppercase">{save.title}</div>
         <div className="my-3 flex items-center gap-4 text-accent-400/80">
           <span className="h-px w-24 bg-gradient-to-l from-accent-400/70 to-transparent" />◆<span className="h-px w-24 bg-gradient-to-r from-accent-400/70 to-transparent" />
         </div>
@@ -375,7 +375,7 @@ function ProgressBanner() {
           {save.trail.map((t, i) => (
             <div key={t.title} className="flex-1">
               <div className={cn("h-1.5 rounded-full", i < save.at ? "bg-accent-400/70" : i === save.at ? "bg-accent-300 shadow-[0_0_10px_#fbbf24]" : "bg-white/15")} />
-              <div className={cn("mt-1.5 truncate font-mono text-xxs uppercase", i === save.at ? "text-accent-200" : i < save.at ? "text-white/50" : "text-white/20")}>{i > save.at ? "?" : t.title}</div>
+              <div className={cn("mt-1.5 truncate font-mono text-3xs uppercase", i === save.at ? "text-accent-200" : i < save.at ? "text-white/50" : "text-white/20")}>{i > save.at ? "?" : t.title}</div>
             </div>
           ))}
         </div>
@@ -459,7 +459,7 @@ function Pause() {
       </div>
       <div className="absolute inset-0 grid place-items-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="font-display text-sm tracking-[0.5em] text-white/70">PAUSED</div>
+          <div className="font-display text-sm tracking-label text-white/70">PAUSED</div>
           <Epic className="scale-125">Continue</Epic>
         </div>
       </div>

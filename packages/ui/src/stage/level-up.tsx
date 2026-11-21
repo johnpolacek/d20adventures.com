@@ -66,7 +66,7 @@ function Section({ title, count, index, children }: { title: string; count?: str
     <section className="enter-rise mt-4" style={staggered(index)}>
       <h3 className={cn(eyebrow, "mb-2 flex items-baseline justify-between gap-3")}>
         <span>{title}</span>
-        {count && <span className="tabular-nums tracking-[0.12em] text-foreground/70">{count}</span>}
+        {count && <span className="tabular-nums tracking-label text-foreground/70">{count}</span>}
       </h3>
       {children}
     </section>
@@ -76,7 +76,7 @@ function Section({ title, count, index, children }: { title: string; count?: str
 function Labeled({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
     <div className={className}>
-      <div className="mb-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">{label}</div>
+      <div className="mb-1 font-sans text-4xs uppercase tracking-label text-foreground/60">{label}</div>
       {children}
     </div>
   )
@@ -132,7 +132,7 @@ function SpellOptions({
     <div className="space-y-2">
       {levels.map((level) => (
         <div key={level} className="flex gap-2">
-          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">Level {level}</span>
+          <span className="w-12 shrink-0 pt-1 font-sans text-4xs uppercase tracking-label text-foreground/60">Level {level}</span>
           <Options
             label={`${label}, level ${level}`}
             from={from.filter((spell) => spell.level === level).map((spell) => ({ ...spell, note: spell.school ? sentence(spell.school) : undefined }))}
@@ -158,7 +158,7 @@ function SpellPicks({ offer, picked, onPick }: { offer: PicksOffer; picked: read
     <div className="space-y-2">
       {offer.slots.map(([level]) => (
         <div key={level} className="flex gap-2">
-          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">Level {level}</span>
+          <span className="w-12 shrink-0 pt-1 font-sans text-4xs uppercase tracking-label text-foreground/60">Level {level}</span>
           <Options
             label={`${offer.feature.name}, level ${level}`}
             from={from.filter((option) => option.level === level)}
@@ -263,7 +263,7 @@ function BookPicks({
           const mine = chosen.filter((id) => from.some((spell) => spell.id === id))
           return (
             <div key={row.level} className="flex gap-2">
-              <span className="w-16 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">
+              <span className="w-16 shrink-0 pt-1 font-sans text-4xs uppercase tracking-label text-foreground/60">
                 {row.label} {mine.length}/{row.most}
               </span>
               <Options
@@ -378,7 +378,7 @@ export function LevelUp({
       </header>
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
-        <p className="font-serif text-[13px] text-foreground/85">
+        <p className="font-serif text-xs text-foreground/85">
           Hit Point Maximum {options.hitPointMaximum}
           {options.features.length > 0 && <> · {options.features.map((feature) => feature.name).join(", ")}</>}
         </p>
@@ -551,7 +551,7 @@ export function LevelUp({
         {options.spells && (
           <Section index={place++} title="Prepared Spells" count={`${picks.spells.length} of ${toPick.count}`}>
             {(options.spells.dropped || toPick.kept.size > 0) && (
-              <p className="mb-2 font-serif text-[12px] text-foreground/70">
+              <p className="mb-2 font-serif text-2xs text-foreground/70">
                 Now always prepared:{" "}
                 {[
                   ...(options.spells.dropped ?? []).map((spell) => spell.name),
@@ -590,7 +590,7 @@ export function LevelUp({
 
       <footer className="mt-4 border-t border-foreground/20 pt-3">
         <Presence show={Boolean(stopped) || left.length > 0} motion="fade" initial={false} asChild>
-          <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-roll-failure" : "text-foreground/70")} role={stopped ? "alert" : undefined}>
+          <p className={cn("mb-2 font-serif text-2xs", stopped ? "text-roll-failure" : "text-foreground/70")} role={stopped ? "alert" : undefined}>
             {stopped ?? `Still to choose: ${left.join(", ")}.`}
           </p>
         </Presence>

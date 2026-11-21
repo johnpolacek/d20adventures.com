@@ -69,7 +69,7 @@ export function CharacterCard({
         type="button"
         onClick={onClose}
         aria-label="Close card"
-        className="absolute top-2.5 right-3 z-10 text-[22px] leading-none text-muted-foreground transition-[color,scale] duration-150 ease-snap hover:text-foreground active:scale-90"
+        className="absolute top-2.5 right-3 z-10 text-xl leading-none text-muted-foreground transition-[color,scale] duration-150 ease-snap hover:text-foreground active:scale-90"
       >
         ×
       </Button>
@@ -79,15 +79,15 @@ export function CharacterCard({
           <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-primary/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
         )}
         <div className={eyebrow}>{info.role}</div>
-        <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
+        <h2 className="mt-1.5 mb-2.5 font-display text-xl font-normal leading-tight">{info.name}</h2>
         {info.standing && <StandingRow standing={info.standing} />}
         <Presence show={Boolean(info.conditions)} motion="fade" initial={false} asChild>
-          <p className="mb-2.5 font-serif text-[13px] text-foreground italic">{info.conditions}</p>
+          <p className="mb-2.5 font-serif text-xs text-foreground italic">{info.conditions}</p>
         </Presence>
         {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
         {info.items && <MagicItems items={info.items} className="mt-4 mb-2.5" />}
         {info.reactions && onOrders && <StandingOrders key={info.id} rows={info.reactions} compact={compact} className="mt-4 mb-2.5" onChange={onOrders} />}
-        {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
+        {info.about && <p className="mb-2 text-2xs leading-[1.7] text-[#e6dac6]">{info.about}</p>}
         {info.details?.map((section) => (
           <div key={section.label}>
             <h3 className={cn(eyebrow, "mt-4 mb-2")}>{section.label}</h3>
@@ -103,7 +103,7 @@ export function CharacterCard({
             <h3 className={cn(eyebrow, "mt-4 mb-2")}>Says</h3>
             <ul>
               {info.lines.map((l) => (
-                <li key={l} className="font-serif text-[13px] leading-[1.75] text-[#eee1ca] italic">
+                <li key={l} className="font-serif text-xs leading-[1.75] text-[#eee1ca] italic">
                   “{l}”
                 </li>
               ))}
@@ -118,7 +118,7 @@ export function CharacterCard({
 const stat = (label: string, value: string) => (
   <span className="flex items-baseline gap-1.5 rounded-hud border border-foreground/25 bg-black/30 px-2 py-1">
     <span className={cn(eyebrow, "text-muted-foreground")}>{label}</span>
-    <span className="font-serif text-[15px] font-semibold tabular-nums text-foreground">{value}</span>
+    <span className="font-serif text-sm font-semibold tabular-nums text-foreground">{value}</span>
   </span>
 )
 const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
@@ -156,7 +156,7 @@ function Spellcasting({ casting }: { casting: SheetSpellcasting }) {
                 />
               ))}
             </span>
-            <span className="font-serif text-[13px] tabular-nums text-foreground">
+            <span className="font-serif text-xs tabular-nums text-foreground">
               {s.left} / {s.total}
             </span>
           </div>
@@ -194,7 +194,7 @@ function StandingRow({ standing: s }: { standing: Standing }) {
           </>
         ) : (
           <span
-            className="font-display text-[13px] font-bold tracking-[0.1em] uppercase"
+            className="font-display text-xs font-bold tracking-wide uppercase"
             style={{ color: s.kind === "wound" ? WOUND_TONE[s.word] : s.kind === "stable" ? "var(--color-roll-success)" : WOUND_TONE.Dead }}
           >
             {standingWords(s).split(",")[0]}

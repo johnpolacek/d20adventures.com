@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { currentUser } from "@clerk/nextjs/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -68,9 +69,9 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             <p className="text-white/70 w-full text-center italic">Welcome back to D20 Adventures, {user.firstName}!</p>
             {characters.length > 0 ? (
               <div className="mt-8">
-                <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
+                <Heading variant="h2" className="mb-8 w-full text-center" style={textShadowSpreadLight}>
                   Your Characters
-                </h2>
+                </Heading>
                 <CharacterGrid username={user.username!} characters={characters} characterFiles={characterFiles} />
               </div>
             ) : (
@@ -90,9 +91,9 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             )}
             {/* Adventures Section */}
             <div className="mt-16">
-              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
+              <Heading variant="h2" className="mb-8 w-full text-center" style={textShadowSpreadLight}>
                 Your Adventures
-              </h2>
+              </Heading>
               {adventures.length > 0 ? (
                 <div className="flex flex-wrap gap-6 justify-center">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -114,10 +115,10 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                         })()}
                         <span className="text-white text-xl text-center px-2 truncate w-full my-2">{adv.title}</span>
                         <div className="flex items-center gap-2 mb-3">
-                          <span className={`text-xxs px-2 py-1 rounded font-mono ${adv.runType === "practice" ? "bg-accent-700/50 text-accent-100" : "bg-primary-500/50 text-primary-50"}`}>
+                          <span className={`text-3xs px-2 py-1 rounded font-mono ${adv.runType === "practice" ? "bg-accent-700/50 text-accent-100" : "bg-primary-500/50 text-primary-50"}`}>
                             {(adv.runType ?? "campaign") === "practice" ? "Practice" : "Campaign"}
                           </span>
-                          <span className="text-xxs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
+                          <span className="text-3xs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
                         </div>
                         <Link href={`/settings/${adv.settingId}/${adv.planId || adv.adventurePlanId}/${adv._id || adv.id}`}>
                           <Button variant="epic" className="text-sm" size="sm">
@@ -134,9 +135,9 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             </div>
 
             <div className="mt-16">
-              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
+              <Heading variant="h2" className="mb-8 w-full text-center" style={textShadowSpreadLight}>
                 Practice Reports
-              </h2>
+              </Heading>
               {practiceReports.length > 0 ? (
                 <div className="max-w-4xl mx-auto space-y-3">
                   {practiceReports.map((report, i) => (

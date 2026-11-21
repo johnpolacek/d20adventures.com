@@ -42,7 +42,7 @@ export function useJoined() {
   }
 }
 
-export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-accent"
+export const eyebrow = "font-sans text-4xs font-medium uppercase tracking-label text-accent"
 export const panel = "stage-grain rounded-md border border-foreground/25 bg-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"
 
 /** The HUD's small button: the outline button at its smallest. `active` marks the chosen one of a set, and `variant="primary"` the
@@ -144,8 +144,8 @@ export function StageHud({
             </svg>
             {/* Kept clear of the turn order centred at the top. */}
             <div style={{ maxWidth: compact ? "calc(50vw - var(--turn-order-half, 100px) - 58px)" : "calc(50vw - var(--turn-order-half, 134px) - 110px)" }}>
-              <div className={cn(eyebrow, compact && "text-[8px]")}>{title.eyebrow}</div>
-              <h1 className={cn("font-display leading-[1.12] [text-shadow:0_2px_18px_#1a0e08c0]", compact ? "mt-0.5 text-[15px]" : "mt-1.5 text-[clamp(20px,2vw,28px)]")}>{title.text}</h1>
+              <div className={cn(eyebrow, compact && "text-4xs")}>{title.eyebrow}</div>
+              <h1 className={cn("font-display leading-[1.12] [text-shadow:0_2px_18px_#1a0e08c0]", compact ? "mt-0.5 text-sm" : "mt-1.5 text-[clamp(20px,2vw,28px)]")}>{title.text}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2.5">{actions}</div>
@@ -164,9 +164,9 @@ export function StageHud({
                 <circle cx="30" cy="30" r="4" />
               </svg>
             )}
-            <div className="max-w-[200px] truncate text-[9px] tracking-[0.25em] text-soft-foreground uppercase [text-shadow:0_1px_6px_#000]">{location.name}</div>
+            <div className="max-w-[200px] truncate text-4xs tracking-label text-soft-foreground uppercase [text-shadow:0_1px_6px_#000]">{location.name}</div>
             <Presence show={Boolean(location.status)} motion="fade" asChild>
-              <div className="text-[10px] tracking-wide text-[#e8c898] [text-shadow:0_1px_6px_#000]">{location.status}</div>
+              <div className="text-4xs tracking-wide text-[#e8c898] [text-shadow:0_1px_6px_#000]">{location.status}</div>
             </Presence>
           </aside>
         )}
@@ -184,11 +184,11 @@ export function StageHud({
                   onClick={() => onView(v.id)}
                   className={cn(
                     "flex shrink-0 items-center gap-2.5 rounded-hud border whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.97]",
-                    compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
+                    compact ? "px-2 py-1 text-4xs" : "px-4 py-3 text-3xs",
                     activeView === v.id ? "stage-navy border-primary/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
                   )}
                 >
-                  <small className={cn("text-[8px]", activeView === v.id ? "text-accent" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
+                  <small className={cn("text-4xs", activeView === v.id ? "text-accent" : "text-[#a6a58c]")}>{String(i + 1).padStart(2, "0")}</small>
                   {v.label}
                 </Button>
               ))}

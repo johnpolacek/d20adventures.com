@@ -92,7 +92,7 @@ export function ItemLooks() {
     <div className="mt-12 flex flex-col gap-6">
       <div>
         <div className={eyebrow}>Stageview · magic items</div>
-        <h2 className="mt-1.5 font-display text-[26px]">Magic Items</h2>
+        <h2 className="mt-1.5 font-display text-2xl">Magic Items</h2>
       </div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6">
         {HEROES.map((hero) => (

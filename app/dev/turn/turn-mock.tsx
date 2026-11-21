@@ -497,9 +497,9 @@ export function TurnMock() {
       {!hideUi && open === "card" && card && <CharacterCard info={card} compact={compact} onClose={() => setOpen(null)} />}
       {!hideUi && open === "settings" && stage && (
         <section className={`${panel} fade-in absolute top-[86px] right-10 z-panel w-[292px] p-6`}>
-          <h2 className="mb-2 font-serif text-[25px] font-normal">Set the scene</h2>
+          <h2 className="mb-2 font-serif text-xl font-normal">Set the scene</h2>
           <div className="mt-5 border-t border-foreground/25 pt-4">
-            <div className="mb-3 text-[10px] tracking-wide">Render quality</div>
+            <div className="mb-3 text-4xs tracking-wide">Render quality</div>
             <div className="flex gap-2">
               {TIERS.map((t) => (
                 <Pill
@@ -517,7 +517,7 @@ export function TurnMock() {
             </div>
           </div>
           <div className="mt-5 border-t border-foreground/25 pt-4">
-            <div className="mb-3 text-[10px] tracking-wide">Story</div>
+            <div className="mb-3 text-4xs tracking-wide">Story</div>
             <div className="flex gap-2">
               <Pill className="flex-1" active={stepMode} onClick={() => setStepMode(true)}>
                 Step through
@@ -528,7 +528,7 @@ export function TurnMock() {
             </div>
           </div>
           <div className={cn("mt-5 border-t border-foreground/25 pt-4", stepMode && "hidden")}>
-            <div className="mb-3 text-[10px] tracking-wide">Narration pace</div>
+            <div className="mb-3 text-4xs tracking-wide">Narration pace</div>
             <div className="flex gap-2">
               {(Object.keys(PACES) as Pace[]).map((p) => (
                 <Pill key={p} className="flex-1 capitalize" active={pace === p} onClick={() => setPace(p)}>
@@ -555,7 +555,7 @@ export function TurnMock() {
         </section>
       )}
       {hideUi && phase !== "title" && (
-        <Button variant="plain" type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-panel rounded border border-white/25 bg-panel/50 px-3 py-2 text-[10px] text-foreground">
+        <Button variant="plain" type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-panel rounded border border-white/25 bg-panel/50 px-3 py-2 text-4xs text-foreground">
           Show interface · H
         </Button>
       )}
@@ -566,9 +566,9 @@ export function TurnMock() {
             <path d="M15 50V25h9v25m12 0V25h9v25M24 50V34l6-8 6 8v16M11 25h17m4 0h17M20 20v-6m20 6v-6M30 9v9M25 13h10M11 55h38" />
           </svg>
           <div className="font-display text-[clamp(28px,3.6vw,46px)] [text-shadow:0_2px_25px_#000]">Arrival at Kordavos</div>
-          <div className="text-[9px] tracking-[0.3em] text-soft-foreground">WELCOME TO KORDAVOS</div>
+          <div className="text-4xs tracking-label text-soft-foreground">WELCOME TO KORDAVOS</div>
           {stage ? (
-            <Button variant="plain" type="button" onClick={start} className="stage-stone mt-3 rounded-full border px-11 py-3 font-display text-[15px] font-bold tracking-[0.3em] transition-[filter]">
+            <Button variant="plain" type="button" onClick={start} className="stage-stone mt-3 rounded-full border px-11 py-3 font-display text-sm font-bold tracking-label transition-[filter]">
               Play
             </Button>
           ) : (
@@ -576,7 +576,7 @@ export function TurnMock() {
               <div className="h-px w-44 overflow-hidden bg-primary/30">
                 <div className="h-full w-3/5 animate-pulse bg-accent" />
               </div>
-              <div className="text-[10px] tracking-[0.2em] text-muted-foreground">{(error ?? loading).toUpperCase()}</div>
+              <div className="text-4xs tracking-label text-muted-foreground">{(error ?? loading).toUpperCase()}</div>
             </>
           )}
         </div>

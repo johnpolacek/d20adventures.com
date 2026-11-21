@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 // Page-level turn narrative: owns the singleton per-page effects (auto-navigate
 // to newly created turns, NPC processing trigger, window auto-scroll) plus
 // page-only chrome (Go To Reply bar, storyview/original-replies bar, practice
@@ -258,7 +259,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         <div className="mt-8 rounded-lg border border-accent-500/30 bg-accent-950/20 p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h4 className="text-accent-300 font-display text-lg">Practice Reports</h4>
+              <Heading variant="h4">Practice Reports</Heading>
               <p className="text-sm text-white/70">Generate a full diagnostic report for plan edits and code investigations.</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleGeneratePracticeReport} disabled={isGeneratingPracticeReport}>

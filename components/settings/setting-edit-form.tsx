@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { toast } from "@d20/ui/toast"
 import { useSettingForm } from "@/components/settings/hooks/use-setting-form"
 import { Button } from "@d20/ui/button"
@@ -149,7 +150,7 @@ export function SettingEditForm({ setting, settingId }: { setting: Setting; sett
     console.error("[SettingEditForm] Error rendering components:", error)
     return (
       <div className="p-8 text-white bg-red-900">
-        <h2>Rendering Error</h2>
+        <Heading variant="h2">Rendering Error</Heading>
         <p>Error: {error instanceof Error ? error.message : "Unknown error"}</p>
         <p>Setting ID: {settingId}</p>
         <p>Setting Name: {setting?.name || "No name"}</p>

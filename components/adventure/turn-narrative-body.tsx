@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 // The reusable core of the turn UI: narrative history, NPC processing state,
 // reply form, waiting/game-over/final-encounter blocks, and turn advance.
 // Rendered by the turn page (variant="page"). The "drawer" variant (a self-scrolling
@@ -108,7 +109,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
           <TurnNarrativeReply character={currentCharacter} submitReply={submitReply} />
         ) : allPCsDead ? (
           <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
-            <h4 className="text-xl font-display text-red-400">Game Over</h4>
+            <Heading variant="h3" as="h4" className="text-red-400">Game Over</Heading>
             <p className="italic text-red-300">All player characters have fallen</p>
             <Link href={`/settings/${settingId}/play`} className="mt-4">
               <Button variant="epic" size="sm" className="text-sm">

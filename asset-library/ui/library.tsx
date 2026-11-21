@@ -37,7 +37,7 @@ type Tab = "characters" | "environments" | "images"
 const TABS = ["environments", "characters", "images"] as const
 
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
-const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-[11px] leading-snug backdrop-blur-sm"
+const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-3xs leading-snug backdrop-blur-sm"
 const count = (n: number) => n.toLocaleString("en-US")
 const SMALL = new Set(["a", "an", "and", "at", "by", "for", "in", "of", "on", "or", "the", "to", "with"])
 // Title case, as names read in the game: small words stay small unless they open the name or follow a colon.
@@ -67,7 +67,7 @@ const rigger = (f: Figure) => {
 // Every figure made of a character, the one that stands for them now first. An index published before figures were
 // kept together has the one alone.
 const versionsOf = (c: Character) => c.versions ?? (c.figure ? [c.figure] : [])
-const TAG = "rounded px-1 text-[9px] font-semibold tracking-wide"
+const TAG = "rounded px-1 text-4xs font-semibold tracking-wide"
 // ── A figure in a lit room ──
 interface Room {
   renderer: THREE.WebGLRenderer
@@ -385,17 +385,17 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
             ›
           </button>
           <input ref={scrub} type="range" aria-label="Moment" min={0} step={0.001} defaultValue={0} className="mx-1 w-44 accent-[#f2c97a]" onChange={(e) => hold(() => Number(e.target.value))} />
-          <span ref={clock} className="w-32 font-mono text-[10px] opacity-75" />
+          <span ref={clock} className="w-32 font-mono text-4xs opacity-75" />
           <button type="button" className={pill(false)} onClick={save}>
             PNG
           </button>
         </div>
         {level && (
-          <div className="font-mono text-[10px] opacity-75">
+          <div className="font-mono text-4xs opacity-75">
             {count(level.triangles)} tris · {level.megabytes} MB · {level.texture} px · {figure.rig.bones} bones · {figure.height} m · {loading ? "…" : `${fps} fps`}
           </div>
         )}
-        <div className="font-mono text-[10px] opacity-55">
+        <div className="font-mono text-4xs opacity-55">
           {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {day(figure.source.made)}
         </div>
       </div>
@@ -429,7 +429,7 @@ function CharacterView({ character, params }: { character: Character; params: Pa
         </div>
       )}
       <div className={`absolute top-3 right-3 max-h-[calc(100%-1.5rem)] w-[290px] overflow-y-auto ${PANEL}`}>
-        <div className="text-[15px] text-[#f2c97a]">{named(character.name)}</div>
+        <div className="text-sm text-[#f2c97a]">{named(character.name)}</div>
         <div className="opacity-70">{named(character.role)}</div>
         {figure && (
           <div className="flex items-center gap-1">
@@ -441,7 +441,7 @@ function CharacterView({ character, params }: { character: Character; params: Pa
             </button>
           </div>
         )}
-        <div className="font-mono text-[10px] opacity-75">
+        <div className="font-mono text-4xs opacity-75">
           {character.height ? `${character.height} m · ` : ""}
           {scenes(character.scenes).toLowerCase()} · {figure ? "3D figure" : "card only"}
         </div>
@@ -472,20 +472,20 @@ function CharacterView({ character, params }: { character: Character; params: Pa
                       className={`block w-full rounded border px-2 py-1.5 text-left ${on ? "border-[#f2c97a] bg-[#f2c97a1f]" : "border-[#e6c89630] hover:border-[#f2c97a99]"}`}
                     >
                       <span className="flex flex-wrap items-center gap-1">
-                        <span className={`text-[12px] ${on ? "text-[#f2c97a]" : ""}`}>{maker(f)}</span>
+                        <span className={`text-2xs ${on ? "text-[#f2c97a]" : ""}`}>{maker(f)}</span>
                         {!!f.plays?.length && <span className={`${TAG} bg-[#7fd0a0] text-[#0c1a12]`}>IN THE GAME</span>}
                       </span>
-                      {f.note && <span className="block text-[10.5px] opacity-85">{named(f.note)}</span>}
-                      <span className="block text-[10.5px] opacity-70">
+                      {f.note && <span className="block text-4xs opacity-85">{named(f.note)}</span>}
+                      <span className="block text-4xs opacity-70">
                         Made {day(f.source.made)}
                         {f.source.built && f.source.built !== f.source.made ? ` · Rebuilt ${day(f.source.built)}` : ""}
                       </span>
-                      <span className="block text-[10.5px] opacity-70">
+                      <span className="block text-4xs opacity-70">
                         {rigger(f)}
                         {triangles ? ` · ${count(triangles)} Triangles` : ""}
                       </span>
-                      {!!f.plays?.length && <span className="block text-[10.5px] opacity-70">Plays in {f.plays.map(named).join(", ")}</span>}
-                      <span className="block font-mono text-[9.5px] opacity-45">{f.id}</span>
+                      {!!f.plays?.length && <span className="block text-4xs opacity-70">Plays in {f.plays.map(named).join(", ")}</span>}
+                      <span className="block font-mono text-4xs opacity-45">{f.id}</span>
                     </button>
                   )
                 })}
@@ -522,7 +522,7 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
     <>
       <Scene set={env.key} staging={staging} iso={cut} files={config.files} figures={config.figures} onNav={onNav} onPick={setAt} />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
-        <div className="text-[15px] text-[#f2c97a]">{named(env.title)}</div>
+        <div className="text-sm text-[#f2c97a]">{named(env.title)}</div>
         {place.variants.length > 1 && (
           <div className="flex flex-wrap items-center gap-1">
             <span className="w-12 opacity-60">Variant</span>
@@ -584,11 +584,11 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             </div>
           ) : null
         })}
-        <div className="font-mono text-[10px] opacity-75">
+        <div className="font-mono text-4xs opacity-75">
           {env.objects} parts · {env.shots} shots · {env.paintings} paintings
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
-        <div className="text-[10px] opacity-55">Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character</div>
+        <div className="text-4xs opacity-55">Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character</div>
       </div>
     </>
   )
@@ -604,7 +604,7 @@ function PictureView({ picture }: { picture: Picture }) {
     <>
       <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4" />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
-        <div className="text-[15px] text-[#f2c97a]">{named(picture.title)}</div>
+        <div className="text-sm text-[#f2c97a]">{named(picture.title)}</div>
         <div className="opacity-70">
           {picture.kind}
           {picture.of ? ` · ${named(picture.of)}` : ""}
@@ -756,15 +756,15 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
       className={`group relative shrink-0 rounded-lg border border-[#e6c8962e] bg-gradient-to-b from-[#1c1610] to-[#120e09] p-3 text-left transition-colors hover:border-[#f2c97a] ${wide ? "w-[172px]" : "w-[148px]"}`}
     >
       <img src={`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
-      <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-[15px]" : "text-[13px]"}`}>{named(c.name)}</span>
-      <span className="block truncate text-[11px] opacity-60">{named(c.figure?.role ?? c.role)}</span>
+      <span className={`mt-2 block truncate font-display group-hover:text-[#f2c97a] ${wide ? "text-sm" : "text-xs"}`}>{named(c.name)}</span>
+      <span className="block truncate text-3xs opacity-60">{named(c.figure?.role ?? c.role)}</span>
       {c.figure && (
-        <span className="mt-1 block truncate font-mono text-[9.5px] opacity-55">
+        <span className="mt-1 block truncate font-mono text-4xs opacity-55">
           {maker(c.figure)} · {day(c.figure.source.made).split(",")[0]}
         </span>
       )}
       {c.figure && (
-        <span className="block h-[14px] truncate font-mono text-[9.5px] opacity-55">{versionsOf(c).length > 1 ? `${versionsOf(c).length} Versions` : ""}</span>
+        <span className="block h-[14px] truncate font-mono text-4xs opacity-55">{versionsOf(c).length > 1 ? `${versionsOf(c).length} Versions` : ""}</span>
       )}
       {!!c.figure?.plays?.length && <span className={`absolute top-2 right-2 ${TAG} bg-[#7fd0a0] text-[#0c1a12]`}>IN THE GAME</span>}
     </button>
@@ -788,7 +788,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                 <button
                   type="button"
-                  className="font-display text-[15px] tracking-[0.04em] text-[#f2c97a] hover:text-[#ffe0a3]"
+                  className="font-display text-sm tracking-wide text-[#f2c97a] hover:text-[#ffe0a3]"
                   onClick={() => {
                     setQ("")
                     setTab(TABS[0])
@@ -798,7 +798,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                 >
                   Asset Library
                 </button>
-                <div className="order-3 flex w-full gap-1 text-[13px] sm:order-2 sm:w-auto">
+                <div className="order-3 flex w-full gap-1 text-xs sm:order-2 sm:w-auto">
                   {TABS.map((t) => (
                     <button
                       key={t}
@@ -818,11 +818,11 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                   }}
                   placeholder="Search"
                   aria-label="Search"
-                  className="order-2 min-w-0 flex-1 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-[12px] outline-none placeholder:opacity-40 focus:border-[#f2c97a99] sm:order-3 sm:ml-auto sm:w-56 sm:flex-none"
+                  className="order-2 min-w-0 flex-1 rounded border border-[#e6c89640] bg-transparent px-2 py-1 text-2xs outline-none placeholder:opacity-40 focus:border-[#f2c97a99] sm:order-3 sm:ml-auto sm:w-56 sm:flex-none"
                 />
               </div>
               {shown ? (
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                <div className="flex flex-wrap items-center gap-1.5 text-3xs">
                   <button type="button" className={pill(false)} onClick={() => close()}>
                     ← Back
                   </button>
@@ -833,7 +833,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                   <span className="text-[#f2c97a]">{named(shown.name)}</span>
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                <div className="flex flex-wrap items-center gap-1 text-3xs">
                   <button type="button" className={pill(group === "all")} onClick={() => pick("all")}>
                     All · {total}
                   </button>
@@ -869,8 +869,8 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
         <div className={open ? "hidden" : "mx-auto max-w-[1500px] px-5 pb-16 sm:px-8"}>
           {whole && tab === TABS[0] && (
             <div className="pt-10 pb-7 text-center">
-              <h1 className="font-display text-[34px] leading-tight tracking-[0.04em] text-[#f2c97a] sm:text-[44px]">{library.settingName}</h1>
-              <div className="mt-3 text-[13px] opacity-70">
+              <h1 className="font-display text-3xl leading-tight tracking-wide text-[#f2c97a] sm:text-4xl">{library.settingName}</h1>
+              <div className="mt-3 text-xs opacity-70">
                 {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places · {pictures.length} Images
               </div>
             </div>
@@ -878,20 +878,20 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
 
           {home && party.length > 0 && (
             <section className="pb-4">
-              <h2 className="pb-3 text-center text-[11px] tracking-[0.24em] uppercase opacity-55">The Party</h2>
+              <h2 className="pb-3 text-center text-3xs tracking-label uppercase opacity-55">The Party</h2>
               <div className="flex flex-wrap justify-center gap-3">{party.map((c) => figureCard(c, true))}</div>
             </section>
           )}
           {home && others.length > 0 && (
             <section className="pt-4 pb-2">
-              <h2 className="pb-3 text-center text-[11px] tracking-[0.24em] uppercase opacity-55">Also in 3D</h2>
+              <h2 className="pb-3 text-center text-3xs tracking-label uppercase opacity-55">Also in 3D</h2>
               <div className="flex flex-wrap justify-center gap-3">{others.map((c) => figureCard(c, false))}</div>
             </section>
           )}
 
           {sections.map((g) => (
             <section key={g}>
-              <h2 className="pt-6 pb-2 text-[11px] tracking-[0.14em] uppercase opacity-55">
+              <h2 className="pt-6 pb-2 text-3xs tracking-label uppercase opacity-55">
                 {groupName(g)} · {inGroup(g)}
               </h2>
               {tab === "characters" ? (
@@ -906,9 +906,9 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                         className="group relative rounded-md border border-[#e6c8961f] bg-[#14100b] p-2 text-left hover:border-[#f2c97a99]"
                       >
                         <img src={c.front} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
-                        {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">3D</span>}
-                        <span className="mt-1.5 block truncate text-[12px] group-hover:text-[#f2c97a]">{named(c.name)}</span>
-                        <span className="block truncate text-[10px] opacity-55">{named(c.role)}</span>
+                        {c.figure && <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-4xs font-semibold tracking-wide text-[#1a1208]">3D</span>}
+                        <span className="mt-1.5 block truncate text-2xs group-hover:text-[#f2c97a]">{named(c.name)}</span>
+                        <span className="block truncate text-4xs opacity-55">{named(c.role)}</span>
                       </button>
                     ))}
                 </div>
@@ -924,8 +924,8 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                         className="group overflow-hidden rounded-md border border-[#e6c8961f] bg-[#14100b] text-left hover:border-[#f2c97a99]"
                       >
                         <img src={p.src} alt="" loading="lazy" decoding="async" className={`${(SHAPES[g] ?? [0, "aspect-[3/2]"])[1]} w-full object-cover`} />
-                        <span className="block truncate px-2.5 pt-1.5 text-[12px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
-                        <span className="block truncate px-2.5 pb-2 text-[10px] opacity-55">{p.of ? named(p.of) : g}</span>
+                        <span className="block truncate px-2.5 pt-1.5 text-2xs group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                        <span className="block truncate px-2.5 pb-2 text-4xs opacity-55">{p.of ? named(p.of) : g}</span>
                       </button>
                     ))}
                 </div>
@@ -933,8 +933,8 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                 chapters(g).map(({ chapter, places: run }, i, all) => (
                   <div key={chapter}>
                     {all.length > 1 && chapter && (
-                      <h3 className={`${i ? "pt-5" : "pt-1"} pb-2 font-display text-[15px] tracking-[0.03em] text-[#f2c97a]`}>
-                        {named(chapter)} <span className="font-serif text-[11px] text-[#e9dcc3] opacity-55">· {run.length}</span>
+                      <h3 className={`${i ? "pt-5" : "pt-1"} pb-2 font-display text-sm tracking-wide text-[#f2c97a]`}>
+                        {named(chapter)} <span className="font-serif text-3xs text-[#e9dcc3] opacity-55">· {run.length}</span>
                       </h3>
                     )}
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
@@ -951,10 +951,10 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                             <span className="block aspect-[3/2] w-full bg-[#1a140e]" />
                           )}
                           {p.variants.some((v) => hasIso(v.key, v.room)) && (
-                            <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-[9px] font-semibold tracking-wide text-[#1a1208]">ISO</span>
+                            <span className="absolute top-1.5 right-1.5 rounded bg-[#f2c97a] px-1 text-4xs font-semibold tracking-wide text-[#1a1208]">ISO</span>
                           )}
-                          <span className="block px-2.5 pt-1.5 text-[12.5px] group-hover:text-[#f2c97a]">{named(p.title)}</span>
-                          <span className="block px-2.5 pb-2 font-mono text-[9.5px] opacity-55">
+                          <span className="block px-2.5 pt-1.5 text-xs group-hover:text-[#f2c97a]">{named(p.title)}</span>
+                          <span className="block px-2.5 pb-2 font-mono text-4xs opacity-55">
                             {p.variants.length > 1 ? `${p.variants.length} Variants · ` : ""}
                             {scenes(p.variants.reduce((n, v) => n + v.stagings.length, 0))}
                             {p.variants.some((v) => v.paintings) ? " · Painted" : ""}

@@ -1,3 +1,4 @@
+import { Heading } from "@d20/ui/typography/heading"
 import { useEffect, useRef, useState } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, Option } from "@d20/ui/button"
@@ -107,7 +108,7 @@ function HeroSheet({ hero }: { hero: GuestHero }) {
       <dl className="grid grid-cols-6 gap-1 text-center">
         {ATTRIBUTES.map(([key, label]) => (
           <div key={key} className="rounded bg-white/5 py-1">
-            <dt className="font-mono text-xxs uppercase text-primary-200">{label}</dt>
+            <dt className="font-mono text-3xs uppercase text-primary-200">{label}</dt>
             <dd className="font-display text-base text-white">{hero.attributes[key]}</dd>
           </div>
         ))}
@@ -313,9 +314,9 @@ export function HostedLobby(props: {
     <div className="absolute inset-0 z-panel grid place-items-center bg-black/70 font-serif text-white">
       <section className={cn(cardVariants({ variant: "frame" }), "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
         <div className={siteLabel}>Hosting</div>
-        <h1 className="mt-2 font-display text-4xl font-bold text-accent-300" style={textShadow}>
+        <Heading variant="h1" className="mt-2" style={textShadow}>
           {props.summary.title}
-        </h1>
+        </Heading>
         {seatRows.map(({ key, item: seat, motion }) => (
           <div key={key} {...motion}>
             <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · {seat.name}</div>

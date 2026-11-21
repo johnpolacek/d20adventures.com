@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { useState } from "react"
 import { MagicItems } from "@d20/ui/stage/magic-items"
@@ -42,7 +43,7 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
 
   return (
     <div>
-      <h3 className="text-lg font-display mb-2">{title}</h3>
+      <Heading variant="h4" as="h3" className="mb-2">{title}</Heading>
       <div className={`text-sm text-white/90 ${!isExpanded && needsTruncation ? "line-clamp-2" : ""}`}>{text}</div>
       {needsTruncation && (
         <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="text-sm text-primary-200 hover:text-primary-100 p-0 h-auto mt-1">
@@ -99,7 +100,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                 {character.race} {character.gender} {character.archetype}
               </div>
               {sheet && (
-                <div className="enter-fade text-xs font-mono text-primary-200 uppercase tracking-wider">
+                <div className="enter-fade text-xs font-mono text-primary-200 uppercase tracking-wide">
                   Level {sheet.level} {sheet.speciesName} {sheet.className}
                   {sheet.subclassName ? ` · ${sheet.subclassName}` : ""} · {sheet.backgroundName}
                 </div>
@@ -107,7 +108,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
               {standing && (
                 <div>
-                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Hit Points</Label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wide">Hit Points</Label>
                   {standing.kind === "hero" ? (
                     <div className="flex items-center gap-2">
                       <div className="">
@@ -132,14 +133,14 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
               )}
               {conditions && (
                 <div>
-                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Conditions</Label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wide">Conditions</Label>
                   <div className="text-sm">{conditions}</div>
                 </div>
               )}
 
               {character.effects && character.effects.length > 0 ? (
                 <div>
-                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wider">Effects</Label>
+                  <Label plain className="text-xs font-mono text-primary-200 uppercase tracking-wide">Effects</Label>
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">
@@ -164,7 +165,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                   [`Hit Dice d${sheet.hitDie}`, `${Math.max(0, sheet.level - (character.hitDiceUsed ?? 0))} / ${sheet.level}`],
                 ].map(([label, value]) => (
                   <div key={label} className="text-center p-2 bg-black/30 rounded border border-primary-700">
-                    <div className="text-[10px] font-mono text-primary-200 uppercase leading-tight">{label}</div>
+                    <div className="text-4xs font-mono text-primary-200 uppercase leading-tight">{label}</div>
                     <div className="text-lg font-bold">{value}</div>
                   </div>
                 ))}
@@ -173,7 +174,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {sheet?.spellcasting && (
               <div className="enter-fade">
-                <h3 className="text-lg font-display mb-3">Spellcasting</h3>
+                <Heading variant="h4" as="h3" className="mb-3">Spellcasting</Heading>
                 <div className="grid grid-cols-5 gap-2">
                   {[
                     ["Spell Save DC", String(sheet.spellcasting.saveDc)],
@@ -181,7 +182,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                     ...sheet.spellcasting.slots.map((slot) => [`Level ${slot.level} Slots`, `${slot.left} / ${slot.total}`]),
                   ].map(([label, value]) => (
                     <div key={label} className="text-center p-2 bg-black/30 rounded border border-primary-700">
-                      <div className="text-[10px] font-mono text-primary-200 uppercase leading-tight">{label}</div>
+                      <div className="text-4xs font-mono text-primary-200 uppercase leading-tight">{label}</div>
                       <div className="text-lg font-bold">{value}</div>
                     </div>
                   ))}
@@ -197,7 +198,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                     .filter(([, names]) => names.length > 0)
                     .map(([label, names]) => (
                       <div key={label}>
-                        <span className="text-xs font-mono text-primary-200 uppercase tracking-wider mr-2">{label}</span>
+                        <span className="text-xs font-mono text-primary-200 uppercase tracking-wide mr-2">{label}</span>
                         {names.join(", ")}
                       </div>
                     ))}
@@ -213,7 +214,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {sheet && (
               <div className="enter-fade">
-                <h3 className="text-lg font-display mb-3">Saving Throws</h3>
+                <Heading variant="h4" as="h3" className="mb-3">Saving Throws</Heading>
                 <div className="grid grid-cols-6 gap-2">
                   {sheet.abilities.map((ability) => (
                     <div key={ability.id} className={`text-center p-2 rounded border ${ability.saveProficient ? "bg-primary-700/50 border-primary-400" : "bg-black/30 border-primary-700"}`}>
@@ -227,7 +228,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {character.attributes && (
               <div>
-                <h3 className="text-lg font-display  mb-3">Attributes</h3>
+                <Heading variant="h4" as="h3" className="mb-3">Attributes</Heading>
                 <div className="grid grid-cols-3 gap-3">
                   {Object.entries(character.attributes).map(([attr, value]) => {
                     const modifier = getModifier(value)
@@ -256,7 +257,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
           <div className="col-span-2 space-y-4">
             {sheet && sheet.features.length > 0 && (
               <div className="enter-fade">
-                <h3 className="text-lg font-display mb-2">Features</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Features</Heading>
                 <div className="flex flex-wrap gap-1">
                   {sheet.features.map((feature) => (
                     <span key={`${feature.from}-${feature.name}`} className="text-xs sm:text-sm text-primary-100 px-3 py-1 bg-primary-700/50 rounded">
@@ -275,7 +276,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {sheet && (
               <div className="enter-fade">
-                <h3 className="text-lg font-display mb-2">Skill Checks</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Skill Checks</Heading>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
                   {sheet.skills.map((skill) => (
                     <div key={skill.id} className={`flex justify-between text-sm ${skill.proficient ? "text-white font-bold" : "text-primary-300"}`}>
@@ -289,7 +290,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {character.skills && character.skills.length > 0 && (
               <div>
-                <h3 className="text-lg font-display  mb-2">Skills</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Skills</Heading>
                 <div className="flex flex-wrap gap-1">
                   {character.skills.map((skill, index) => (
                     <span key={index} className="text-xs sm:text-sm text-primary-100 px-3 py-1 bg-primary-700/50 rounded ">
@@ -302,7 +303,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {character.spells && character.spells.length > 0 && (
               <div>
-                <h3 className="text-lg font-display  mb-2">Spells</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Spells</Heading>
                 <div className="grid grid-cols-2 gap-2 auto-rows-fr">
                   {character.spells.map((spell, index) => (
                     <div key={index} className="h-full flex flex-col p-2 bg-black/30 rounded border border-primary-700">
@@ -316,7 +317,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {character.specialAbilities && character.specialAbilities.length > 0 && (
               <div>
-                <h3 className="text-lg font-display  mb-2">Special Abilities</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Special Abilities</Heading>
                 <div className="grid grid-cols-2 gap-2 auto-rows-fr">
                   {character.specialAbilities.map((ability, index) => (
                     <div key={index} className="h-full flex items-start text-sm text-primary-200 p-2 bg-black/30 rounded border border-primary-700">
@@ -329,7 +330,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
 
             {character.equipment && character.equipment.length > 0 && (
               <div>
-                <h3 className="text-lg font-display  mb-2">Equipment</h3>
+                <Heading variant="h4" as="h3" className="mb-2">Equipment</Heading>
                 <div className="grid grid-cols-2 gap-2 auto-rows-fr">
                   {character.equipment.map((item, index) => (
                     <div key={index} className="h-full flex flex-col p-2 bg-black/30 rounded border border-primary-700">
@@ -345,7 +346,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
         {/* Turn-specific info if available */}
         {isTurnCharacter(character) && (
           <div className="flex gap-4 items-center mt-2">
-            <div className="text-xs font-mono text-primary-200 uppercase tracking-wider">
+            <div className="text-xs font-mono text-primary-200 uppercase tracking-wide">
               Initiative: <span className="font-bold text-lg">{character.initiative}</span>
             </div>
             {character.isComplete && <div className="text-xs text-green-400 font-bold">Turn Complete</div>}

@@ -201,7 +201,7 @@ function BubbleView({ bubble, compact, moving, backdrop }: { bubble: Bubble; com
       className={cn(
         "group absolute top-0 left-0 isolate w-max origin-bottom text-center font-serif text-(--ink) italic opacity-0 transition-opacity [text-shadow:0_1px_2px_#0009] [text-wrap:balance] [--accent:var(--color-accent)] [--band:#120d1c] [--ink:#f4ecdc]",
         "px-(--pad) data-[side=l]:pr-[22px] data-[side=l]:text-right data-[side=r]:pl-[22px] data-[side=r]:text-left",
-        compact ? "max-w-[300px] py-2 text-[14px] leading-[1.32]" : "max-w-[500px] pt-[15px] pb-4 text-[18px] leading-[1.34]"
+        compact ? "max-w-[300px] py-2 text-sm leading-[1.32]" : "max-w-[500px] pt-[15px] pb-4 text-base leading-[1.34]"
       )}
     >
       <span ref={paint} aria-hidden="true" className="absolute inset-0 -z-10 bg-(--band) opacity-[.94] [mask-size:100%_100%]" />
@@ -279,12 +279,12 @@ export function Plate({ line, compact = false, docked = false, className, style,
         </div>
       )}
       <div className={cn("flex min-w-0 flex-col justify-center", compact ? "px-2.5" : "py-1 pr-2.5 pl-4")}>
-        <div className={cn("font-serif leading-[1.1] text-[#f3d6a6]", compact ? "text-[15px]" : "text-[21px]")}>{line.name}</div>
-        {line.role && !compact && <div className="mt-1 text-[8.5px] tracking-[0.22em] text-accent uppercase">{line.role}</div>}
+        <div className={cn("font-serif leading-[1.1] text-[#f3d6a6]", compact ? "text-sm" : "text-lg")}>{line.name}</div>
+        {line.role && !compact && <div className="mt-1 text-4xs tracking-label text-accent uppercase">{line.role}</div>}
         <div
           className={cn(
             "border-t border-primary/25 font-serif text-foreground italic",
-            compact ? "mt-1.5 line-clamp-2 pt-1.5 text-[12px] leading-snug" : "mt-2.5 line-clamp-4 pt-2.5 text-[15px] leading-[1.45]"
+            compact ? "mt-1.5 line-clamp-2 pt-1.5 text-2xs leading-snug" : "mt-2.5 line-clamp-4 pt-2.5 text-sm leading-[1.45]"
           )}
         >
           “{line.text}”

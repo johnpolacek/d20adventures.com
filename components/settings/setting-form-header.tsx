@@ -1,5 +1,6 @@
 "use client"
 
+import { Heading } from "@d20/ui/typography/heading"
 import { Download } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@d20/ui/button"
@@ -16,7 +17,7 @@ export function SettingFormHeader({ settingId, settingName, isSaving, onDownload
   return (
     <div className="w-full flex justify-between items-center p-4 border-b border-white/10 bg-black/50 backdrop-blur-sm -mt-4">
       <div className="flex gap-4">
-        <h1 className="text-xl font-display text-primary-200 pl-4">Edit Setting</h1>
+        <Heading variant="h3" as="h1" className="pl-4">Edit Setting</Heading>
         <Link className="border-l border-white/20 text-xl font-display hover:text-accent-400 text-accent-300 font-bold pl-4 transition-colors duration-150" href={`/settings/${settingId}`}>
           {settingName}
         </Link>
