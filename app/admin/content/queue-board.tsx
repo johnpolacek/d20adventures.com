@@ -149,6 +149,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
 
 function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem) => void }) {
   const [title, setTitle] = useState(item.title)
+  const [longTitle, setLongTitle] = useState(item.longTitle)
   const [status, setStatus] = useState(item.status)
   const [posted, setPosted] = useState<Record<string, string>>(item.posted)
   const [bodies, setBodies] = useState<Record<string, string>>(() => Object.fromEntries(item.sections.map((s) => [s.name, s.body])))
@@ -174,8 +175,8 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
     const cleanPosted = Object.fromEntries(Object.entries(posted).filter(([, url]) => url.trim()))
     start(async () => {
       try {
-        await saveQueueItem({ slug: item.slug, title, status, sections, posted: cleanPosted })
-        onSaved({ ...item, title, status, sections, posted: cleanPosted })
+        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted })
+        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted })
         setDirty(false)
         setError("")
       } catch (e) {
@@ -230,6 +231,16 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
         </Button>
       </div>
+      <Field label="Long Title">
+        <textarea
+          className={cn(fieldClass, "field-sizing-content min-h-9 py-1.5 text-sm")}
+          value={longTitle}
+          onChange={(e) => {
+            setLongTitle(e.target.value)
+            setDirty(true)
+          }}
+        />
+      </Field>
       {error && <p className="text-sm text-red-300">{error}</p>}
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">

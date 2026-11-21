@@ -142,6 +142,24 @@ Product in the subject slot, the receipt linked instead of narrated, and the ope
 
 **Titles.** Title Case, roughly 2–11 words. Shapes: bare product name, Introducing/Announcing X, gerund how-to (“Adding Dark Mode to a Next.js Site”), “How to X”, first-person event (“I Bought a Giant Cast Iron Skillet”), declarative noun phrase (“The Bootstrap Trap”). Never confessional error headlines (“I Was Wrong About X”, “What I Learned From X”), no colons, no numbers, no “Ultimate Guide”.
 
+**Titles that draw people in.** A title shows up everywhere: the post, the feed card, the Reddit title, the content queue. It has one job, to make a stranger want to read. Learned with John on 2026-11-21:
+
+- Say exactly what the reader will learn. A how-to they can picture beats a clever phrase or a teaser.
+- Talk to the reader. “Turn Your Character Art into…” beat “Turning Character Art into…”.
+- Name the tech. Real tool names tell the people who use them that this is for them, and they get searched. Vague “with AI” doesn’t.
+- Price is not a draw. Leave costs in the post.
+- One idea per title. Two glued with “and” is two titles.
+- Zoom out from the incident to the topic. One bug is too narrow to draw anyone in. Title the bigger subject it belongs to, and use the bug as an example inside. “The game suggested a spell that could never work” became a piece on the challenges of running an AI game master, with the owlbear spell as one of its stories.
+- Write a short title and a long title. The short one names the outcome and the best-known tools. The long one carries the whole stack and the promise (“Every Prompt Included”).
+
+The first one, before and after:
+
+> A full rigged 3D character for $0.60, and three in the game for about $4
+>
+> Short: Turn Your Character Art into Animated 3D Figures with Hi3D and Blender
+>
+> Long: How I Turn Painted Character Art into Rigged, Animated 3D Figures with Hi3D, Hyper3D and Blender, Every Prompt Included
+
 **Frontmatter.** `title`, `date` (YYYY-MM-DD, the post shows from that day, Chicago time), `description` (a written one-sentence summary), `image` (full bucket URL), and `draft: true` while it isn’t ready. Frontmatter values keep straight quotes.
 
 **Numbers.** Concrete, checkable, dropped flat with no consequence clause: “10x faster at 10x cheaper”, “about $2.30 each”, “12+ hours at 100 degrees”.

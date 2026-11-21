@@ -30,6 +30,7 @@ type Commit = { hash: string; date: string; subject: string; body: string; stat:
 type Exchange = { source: "claude" | "codex"; session: string; date: string; prompt: string; reply: string }
 type Candidate = {
   title: string
+  longTitle: string
   point: string
   hook: string
   payoff: string
@@ -311,6 +312,12 @@ function parseJsonArray<T>(text: string): T[] {
 
 const CONTEXT = `D20 Adventures (d20adventures.com) is John Polacek's solo-built tabletop RPG where an AI game master runs D&D-style adventures, with a painted 3D encounter stage, a desktop app that runs locally, and adventures authored as markdown. John builds it with AI coding agents. Audiences: tabletop and AI RPG players, and indie and AI-assisted developers.`
 
+// The title lessons live in the voice guide, so what John teaches there reaches every run.
+function titleGuide(): string {
+  const doc = fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8")
+  return doc.match(/\*\*Titles\.\*\*[\s\S]*?(?=\n\*\*Frontmatter\.\*\*)/)?.[0].trim() ?? ""
+}
+
 const SHAREABLE = `Judge every idea as a stranger scrolling a feed would. Three questions:
 - Hook: would they stop scrolling? Lead with the moment, not with "I built" or "I did". A rules gotcha D&D players recognize, a funny fail, a surprising number, or a question they want to answer.
 - Payoff: what do they walk away with? A price table they can reuse, a trick that fixes their own bug, a rules answer, a clip worth watching.
@@ -318,9 +325,12 @@ const SHAREABLE = `Judge every idea as a stranger scrolling a feed would. Three 
 What spreads best here: rules gotchas and AI GM mistakes players recognize, cost and speed tables, funny visual fails with a fix, clever tricks for AI 3D and AI agents.
 Not worth sharing: refactors, renames, cleanups, token or theme plumbing, config, dependency bumps, loading fixes, and pretty shots with no story beyond a ScreenshotSaturday clip.
 Score hook, payoff and spread each 1 to 5. Use the whole range: most ideas are 2s and 3s, a 5 is rare.
-Every idea must be grounded in the material. Never invent a fact, number, motive or opinion, and never generalize past what the material shows.`
+Every idea must be grounded in the material. Never invent a fact, number, motive or opinion, and never generalize past what the material shows.
 
-const CANDIDATE_SHAPE = `{"title": short working title, "point": one sentence on what happened, "hook": the opening line of a post, plain words, under 30 words, "payoff": what the reader walks away with, "spread": why they would pass it on, "numbers": [verified numbers from the material], "visual": what screenshot or clip would show it, or "" if none, "audience": "players" | "devs" | "both", "formats": any of ["x", "bluesky", "reddit", "update", "screenshot-saturday"], "scores": {"hook": 1-5, "payoff": 1-5, "spread": 1-5}, "commits": [short hashes], "sessions": ["claude:xxxxxxxx" ids], "quotes": [up to 2 short verbatim lines from John that show the human moment]}`
+How to title an idea, from John's voice guide:
+${titleGuide()}`
+
+const CANDIDATE_SHAPE = `{"title": the short title, "longTitle": the long title, "point": one sentence on what happened, "hook": the opening line of a post, plain words, under 30 words, "payoff": what the reader walks away with, "spread": why they would pass it on, "numbers": [verified numbers from the material], "visual": what screenshot or clip would show it, or "" if none, "audience": "players" | "devs" | "both", "formats": any of ["x", "bluesky", "reddit", "update", "screenshot-saturday"], "scores": {"hook": 1-5, "payoff": 1-5, "spread": 1-5}, "commits": [short hashes], "sessions": ["claude:xxxxxxxx" ids], "quotes": [up to 2 short verbatim lines from John that show the human moment]}`
 
 function mapPrompt(digest: string): string {
   return `${CONTEXT}
@@ -338,7 +348,7 @@ ${digest}`
 function reducePrompt(cands: Candidate[], existing: string[]): string {
   return `${CONTEXT}
 
-These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Drop any idea that repeats one already in the queue. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
+These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Ideas that are each one incident of a bigger subject (several AI game master mistakes, several 3D figure fixes) become one idea about that subject, with the incidents as its examples. Drop any idea that repeats one already in the queue. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
 
 ${SHAREABLE}
 
@@ -402,6 +412,7 @@ function writeIdea(c: Candidate, rank: number, mined: string): string {
   const total = s.hook + s.payoff + s.spread
   const md = `---
 title: ${JSON.stringify(c.title)}
+longTitle: ${JSON.stringify(c.longTitle ?? "")}
 status: idea
 rank: ${rank}
 tier: ${total >= 12 ? 1 : total >= 9 ? 2 : 3}

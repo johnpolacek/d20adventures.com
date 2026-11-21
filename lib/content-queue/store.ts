@@ -19,6 +19,7 @@ export type QueueSection = { name: string; body: string }
 export type QueueItem = {
   slug: string
   title: string
+  longTitle: string
   status: QueueStatus
   rank: number
   tier: number
@@ -56,6 +57,7 @@ function parseItem(slug: string, text: string): QueueItem {
   return {
     slug,
     title: String(meta.title ?? slug),
+    longTitle: String(meta.longTitle ?? ""),
     status: STATUSES.includes(meta.status) ? meta.status : "idea",
     rank: Number(meta.rank ?? 999),
     tier: Number(meta.tier ?? 3),
