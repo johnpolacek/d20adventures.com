@@ -1,7 +1,9 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { updateTag } from "next/cache"
 import { canManageResource, getResourceOwnerId } from "@/lib/content-permissions"
+import { settingCacheTag } from "@/lib/setting-cache"
 import { copyS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { Setting } from "@/types/setting"
 
@@ -75,6 +77,7 @@ export async function updateSettingAction(params: UpdateSettingParams): Promise<
     console.log("updateSettingAction: Full setting object before S3 update:", JSON.stringify(sanitizedSetting, null, 2))
 
     await updateJsonOnS3(originalKey, sanitizedSetting)
+    updateTag(settingCacheTag(settingId))
     return { success: true, message: "Setting updated successfully." }
   } catch (error) {
     console.error(`updateSettingAction: Error during S3 operations for ${originalKey}:`, error)

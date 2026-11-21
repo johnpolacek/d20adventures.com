@@ -2,18 +2,16 @@ import Link from "next/link"
 import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
-import { readJsonFromS3 } from "@/lib/s3-utils"
+import { getCachedSetting } from "@/lib/setting-cache"
 import { getImageUrl } from "@/lib/utils"
 import type { Setting } from "@/types/setting"
 
 export default async function SettingHome(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
 
-  const key = `settings/${settingId}/setting-data.json`
-
   let setting: Setting | null = null
   try {
-    setting = (await readJsonFromS3(key)) as Setting
+    setting = await getCachedSetting(settingId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading setting data.</div>

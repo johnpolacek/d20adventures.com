@@ -5,10 +5,9 @@ import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
 import ImageHeader from "@d20/ui/image-header"
 import Image from "@d20/ui/native-image"
-import { listAndReadJsonFilesInS3Directory, readJsonFromS3 } from "@/lib/s3-utils"
+import { getCachedSetting, getCachedSettingAdventures } from "@/lib/setting-cache"
 import { getImageUrl } from "@/lib/utils"
-import { getLocalWikiAdventureDefinition, settingHasLocalWikiAdventures } from "@/lib/wiki-adventures/local-runtime"
-import { loadWikiAdventurePlanViewsForSetting } from "@/lib/wiki-adventures/plan-view"
+import { getLocalWikiAdventureDefinition } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
 
@@ -21,27 +20,19 @@ function partyLabel(party: AdventurePlan["party"]) {
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params
 
-  const key = `settings/${settingId}/setting-data.json`
-
   let setting: Setting | null = null
   try {
-    setting = (await readJsonFromS3(key)) as Setting
+    setting = await getCachedSetting(settingId)
   } catch (err) {
     console.error("Error fetching JSON from S3:", err)
     return <div>Error loading setting data.</div>
   }
 
-  // Resolve the adventure list from the wiki runtime for settings whose adventures are
-  // wiki-backed; otherwise fall back to enumerating the legacy S3 AdventurePlan JSON.
+  // Wiki-backed settings list their compiled adventures, others the legacy S3 AdventurePlan JSON.
   let adventures: AdventurePlan[] = []
   let publishedAdventures: AdventurePlan[] = []
   try {
-    if (settingHasLocalWikiAdventures(settingId)) {
-      adventures = await loadWikiAdventurePlanViewsForSetting(settingId)
-    } else {
-      const adventureFiles = await listAndReadJsonFilesInS3Directory(`settings/${settingId}/`, ["setting-data.json"])
-      adventures = adventureFiles.map((file) => file.data as AdventurePlan)
-    }
+    adventures = await getCachedSettingAdventures(settingId)
     publishedAdventures = adventures.filter((a) => !a.draft)
   } catch (err) {
     console.error("Error fetching adventure files:", err)

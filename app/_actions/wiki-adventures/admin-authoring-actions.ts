@@ -1,5 +1,6 @@
 "use server"
 
+import { updateTag } from "next/cache"
 import { requireAdmin } from "@/lib/auth-utils"
 import {
   applyAdminChatRequest,
@@ -10,6 +11,7 @@ import {
   loadAdminWikiAdventureState,
   restoreAdminWikiAdventureRevision,
 } from "@/lib/wiki-adventures/admin-authoring"
+import { settingCacheTag } from "@/lib/setting-cache"
 
 async function assertAdmin() {
   const result = await requireAdmin()
@@ -46,12 +48,16 @@ export async function loadAdminWikiAdventureStateAction(settingId: string, planI
 
 export async function sendAdminWikiAdventureChatAction(input: { settingId: string; planId: string; message: string }) {
   await assertAdmin()
-  return applyAdminChatRequest(input)
+  const result = await applyAdminChatRequest(input)
+  updateTag(settingCacheTag(input.settingId))
+  return result
 }
 
 export async function saveAdminWikiAdventureFileAction(input: { settingId: string; planId: string; path: string; content: string; intent: string }) {
   await assertAdmin()
-  return applyAdminKeyFieldUpdate(input)
+  const result = await applyAdminKeyFieldUpdate(input)
+  updateTag(settingCacheTag(input.settingId))
+  return result
 }
 
 export async function exportAdminWikiAdventureBundleAction(settingId: string, planId: string) {
@@ -61,10 +67,14 @@ export async function exportAdminWikiAdventureBundleAction(settingId: string, pl
 
 export async function importAdminWikiAdventureBundleAction(input: { settingId: string; planId: string; files: Array<{ path: string; content: string }> }) {
   await assertAdmin()
-  return importAdminWikiAdventureBundle(input)
+  const result = await importAdminWikiAdventureBundle(input)
+  updateTag(settingCacheTag(input.settingId))
+  return result
 }
 
 export async function restoreAdminWikiAdventureRevisionAction(input: { settingId: string; planId: string; revisionId: string; path?: string }) {
   await assertAdmin()
-  return restoreAdminWikiAdventureRevision(input)
+  const result = await restoreAdminWikiAdventureRevision(input)
+  updateTag(settingCacheTag(input.settingId))
+  return result
 }
