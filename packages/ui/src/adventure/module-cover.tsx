@@ -8,7 +8,7 @@ export const playersLine = ([min, max]: [number, number]) => `${min === max ? mi
 export function ModuleCover(props: { id: string; title: string; players: [number, number]; className?: string }) {
   const longest = Math.max(...props.title.split(/\s+/).map((w) => w.length))
   return (
-    <figure className={cn("@container relative aspect-[3/4] w-full overflow-hidden rounded-[4px] bg-black text-left shadow-[0_18px_40px_#000a]", props.className)}>
+    <figure className={cn("@container relative aspect-[3/4] w-full overflow-hidden rounded-[4px] bg-black text-left shadow-float", props.className)}>
       <img data-intro="art" src={`/stage/covers/${props.id}.jpg`} alt="" className="absolute inset-0 h-full w-full object-cover" />
       <div data-intro="shade" className="absolute inset-x-0 top-0 bg-gradient-to-b from-black via-black/60 to-transparent px-[7%] pt-[11%] pb-[24%]">
         <h1

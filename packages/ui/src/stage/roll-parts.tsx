@@ -24,7 +24,7 @@ function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus:
         <span
           key={i}
           className={cn(
-            "inline-grid place-items-center self-center rounded-[3px] border border-foreground/30 bg-black/35 font-serif font-semibold leading-none text-accent-soft",
+            "inline-grid place-items-center self-center rounded-hud border border-foreground/30 bg-black/35 font-serif font-semibold leading-none text-accent-soft",
             compact ? "h-4 min-w-4 px-0.5 text-[10px]" : "h-5 min-w-5 px-1 text-[12px]"
           )}
         >
@@ -124,7 +124,7 @@ export function RollDetails({ roll, compact = false, className }: { roll: RollVi
  */
 export function FeatureEntry({ feature, compact = false, className }: { feature: FeatureView; compact?: boolean; className?: string }) {
   return (
-    <div className={cn("rounded-[3px] border border-l-2 border-foreground/15 border-l-accent bg-black/30", compact ? "px-2 py-1.5" : "px-3 py-2", className)}>
+    <div className={cn("rounded-hud border border-l-2 border-foreground/15 border-l-accent bg-black/30", compact ? "px-2 py-1.5" : "px-3 py-2", className)}>
       <span className="sr-only">{featureSpeech(feature)}</span>
       <div aria-hidden="true">
         <div className={cn(eyebrow, "truncate")}>

@@ -22,7 +22,7 @@ export default function Header() {
     <header
       className={cn(
         paper.className,
-        "fixed top-0 select-none z-30 flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full max-w-[100vw] border-b-8 border-[rgba(0,0,0,.25)]",
+        "fixed top-0 select-none z-raised flex sm:gap-1 items-center pr-2 sm:px-8 md:px-12 pt-1 sm:py-4 w-full max-w-[100vw] border-b-8 border-[rgba(0,0,0,.25)]",
         !isBig && "md:px-8 sm:py-0"
       )}
       style={{ ...paper.style, viewTransitionName: "site-header" }}
@@ -52,7 +52,7 @@ export default function Header() {
           {settingSlug && (
             <Link
               href={`/settings/${settingSlug}`}
-              className="text-sm -ml-2 font-display hidden sm:block text-yellow-950/80 hover:text-yellow-950/90 active:opacity-70 font-bold tracking-wide transition-[color,opacity] duration-150"
+              className="text-sm -ml-2 font-display hidden sm:block text-accent-950/80 hover:text-accent-950/90 active:opacity-70 font-bold tracking-wide transition-[color,opacity] duration-150"
             >
               {reverseSlugify(settingSlug)}
             </Link>

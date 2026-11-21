@@ -17,8 +17,20 @@
   --color-primary-900: #07070E;
   --color-primary-950: #000000;
 
-  /* Colours with no UI SDK role: the gold accent, its pale tint, the black of a HUD panel and a softer white. */
+  /* Colours with no UI SDK role: the gold accent, its pale tint, the black of a HUD panel and a softer white. The accent
+     scale is Tailwind's amber, the one gold. Purples are the primary scale and greys are zinc. */
   --color-accent: #fcd34d;
+  --color-accent-50: oklch(98.7% 0.022 95.277);
+  --color-accent-100: oklch(96.2% 0.059 95.617);
+  --color-accent-200: oklch(92.4% 0.12 95.746);
+  --color-accent-300: oklch(87.9% 0.169 91.605);
+  --color-accent-400: oklch(82.8% 0.189 84.429);
+  --color-accent-500: oklch(76.9% 0.188 70.08);
+  --color-accent-600: oklch(66.6% 0.179 58.318);
+  --color-accent-700: oklch(55.5% 0.163 48.998);
+  --color-accent-800: oklch(47.3% 0.137 46.201);
+  --color-accent-900: oklch(41.4% 0.112 45.904);
+  --color-accent-950: oklch(27.9% 0.077 45.635);
   --color-accent-soft: #fef3c7;
   --color-panel: #000000;
   --color-soft-foreground: #d9d9de;
@@ -42,6 +54,31 @@
   --color-destructive: oklch(50.5% 0.213 27.518);
   --color-ring: #7067b7;
   --color-overlay: rgb(0 0 0 / 0.7);
+
+  /* The HUD panel's corner, and the two shadows a dark panel casts: raised a little, or floating over the page. */
+  --radius-hud: 3px;
+  --shadow-raised: 0 8px 24px #000c;
+  --shadow-float: 0 18px 44px #000a;
+}
+
+/* Page layers, low to high. Numbers under 30 stack parts inside one component. */
+@utility z-raised {
+  z-index: 30;
+}
+@utility z-panel {
+  z-index: 40;
+}
+@utility z-overlay {
+  z-index: 50;
+}
+@utility z-alert {
+  z-index: 60;
+}
+@utility z-screen {
+  z-index: 100;
+}
+@utility z-gate {
+  z-index: 120;
 }
 
 /* UI SDK's web.css and parts read the --ui-* names. web.css is not imported yet. */
@@ -58,6 +95,8 @@
   --ui-ring: var(--color-ring);
   --ui-ring-border: var(--color-primary-300);
   --ui-overlay: var(--color-overlay);
+  --ui-radius: var(--radius-md);
+  --ui-shadow: var(--shadow-raised);
 }
 
 /* Motion, the same in both apps. A part comes in with `enter-*` and goes with `exit-*`: fade, rise (up from below), drop

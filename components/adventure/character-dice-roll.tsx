@@ -40,7 +40,7 @@ export default function CharacterDiceRoll({
         <h4 className="text-sm">
           {title} {rollResult === null ? "Needed" : ""}
         </h4>
-        <h3 className="text-2xl text-amber-300">{rollType}</h3>
+        <h3 className="text-2xl text-accent-300">{rollType}</h3>
         {kind === "attack" && target && <div className="font-mono text-xs text-primary-100 -mt-3 uppercase tracking-wider">→ {target}</div>}
         <div className="font-mono text-xs text-primary-300 -mt-4 uppercase tracking-wider">
           {againstLabel(kind)} {difficulty}
@@ -48,7 +48,7 @@ export default function CharacterDiceRoll({
         </div>
         {kind === "death" && <DeathSaveMarks saves={{ successes: character.deathSaves?.successes ?? 0, failures: character.deathSaves?.failures ?? 0 }} compact />}
         {mode !== "normal" && (
-          <div className="font-mono text-xs text-amber-200 -mt-3 uppercase tracking-wider">
+          <div className="font-mono text-xs text-accent-200 -mt-3 uppercase tracking-wider">
             {mode === "advantage" ? "Advantage" : "Disadvantage"}
             {reasons?.length ? <span className="block normal-case tracking-normal text-primary-300">{reasons.join(", ")}</span> : null}
           </div>

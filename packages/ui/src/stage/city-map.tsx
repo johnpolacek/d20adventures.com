@@ -313,7 +313,7 @@ export function CityMapPanel({ map, trail, compact, onClose, className, style, o
   const title = below ? underground.name : (district?.name ?? map.name)
   return (
     <section
-      className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6", entrance("enter-pop", className))}
+      className={cn(panel, "absolute z-panel flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6", entrance("enter-pop", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
       aria-label="Map"

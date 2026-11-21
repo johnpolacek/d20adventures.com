@@ -563,7 +563,7 @@ export function PromptCard({
       ref={ref}
       className={cn(
         candlelit,
-        "absolute left-1/2 z-30 -translate-x-1/2 text-center",
+        "absolute left-1/2 z-raised -translate-x-1/2 text-center",
         compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))] px-3 py-2" : "bottom-[118px] w-[min(520px,calc(100%-40px))] px-6 pt-4 pb-4",
         mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-[50px]"),
         entrance("enter-rise", className)

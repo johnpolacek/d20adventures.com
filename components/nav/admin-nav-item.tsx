@@ -56,8 +56,8 @@ export function AdminNavItem() {
               key={item.href}
               href={item.href}
               className={cn(
-                "text-xs sm:text-sm font-bold font-display transition-[color,opacity] duration-150 hover:text-yellow-950 active:opacity-70 flex items-center gap-1",
-                item.isActive ? "text-yellow-950" : "text-yellow-950/70"
+                "text-xs sm:text-sm font-bold font-display transition-[color,opacity] duration-150 hover:text-accent-950 active:opacity-70 flex items-center gap-1",
+                item.isActive ? "text-accent-950" : "text-accent-950/70"
               )}
             >
               <Icon className="h-4 w-4" />

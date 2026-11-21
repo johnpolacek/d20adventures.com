@@ -251,7 +251,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   <div key={index} className={message.role === "admin" ? "enter-rise flex justify-end" : "enter-rise flex justify-start"}>
                     <div
                       className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
-                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-indigo-950/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
+                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-primary-800/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
                       }`}
                     >
                       {message.content}
@@ -284,7 +284,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   size="sm"
                   onClick={sendMessage}
                   disabled={busy || !prompt.trim()}
-                  className="mt-3 h-11 w-full gap-2 rounded-md border border-indigo-300/35 bg-indigo-900/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] duration-150 ease-snap hover:scale-[1.01] hover:bg-indigo-800 active:scale-[0.96] disabled:border-indigo-300/20 disabled:bg-indigo-950/65 disabled:text-indigo-100/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-indigo-950/65 disabled:active:scale-100"
+                  className="mt-3 h-11 w-full gap-2 rounded-md border border-primary-100/35 bg-primary-700/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-primary-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] duration-150 ease-snap hover:scale-[1.01] hover:bg-primary-600 active:scale-[0.96] disabled:border-primary-100/20 disabled:bg-primary-800/65 disabled:text-primary-50/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-primary-800/65 disabled:active:scale-100"
                   style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
                 >
                   <Wand2 className="size-4" />

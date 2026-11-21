@@ -46,7 +46,7 @@ function AlertDialogTitle({ className, ...props }: WithClass<ComponentProps<type
 }
 
 function AlertDialogDescription({ className, ...props }: WithClass<ComponentProps<typeof BaseAlertDialogDescription>>) {
-  return <BaseAlertDialogDescription className={cn("text-sm text-gray-300", className)} {...props} />
+  return <BaseAlertDialogDescription className={cn("text-sm text-zinc-300", className)} {...props} />
 }
 
 /** Closes the dialog as its answer. Runs onClick first. */
@@ -55,7 +55,7 @@ function AlertDialogAction({ className, ...props }: WithClass<ComponentProps<typ
 }
 
 function AlertDialogCancel({ className, ...props }: WithClass<ComponentProps<typeof AlertDialogClose>>) {
-  return <AlertDialogClose className={cn(buttonVariants({ variant: "ghost" }), "mt-2 hover:bg-neutral-800/50 hover:text-white sm:mt-0", className)} {...props} />
+  return <AlertDialogClose className={cn(buttonVariants({ variant: "ghost" }), "mt-2 hover:bg-zinc-800/50 hover:text-white sm:mt-0", className)} {...props} />
 }
 
 export { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger }

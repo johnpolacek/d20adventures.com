@@ -213,7 +213,7 @@ export function NewGame(props: {
             {info.teaser && (
               <div>
                 <div className={cn(siteLabel, "mb-2")}>The adventure</div>
-                <p className="max-w-[70ch] text-base text-gray-300">{info.teaser}</p>
+                <p className="max-w-[70ch] text-base text-zinc-300">{info.teaser}</p>
               </div>
             )}
             <div>
@@ -321,7 +321,7 @@ export function NewGame(props: {
                         className="flex w-full flex-1 flex-col items-stretch gap-2 p-2 text-left transition-opacity duration-150 ease-snap enabled:active:opacity-80 disabled:cursor-default"
                       >
                         <Face pick={p} size="h-24 w-full" />
-                        <span className={cn("truncate font-display text-sm", choice?.who === "you" && "text-amber-400")}>{p.name}</span>
+                        <span className={cn("truncate font-display text-sm", choice?.who === "you" && "text-accent-400")}>{p.name}</span>
                         <span className="-mt-2 truncate text-xs text-white/70">
                           {p.race} {p.archetype}
                         </span>
@@ -427,7 +427,7 @@ export function NewGame(props: {
         <GameMaster providers={props.providers} models={props.models} provider={props.provider} claudeModel={props.claudeModel} onProvider={props.onProvider} />
         <div className="flex-1" />
         <Presence show={hosting && sized && !hostable} motion="fade" asChild>
-          <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>
+          <p className="text-sm text-accent-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>
         </Presence>
         {props.onCancel && (
           <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
@@ -542,7 +542,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
           <div className="relative md:sticky md:top-0 md:self-start">
             <ModuleCover id={info.id} title={info.title} players={info.players} className="[filter:grayscale(.55)_brightness(.7)]" />
             <div className="absolute inset-0 grid place-items-center">
-              <div className="grid h-16 w-16 place-items-center rounded-full border-2 border-white/30 bg-black/70 text-amber-300">
+              <div className="grid h-16 w-16 place-items-center rounded-full border-2 border-white/30 bg-black/70 text-accent-300">
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-7 w-7 fill-current">
                   <path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm2 0h4V5a2 2 0 1 0-4 0v2Z" />
                 </svg>
@@ -553,13 +553,13 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
             {info.teaser && (
               <div>
                 <div className={cn(siteLabel, "mb-2")}>The adventure</div>
-                <p className="max-w-[70ch] text-base text-gray-300">{info.teaser}</p>
+                <p className="max-w-[70ch] text-base text-zinc-300">{info.teaser}</p>
               </div>
             )}
             <div className={cn(cardVariants({ variant: "quiet" }), "max-w-md p-5")}>
               <div className={siteLabel}>{info.owned ? "In your library" : "Not in your library"}</div>
-              {!info.owned && <div className="mt-2 font-display text-4xl text-amber-300">{price(info.priceCents)}</div>}
-              <p className="mt-3 text-base text-gray-300">{status}</p>
+              {!info.owned && <div className="mt-2 font-display text-4xl text-accent-300">{price(info.priceCents)}</div>}
+              <p className="mt-3 text-base text-zinc-300">{status}</p>
               <Presence show={Boolean(!info.owned && !props.linked && props.onLink)} motion="fade" asChild>
                 <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
                   Link account
@@ -588,7 +588,7 @@ function Face({ pick, size }: { pick: Pick; size: string }) {
   return pick.portrait ? (
     <img src={pick.portrait} alt="" className={cn(size, "block shrink-0 rounded-md border border-white/30 object-cover object-[50%_15%]")} />
   ) : (
-    <span aria-hidden="true" className={cn(size, "grid shrink-0 place-items-center rounded-md border border-white/30 font-display text-amber-400")}>
+    <span aria-hidden="true" className={cn(size, "grid shrink-0 place-items-center rounded-md border border-white/30 font-display text-accent-400")}>
       {pick.name[0]}
     </span>
   )

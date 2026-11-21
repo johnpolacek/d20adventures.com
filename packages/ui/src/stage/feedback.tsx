@@ -74,7 +74,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
         </Button>
       </Tip>
       <Presence show={callout} motion="drop" asChild>
-        <div className={cn(panel, "absolute right-0 z-50 flex items-center gap-2 border-accent/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
+        <div className={cn(panel, "absolute right-0 z-overlay flex items-center gap-2 border-accent/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
           {/* The pointer, under the middle of the button. */}
           <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-accent/60 bg-panel" />
           <span className="font-display text-sm tracking-wide whitespace-nowrap text-foreground">Give Us Feedback</span>
@@ -97,7 +97,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
 const NO_FILES: File[] = []
 
 const field =
-  "w-full resize-none rounded-[3px] border border-foreground/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-foreground transition-colors duration-150 placeholder:text-foreground/35 focus:border-accent/70 focus:outline-none"
+  "w-full resize-none rounded-hud border border-foreground/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-foreground transition-colors duration-150 placeholder:text-foreground/35 focus:border-accent/70 focus:outline-none"
 
 function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: (rating: number) => void; size?: string }) {
   const [hover, setHover] = useState(0)
@@ -228,7 +228,7 @@ export function FeedbackPanel({
       aria-label="Feedback"
       className={cn(
         panel,
-        "absolute z-40 flex max-h-[calc(100%-7rem)] w-[min(24rem,calc(100%-2rem))] flex-col overflow-y-auto p-6",
+        "absolute z-panel flex max-h-[calc(100%-7rem)] w-[min(24rem,calc(100%-2rem))] flex-col overflow-y-auto p-6",
         compact ? "top-14 right-4 max-h-[calc(100%-4rem)]" : "top-24 right-10",
         entrance("enter-right", className)
       )}
@@ -290,7 +290,7 @@ export function FeedbackPanel({
                 <ul className="flex flex-wrap gap-2">
                   {shots.map((shot) => (
                     <li key={shot.url} className="enter-pop relative">
-                      <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-foreground/25 object-cover" />
+                      <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-hud border border-foreground/25 object-cover" />
                       <Button
                         variant="plain"
                         type="button"

@@ -20,7 +20,7 @@ export function Option({ active, className, ...rest }: Omit<ButtonProps, "varian
 
 const chipTones = {
   dark: "bg-black/80 text-white",
-  amber: "bg-amber-500/90 font-semibold text-black",
+  amber: "bg-accent-500/90 font-semibold text-black",
   primary: "bg-primary-800/80 text-primary-100",
 }
 
@@ -33,7 +33,7 @@ export function Chip({ tone = "dark", className, ...rest }: ComponentProps<"span
 export function SectionPlate({ className, ...rest }: ComponentProps<"h2">) {
   return (
     <div className="text-center">
-      <h2 {...rest} className={cn("my-4 inline-block rounded bg-black/50 px-8 py-2 text-center font-display text-lg font-bold tracking-wider text-amber-400/90", className)} />
+      <h2 {...rest} className={cn("my-4 inline-block rounded bg-black/50 px-8 py-2 text-center font-display text-lg font-bold tracking-wider text-accent-400/90", className)} />
     </div>
   )
 }

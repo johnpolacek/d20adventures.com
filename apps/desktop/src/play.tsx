@@ -418,7 +418,7 @@ export function DesktopGame() {
       onError={onError}
       onStage={setStageState}
     >
-      <Presence show={Boolean(hosting && hosted && !hosted.turn && screen === null)} motion="fade" className="absolute inset-0 z-40">
+      <Presence show={Boolean(hosting && hosted && !hosted.turn && screen === null)} motion="fade" className="absolute inset-0 z-panel">
         {hosting && hosted && !hosted.turn && screen === null && (
           <HostedLobby
             summary={hosted.summary}
@@ -437,7 +437,7 @@ export function DesktopGame() {
       {/* Every screen outside play sits under the website's header, which stays put while the screens under it change. */}
       <Presence show={screen !== null} motion="fade" initial={false} asChild>
         {screen !== null && (
-          <div className="absolute inset-0 z-40 flex flex-col font-serif text-white">
+          <div className="absolute inset-0 z-panel flex flex-col font-serif text-white">
             {/* Black behind every screen, so the stage loading behind never flashes through before the title screen or
                 between two screens. Party setup alone lets the opening scene show. */}
             <div className={cn("absolute inset-0 bg-black transition-opacity duration-150 ease-snap", screen === "new" && "opacity-70")} />
@@ -445,7 +445,7 @@ export function DesktopGame() {
               page={screen === "new" ? "adventures" : screen}
               big={screen === "home"}
               account={<AccountBadge account={acct} />}
-              trailing={<FullscreenButton className="text-yellow-950 opacity-70 drop-shadow-none" />}
+              trailing={<FullscreenButton className="text-accent-950 opacity-70 drop-shadow-none" />}
               onNavigate={ready ? navigate : undefined}
             />
             <div className="relative min-h-0 flex-1">
@@ -558,7 +558,7 @@ export function DesktopGame() {
         />
       )}
       <Presence show={Boolean(error || stageError)} motion="drop" asChild>
-        <div role="alert" className={`${panel} absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
+        <div role="alert" className={`${panel} absolute left-1/2 top-28 z-alert w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
           <p>{error ?? stageError}</p>
           <Pill className="mt-3" disabled={working} onClick={() => void invoke({ kind: "load" })}>
             Reload saved state

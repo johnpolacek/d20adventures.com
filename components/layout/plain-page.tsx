@@ -3,11 +3,11 @@ import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
 
 /** The see-through card that holds a PlainPage's content. */
-export const plainCard = "rounded-lg border border-amber-200/20 bg-black/70 shadow-[0_18px_44px_#000a] backdrop-blur-sm"
+export const plainCard = "rounded-lg border border-accent-200/20 bg-black/70 shadow-float backdrop-blur-sm"
 
 /** Body text for a PlainPage. */
 export const plainProse =
-  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-blue-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-amber-200 prose-a:decoration-amber-200/40 prose-a:transition-colors prose-a:duration-150 hover:prose-a:decoration-amber-200 prose-li:marker:text-amber-300/70 prose-strong:text-white"
+  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-blue-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-accent-200 prose-a:decoration-accent-200/40 prose-a:transition-colors prose-a:duration-150 hover:prose-a:decoration-accent-200 prose-li:marker:text-accent-300/70 prose-strong:text-white"
 
 /** A plain page over the home page's hero art, its content on a see-through card unless `card` is false. */
 export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", children }: { title?: string; subtitle?: ReactNode; card?: boolean; width?: string; children: ReactNode }) {
@@ -24,7 +24,7 @@ export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", c
                 {title}
               </h1>
               {subtitle && (
-                <p className="mt-3 font-display text-sm tracking-[0.2em] uppercase text-amber-200" style={textShadowSpreadLight}>
+                <p className="mt-3 font-display text-sm tracking-[0.2em] uppercase text-accent-200" style={textShadowSpreadLight}>
                   {subtitle}
                 </p>
               )}

@@ -330,7 +330,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
   const expandedDialogContent = (
     <DialogContent className="w-full max-w-4xl bg-primary-800 text-white border-4 border-primary-600">
       <DialogHeader>
-        <DialogTitle className="font-display text-amber-300">Game Chat</DialogTitle>
+        <DialogTitle className="font-display text-accent-300">Game Chat</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col gap-3">
         <ChatMessageList
@@ -357,8 +357,8 @@ export default function GameChat({ adventureId, characterName, variant = "floati
               nested controls — expand to page through history. */}
           <Button variant="plain" type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left transition-opacity duration-100 active:opacity-80" aria-label="Expand chat">
             <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
-              <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
-              <Maximize2 className="h-4 w-4 text-stone-300 transition-colors duration-150 group-hover:text-amber-200" aria-hidden />
+              <h3 className="font-display text-sm font-bold text-accent-300">Game Chat</h3>
+              <Maximize2 className="h-4 w-4 text-zinc-300 transition-colors duration-150 group-hover:text-accent-200" aria-hidden />
             </div>
             <ChatMessageList
               messages={messages}
@@ -390,7 +390,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
             Chat
           </DialogTrigger>
           <Presence show={unseenCount > 0} motion="pop" asChild>
-            <Badge className="bg-purple-600 ring-2 ring-purple-700 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full">
+            <Badge className="bg-primary-400 ring-2 ring-primary-500 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full">
               {unseenCount > 99 ? "99+" : unseenCount}
             </Badge>
           </Presence>

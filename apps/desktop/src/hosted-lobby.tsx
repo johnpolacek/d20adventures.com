@@ -54,7 +54,7 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
         <div ref={list} className="mb-2 max-h-40 space-y-1 overflow-y-auto text-sm">
           {chat.map((m, i) => (
             <p key={i} className={i >= before ? "enter-rise" : undefined}>
-              <span className="text-amber-300">{m.from}</span> <span className="text-gray-300">{m.text}</span>
+              <span className="text-accent-300">{m.from}</span> <span className="text-zinc-300">{m.text}</span>
             </p>
           ))}
         </div>
@@ -103,7 +103,7 @@ function HeroSheet({ hero }: { hero: GuestHero }) {
     ["Motivation", hero.motivation],
   ] as const
   return (
-    <div className="mt-3 space-y-3 border-t border-white/10 pt-3 text-sm text-gray-300">
+    <div className="mt-3 space-y-3 border-t border-white/10 pt-3 text-sm text-zinc-300">
       <dl className="grid grid-cols-6 gap-1 text-center">
         {ATTRIBUTES.map(([key, label]) => (
           <div key={key} className="rounded bg-white/5 py-1">
@@ -251,7 +251,7 @@ function Request({
     <Collapsible render={<li {...motion} className={cn("rounded-lg border border-white/10 bg-black/50 p-3", motion?.className)} />} {...root}>
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="truncate font-display text-lg text-amber-300">{request.name}</div>
+          <div className="truncate font-display text-lg text-accent-300">{request.name}</div>
           <div className="truncate text-xs text-white/70">
             {[request.race, request.archetype].filter(Boolean).join(" ")} · {request.player}
           </div>
@@ -310,10 +310,10 @@ export function HostedLobby(props: {
   const hostRows = useLeaving(hostHeroes, (name) => name, { from: unchosen?.length ?? 0 })
   const guestRows = useLeaving(guests, (guest) => guest.userId, { from: (unchosen?.length ?? 0) + hostHeroes.length })
   return (
-    <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
+    <div className="absolute inset-0 z-panel grid place-items-center bg-black/70 font-serif text-white">
       <section className={cn(cardVariants({ variant: "frame" }), "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
         <div className={siteLabel}>Hosting</div>
-        <h1 className="mt-2 font-display text-4xl font-bold text-amber-300" style={textShadow}>
+        <h1 className="mt-2 font-display text-4xl font-bold text-accent-300" style={textShadow}>
           {props.summary.title}
         </h1>
         {seatRows.map(({ key, item: seat, motion }) => (

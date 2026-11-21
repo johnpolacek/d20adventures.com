@@ -235,14 +235,14 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
     <div className="w-full grow max-w-3xl mx-auto fade-in">
       <Presence show={Boolean(shouldShowReply)} motion="drop" asChild>
         <div className="hidden md:flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
-          <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
+          <p className="italic text-sm pl-2 font-bold text-accent-300">It is your turn!</p>
           <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
             Go To Reply
           </Button>
         </div>
       </Presence>
       <TurnNarrativeBody variant="page" showOriginalReplies={showOriginalReplies} nextAdventure={nextAdventure} />
-      <div className="absolute bottom-8 left-8 w-auto pr-16 z-50">
+      <div className="absolute bottom-8 left-8 w-auto pr-16 z-overlay">
         <div className="flex justify-center md:justify-start items-center gap-3 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
           {/* On xl+ the right-rail Storyview card is the entry point */}
           <span className="xl:hidden">
@@ -255,10 +255,10 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
         </div>
       </div>
       {isPracticeRun && (
-        <div className="mt-8 rounded-lg border border-amber-500/30 bg-amber-950/20 p-4">
+        <div className="mt-8 rounded-lg border border-accent-500/30 bg-accent-950/20 p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h4 className="text-amber-300 font-display text-lg">Practice Reports</h4>
+              <h4 className="text-accent-300 font-display text-lg">Practice Reports</h4>
               <p className="text-sm text-white/70">Generate a full diagnostic report for plan edits and code investigations.</p>
             </div>
             <Button variant="outline" size="sm" onClick={handleGeneratePracticeReport} disabled={isGeneratingPracticeReport}>
@@ -285,8 +285,8 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
                         <div key={`${report.id}-${findingIndex}`} className="rounded border border-white/10 bg-black/40 p-2">
                           <div className="flex flex-wrap items-center gap-2 text-xs">
                             <span className="text-white font-semibold">{finding.title || "Untitled finding"}</span>
-                            {finding.type ? <span className="px-1.5 py-0.5 rounded bg-indigo-700/50 text-indigo-100 uppercase">{finding.type}</span> : null}
-                            {finding.priority ? <span className="px-1.5 py-0.5 rounded bg-amber-700/50 text-amber-100 uppercase">{finding.priority}</span> : null}
+                            {finding.type ? <span className="px-1.5 py-0.5 rounded bg-primary-500/50 text-primary-50 uppercase">{finding.type}</span> : null}
+                            {finding.priority ? <span className="px-1.5 py-0.5 rounded bg-accent-700/50 text-accent-100 uppercase">{finding.priority}</span> : null}
                           </div>
                           {finding.recommendation ? <p className="text-sm text-white/80 mt-1">{finding.recommendation}</p> : null}
                           {finding.target?.planPath ? (

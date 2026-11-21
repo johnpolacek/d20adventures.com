@@ -105,14 +105,14 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
           <h1 style={textShadowSpreadLight} className="text-3xl md:text-4xl font-bold font-display mb-1 text-white leading-tight">
             {adventurePlan.title}
           </h1>
-          <p style={textShadow} className="max-w-3xl mx-auto relative z-10 text-indigo-100 text-sm md:text-base !text-balance">
+          <p style={textShadow} className="max-w-3xl mx-auto relative z-10 text-primary-50 text-sm md:text-base !text-balance">
             {adventurePlan.teaser}
           </p>
         </div>
         {adventurePlan.availableCharacterOptions && (
           <div className="flex flex-col items-center justify-center gap-4">
             {adventurePlan.premadePlayerCharacters && adventurePlan.premadePlayerCharacters.length > 0 && (
-              <p className="font-display w-full text-center text-xl text-amber-300 font-bold mb-6" style={textShadow}>
+              <p className="font-display w-full text-center text-xl text-accent-300 font-bold mb-6" style={textShadow}>
                 CreatE a CharacteR
               </p>
             )}
@@ -122,7 +122,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
         )}
         {adventurePlan.premadePlayerCharacters && adventurePlan.premadePlayerCharacters.length > 0 && (
           <div>
-            <p className="font-display w-full text-center text-xl text-amber-300 font-bold mb-6" style={textShadow}>
+            <p className="font-display w-full text-center text-xl text-accent-300 font-bold mb-6" style={textShadow}>
               ChoosE Your characteR
             </p>
             <div className={cn("grid gap-6 mb-8 max-w-4xl mx-auto", adventurePlan.premadePlayerCharacters.length === 1 ? "grid-cols-1 justify-items-center" : "grid-cols-1 md:grid-cols-2")}>
@@ -148,17 +148,17 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                     </Button>
                     {/* Overlay spinner/feedback if selecting this card */}
                     <Presence show={isSelecting && selectedCharacterId === character.id} motion="fade" asChild>
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
-                        <svg className="animate-spin h-8 w-8 text-amber-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-raised">
+                        <svg className="animate-spin h-8 w-8 text-accent-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                         </svg>
-                        <span className="text-amber-300 font-bold text-lg">Selecting...</span>
+                        <span className="text-accent-300 font-bold text-lg">Selecting...</span>
                       </div>
                     </Presence>
 
                     <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-2xl z-10">
-                      <div className="font-bold text-amber-300 pb-1">{character.name}</div>
+                      <div className="font-bold text-accent-300 pb-1">{character.name}</div>
                       <div className="text-base">
                         {character.gender} {character.race} {character.archetype}
                       </div>
@@ -168,7 +168,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                   </div>
                   <CardContent className="flex-1 flex flex-col">
                     <div className="relative z-10 flex-1 flex flex-col">
-                      {character.background && <div className="text-gray-300 text-sm -mt-2 mb-3 whitespace-pre-line">{character.background}</div>}
+                      {character.background && <div className="text-zinc-300 text-sm -mt-2 mb-3 whitespace-pre-line">{character.background}</div>}
                       <div className="w-full flex justify-center pt-2 pb-8 mt-auto">
                         <Button variant="outline" size="lg" className="text-lg w-36" disabled={isSelecting}>
                           {isSelecting && selectedCharacterId === character.id ? <span>Selecting...</span> : selectedCharacterId === character.id ? "Selected" : "Select"}
@@ -182,7 +182,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
             </div>
 
             <Presence show={!selectedCharacterId} motion="fade" initial={false} asChild>
-              <p className="text-center text-lg text-indigo-200 pb-8">
+              <p className="text-center text-lg text-primary-50 pb-8">
                 {adventurePlan.premadePlayerCharacters.length === 1
                   ? "This intro adventure uses a premade character. Click to select and continue."
                   : "This intro adventure uses premade characters. Please select your character to continue."}
@@ -207,10 +207,10 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
         <Dialog open={showSignInPrompt && !isSignedIn} onOpenChange={setShowSignInPrompt}>
           <DialogContent className="bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600 text-white">
             <DialogHeader className="sm:text-center">
-              <DialogTitle style={textShadow} className="font-display text-2xl text-amber-300">
+              <DialogTitle style={textShadow} className="font-display text-2xl text-accent-300">
                 Sign in to start your adventure
               </DialogTitle>
-              <DialogDescription className="text-indigo-100 text-base">
+              <DialogDescription className="text-primary-50 text-base">
                 {selectedCharacterId && characterNames[selectedCharacterId]
                   ? `Create a free account or sign in to play as ${characterNames[selectedCharacterId]}.`
                   : "Create a free account or sign in to play this adventure."}

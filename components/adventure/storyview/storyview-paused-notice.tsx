@@ -11,8 +11,8 @@ export default function StoryviewPausedNotice({ paused, className }: { paused: N
 
   if (you) {
     return (
-      <p className={cn("text-xs text-amber-300/90", className)}>
-        <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />
+      <p className={cn("text-xs text-accent-300/90", className)}>
+        <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent-400 align-middle" />
         Auto-narration is paused — you need more D20 tokens to cover your share (~{Math.ceil(paused.estimatedShare)}).
       </p>
     )
@@ -20,8 +20,8 @@ export default function StoryviewPausedNotice({ paused, className }: { paused: N
 
   const names = others.map((user) => user.name).join(", ")
   return (
-    <p className={cn("text-xs text-amber-300/90", className)}>
-      <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 align-middle" />
+    <p className={cn("text-xs text-accent-300/90", className)}>
+      <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent-400 align-middle" />
       Auto-narration paused — waiting on {names || "a player"} to add tokens.
     </p>
   )

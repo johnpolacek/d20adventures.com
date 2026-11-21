@@ -16,8 +16,8 @@ import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 
 gsap.registerPlugin(useGSAP)
 
-const labelClass = "font-display text-sm tracking-[0.2em] uppercase text-amber-300/90"
-const fieldClass = "h-auto py-2.5 border-amber-200/20 bg-black/60 text-base focus-visible:border-amber-200/50"
+const labelClass = "font-display text-sm tracking-[0.2em] uppercase text-accent-300/90"
+const fieldClass = "h-auto py-2.5 border-accent-200/20 bg-black/60 text-base focus-visible:border-accent-200/50"
 
 type Draft = { name: string; email: string; message: string }
 
@@ -128,7 +128,7 @@ function ContactSent({ name }: { name: string }) {
         <Image data-sent="die" src="/images/d20-white.svg" alt="" width={112} height={112} className="relative size-28 drop-shadow-[0_0_24px_rgba(96,165,250,0.6)]" />
       </div>
       <div data-sent="text" className="flex flex-col items-center">
-        <p className="font-display text-sm tracking-[0.3em] uppercase text-amber-300/90">Natural 20</p>
+        <p className="font-display text-sm tracking-[0.3em] uppercase text-accent-300/90">Natural 20</p>
         <h2 className="mt-2 font-display text-4xl sm:text-5xl text-blue-50" style={textShadowSpreadLight}>
           Message Sent
         </h2>

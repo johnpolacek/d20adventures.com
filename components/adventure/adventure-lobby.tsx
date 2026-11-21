@@ -357,7 +357,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                   </Presence>
                   <Presence show={Boolean(seat.request && seat.request.status !== "pending")} motion="drop" asChild>
                     {seat.request && seat.request.status !== "pending" && (
-                      <p className="mb-8 max-w-xl rounded bg-amber-900/20 px-4 py-2 text-center text-amber-200">
+                      <p className="mb-8 max-w-xl rounded bg-accent-900/20 px-4 py-2 text-center text-accent-200">
                         The host {seat.request.status === "removed" ? "removed" : "declined"} {seat.request.name}
                         {seat.request.note ? `: ${seat.request.note}` : "."}
                       </p>
@@ -450,7 +450,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         </Presence>
         {/* A hosted game has its host to talk to, even with one seat. */}
         <Presence show={Boolean(isSignedIn && userCharacter && (maxParty > 1 || hosted))} motion="fade" asChild>
-          <div className="fixed top-20 right-8 z-50">
+          <div className="fixed top-20 right-8 z-overlay">
             <GameChat />
           </div>
         </Presence>

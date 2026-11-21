@@ -22,7 +22,7 @@ const formatCode = (code: string) => {
 // The code from the app, as two rows of parchment tiles.
 function CodeTiles({ code }: { code: string }) {
   const c = clean(code)
-  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-[3px] font-display text-2xl text-background shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
+  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-hud font-display text-2xl text-background shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
   return (
     <div className="flex items-center justify-center gap-1.5" role="img" aria-label={`Code ${formatCode(code)}`}>
       {[...c.slice(0, 4)].map((ch, i) => (
@@ -147,7 +147,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                   placeholder="ABCD-EFGH"
                   autoComplete="off"
                   spellCheck={false}
-                  className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="stage-parchment w-full rounded-hud px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
                   Continue
@@ -167,7 +167,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
               <ul className="space-y-2">
                 {devices.map((device, i) => (
                   <Presence key={device.id} show={!unlinked.includes(device.id)} asChild motion="rise" exit="left" index={i}>
-                    <li className="stage-navy flex items-center justify-between gap-4 rounded-[3px] border border-foreground/20 px-3 py-2">
+                    <li className="stage-navy flex items-center justify-between gap-4 rounded-hud border border-foreground/20 px-3 py-2">
                       <div className="min-w-0">
                         <div className="truncate font-serif">{device.name}</div>
                         <div className="text-[11px] text-muted-foreground">Linked {new Date(device.createdAt).toLocaleDateString()}</div>

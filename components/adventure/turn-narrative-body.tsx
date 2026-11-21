@@ -98,7 +98,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
       <Presence show={Boolean(isNpcProcessing && !offer && !currentTurn?.isFinalEncounter && !disableSSE)} motion="fade" asChild>
         <div className="flex flex-col items-center gap-4 py-8">
           <LoadingAnimation />
-          <p className="text-indigo-300 font-display">{currentCharacter?.name} is rolling…</p>
+          <p className="text-primary-100 font-display">{currentCharacter?.name} is rolling…</p>
         </div>
       </Presence>
 
@@ -121,15 +121,15 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
             id="turn-indicator"
             className={cn(
               "flex flex-col gap-2 justify-center border mt-4 border-white/20 items-center p-8 rounded-lg transition-colors duration-150",
-              isPlayerTurnComplete ? "bg-neutral-900" : "bg-primary-800/70 border-dashed",
+              isPlayerTurnComplete ? "bg-zinc-900" : "bg-primary-800/70 border-dashed",
               isTurnComplete && "hidden"
             )}
           >
             <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
             <div className="flex gap-3 mt-3 mb-4 scale-75">
-              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }} />
-              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }} />
-              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-zinc-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }} />
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-zinc-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }} />
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-zinc-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
             </div>
             <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
             {passed && <p className="text-sm text-red-300/80">Passed Over · {passed}</p>}

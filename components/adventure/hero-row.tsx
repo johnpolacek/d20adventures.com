@@ -18,13 +18,13 @@ export function HeroRow(props: {
 }) {
   const c = props.character
   return (
-    <li className={cn("flex min-w-0 items-center gap-3 rounded-lg border bg-black/60 p-2", props.mine ? "border-amber-400/60" : "border-white/10", props.className)} style={props.style}>
+    <li className={cn("flex min-w-0 items-center gap-3 rounded-lg border bg-black/60 p-2", props.mine ? "border-accent-400/60" : "border-white/10", props.className)} style={props.style}>
       <Button variant="plain" type="button" onClick={props.onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity duration-100 hover:opacity-80 active:opacity-60">
         <span className="relative h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/20 bg-white/5">
           {c.image && <Image src={getImageUrl(c.image)} alt="" fill className="object-cover object-[50%_15%]" onError={(e) => (e.currentTarget.style.display = "none")} />}
         </span>
         <span className="min-w-0">
-          <span className={cn("block truncate font-display text-base", props.mine && "text-amber-400")}>{c.name}</span>
+          <span className={cn("block truncate font-display text-base", props.mine && "text-accent-400")}>{c.name}</span>
           <span className="block truncate text-xs text-white/70">
             {c.race} {c.archetype}
           </span>
@@ -75,6 +75,6 @@ export function HeroRows({ children }: { children: ReactNode }) {
 
 // The small label after a seated hero: who plays them.
 export function HeroTag(props: { tone: "you" | "ai" | "player"; children: ReactNode }) {
-  const tones = { you: "bg-amber-800 text-amber-200", ai: "bg-sky-900 text-sky-200", player: "bg-primary-700 text-primary-200" }
+  const tones = { you: "bg-accent-800 text-accent-200", ai: "bg-sky-900 text-sky-200", player: "bg-primary-700 text-primary-200" }
   return <span className={cn("max-w-28 shrink-0 truncate rounded-sm px-2 py-0.5 font-mono text-xs font-bold tracking-wider", tones[props.tone])}>{props.children}</span>
 }

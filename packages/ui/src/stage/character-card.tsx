@@ -57,7 +57,7 @@ export function CharacterCard({
     <section
       className={cn(
         panel,
-        "absolute z-40 overflow-y-auto px-6 pt-6 pb-5",
+        "absolute z-panel overflow-y-auto px-6 pt-6 pb-5",
         compact ? "top-12 right-3 bottom-12 w-[min(330px,55vw)]" : "top-24 right-10 max-h-[calc(100%-230px)] w-[330px]",
         entrance("enter-right", className)
       )}
@@ -116,7 +116,7 @@ export function CharacterCard({
 }
 
 const stat = (label: string, value: string) => (
-  <span className="flex items-baseline gap-1.5 rounded-[3px] border border-foreground/25 bg-black/30 px-2 py-1">
+  <span className="flex items-baseline gap-1.5 rounded-hud border border-foreground/25 bg-black/30 px-2 py-1">
     <span className={cn(eyebrow, "text-muted-foreground")}>{label}</span>
     <span className="font-serif text-[15px] font-semibold tabular-nums text-foreground">{value}</span>
   </span>
@@ -187,7 +187,7 @@ function StandingRow({ standing: s }: { standing: Standing }) {
             {s.temporary ? stat("Temporary Hit Points", String(s.temporary)) : null}
             {stat("Armor Class", String(s.armorClass))}
             {s.inspired ? (
-              <span className="flex items-baseline rounded-[3px] border border-foreground/25 bg-black/30 px-2 py-1">
+              <span className="flex items-baseline rounded-hud border border-foreground/25 bg-black/30 px-2 py-1">
                 <span className={cn(eyebrow, "text-foreground")}>Heroic Inspiration</span>
               </span>
             ) : null}

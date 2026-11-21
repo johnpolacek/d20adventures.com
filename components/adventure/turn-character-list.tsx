@@ -68,7 +68,7 @@ export default function TurnCharacterList() {
                 key={character.id}
                 className={cn(
                   "enter-rise w-full max-w-[320px] 2xl:max-w-[360px] flex items-center gap-3 p-1.5 sm:p-2 relative rounded-xl transition-[scale,opacity,box-shadow] duration-200 ease-snap bg-gradient-to-tl ring ring-primary-700 cursor-pointer hover:ring-primary-500",
-                  isDead ? "ring-gray-700 from-gray-800/50 via-gray-800/50 to-gray-700/50 opacity-60" : character.isComplete ? "ring-primary-600" : "from-primary-800 via-primary-800 to-primary-700",
+                  isDead ? "ring-zinc-700 from-zinc-800/50 via-zinc-800/50 to-zinc-700/50 opacity-60" : character.isComplete ? "ring-primary-600" : "from-primary-800 via-primary-800 to-primary-700",
                   character.id === currentActorId && !isDead ? "scale-100 shadow-md ring-primary-600 ring-2 from-primary-900" : "scale-90 from-primary-800/70 via-primary-800/70 opacity-90",
                   isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
                 )}
@@ -104,7 +104,7 @@ export default function TurnCharacterList() {
                     </div>
                   )}
                   <Presence show={Boolean(conditions)} motion="fade" asChild>
-                    <div className="text-xxs sm:text-xs italic text-amber-200/90">{conditions}</div>
+                    <div className="text-xxs sm:text-xs italic text-accent-200/90">{conditions}</div>
                   </Presence>
 
                   {characters.length > 1 && !isDead && (
@@ -122,7 +122,7 @@ export default function TurnCharacterList() {
                 </Presence>
 
                 {isPlayerCharacter && !isDead && (
-                  <div className="text-xxs sm:text-xs text-amber-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
+                  <div className="text-xxs sm:text-xs text-accent-300/80 scale-x-110 tracking-wide font-bold font-mono px-1 py-0.5 bg-black rounded absolute -bottom-2.5 ring-2 ring-primary-600 right-8 z-10 scale-90">
                     YOU
                   </div>
                 )}

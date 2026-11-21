@@ -55,11 +55,11 @@ function Remove(props: { className?: string }) {
 }
 
 function Thumb(props: { className?: string }) {
-  return <img src={save.cover} alt="" className={cn("aspect-[3/4] w-20 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20", props.className)} />
+  return <img src={save.cover} alt="" className={cn("aspect-[3/4] w-20 shrink-0 rounded-md object-cover shadow-raised ring-1 ring-white/20", props.className)} />
 }
 
 function Portrait(props: { src: string; className?: string }) {
-  return <img src={props.src} alt="" className={cn("rounded-full object-cover object-top ring-2 ring-amber-400/70", props.className)} />
+  return <img src={props.src} alt="" className={cn("rounded-full object-cover object-top ring-2 ring-accent-400/70", props.className)} />
 }
 
 // A: the cover as a book on the left, the run laid out to its right.
@@ -73,12 +73,12 @@ function Ledger() {
           <span className={siteLabel}>{save.players} · Last played {save.playedAt}</span>
         </div>
         <h3 className="font-display text-4xl text-white">{save.title}</h3>
-        <p className="max-w-2xl font-serif text-lg text-gray-300">{save.teaser}</p>
+        <p className="max-w-2xl font-serif text-lg text-zinc-300">{save.teaser}</p>
         <div className="mt-auto flex items-end justify-between gap-6">
           <div>
             <div className={siteLabel}>Round {save.round}</div>
-            <div className="font-display text-2xl text-amber-300">{save.turnTitle}</div>
-            <div className="mt-2 flex items-center gap-2 text-gray-300">
+            <div className="font-display text-2xl text-accent-300">{save.turnTitle}</div>
+            <div className="mt-2 flex items-center gap-2 text-zinc-300">
               <Portrait src={save.party[0].image} className="size-7" />
               {save.party.map((p) => p.name).join(", ")}
             </div>
@@ -102,7 +102,7 @@ function Cinema() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
       <div className="relative flex h-full flex-col p-10">
         <div className="flex items-center gap-6">
-          <img src={save.cover} alt="" className="aspect-[3/4] w-24 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+          <img src={save.cover} alt="" className="aspect-[3/4] w-24 shrink-0 rounded-md object-cover shadow-raised ring-1 ring-white/20" />
           <div className="flex flex-col items-start gap-3">
             <Chip tone="amber">Playing</Chip>
             <h3 className="max-w-xl font-display text-5xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{save.title}</h3>
@@ -111,7 +111,7 @@ function Cinema() {
         <div className="mt-auto flex items-end justify-between gap-6">
           <div>
             <div className={siteLabel}>Round {save.round}</div>
-            <div className="font-display text-2xl text-amber-300 [text-shadow:0_2px_8px_#000]">{save.turnTitle}</div>
+            <div className="font-display text-2xl text-accent-300 [text-shadow:0_2px_8px_#000]">{save.turnTitle}</div>
           </div>
           <div className="flex shrink-0 items-center gap-4">
             <span className="rounded-full bg-black/70 px-4 py-1.5 text-sm text-white">{save.party[0].name}</span>
@@ -146,14 +146,14 @@ function Trail() {
           const now = i === save.at
           const ahead = i > save.at
           return (
-            <div key={t.title} className={cn("relative overflow-hidden rounded", now ? "flex-[3] ring-2 ring-amber-400" : "flex-1")}>
+            <div key={t.title} className={cn("relative overflow-hidden rounded", now ? "flex-[3] ring-2 ring-accent-400" : "flex-1")}>
               <img
                 src={t.image}
                 alt=""
                 className={cn("h-40 w-full object-cover", ahead && "blur-sm grayscale brightness-[.35]", !now && !ahead && "brightness-75 saturate-50")}
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-2 pt-8">
-                <div className={cn("font-display leading-tight", now ? "text-lg text-amber-300" : "text-xs text-white/70")}>{ahead ? "?" : t.title}</div>
+                <div className={cn("font-display leading-tight", now ? "text-lg text-accent-300" : "text-xs text-white/70")}>{ahead ? "?" : t.title}</div>
               </div>
             </div>
           )
@@ -174,9 +174,9 @@ function Hero() {
           <span className={siteLabel}>{save.title}</span>
         </div>
         <p className="font-display text-3xl leading-snug text-white">
-          {save.party[0].name} the {save.party[0].role} is searching for <span className="text-amber-300">{save.turnTitle}</span>.
+          {save.party[0].name} the {save.party[0].role} is searching for <span className="text-accent-300">{save.turnTitle}</span>.
         </p>
-        <p className="font-serif text-gray-400 italic">Round {save.round}. Last played {save.playedAt}.</p>
+        <p className="font-serif text-zinc-400 italic">Round {save.round}. Last played {save.playedAt}.</p>
         <div className="mt-4 flex items-center gap-4">
           <Epic>Continue</Epic>
           <Remove />
@@ -194,14 +194,14 @@ function Tome() {
       <div className="relative shrink-0 [transform:rotateY(18deg)] [transform-style:preserve-3d]">
         <img src={save.cover} alt="" className="aspect-[3/4] w-60 rounded-r-md object-cover shadow-[-12px_20px_40px_#000,inset_0_0_0_1px_#fff2]" />
         <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/70 to-transparent" />
-        <div className="absolute -bottom-6 right-8 flex h-24 w-9 items-end justify-center bg-red-800 pb-3 font-display text-lg text-amber-100 shadow-lg [clip-path:polygon(0_0,100%_0,100%_100%,50%_85%,0_100%)]">
+        <div className="absolute -bottom-6 right-8 flex h-24 w-9 items-end justify-center bg-red-800 pb-3 font-display text-lg text-accent-100 shadow-lg [clip-path:polygon(0_0,100%_0,100%_100%,50%_85%,0_100%)]">
           {save.round}
         </div>
       </div>
-      <div className="flex-1 border-l border-amber-200/10 pl-12">
+      <div className="flex-1 border-l border-accent-200/10 pl-12">
         <div className={siteLabel}>Chapter {save.at + 1} of {save.trail.length}</div>
-        <h3 className="mt-1 font-display text-3xl text-amber-200">{save.turnTitle}</h3>
-        <p className="mt-4 max-w-xl font-serif text-lg leading-relaxed text-amber-50/80 first-letter:float-left first-letter:mr-2 first-letter:font-display first-letter:text-5xl first-letter:leading-none first-letter:text-amber-300">
+        <h3 className="mt-1 font-display text-3xl text-accent-200">{save.turnTitle}</h3>
+        <p className="mt-4 max-w-xl font-serif text-lg leading-relaxed text-accent-50/80 first-letter:float-left first-letter:mr-2 first-letter:font-display first-letter:text-5xl first-letter:leading-none first-letter:text-accent-300">
           At midnight Thalbern reached the Old Standing Stones. Wollandora waited in the moonlight, and the relics she had guarded for a generation were gone.
         </p>
         <div className="mt-8 flex items-center gap-4">
@@ -225,7 +225,7 @@ function Marquee() {
       <div className="relative px-10 pt-14 pb-6">
         <h3 className="font-display text-[clamp(3rem,7vw,6.5rem)] leading-[0.95] text-white [text-shadow:0_4px_24px_#000]">{save.title}</h3>
         <div className="mt-10 flex items-center gap-8 border-t border-white/20 pt-4 font-mono text-xs tracking-widest text-white/80 uppercase">
-          <span className="text-amber-300">● Playing</span>
+          <span className="text-accent-300">● Playing</span>
           <span>Round {save.round}</span>
           <span>{save.turnTitle}</span>
           <span>{save.party[0].name}</span>
@@ -256,7 +256,7 @@ function Diptych() {
         <div className="absolute right-6 bottom-6 left-10 flex items-end justify-between gap-6">
           <div>
             <div className="font-mono text-xs text-white/70">ROUND {save.round}</div>
-            <div className="font-display text-4xl text-amber-300 [text-shadow:0_2px_10px_#000]">{save.turnTitle}</div>
+            <div className="font-display text-4xl text-accent-300 [text-shadow:0_2px_10px_#000]">{save.turnTitle}</div>
             <div className="mt-2 flex items-center gap-2 text-white/80">
               <Portrait src={save.party[0].image} className="size-7" />
               {save.party[0].name}
@@ -280,7 +280,7 @@ function Rows() {
         <div className="relative flex-1">
           <Chip tone="amber">Playing</Chip>
           <h3 className="mt-2 font-display text-3xl text-white">{save.title}</h3>
-          <div className="text-amber-300">
+          <div className="text-accent-300">
             Round {save.round} · {save.turnTitle}
           </div>
         </div>
@@ -294,10 +294,10 @@ function Rows() {
         <div key={o.title} className="flex items-center gap-5 border-t border-white/10 px-5 py-3 hover:bg-white/5">
           <img src={o.cover} alt="" className={cn("aspect-[3/4] w-10 rounded-sm object-cover", o.done && "saturate-50 brightness-75")} />
           <div className="w-64 font-display text-lg text-white">{o.title}</div>
-          <div className="flex-1 text-sm text-gray-400">{o.line}</div>
-          <div className="w-48 text-sm text-gray-400">{o.party}</div>
+          <div className="flex-1 text-sm text-zinc-400">{o.line}</div>
+          <div className="w-48 text-sm text-zinc-400">{o.party}</div>
           <Chip tone={o.tone}>{o.chip}</Chip>
-          <span className="w-36 text-right font-display text-sm text-amber-300 hover:text-amber-200">{o.action} ›</span>
+          <span className="w-36 text-right font-display text-sm text-accent-300 hover:text-accent-200">{o.action} ›</span>
           <Remove />
         </div>
       ))}
@@ -316,10 +316,10 @@ function Sidebar() {
           <Remove />
         </div>
         <h3 className="font-display text-3xl leading-tight text-white">{save.title}</h3>
-        <div className="h-px bg-gradient-to-r from-amber-400/60 to-transparent" />
+        <div className="h-px bg-gradient-to-r from-accent-400/60 to-transparent" />
         <div>
           <div className={siteLabel}>Round {save.round}</div>
-          <div className="font-display text-xl text-amber-300">{save.turnTitle}</div>
+          <div className="font-display text-xl text-accent-300">{save.turnTitle}</div>
         </div>
         <div className="mt-auto flex items-center justify-between">
           <span className="font-serif text-sm text-white/60 italic">{save.party[0].name}</span>
@@ -340,10 +340,10 @@ function TitleCard() {
       <div className="relative flex flex-col items-center text-center">
         <Thumb className="w-14" />
         <div className="mt-5 font-display text-sm tracking-[0.4em] text-white/70 uppercase">{save.title}</div>
-        <div className="my-3 flex items-center gap-4 text-amber-400/80">
-          <span className="h-px w-24 bg-gradient-to-l from-amber-400/70 to-transparent" />◆<span className="h-px w-24 bg-gradient-to-r from-amber-400/70 to-transparent" />
+        <div className="my-3 flex items-center gap-4 text-accent-400/80">
+          <span className="h-px w-24 bg-gradient-to-l from-accent-400/70 to-transparent" />◆<span className="h-px w-24 bg-gradient-to-r from-accent-400/70 to-transparent" />
         </div>
-        <h3 className="font-display text-6xl text-amber-200 [text-shadow:0_2px_16px_#000]">{save.turnTitle}</h3>
+        <h3 className="font-display text-6xl text-accent-200 [text-shadow:0_2px_16px_#000]">{save.turnTitle}</h3>
         <div className="mt-3 font-serif text-white/60 italic">
           Round {save.round} · {save.party[0].name}
         </div>
@@ -365,7 +365,7 @@ function ProgressBanner() {
           <Thumb />
           <div className="flex-1">
             <h3 className="font-display text-4xl text-white [text-shadow:0_2px_12px_#000]">{save.title}</h3>
-            <div className="font-display text-xl text-amber-300">
+            <div className="font-display text-xl text-accent-300">
               Round {save.round} · {save.turnTitle}
             </div>
           </div>
@@ -374,8 +374,8 @@ function ProgressBanner() {
         <div className="mt-5 flex gap-1.5">
           {save.trail.map((t, i) => (
             <div key={t.title} className="flex-1">
-              <div className={cn("h-1.5 rounded-full", i < save.at ? "bg-amber-400/70" : i === save.at ? "bg-amber-300 shadow-[0_0_10px_#fbbf24]" : "bg-white/15")} />
-              <div className={cn("mt-1.5 truncate font-mono text-xxs uppercase", i === save.at ? "text-amber-200" : i < save.at ? "text-white/50" : "text-white/20")}>{i > save.at ? "?" : t.title}</div>
+              <div className={cn("h-1.5 rounded-full", i < save.at ? "bg-accent-400/70" : i === save.at ? "bg-accent-300 shadow-[0_0_10px_#fbbf24]" : "bg-white/15")} />
+              <div className={cn("mt-1.5 truncate font-mono text-xxs uppercase", i === save.at ? "text-accent-200" : i < save.at ? "text-white/50" : "text-white/20")}>{i > save.at ? "?" : t.title}</div>
             </div>
           ))}
         </div>
@@ -433,7 +433,7 @@ function Deck() {
           <div>
             <Chip tone="amber">Playing</Chip>
             <h3 className="mt-3 font-display text-5xl text-white">{save.title}</h3>
-            <div className="mt-2 font-display text-xl text-amber-300">
+            <div className="mt-2 font-display text-xl text-accent-300">
               Round {save.round} · {save.turnTitle}
             </div>
             <Epic className="mt-6">Continue</Epic>
@@ -475,7 +475,7 @@ function Pause() {
         </div>
         <div className="text-right">
           <div className={siteLabel}>Scene</div>
-          <div className="font-display text-xl text-amber-300">{save.turnTitle}</div>
+          <div className="font-display text-xl text-accent-300">{save.turnTitle}</div>
         </div>
       </div>
     </div>
@@ -492,7 +492,7 @@ function Triptych() {
           <div key={t.title} className="relative overflow-hidden">
             <img src={t.image} alt="" className={cn("h-full w-full object-cover", i < 2 && "brightness-50 saturate-50")} />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-3 pt-10">
-              <div className={cn("font-display", i === 2 ? "text-2xl text-amber-300" : "text-sm text-white/60")}>{t.title}</div>
+              <div className={cn("font-display", i === 2 ? "text-2xl text-accent-300" : "text-sm text-white/60")}>{t.title}</div>
             </div>
           </div>
         ))}
@@ -524,7 +524,7 @@ function Letterbox() {
       <img src={save.sceneArt} alt="" className="aspect-[3/1] w-full object-cover" />
       <div className="flex items-center gap-6 px-8 py-4">
         <span className="font-mono text-xs text-white/50">ROUND {save.round}</span>
-        <span className="flex-1 font-display text-xl text-amber-300">{save.turnTitle}</span>
+        <span className="flex-1 font-display text-xl text-accent-300">{save.turnTitle}</span>
         <span className="font-serif text-sm text-white/60 italic">{save.party[0].name}</span>
         <Epic>Continue</Epic>
       </div>
@@ -604,11 +604,11 @@ function RunCard({ run, confirming }: { run: Run; confirming?: boolean }) {
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
       <Remove className="absolute top-6 right-6" />
       <div className="absolute top-8 left-8 flex items-stretch gap-6">
-        <img src={run.cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+        <img src={run.cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-raised ring-1 ring-white/20" />
         <div className="flex flex-col items-start">
           <h3 className="font-display text-4xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{run.title}</h3>
           <div className={cn(siteLabel, "mt-1")}>{run.kicker}</div>
-          <div className="font-display text-xl text-amber-300 [text-shadow:0_2px_8px_#000]">{run.status}</div>
+          <div className="font-display text-xl text-accent-300 [text-shadow:0_2px_8px_#000]">{run.status}</div>
           <Epic className="mt-auto">{run.action}</Epic>
         </div>
       </div>
@@ -668,7 +668,7 @@ export function AdventureCardLab() {
         {variants.map((v) => (
           <section key={v.key} id={v.key} className="space-y-4">
             <div className="flex items-baseline gap-3">
-              <span className="font-display text-2xl text-amber-400">{v.key.toUpperCase()}</span>
+              <span className="font-display text-2xl text-accent-400">{v.key.toUpperCase()}</span>
               <span className="font-display text-xl text-white">{v.name}</span>
               <span className={siteLabel}>{v.note}</span>
             </div>

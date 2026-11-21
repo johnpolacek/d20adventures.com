@@ -75,7 +75,7 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
       </aside>
 
       {/* Below xl: floating buttons (the rail is hidden) */}
-      <div className="fixed right-4 top-20 z-50 flex items-center gap-3 xl:hidden">
+      <div className="fixed right-4 top-20 z-overlay flex items-center gap-3 xl:hidden">
         <Presence show={Boolean(floor)} motion="pop" as="span" className="inline-flex">
           {floor && <FloorPlanButton floor={floor} characters={characters} title={mapTitle} />}
         </Presence>

@@ -134,7 +134,7 @@ export function HeroCreator(props: {
         <Swap id={step} motion={back ? "left" : "right"} exit={back ? "right" : "left"} className="flex flex-col gap-5">
           {step === "pick" && (
             <>
-              <h2 className="font-display text-3xl font-bold text-amber-300">New Hero</h2>
+              <h2 className="font-display text-3xl font-bold text-accent-300">New Hero</h2>
               <Swap id={!menu || !pick ? "loading" : "menu"} className="flex flex-col gap-5">
                 {!menu || !pick ? (
                   <p className="text-white/70 italic">Loading…</p>
@@ -180,7 +180,7 @@ export function HeroCreator(props: {
           {step === "rules" && kit && pick && choices && (
             <>
               <div>
-                <h2 className="font-display text-3xl font-bold text-amber-300">{idea.name.trim()}</h2>
+                <h2 className="font-display text-3xl font-bold text-accent-300">{idea.name.trim()}</h2>
                 <p className="mt-1 text-white/80">
                   {view
                     ? `Level 1 ${view.speciesName} ${view.className} · ${view.backgroundName} · Hit Points ${view.hitPoints.maximum} · Armor Class ${view.armorClass} · Speed ${view.speed} ft.`
@@ -245,7 +245,7 @@ export function HeroCreator(props: {
                 <div className="grid content-start gap-3">
                   <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
                     <Labeled label="Name">
-                      <Input plain className={cn(field, "font-display text-lg text-amber-300")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
+                      <Input plain className={cn(field, "font-display text-lg text-accent-300")} value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
                     </Labeled>
                     <Labeled label="Gender">
                       <Input plain className={field} value={hero.gender ?? ""} maxLength={40} onChange={(e) => setHero({ ...hero, gender: e.target.value })} />
@@ -253,7 +253,7 @@ export function HeroCreator(props: {
                   </div>
                   {/* The rules of the hero, read off their sheet. Levels change them, not this screen. */}
                   <div className="rounded-md border border-white/10 bg-black/30 p-3 text-sm text-white/85">
-                    <div className="font-display text-base text-amber-300">
+                    <div className="font-display text-base text-accent-300">
                       {sheet ? `Level ${sheet.level} ${hero.race} ${sheet.className}${sheet.subclassName ? ` · ${sheet.subclassName}` : ""} · ${sheet.backgroundName}` : `${hero.race} ${hero.archetype}`}
                     </div>
                     {sheet && (

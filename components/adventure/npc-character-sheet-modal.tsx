@@ -24,7 +24,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-display text-amber-300">{character.name}</DialogTitle>
+          <DialogTitle className="text-2xl font-display text-accent-300">{character.name}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -56,13 +56,13 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">
-                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-zinc-400">({effect.duration} turns left)</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               ) : (
-                <div className="text-sm text-gray-400">No active effects.</div>
+                <div className="text-sm text-zinc-400">No active effects.</div>
               )}
             </div>
           </div>

@@ -287,7 +287,7 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
   return (
     <div className="relative h-[600px] overflow-hidden rounded-md border border-foreground/15 bg-background">
       <Pill
-        className="absolute top-3 left-3 z-40"
+        className="absolute top-3 left-3 z-panel"
         onClick={() => {
           setMade(undefined)
           setResult(undefined)
@@ -351,7 +351,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
   const [said, setSaid] = useState("")
   const text = "Reinhard Voss is leaving Lyra Ashgrove's reach. Lyra Ashgrove may strike with Dagger."
   const stage = "relative h-[300px] overflow-hidden rounded-md border border-foreground/15 bg-background"
-  const placed = `absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`
+  const placed = `absolute left-1/2 z-raised -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`
   const answer = (take: boolean) => setSaid(take ? "Take It" : "Let It Pass")
   return (
     <div className="flex flex-col gap-4">
@@ -408,7 +408,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
             text={text}
             mine
             compact={compact}
-            className="absolute bottom-[50px] left-1/2 z-30 w-[min(430px,calc(100%-24px))] -translate-x-1/2"
+            className="absolute bottom-[50px] left-1/2 z-raised w-[min(430px,calc(100%-24px))] -translate-x-1/2"
             onTake={() => answer(true)}
             onPass={() => answer(false)}
           />

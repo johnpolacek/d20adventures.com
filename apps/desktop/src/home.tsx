@@ -53,7 +53,7 @@ export function Home(props: { save: Save | null; art: Record<string, FigureArt>;
               <div className="flex items-center gap-4 text-left">
                 {portrait && <img src={portrait} alt={hero?.name} className="h-14 w-14 shrink-0 rounded-full border-2 border-white/30 object-cover" />}
                 <div>
-                  <h2 className="font-display text-2xl font-bold text-amber-300" style={textShadowSpread}>
+                  <h2 className="font-display text-2xl font-bold text-accent-300" style={textShadowSpread}>
                     {props.save.adventure.title}
                   </h2>
                   {!finished && turn?.title && <p className="font-display text-sm text-white/80">{turn.title}</p>}

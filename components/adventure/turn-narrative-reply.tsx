@@ -300,7 +300,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                 </div>
               ) : (
                 <Button variant="outline" size="sm" className="enter-fade text-xs" type="button" onClick={handleGenerate} disabled={generating}>
-                  <SparklesIcon className="w-4 h-4 text-amber-400 mr-0.5" />
+                  <SparklesIcon className="w-4 h-4 text-accent-400 mr-0.5" />
                   Generate
                 </Button>
               )}
@@ -325,7 +325,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                     </AlertDialogTrigger>
                     <AlertDialogContent className="sm:max-w-sm">
                       <AlertDialogHeader>
-                        <AlertDialogTitle className="text-amber-300 font-bold text-center">Skip turn</AlertDialogTitle>
+                        <AlertDialogTitle className="text-accent-300 font-bold text-center">Skip turn</AlertDialogTitle>
                         <AlertDialogDescription>Choose to skip to after another player with lower initiative, or skip your entire turn.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <div className="flex flex-col gap-2">

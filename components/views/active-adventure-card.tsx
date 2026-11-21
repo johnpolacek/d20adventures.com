@@ -29,7 +29,7 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
               Current {(adventure.runType ?? "campaign") === "practice" ? "Practice Run" : "Campaign"}
             </div>
           </div>
-          <h3 style={textShadowSpread} className="text-2xl sm:text-3xl font-bold text-amber-300 font-display">
+          <h3 style={textShadowSpread} className="text-2xl sm:text-3xl font-bold text-accent-300 font-display">
             {adventure.title}
           </h3>
           {userCharacter && (
@@ -45,7 +45,7 @@ export default function ActiveAdventureCard({ adventure, userId }: ActiveAdventu
         </div>
         <div className="flex gap-3">
           <Button variant="epic" size="lg" className="flex items-center text-center gap-2" render={<Link href={`/settings/${adventure.settingId}/${adventure.adventurePlanId}/${adventure.id}`} />}>
-              Continue <ChevronsRight style={textShadow} className="w-5 h-5 scale-y-125 text-indigo-300 -ml-1 -mr-2 relative -top-px" />
+              Continue <ChevronsRight style={textShadow} className="w-5 h-5 scale-y-125 text-primary-100 -ml-1 -mr-2 relative -top-px" />
             </Button>
         </div>
       </CardContent>

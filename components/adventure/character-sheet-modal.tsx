@@ -94,7 +94,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
             )}
 
             <div className="space-y-2">
-              <div className="text-2xl lg:text-3xl font-display text-amber-300 font-bold">{character.name}</div>
+              <div className="text-2xl lg:text-3xl font-display text-accent-300 font-bold">{character.name}</div>
               <div className="font-display text-sm">
                 {character.race} {character.gender} {character.archetype}
               </div>
@@ -115,7 +115,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                         {standing.temporary ? <span className="text-primary-200"> +{standing.temporary} Temporary</span> : null}
                         {sheet?.heroicInspiration ? <span className="text-primary-200"> · Heroic Inspiration</span> : null}
                       </div>
-                      <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <div className="flex-1 bg-zinc-700 rounded-full h-2 overflow-hidden">
                         <div
                           className="h-full w-full origin-left bg-gradient-to-r from-green-500 to-red-500 transition-transform duration-200 ease-snap"
                           style={{ transform: `scaleX(${Math.max(0, Math.min(1, standing.hitPoints / Math.max(1, standing.maximum)))})` }}
@@ -143,13 +143,13 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
                   <ul>
                     {character.effects.map((effect, idx) => (
                       <li key={idx} className="mb-1">
-                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-gray-400">({effect.duration} turns left)</span>
+                        <span className="font-bold">{effect.name}</span>: {effect.description} <span className="text-xs text-zinc-400">({effect.duration} turns left)</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               ) : (
-                <div className="text-sm text-gray-400">No active effects.</div>
+                <div className="text-sm text-zinc-400">No active effects.</div>
               )}
             </div>
 
@@ -350,7 +350,7 @@ export function CharacterSheetModal({ character: current, open, onOpenChange, on
             </div>
             {character.isComplete && <div className="text-xs text-green-400 font-bold">Turn Complete</div>}
             {character.hasReplied && <div className="text-xs text-blue-400 font-bold">Replied</div>}
-            {character.rollRequired && <div className="text-xs text-yellow-400 font-bold">Roll Required</div>}
+            {character.rollRequired && <div className="text-xs text-accent-400 font-bold">Roll Required</div>}
           </div>
         )}
       </DialogContent>

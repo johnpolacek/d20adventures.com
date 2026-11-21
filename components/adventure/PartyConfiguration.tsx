@@ -27,7 +27,7 @@ function isSoloAdventure(characterChoices: CharacterChoiceMode[]) {
 // (the previous inline message sat at the bottom of the page and was easy to scroll past)
 function StatusOverlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="enter-fade fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div className="enter-fade fixed inset-0 z-overlay flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
       <div className="enter-pop w-full max-w-md rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-8 text-center text-white shadow-2xl shadow-black/50 ring-4 ring-black/40">
         {children}
       </div>
@@ -39,7 +39,7 @@ const modeButton = "px-6 py-1 border rounded font-mono transition-[color,backgro
 
 function Spinner() {
   return (
-    <svg className="mx-auto mb-4 h-10 w-10 animate-spin text-amber-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="mx-auto mb-4 h-10 w-10 animate-spin text-accent-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
     </svg>
@@ -125,7 +125,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
     if (startError) {
       return (
         <StatusOverlay>
-          <div className="text-2xl font-display mb-4 text-amber-300">Could not start your adventure</div>
+          <div className="text-2xl font-display mb-4 text-accent-300">Could not start your adventure</div>
           <div className="text-red-200 mb-6">{startError}</div>
           <Button variant="epic" size="lg" className="text-lg w-36" onClick={handleStartAdventure} disabled={isCreating}>
             Try Again

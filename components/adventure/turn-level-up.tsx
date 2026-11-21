@@ -38,7 +38,7 @@ export function TurnLevelUp({ className }: { className?: string }) {
       </Presence>
       <Presence show={Boolean(hero?.sheet)} motion="fade" asChild>
         {hero?.sheet && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 text-left">
+          <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/70 p-3 text-left">
             <LevelUp
               hero={hero.name}
               portrait={hero.image ? getImageUrl(hero.image) : undefined}

@@ -30,7 +30,7 @@ const LoadingAnimation = ({ className, children, containerClassName, scroll = tr
       <AnimateIn from="opacity-0 scale-0" to="opacity-50 scale-50" duration={300} className={cn("w-full flex justify-center", className)}>
         <style>{spin}</style>
         <Image
-          className="inline-block p-4 border-2 bg-black/90 border-indigo-400 rounded-full overflow-hidden transition-all ease-in-out animate-spin"
+          className="inline-block p-4 border-2 bg-black/90 border-primary-300 rounded-full overflow-hidden transition-all ease-in-out animate-spin"
           src="/images/d20-white.svg"
           width={96}
           height={96}

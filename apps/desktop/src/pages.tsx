@@ -231,11 +231,11 @@ function SavedCard(props: {
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80" />
         <div className="absolute top-8 left-8 flex items-stretch gap-6">
-          <img src={cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-[0_8px_24px_#000c] ring-1 ring-white/20" />
+          <img src={cover} alt="" className="aspect-[3/4] w-28 shrink-0 rounded-md object-cover shadow-raised ring-1 ring-white/20" />
           <div className="flex flex-col items-start">
             <h3 className="font-display text-4xl leading-tight text-white [text-shadow:0_2px_12px_#000]">{props.title}</h3>
             {props.kicker && <div className={cn(siteLabel, "mt-1")}>{props.kicker}</div>}
-            <div className="font-display text-xl text-amber-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
+            <div className="font-display text-xl text-accent-300 [text-shadow:0_2px_8px_#000]">{props.status}</div>
             <span className={buttonClassName("epic", undefined, "mt-auto text-sm")} style={buttonStyle("epic")}>
               {props.action}
             </span>
@@ -244,7 +244,7 @@ function SavedCard(props: {
         <div className="absolute bottom-6 left-8 flex items-end gap-6">
           {props.heroes.map((h) => (
             <div key={h.name} className="flex items-center gap-3">
-              {h.portrait && <img src={h.portrait} alt="" className="size-14 rounded-full object-cover object-top ring-2 ring-amber-400/70" />}
+              {h.portrait && <img src={h.portrait} alt="" className="size-14 rounded-full object-cover object-top ring-2 ring-accent-400/70" />}
               <div>
                 <div className="font-display text-lg text-white [text-shadow:0_2px_8px_#000]">{h.name}</div>
                 {h.healthPercent !== undefined && (
@@ -426,7 +426,7 @@ export function AdventuresPage(props: {
                     </div>
                   </div>
                   <div className="flex flex-1 flex-col px-6 pt-4 pb-6">
-                    <p className="line-clamp-4 flex-1 text-base text-gray-300">{a.teaser}</p>
+                    <p className="line-clamp-4 flex-1 text-base text-zinc-300">{a.teaser}</p>
                     <Details a={a} className="mt-4" />
                     <div className="mt-4 flex justify-center">
                       {a.locked ? (
@@ -473,11 +473,11 @@ export function AdventuresPage(props: {
                   The Realm of Myr
                 </Chip>
               </div>
-              <h3 className="font-display text-[clamp(2rem,4vw,3rem)] font-bold leading-none text-amber-300" style={textShadowSpread}>
+              <h3 className="font-display text-[clamp(2rem,4vw,3rem)] font-bold leading-none text-accent-300" style={textShadowSpread}>
                 {featured.title}
               </h3>
               <Rule className="w-48" />
-              <p className="max-w-[60ch] text-base text-gray-300">{featured.teaser}</p>
+              <p className="max-w-[60ch] text-base text-zinc-300">{featured.teaser}</p>
               <Details a={featured} />
               <div className="flex items-center gap-5">
                 {featured.locked ? (
@@ -597,12 +597,12 @@ export function CharactersPage(props: {
                     {portrait ? (
                       <img src={portrait} alt="" className="h-full w-full object-cover object-[50%_15%]" />
                     ) : (
-                      <span className="grid h-full w-full place-items-center text-5xl text-amber-400">{h.name[0]}</span>
+                      <span className="grid h-full w-full place-items-center text-5xl text-accent-400">{h.name[0]}</span>
                     )}
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                   </div>
                   <div className="relative z-10 -mt-10 flex w-full flex-col items-center pb-6">
-                    <div className="mb-1 w-full truncate px-3 text-center text-2xl font-bold text-amber-400" style={textShadow}>
+                    <div className="mb-1 w-full truncate px-3 text-center text-2xl font-bold text-accent-400" style={textShadow}>
                       {h.name}
                     </div>
                     <div className="mb-4 text-center text-sm">
@@ -666,7 +666,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
                   </div>
                 </div>
                 <div className="px-6 pt-3 pb-6">
-                  <p className="line-clamp-4 text-base text-gray-300">{props.realm.description.split(/\n\s*\n/)[0]}</p>
+                  <p className="line-clamp-4 text-base text-zinc-300">{props.realm.description.split(/\n\s*\n/)[0]}</p>
                   <div className="mt-5 flex justify-center">
                     <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Explore</span>
                   </div>
@@ -678,7 +678,7 @@ export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }
       </Presence>
       <section>
         <SectionPlate>Licenses</SectionPlate>
-        <p className="mx-auto mt-6 max-w-3xl text-sm text-gray-300">{srdAttribution}</p>
+        <p className="mx-auto mt-6 max-w-3xl text-sm text-zinc-300">{srdAttribution}</p>
       </section>
     </PageShell>
   )

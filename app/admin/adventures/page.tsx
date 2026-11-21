@@ -26,7 +26,7 @@ export default async function AdminAdventuresPage() {
     <div className="container py-8">
       <AdminBreadcrumb items={[{ label: "Adventures" }]} />
       <div className="mb-8">
-        <h1 className="text-4xl font-bold font-display text-amber-400">Adventures</h1>
+        <h1 className="text-4xl font-bold font-display text-accent-400">Adventures</h1>
         <p className="font-mono text-primary-300">Manage and view adventure information</p>
       </div>
       <Table>
@@ -62,7 +62,7 @@ export default async function AdminAdventuresPage() {
                 <TableCell>
                   <div className="flex flex-col gap-1 text-xs">
                     <span>{adventure.status ?? "active"}</span>
-                    {(adventure.runType ?? "campaign") === "practice" && <span className="text-purple-300">practice</span>}
+                    {(adventure.runType ?? "campaign") === "practice" && <span className="text-primary-50">practice</span>}
                     {players.some((p) => p.aiControlled) && <span className="text-sky-300">{players.filter((p) => p.aiControlled).length} AI</span>}
                   </div>
                 </TableCell>

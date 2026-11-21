@@ -92,10 +92,10 @@ export default function ChooseCharacterView({
       ) : (
         <div className="flex flex-col items-center justify-center relative z-10 pt-24 pb-12">
           <Card variant="feature" className="mt-8 mb-12 sm:p-8">
-            <div style={textShadow} className="mb-4 text-5xl font-display font-bold text-amber-300">
+            <div style={textShadow} className="mb-4 text-5xl font-display font-bold text-accent-300">
               {adventureTitle}
             </div>
-            <div style={textShadow} className="max-w-4xl mx-auto text-base text-amber-50 text-left text-pretty">
+            <div style={textShadow} className="max-w-4xl mx-auto text-base text-accent-50 text-left text-pretty">
               {adventureTeaser}
             </div>
             <Link href={`/settings/${settingId}/play`}>
@@ -104,14 +104,14 @@ export default function ChooseCharacterView({
               </Button>
             </Link>
           </Card>
-          <div style={textShadowSpread} className="mb-8 text-3xl font-display font-bold text-amber-100">
+          <div style={textShadowSpread} className="mb-8 text-3xl font-display font-bold text-accent-100">
             Choose Your Character
           </div>
           <div className="flex flex-wrap gap-8 justify-center mb-8 w-full max-w-6xl">
             {characters.map((char, i) => (
               <div
                 key={char.id}
-                className={`enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-[scale] ease-snap duration-150${selectedCharacter === characterFiles[i] ? " ring-amber-400 border-amber-400 scale-105" : ""}`}
+                className={`enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-[scale] ease-snap duration-150${selectedCharacter === characterFiles[i] ? " ring-accent-400 border-accent-400 scale-105" : ""}`}
                 style={{ "--i": Math.min(i, 8) } as CSSProperties}
                 onClick={() => {
                   setSelectedCharacter(characterFiles[i])
@@ -123,7 +123,7 @@ export default function ChooseCharacterView({
                   buttonLabel="Choose"
                   disabled={submitting}
                   clickable={true}
-                  className={selectedCharacter === characterFiles[i] ? "ring-amber-400/50 border-amber-400/50 hover:scale-[1.01]" : ""}
+                  className={selectedCharacter === characterFiles[i] ? "ring-accent-400/50 border-accent-400/50 hover:scale-[1.01]" : ""}
                 />
               </div>
             ))}
@@ -138,7 +138,7 @@ export default function ChooseCharacterView({
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                   </div>
                   <div className="pb-6 -mt-10 z-10 relative flex flex-col justify-center items-center">
-                    <div className="font-bold text-3xl text-amber-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
+                    <div className="font-bold text-3xl text-accent-400 -mt-8 mb-4 truncate w-full text-center">Create New Character</div>
                     <Button variant="epic" className="text-sm" size="sm">
                       Create
                     </Button>

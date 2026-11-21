@@ -27,7 +27,7 @@ const setupPrompt = `Set me up as a D20 Adventures playtester on this computer.
 
 Source: ${repo}`
 
-const hairline = "h-px w-full bg-gradient-to-r from-amber-200/0 via-amber-200/45 to-amber-200/0"
+const hairline = "h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/45 to-accent-200/0"
 
 export default async function PlaytestPage() {
   const { userId } = await auth()
@@ -39,7 +39,7 @@ export default async function PlaytestPage() {
         <Image fill priority src="/stage/realm/realm-of-myr/realm.jpg" alt="" className="object-cover" />
       </div>
       <div className="container pt-28 pb-24">
-        <article className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-amber-200/20 bg-black/90 shadow-[0_18px_44px_#000a]">
+        <article className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-accent-200/20 bg-black/90 shadow-float">
           <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
             <h1 className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text font-display text-4xl leading-tight text-transparent drop-shadow-[0_2px_6px_#f59e0b55] sm:text-5xl">{joined ? "You’re a Playtester" : "Become a Playtester"}</h1>
             <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
@@ -49,13 +49,13 @@ export default async function PlaytestPage() {
 
           <div className="space-y-8 px-6 pt-8 pb-10 sm:px-10 lg:px-14">
             <section>
-              <h2 className="font-display text-xl text-indigo-300">Host a Game</h2>
+              <h2 className="font-display text-xl text-primary-100">Host a Game</h2>
               <CopyBlock label="Prompt" text={setupPrompt} className="mt-4" />
             </section>
 
             <div className="flex items-center gap-4">
               <div className={hairline} />
-              <span className="shrink-0 font-display text-sm tracking-[0.2em] uppercase text-amber-200/70">or</span>
+              <span className="shrink-0 font-display text-sm tracking-[0.2em] uppercase text-accent-200/70">or</span>
               <div className={hairline} />
             </div>
 
@@ -66,12 +66,12 @@ export default async function PlaytestPage() {
             </div>
           </div>
 
-          <footer className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 border-t border-amber-200/15 px-6 py-4 font-sans text-sm tracking-wide">
-            <a href={repo} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/75 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
+          <footer className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 border-t border-accent-200/15 px-6 py-4 font-sans text-sm tracking-wide">
+            <a href={repo} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/75 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
               <Github className="size-4" />
               View on GitHub
             </a>
-            <a href={installSource} target="_blank" rel="noopener noreferrer" className="text-white/75 underline decoration-amber-200/40 underline-offset-4 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
+            <a href={installSource} target="_blank" rel="noopener noreferrer" className="text-white/75 underline decoration-accent-200/40 underline-offset-4 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
               View the Install Script
             </a>
           </footer>

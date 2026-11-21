@@ -48,7 +48,7 @@ export const panel = "stage-grain rounded-md border border-foreground/25 bg-pane
 /** A pill's class names, for a control that only looks like one, such as a file picker's trigger. */
 export function pillClass(active?: boolean, className?: string) {
   return cn(
-    "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color,background-color,scale] duration-150 ease-snap not-disabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-40",
+    "rounded-hud border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color,background-color,scale] duration-150 ease-snap not-disabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-40",
     active ? "stage-stone" : "stage-navy border-foreground/25 text-foreground hover:border-accent/60",
     className
   )
@@ -139,7 +139,7 @@ export function StageHud({
   children?: ReactNode
 }) {
   return (
-    <div className="fixed inset-0 z-[100] overflow-clip bg-background font-sans text-foreground">
+    <div className="fixed inset-0 z-screen overflow-clip bg-background font-sans text-foreground">
       {backdrop}
       <div ref={containerRef} className="absolute inset-0" />
       <div
@@ -194,7 +194,7 @@ export function StageHud({
                   aria-pressed={activeView === v.id}
                   onClick={() => onView(v.id)}
                   className={cn(
-                    "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.97]",
+                    "flex shrink-0 items-center gap-2.5 rounded-hud border whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.97]",
                     compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
                     activeView === v.id ? "stage-navy border-primary/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
                   )}

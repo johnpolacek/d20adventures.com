@@ -84,7 +84,7 @@ export default function DiceRoll({
       </span>
       <Image
         style={{ transform: rolling ? "rotate(720deg)" : undefined, transition: "transform 1.2s cubic-bezier(.22,1,.36,1)" }}
-        className="inline-block border border-[rgba(255,255,255,.33)] ring-4 ring-blue-600 group-disabled:ring-gray-600 shadow-inner shadow-black rounded-full overflow-hidden p-[2px]"
+        className="inline-block border border-[rgba(255,255,255,.33)] ring-4 ring-blue-600 group-disabled:ring-zinc-600 shadow-inner shadow-black rounded-full overflow-hidden p-[2px]"
         src={icon}
         width={iconSize}
         height={iconSize}

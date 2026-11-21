@@ -30,18 +30,18 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
   if (!post) notFound()
   return (
     <PlainPage card={false} width="max-w-3xl lg:max-w-4xl xl:max-w-5xl">
-      <div className="overflow-hidden rounded-lg border border-amber-200/20 bg-black/90 shadow-[0_18px_44px_#000a]">
+      <div className="overflow-hidden rounded-lg border border-accent-200/20 bg-black/90 shadow-float">
         <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
-          <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-amber-200/80 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
+          <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-accent-200/80 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
             Updates
           </Link>
           <h1 className="mt-3 font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{post.title}</h1>
-          <time className="mt-3 block font-display text-sm tracking-[0.2em] uppercase text-amber-300/90">{formatPostDate(post.date)}</time>
-          <div className="mt-8 h-px w-full bg-gradient-to-r from-amber-200/0 via-amber-200/45 to-amber-200/0" />
+          <time className="mt-3 block font-display text-sm tracking-[0.2em] uppercase text-accent-300/90">{formatPostDate(post.date)}</time>
+          <div className="mt-8 h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/45 to-accent-200/0" />
         </header>
         <PostBody className={`update-body px-6 pt-8 pb-10 sm:px-10 lg:px-14 prose-lg prose-img:rounded-lg ${plainProse}`} html={renderPost(post)} />
-        <div className="flex justify-end border-t border-amber-200/15 px-6 py-4 sm:px-10 lg:px-14">
-          <a href={`/updates/${post.slug}/markdown`} download className="font-display text-sm text-amber-200/80 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
+        <div className="flex justify-end border-t border-accent-200/15 px-6 py-4 sm:px-10 lg:px-14">
+          <a href={`/updates/${post.slug}/markdown`} download className="font-display text-sm text-accent-200/80 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
             Download as Markdown
           </a>
         </div>

@@ -127,15 +127,15 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
   return (
     <div className="flex flex-col items-center w-full max-w-6xl px-4">
       <Card variant="feature" className="w-full max-w-2xl">
-        <h2 style={textShadow} className="text-3xl sm:text-4xl font-display font-bold text-amber-300 text-balance mb-2">
+        <h2 style={textShadow} className="text-3xl sm:text-4xl font-display font-bold text-accent-300 text-balance mb-2">
           Choose Your Party
         </h2>
         <p className="text-sm text-white/60 tabular-nums mb-3">
           {partySize} of {minParty}–{maxParty} party members
         </p>
         <div className="flex flex-col items-center mb-6">
-          <p className="text-indigo-100 text-pretty">
-            Playing as <span className="text-amber-300 font-bold">{selectedCharacterName}</span>
+          <p className="text-primary-50 text-pretty">
+            Playing as <span className="text-accent-300 font-bold">{selectedCharacterName}</span>
           </p>
           {onBack && (
             <Button
@@ -143,7 +143,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
               type="button"
               onClick={onBack}
               disabled={isCreating}
-              className="mt-1 text-sm underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white active:opacity-70 transition-[color,opacity] duration-150"
+              className="mt-1 text-sm underline underline-offset-4 decoration-primary-100/50 text-primary-50 hover:text-white active:opacity-70 transition-[color,opacity] duration-150"
             >
               change
             </Button>
@@ -152,7 +152,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
 
         {/* Party at a glance: you, any AI companions, and open slots for friends */}
         <div className="flex items-start justify-center gap-4 sm:gap-6 mb-6">
-          <PartySlotAvatar image={selectedCharacterImage} name={selectedCharacterName} label="You" labelClass="text-amber-300" ringClass="ring-amber-400/90" />
+          <PartySlotAvatar image={selectedCharacterImage} name={selectedCharacterName} label="You" labelClass="text-accent-300" ringClass="ring-accent-400/90" />
           {addedCompanions.map((companion) => (
             <PartySlotAvatar
               key={companion.id}
@@ -197,7 +197,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
           <Button
             variant="epic"
             size="lg"
-            className="text-lg py-6 px-8 w-full sm:w-auto whitespace-nowrap bg-purple-600 transition-transform active:scale-[0.96]"
+            className="text-lg py-6 px-8 w-full sm:w-auto whitespace-nowrap bg-primary-400 transition-transform active:scale-[0.96]"
             onClick={() => submit(false)}
             disabled={isCreating}
           >

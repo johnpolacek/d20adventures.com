@@ -21,7 +21,7 @@ export default function NotFound() {
           <span>4</span>
         </div>
 
-        <p className="mt-8 font-display text-sm sm:text-base tracking-[0.3em] text-amber-300/90 uppercase">Natural 1</p>
+        <p className="mt-8 font-display text-sm sm:text-base tracking-[0.3em] text-accent-300/90 uppercase">Natural 1</p>
         <h1 className="mt-2 font-display text-3xl sm:text-5xl" style={textShadowSpreadLight}>
           Lost in the Wilds
         </h1>

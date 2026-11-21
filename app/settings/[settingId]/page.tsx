@@ -26,7 +26,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
         {canEdit && (
           <div className="fixed bottom-[4vh] right-[4vh] z-20 space-y-4 flex flex-col items-end">
             <Link href={`/settings/${settingId}/edit`}>
-              <Button className="text-sm bg-indigo-800 hover:bg-indigo-700">Edit Setting</Button>
+              <Button className="text-sm bg-primary-600 hover:bg-primary-500">Edit Setting</Button>
             </Link>
           </div>
         )}

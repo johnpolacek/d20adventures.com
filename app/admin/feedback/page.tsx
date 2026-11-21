@@ -29,7 +29,7 @@ export default async function AdminFeedbackPage() {
               <span>{names.get(row.userId) ?? row.userId}</span>
               <span className="rounded bg-white/10 px-1.5 py-0.5 uppercase">{row.source}</span>
               <span className="rounded bg-white/10 px-1.5 py-0.5 uppercase">{row.kind}</span>
-              {row.rating !== undefined && <span className="text-amber-300">{row.rating} / 5</span>}
+              {row.rating !== undefined && <span className="text-accent-300">{row.rating} / 5</span>}
             </div>
             {row.message && <p className="mt-3 whitespace-pre-wrap">{row.message}</p>}
             {row.bestMoment && (

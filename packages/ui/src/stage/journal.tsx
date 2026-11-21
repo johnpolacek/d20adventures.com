@@ -76,7 +76,7 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
     </>
   )
   return (
-    <div className={cn("my-3 flex items-start gap-3 rounded-[3px] border border-l-2 border-foreground/15 bg-black/30 py-2 pr-3 pl-2", className)} style={{ borderLeftColor: tone }}>
+    <div className={cn("my-3 flex items-start gap-3 rounded-hud border border-l-2 border-foreground/15 bg-black/30 py-2 pr-3 pl-2", className)} style={{ borderLeftColor: tone }}>
       <span className="sr-only">{rollSpeech(roll)}</span>
       <div className="flex shrink-0 gap-0.5">
         {dice.map((d, i) => (
@@ -109,7 +109,7 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
           <span className="flex shrink-0 items-center gap-2">
             {mode && <span className="font-serif text-[12px] font-semibold text-accent">{mode}</span>}
             <span
-              className="rounded-[3px] border px-1.5 py-0.5 font-display text-[10px] font-bold tracking-[0.06em] uppercase"
+              className="rounded-hud border px-1.5 py-0.5 font-display text-[10px] font-bold tracking-[0.06em] uppercase"
               style={{ color: tone, borderColor: tone, boxShadow: `${crit ? `0 0 10px ${tone}55, ` : ""}inset 0 0 6px ${tone}33`, textShadow: `0 0 6px ${tone}55` }}
             >
               {verdict}
@@ -165,7 +165,7 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Say something"
         aria-label="Table chat message"
-        className="min-w-0 flex-1 rounded-[3px] border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
+        className="min-w-0 flex-1 rounded-hud border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
       />
       <Pill type="submit" disabled={sending || !draft.trim()}>
         Send
@@ -258,7 +258,7 @@ export function Journal({
   const scroller = useRef<HTMLDivElement>(null)
   return (
     <section
-      className={cn(panel, "absolute z-40 flex flex-col", compact ? "top-12 right-3 bottom-12 w-[min(380px,60vw)]" : "top-[86px] right-10 bottom-[118px] w-[380px]", entrance("enter-right", className))}
+      className={cn(panel, "absolute z-panel flex flex-col", compact ? "top-12 right-3 bottom-12 w-[min(380px,60vw)]" : "top-[86px] right-10 bottom-[118px] w-[380px]", entrance("enter-right", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
     >

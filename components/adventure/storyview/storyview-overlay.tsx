@@ -79,7 +79,7 @@ export default function StoryviewOverlay({
   }
 
   return createPortal(
-    <div className={cn("fixed inset-0 z-[100] flex flex-col bg-black", className)} style={style} onAnimationEnd={onAnimationEnd}>
+    <div className={cn("fixed inset-0 z-screen flex flex-col bg-black", className)} style={style} onAnimationEnd={onAnimationEnd}>
       <div className="flex items-center justify-between px-6 py-4">
         <p className="font-display text-sm tracking-widest text-primary-200/80 uppercase">Storyview</p>
         <div className="flex items-center gap-3">
@@ -100,7 +100,7 @@ export default function StoryviewOverlay({
           {player.status === "generating" && (
             <div className="flex flex-col items-center gap-4">
               <LoadingAnimation />
-              <p className="font-display text-indigo-300">Preparing narration…</p>
+              <p className="font-display text-primary-100">Preparing narration…</p>
             </div>
           )}
           {(player.status === "error" || player.status === "insufficient-tokens") && (

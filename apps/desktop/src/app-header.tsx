@@ -47,7 +47,7 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
               onClick={() => onNavigate?.(page)}
               className={cn(
                 "font-display text-sm font-bold tracking-wide underline decoration-2 underline-offset-8 transition-[color,text-decoration-color,opacity] duration-150 ease-snap active:opacity-60",
-                props.page === page ? "text-primary-600" : "text-yellow-950/80 decoration-transparent hover:text-yellow-950"
+                props.page === page ? "text-primary-600" : "text-accent-950/80 decoration-transparent hover:text-accent-950"
               )}
             >
               {label}

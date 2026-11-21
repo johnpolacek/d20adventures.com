@@ -58,7 +58,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
                   )}
                   {/* Adventure Details */}
                   <div className="space-y-2">
-                    <h3 className="text-xl font-display font-bold text-amber-400">{nextAdventurePlan.title}</h3>
+                    <h3 className="text-xl font-display font-bold text-accent-400">{nextAdventurePlan.title}</h3>
                     {nextAdventurePlan.teaser && <p className="text-sm text-white leading-relaxed pb-2">{nextAdventurePlan.teaser}</p>}
                   </div>
                   {/* Play Button */}
@@ -74,7 +74,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
       {isSignedIn && !nextAdventure && (
         <div className="flex flex-col md:flex-row justify-center gap-6">
           <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${adventurePlanId}/character-select`} />}>Play Again</Button>
-          <Button size="sm" variant="epic" className="bg-amber-800 hover:bg-amber-700 saturate-75" render={<Link href={`/settings/${settingId}/play`} />}>Go to Setting</Button>
+          <Button size="sm" variant="epic" className="bg-accent-800 hover:bg-accent-700 saturate-75" render={<Link href={`/settings/${settingId}/play`} />}>Go to Setting</Button>
         </div>
       )}
     </>

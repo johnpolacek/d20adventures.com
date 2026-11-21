@@ -338,7 +338,7 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
                   ) : (
                     <span className="py-1.5 text-sm text-white/30">+0</span>
                   )}
-                  <span className="font-display text-lg text-amber-300 tabular-nums">{choices.abilityScores[ability] + added}</span>
+                  <span className="font-display text-lg text-accent-300 tabular-nums">{choices.abilityScores[ability] + added}</span>
                 </div>
               )
             })}

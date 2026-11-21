@@ -39,7 +39,7 @@ export default async function AdminPage() {
   return (
     <div className="container py-8 md:py-24">
       <div className="mx-auto max-w-6xl">
-        <Heading variant="h3" className="mb-8 text-center text-amber-400">
+        <Heading variant="h3" className="mb-8 text-center text-accent-400">
           Admin Dashboard
         </Heading>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

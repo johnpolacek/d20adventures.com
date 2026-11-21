@@ -47,7 +47,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
         )}
         <div className="absolute bottom-32 sm:bottom-36 left-0 right-0 flex justify-center">
           {subtitle && (
-            <h3 className="relative border border-white/20 rounded-sm bg-gradient-to-t from-amber-950 via-amber-950 to-amber-800 font-display sm:text-lg md:text-xl font-bold px-6 sm:px-8 py-1 sm:py-2 ring-4 sm:ring-8 ring-black z-[11] contrast-[1.2] saturate-[.4]">
+            <h3 className="relative border border-white/20 rounded-sm bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 font-display sm:text-lg md:text-xl font-bold px-6 sm:px-8 py-1 sm:py-2 ring-4 sm:ring-8 ring-black z-[11] contrast-[1.2] saturate-[.4]">
               <Parchment />
               <span style={textShadow}>{subtitle}</span>
             </h3>

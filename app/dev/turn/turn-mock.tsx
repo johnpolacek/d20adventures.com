@@ -496,7 +496,7 @@ export function TurnMock() {
       {!hideUi && open === "journal" && <Journal turns={journal} chat={CHAT} compact={compact} onClose={() => setOpen(null)} />}
       {!hideUi && open === "card" && card && <CharacterCard info={card} compact={compact} onClose={() => setOpen(null)} />}
       {!hideUi && open === "settings" && stage && (
-        <section className={`${panel} fade-in absolute top-[86px] right-10 z-40 w-[292px] p-6`}>
+        <section className={`${panel} fade-in absolute top-[86px] right-10 z-panel w-[292px] p-6`}>
           <h2 className="mb-2 font-serif text-[25px] font-normal">Set the scene</h2>
           <div className="mt-5 border-t border-foreground/25 pt-4">
             <div className="mb-3 text-[10px] tracking-wide">Render quality</div>
@@ -555,12 +555,12 @@ export function TurnMock() {
         </section>
       )}
       {hideUi && phase !== "title" && (
-        <Button variant="plain" type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-40 rounded border border-white/25 bg-panel/50 px-3 py-2 text-[10px] text-foreground">
+        <Button variant="plain" type="button" onClick={() => setHideUi(false)} className="absolute right-4 bottom-4 z-panel rounded border border-white/25 bg-panel/50 px-3 py-2 text-[10px] text-foreground">
           Show interface · H
         </Button>
       )}
       {phase === "title" && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background/45 text-center">
+        <div className="absolute inset-0 z-overlay flex flex-col items-center justify-center gap-5 bg-background/45 text-center">
           <svg viewBox="0 0 60 72" aria-hidden="true" className="h-[70px] w-14 fill-none stroke-accent" strokeWidth="1">
             <path d="m30 2 25 15v37L30 70 5 54V17Z" />
             <path d="M15 50V25h9v25m12 0V25h9v25M24 50V34l6-8 6 8v16M11 25h17m4 0h17M20 20v-6m20 6v-6M30 9v9M25 13h10M11 55h38" />

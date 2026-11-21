@@ -21,8 +21,8 @@ export function AdminConfigMessage() {
     <Card className="p-6">
       <div className="space-y-4">
         <div className="flex justify-center mb-4">
-          <div className="p-2 rounded-full bg-amber-500/10">
-            <ShieldUser className="w-8 h-8 text-amber-600" />
+          <div className="p-2 rounded-full bg-accent-500/10">
+            <ShieldUser className="w-8 h-8 text-accent-600" />
           </div>
         </div>
         <h3 className="text-lg font-medium text-center">Configure Admin Access</h3>

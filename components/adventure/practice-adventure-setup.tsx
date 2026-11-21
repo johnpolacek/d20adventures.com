@@ -96,7 +96,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
     <div className="max-w-5xl mx-auto w-full">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="font-display text-amber-400 text-3xl">Practice Mode</CardTitle>
+          <CardTitle className="font-display text-accent-400 text-3xl">Practice Mode</CardTitle>
           <CardDescription className="text-white/80">
             Start a private rehearsal run for <span className="font-semibold">{adventureTitle}</span>. You will control all selected player characters.
           </CardDescription>
@@ -117,7 +117,7 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
                   key={option.id}
                   type="button"
                   onClick={() => toggleCharacter(option)}
-                  className={`enter-rise text-left rounded-lg border p-3 transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.98] ${isSelected ? "border-amber-400 bg-amber-500/10" : "border-white/20 bg-black/40 hover:border-white/40"}`}
+                  className={`enter-rise text-left rounded-lg border p-3 transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.98] ${isSelected ? "border-accent-400 bg-accent-500/10" : "border-white/20 bg-black/40 hover:border-white/40"}`}
                   style={{ "--i": Math.min(index, 8) } as CSSProperties}
                 >
                   <div className="flex items-center justify-between">

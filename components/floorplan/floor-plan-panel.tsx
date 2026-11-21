@@ -37,10 +37,10 @@ function FloorPlanOverlay({
 
   // Portalled to <body> above the turn page's fixed chrome, as the grid map's overlay is.
   return createPortal(
-    <div className={cn("fixed inset-0 z-[60] flex flex-col bg-black/95", className)} style={style} onAnimationEnd={onAnimationEnd}>
+    <div className={cn("fixed inset-0 z-alert flex flex-col bg-black/95", className)} style={style} onAnimationEnd={onAnimationEnd}>
       <header className="relative flex flex-none items-center justify-center px-5 py-5">
         <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-[1px] -translate-y-1/2 bg-[url('/images/app/art/texture-line.png')] bg-blend-lighten opacity-50" />
-        <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-amber-950 via-amber-950 to-amber-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
+        <h2 className="relative z-[11] rounded-sm border border-white/20 bg-gradient-to-t from-accent-950 via-accent-950 to-accent-800 px-6 py-1.5 text-center font-display text-lg font-bold contrast-[1.2] saturate-[.4] ring-4 ring-black sm:px-8 sm:py-2 sm:text-xl sm:ring-8">
           <Parchment />
           <span style={textShadow}>{title || floor.location || floor.title}</span>
         </h2>
@@ -48,7 +48,7 @@ function FloorPlanOverlay({
           variant="plain"
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-3 rounded-full border border-stone-600 bg-black px-3 py-2 font-display text-lg text-stone-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-amber-500 hover:text-amber-200 active:scale-95 sm:right-10 sm:px-5"
+          className="absolute right-4 top-1/2 inline-flex -translate-y-1/2 items-center gap-3 rounded-full border border-zinc-600 bg-black px-3 py-2 font-display text-lg text-zinc-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-accent-500 hover:text-accent-200 active:scale-95 sm:right-10 sm:px-5"
           aria-label="Close map"
         >
           <span className="hidden sm:inline">Close Map</span>
@@ -89,8 +89,8 @@ export function FloorPlanRailPanel({ className, ...props }: PlanProps & { classN
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-amber-300">{props.title || props.floor.location || props.floor.title}</h3>
-          <Button variant="plain" type="button" onClick={() => setOpen(true)} className="rounded p-1 text-stone-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-amber-200 active:scale-90" aria-label="Expand map">
+          <h3 className="truncate font-display text-sm font-bold text-accent-300">{props.title || props.floor.location || props.floor.title}</h3>
+          <Button variant="plain" type="button" onClick={() => setOpen(true)} className="rounded p-1 text-zinc-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-accent-200 active:scale-90" aria-label="Expand map">
             <Maximize2 className="h-4 w-4" />
           </Button>
         </div>

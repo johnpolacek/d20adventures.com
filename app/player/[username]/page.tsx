@@ -68,7 +68,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             <p className="text-white/70 w-full text-center italic">Welcome back to D20 Adventures, {user.firstName}!</p>
             {characters.length > 0 ? (
               <div className="mt-8">
-                <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-amber-400 font-display text-center">
+                <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
                   Your Characters
                 </h2>
                 <CharacterGrid username={user.username!} characters={characters} characterFiles={characterFiles} />
@@ -90,7 +90,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             )}
             {/* Adventures Section */}
             <div className="mt-16">
-              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-amber-400 font-display text-center">
+              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
                 Your Adventures
               </h2>
               {adventures.length > 0 ? (
@@ -114,7 +114,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                         })()}
                         <span className="text-white text-xl text-center px-2 truncate w-full my-2">{adv.title}</span>
                         <div className="flex items-center gap-2 mb-3">
-                          <span className={`text-xxs px-2 py-1 rounded font-mono ${adv.runType === "practice" ? "bg-amber-700/50 text-amber-100" : "bg-indigo-700/50 text-indigo-100"}`}>
+                          <span className={`text-xxs px-2 py-1 rounded font-mono ${adv.runType === "practice" ? "bg-accent-700/50 text-accent-100" : "bg-primary-500/50 text-primary-50"}`}>
                             {(adv.runType ?? "campaign") === "practice" ? "Practice" : "Campaign"}
                           </span>
                           <span className="text-xxs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
@@ -134,7 +134,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
             </div>
 
             <div className="mt-16">
-              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-amber-400 font-display text-center">
+              <h2 style={textShadowSpreadLight} className="text-3xl font-bold mb-8 w-full text-accent-400 font-display text-center">
                 Practice Reports
               </h2>
               {practiceReports.length > 0 ? (
@@ -142,7 +142,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                   {practiceReports.map((report, i) => (
                     <div key={report.id} className="enter-rise rounded-lg border border-white/20 bg-black/50 p-4" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="font-display text-lg text-amber-200">{report.adventureTitle}</div>
+                        <div className="font-display text-lg text-accent-200">{report.adventureTitle}</div>
                         <div className="text-xs font-mono text-white/70">{new Date(report.createdAt).toLocaleString()}</div>
                       </div>
                       <div className="text-sm text-white/70 mt-1">

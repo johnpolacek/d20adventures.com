@@ -37,7 +37,7 @@ export async function requestLandscape() {
 export function RotatePrompt({ className, style, onAnimationEnd }: MotionProps) {
   return (
     <div
-      className={cn("fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-background px-8 text-center", entrance("enter-fade", className))}
+      className={cn("fixed inset-0 z-gate flex flex-col items-center justify-center gap-6 bg-background px-8 text-center", entrance("enter-fade", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
       role="alert"

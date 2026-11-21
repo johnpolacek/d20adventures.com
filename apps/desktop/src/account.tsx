@@ -121,7 +121,7 @@ export type Account = ReturnType<typeof useAccount>
 function CodeTiles({ code }: { code: string }) {
   const c = code.replace(/[^A-Z0-9]/g, "")
   const tile =
-    "enter-pop grid h-12 w-9 place-items-center rounded-sm bg-amber-50 bg-[url('/images/app/backgrounds/paper-texture.png')] bg-[length:120px] font-display text-2xl font-bold text-primary-700 ring-2 ring-black"
+    "enter-pop grid h-12 w-9 place-items-center rounded-sm bg-accent-50 bg-[url('/images/app/backgrounds/paper-texture.png')] bg-[length:120px] font-display text-2xl font-bold text-primary-700 ring-2 ring-black"
   const at = (i: number) => ({ "--i": Math.min(i, 8) }) as CSSProperties
   return (
     <div className="flex items-center justify-center gap-2" role="img" aria-label={`Code ${code}`}>
@@ -130,7 +130,7 @@ function CodeTiles({ code }: { code: string }) {
           {ch}
         </span>
       ))}
-      <span className="mx-1 h-[2px] w-3 bg-amber-400/70" />
+      <span className="mx-1 h-[2px] w-3 bg-accent-400/70" />
       {[...c.slice(4)].map((ch, i) => (
         <span key={`b${i}`} className={tile} style={at(i + 4)}>
           {ch}
@@ -145,7 +145,7 @@ function Waiting({ account: a }: { account: Account }) {
   return (
     <div className="space-y-4">
       <CodeTiles code={a.link.userCode} />
-      <p className="text-sm text-gray-300">Approve this code on the website.</p>
+      <p className="text-sm text-zinc-300">Approve this code on the website.</p>
       <div className="flex justify-center gap-2">
         <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} onClick={() => void openSite(a.link!.verifyPath)}>
           Open website
@@ -176,7 +176,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
                 {state.avatar ? <img src={state.avatar} alt="" className="h-full w-full object-cover" /> : state.account.slice(0, 1).toUpperCase()}
               </MenuTrigger>
               <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
-                <p className="truncate px-1 text-sm text-gray-300">{state.account}</p>
+                <p className="truncate px-1 text-sm text-zinc-300">{state.account}</p>
                 <MenuItem className={cn(siteOutline, "active:scale-[0.97] mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-blue-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
                   Unlink
                 </MenuItem>
@@ -198,7 +198,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
 export function AccountNotice({ account: a }: { account: Account }) {
   const on = a.ready && !a.gated
   return (
-    <div className="absolute top-4 right-8 z-30 flex flex-col items-end gap-2">
+    <div className="absolute top-4 right-8 z-raised flex flex-col items-end gap-2">
       <Presence show={on && Boolean(a.link)} motion="drop" asChild>
         <div className={cn(cardVariants({ variant: "frame" }), "w-80 p-5 text-center")}>
           <Waiting account={a} />
@@ -236,7 +236,7 @@ export function FeedbackLink({ account: a }: { account: Account }) {
 export function LinkGate({ account: a }: { account: Account }) {
   return (
     <div className={cn(cardVariants({ variant: "quiet" }), "w-[min(28rem,92vw)] px-8 py-9 text-center text-white")}>
-      <h1 className="font-display text-3xl font-bold leading-tight text-amber-400" style={textShadowSpreadLight}>
+      <h1 className="font-display text-3xl font-bold leading-tight text-accent-400" style={textShadowSpreadLight}>
         Link your account
       </h1>
       <Rule className="mx-auto mt-5 mb-6 w-48" />

@@ -76,7 +76,7 @@ function TypographyDemo() {
         ))}
         <span className={cn(siteLabel, "mt-4")}>Shadows over art</span>
         <div className="flex flex-col items-center gap-2 rounded-lg bg-[url(/images/app/backgrounds/d20-hero.webp)] bg-cover bg-center p-6">
-          <span className="font-display text-3xl font-bold text-amber-300" style={textShadow}>
+          <span className="font-display text-3xl font-bold text-accent-300" style={textShadow}>
             textShadow
           </span>
           <span className="font-display text-3xl font-bold text-white" style={textShadowSpread}>
@@ -93,8 +93,8 @@ function NarrationDemo() {
   return (
     <article className="mx-auto flex max-w-2xl flex-col gap-4 font-serif text-lg leading-relaxed text-white/90">
       <div className="text-center">
-        <div className="font-mono text-xs uppercase tracking-widest text-amber-400/80">Scene One</div>
-        <h3 className="font-display text-3xl text-amber-300" style={textShadow}>
+        <div className="font-mono text-xs uppercase tracking-widest text-accent-400/80">Scene One</div>
+        <h3 className="font-display text-3xl text-accent-300" style={textShadow}>
           The Gate
         </h3>
       </div>
@@ -134,12 +134,12 @@ const palettes: { name: string; note: string; swatches: { label: string; classNa
     name: "Amber",
     note: "titles, featured, premade tags",
     swatches: [
-      { label: "100", className: "bg-amber-100" },
-      { label: "200", className: "bg-amber-200" },
-      { label: "300", className: "bg-amber-300" },
-      { label: "400", className: "bg-amber-400" },
-      { label: "500", className: "bg-amber-500" },
-      { label: "700", className: "bg-amber-700" },
+      { label: "100", className: "bg-accent-100" },
+      { label: "200", className: "bg-accent-200" },
+      { label: "300", className: "bg-accent-300" },
+      { label: "400", className: "bg-accent-400" },
+      { label: "500", className: "bg-accent-500" },
+      { label: "700", className: "bg-accent-700" },
     ],
   },
   {
@@ -162,7 +162,7 @@ const palettes: { name: string; note: string; swatches: { label: string; classNa
       { label: "white/10", className: "bg-white/10" },
       { label: "white/20", className: "bg-white/20" },
       { label: "white/60", className: "bg-white/60" },
-      { label: "gray-300", className: "bg-gray-300" },
+      { label: "gray-300", className: "bg-zinc-300" },
       { label: "white", className: "bg-white" },
     ],
   },
@@ -222,7 +222,7 @@ function CardVariants() {
       <div className="flex flex-col gap-2">
         <span className={siteLabel}>feature</span>
         <Card variant="feature">
-          <div className="font-display text-3xl font-bold text-amber-300">Choose Your Party</div>
+          <div className="font-display text-3xl font-bold text-accent-300">Choose Your Party</div>
           <p className="mt-2 text-white/70">The step a page opens with.</p>
         </Card>
       </div>

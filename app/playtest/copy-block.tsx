@@ -29,7 +29,7 @@ export function CopyBlock({ label, text, className }: { label: string; text: str
           type="button"
           onClick={copy}
           className={cn(
-            "flex cursor-pointer items-center gap-1.5 rounded-[3px] border px-2.5 py-1 font-sans text-[11px] tracking-wide transition-[color,border-color,scale] duration-150 ease-snap active:scale-95",
+            "flex cursor-pointer items-center gap-1.5 rounded-hud border px-2.5 py-1 font-sans text-[11px] tracking-wide transition-[color,border-color,scale] duration-150 ease-snap active:scale-95",
             copied ? "border-emerald-400/60 text-emerald-300" : "border-foreground/25 text-foreground hover:border-accent/60 hover:text-accent"
           )}
         >
@@ -39,7 +39,7 @@ export function CopyBlock({ label, text, className }: { label: string; text: str
           {copied ? "Copied" : "Copy"}
         </Button>
       </div>
-      <pre className="overflow-x-auto px-4 py-4 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-amber-100/95">{text}</pre>
+      <pre className="overflow-x-auto px-4 py-4 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-accent-100/95">{text}</pre>
     </div>
   )
 }

@@ -26,13 +26,13 @@ export function FloorPlanGallery({ states }: { states: GalleryState[] }) {
   return (
     <main className="min-h-screen bg-black px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-[1400px]">
-        <h1 className="mb-6 font-display text-2xl text-amber-300">Floor Plans</h1>
+        <h1 className="mb-6 font-display text-2xl text-accent-300">Floor Plans</h1>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
           {states.map((state) => (
             <GalleryCard key={state.id} state={state} />
           ))}
         </div>
-        <h2 className="mb-4 mt-10 font-display text-xl text-amber-300">Rail Width</h2>
+        <h2 className="mb-4 mt-10 font-display text-xl text-accent-300">Rail Width</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,360px)]">
           {states.map((state) => (
             <GalleryCard key={state.id} state={state} />

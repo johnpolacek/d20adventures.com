@@ -94,7 +94,7 @@ export function StagePlayMock({ start: first }: { start: number }) {
         onContinue={() => {}}
         onError={(m) => console.error(m)}
       />
-      <div className="fixed bottom-2 left-2 z-50 flex flex-wrap gap-1 rounded bg-black/70 p-1 text-xs text-white">
+      <div className="fixed bottom-2 left-2 z-overlay flex flex-wrap gap-1 rounded bg-black/70 p-1 text-xs text-white">
         {STEPS.map((s, i) => (
           <Button variant="plain" key={s.label} type="button" onClick={() => setStep(i)} className={i === step ? "bg-white px-2 py-1 text-black" : "px-2 py-1"}>
             {s.label}

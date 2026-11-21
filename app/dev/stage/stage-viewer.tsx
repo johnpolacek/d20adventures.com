@@ -168,7 +168,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
   })()
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
+    <div className="fixed inset-0 z-screen overflow-hidden bg-[#0d0b09] font-serif text-[#e9dcc3]">
       <div ref={containerRef} className="absolute inset-0" {...onPointer} />
       {!ready && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0d0b09]">

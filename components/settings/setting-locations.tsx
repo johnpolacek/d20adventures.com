@@ -128,7 +128,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
         {locations.map((location, locationIndex) => (
           <Card key={locationIndex} variant="inset" className="enter-rise">
             <Collapsible open={openLocations.has(locationIndex)} onOpenChange={() => toggleLocation(locationIndex)}>
-              <CardHeader className="text-white hover:text-amber-300 transition-colors duration-150">
+              <CardHeader className="text-white hover:text-accent-300 transition-colors duration-150">
                   <CardTitle className="flex items-center justify-between">
                     <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left font-display">
                       {openLocations.has(locationIndex) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -215,7 +215,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
                       {location.organizations.map((org, orgIndex) => (
                         <Card key={orgIndex} variant="inset" className="enter-rise bg-black/30 border-white/5">
                           <Collapsible open={openOrganizations.has(`${locationIndex}-${orgIndex}`)} onOpenChange={() => toggleOrganization(locationIndex, orgIndex)}>
-                            <CardHeader className="hover:text-amber-300 text-white transition-colors duration-150 py-3">
+                            <CardHeader className="hover:text-accent-300 text-white transition-colors duration-150 py-3">
                                 <CardTitle className="flex items-center justify-between text-base">
                                   <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left">
                                     {openOrganizations.has(`${locationIndex}-${orgIndex}`) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -285,7 +285,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
         <Presence show={locations.length === 0} motion="fade" asChild>
           <Card variant="inset" className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-gray-400 mb-4">No locations added yet.</p>
+              <p className="text-zinc-400 mb-4">No locations added yet.</p>
               <Button onClick={addLocation} disabled={isSaving}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Location

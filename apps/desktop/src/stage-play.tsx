@@ -1235,7 +1235,7 @@ export function StagePlay(props: {
             )}
           </Presence>
           <Presence show={on && Boolean(ended && !busy && !reading)} motion="rise" asChild>
-            <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
+            <div className={`${panel} absolute bottom-28 left-1/2 z-raised -translate-x-1/2 p-6 text-center`}>
               <div className="text-[10px] tracking-[.3em] text-accent">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
               {owed.length > 0 && (
@@ -1263,7 +1263,7 @@ export function StagePlay(props: {
             </div>
           </Presence>
           <Presence show={on && !ended && owed.length > 0 && !levelHero} motion="drop" asChild>
-            <div className="absolute top-24 left-1/2 z-30 flex -translate-x-1/2 flex-wrap justify-center gap-2">
+            <div className="absolute top-24 left-1/2 z-raised flex -translate-x-1/2 flex-wrap justify-center gap-2">
               {owed.map((c) => (
                 <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
                   Level Up {c.name}
@@ -1273,7 +1273,7 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on && Boolean(levelHero?.sheet && latest)} motion="fade" asChild>
             {levelHero?.sheet && latest && (
-              <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-3">
+              <div className="absolute inset-0 z-panel flex items-center justify-center bg-black/60 p-3">
                 <LevelUp
                   hero={levelHero.name}
                   portrait={portrait(levelHero)}
@@ -1302,7 +1302,7 @@ export function StagePlay(props: {
                 mine={offerMine}
                 answered={reaction.answer !== undefined}
                 compact={compact}
-                className={`absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`}
+                className={`absolute left-1/2 z-raised -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`}
                 onTake={() => react(true)}
                 onPass={() => react(false)}
               />
@@ -1310,7 +1310,7 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on && Boolean(!ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey))} motion="rise" asChild>
             {turn && (
-              <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
+              <div className={`${panel} absolute bottom-28 left-1/2 z-raised -translate-x-1/2 p-6 text-center`}>
                 <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
                 {passed && <p className="mb-3 font-serif text-sm text-roll-failure">Passed Over · {passed}</p>}
                 {/* Another player's hero acts from their own screen. */}
@@ -1374,7 +1374,7 @@ export function StagePlay(props: {
             )}
           </Presence>
           <Presence show={on && open === "settings"} motion="drop" asChild>
-            <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>
+            <section className={`${panel} absolute right-10 top-24 z-panel w-72 p-6`}>
               <h2 className="mb-4 font-serif text-2xl">Scene Settings</h2>
               <div className="mb-4 flex gap-2">
                 <Pill active={!auto} onClick={() => setAuto(false)}>
@@ -1428,7 +1428,7 @@ export function StagePlay(props: {
         </>
       )}
       <Presence show={hidden} motion="rise" asChild>
-        <Pill className="absolute bottom-4 right-4 z-50" onClick={() => setHidden(false)}>
+        <Pill className="absolute bottom-4 right-4 z-overlay" onClick={() => setHidden(false)}>
           Show interface · H
         </Pill>
       </Presence>

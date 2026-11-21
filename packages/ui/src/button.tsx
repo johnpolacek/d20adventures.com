@@ -52,7 +52,7 @@ export const buttonVariants = cva(
 )
 
 export const baseButtonClass =
-  "inline-flex gap-1 items-center justify-center transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] ease-snap duration-150 text-blue-50 hover:text-white hover:scale-105 active:scale-100 disabled:bg-gray-600 disabled:opacity-50 disabled:pointer-events-none data-disabled:opacity-50 data-disabled:pointer-events-none px-3 rounded-md py-1 disabled:border-transparent select-none"
+  "inline-flex gap-1 items-center justify-center transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] ease-snap duration-150 text-blue-50 hover:text-white hover:scale-105 active:scale-100 disabled:bg-zinc-600 disabled:opacity-50 disabled:pointer-events-none data-disabled:opacity-50 data-disabled:pointer-events-none px-3 rounded-md py-1 disabled:border-transparent select-none"
 export const epicButtonClass = cn(
   baseButtonClass,
   "px-8 py-3 bg-blue-600 font-bold brightness-110 saturate-[1.2] scale-105 active:scale-100 hover:scale-110 border-[rgba(0,0,0,.66)] disabled:opacity-90 border-4 rounded-full font-display tracking-widest bg-[url('/images/app/backgrounds/buried.png')]"
@@ -115,7 +115,7 @@ export function buttonStyle(variant?: ButtonVariant, size?: ButtonSize): CSSProp
 export function Button({ variant, size, className, style, children, ...props }: ButtonProps) {
   return (
     <BaseButton {...props} className={buttonClassName(variant, size, className)} style={style ?? buttonStyle(variant, size)}>
-      {variant === "sparkle" && <SparklesIcon className="w-4 h-4 text-amber-200" />}
+      {variant === "sparkle" && <SparklesIcon className="w-4 h-4 text-accent-200" />}
       {children}
     </BaseButton>
   )

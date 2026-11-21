@@ -13,7 +13,7 @@ export const textShadowSpreadLight = {
 
 /** The opening letter of a scene, large and amber in the display face, three lines deep. Add to the first paragraph. */
 export const dropCap =
-  "first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:font-display first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:text-amber-300"
+  "first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:font-display first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:text-accent-300"
 
 /** The same, two lines deep, for small text like the stage journal. */
 export const dropCapSmall =

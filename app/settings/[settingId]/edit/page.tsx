@@ -32,7 +32,7 @@ export default async function SettingEditPage(props: { params: Promise<{ setting
   }
 
   return (
-    <div className="flex flex-col relative bg-gray-900 text-white mt-4">
+    <div className="flex flex-col relative bg-zinc-900 text-white mt-4">
       <SettingEditForm setting={setting} settingId={settingId} />
     </div>
   )

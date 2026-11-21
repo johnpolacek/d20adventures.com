@@ -113,17 +113,17 @@ export default function StoryviewRailPanel({ className }: { className?: string }
     <>
       <div className={cn("overflow-hidden rounded-xl bg-black/40 ring ring-primary-700", className)}>
         <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h3 className="truncate font-display text-sm font-bold text-violet-300">Storyview</h3>
+          <h3 className="truncate font-display text-sm font-bold text-primary-100">Storyview</h3>
           <div className="flex items-center gap-2">
             {isOwner && (
               <Tip label="Automatically narrate each turn; the token cost is split among all players.">
                 <Label plain className="flex cursor-pointer items-center gap-1.5">
-                  <span className="text-[10px] uppercase tracking-wide text-stone-400">Auto</span>
+                  <span className="text-[10px] uppercase tracking-wide text-zinc-400">Auto</span>
                   <Switch checked={autoEnabled} onCheckedChange={toggleAuto} aria-label="Toggle auto-narration" />
                 </Label>
               </Tip>
             )}
-            <Button variant="plain" type="button" onClick={open} className="rounded p-1 text-stone-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-violet-200 active:scale-90" aria-label="Play this turn in Storyview">
+            <Button variant="plain" type="button" onClick={open} className="rounded p-1 text-zinc-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-primary-50 active:scale-90" aria-label="Play this turn in Storyview">
               <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
@@ -136,13 +136,13 @@ export default function StoryviewRailPanel({ className }: { className?: string }
           aria-label="Play this turn in Storyview"
         >
           <div className="relative max-h-28 overflow-hidden px-4 pt-3">
-            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors duration-150 group-hover:text-violet-100/30">{previewText(currentTurn.story)}</p>
+            <p className="font-display text-lg leading-snug text-zinc-200/30 transition-colors duration-150 group-hover:text-primary-50/30">{previewText(currentTurn.story)}</p>
             {/* crop fade into the caption row */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0a0810] to-transparent" />
           </div>
           <div className="flex items-center gap-2 px-4 pb-3 pt-1">
-            <Clapperboard className="h-4 w-4 flex-none text-violet-400/90" />
-            <p className="text-[11px] text-stone-400">Play this turn cinematically</p>
+            <Clapperboard className="h-4 w-4 flex-none text-primary-200/90" />
+            <p className="text-[11px] text-zinc-400">Play this turn cinematically</p>
           </div>
         </Button>
         <Presence show={Boolean(paused || showReady || showPreparing)} motion="fade" asChild>
@@ -155,7 +155,7 @@ export default function StoryviewRailPanel({ className }: { className?: string }
               </p>
             )}
             {showPreparing && (
-              <p className="enter-fade flex items-center gap-1.5 text-xs text-indigo-300/80">
+              <p className="enter-fade flex items-center gap-1.5 text-xs text-primary-100/80">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Preparing narration…
               </p>

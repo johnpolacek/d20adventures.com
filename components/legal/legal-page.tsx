@@ -15,7 +15,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         {sections.map((section, i) => (
           <section key={section.title}>
             <h2>
-              <span className="mr-3 text-amber-300/70">{i + 1}.</span>
+              <span className="mr-3 text-accent-300/70">{i + 1}.</span>
               {section.title}
             </h2>
             {section.body}
