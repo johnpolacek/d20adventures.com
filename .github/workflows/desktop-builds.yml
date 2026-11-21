@@ -35,6 +35,8 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     steps:
+      # Windows would otherwise check out the adventure sources with CRLF line endings, which the compiler rejects.
+      - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag || github.ref }}

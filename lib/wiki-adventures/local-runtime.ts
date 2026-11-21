@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
-import { join } from "node:path"
+import { posix } from "node:path"
 import { s3Client } from "@/lib/aws"
 import { createSourceFile } from "./change-sets"
 import { compileAdventureSourceTree } from "./compiler"
@@ -251,9 +251,10 @@ function unique(values: string[]) {
   return Array.from(new Set(values))
 }
 
+// Source paths always use forward slashes, as the compiler matches them, even when the app is built on Windows.
 function listFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(root, entry.name)
+    const path = posix.join(root, entry.name)
     return entry.isDirectory() ? listFiles(path) : [path]
   })
 }
