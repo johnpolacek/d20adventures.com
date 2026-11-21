@@ -148,3 +148,43 @@ textarea:-webkit-autofill {
   width: auto;
   margin-inline: auto;
 }
+.update-body .update-prompt {
+  margin: 1.75rem 0;
+  overflow: hidden;
+  border: 1px solid rgb(253 230 138 / 0.25);
+  border-radius: 0.5rem;
+  background: rgb(0 0 0 / 0.55);
+}
+.update-body .update-prompt figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(253 230 138 / 0.15);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-amber-200);
+}
+.update-body .update-prompt button {
+  border: 1px solid rgb(253 230 138 / 0.35);
+  border-radius: 0.375rem;
+  padding: 0.2rem 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.update-body .update-prompt button:hover {
+  background: rgb(253 230 138 / 0.12);
+}
+.update-body .update-prompt pre {
+  margin: 0;
+  max-height: 24rem;
+  overflow: auto;
+  padding: 1rem;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgb(255 255 255 / 0.85);
+}

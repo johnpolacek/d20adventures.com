@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
-import { marked } from "marked"
+import { Marked } from "marked"
 
 const UPDATES_DIR = path.join(process.cwd(), "content/updates")
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/
@@ -51,10 +51,27 @@ export async function getPost(slug: string): Promise<Update | undefined> {
   return (await getPosts()).find((post) => post.slug === slug)
 }
 
+const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+// A fenced block marked `prompt` is drawn as a prompt card with a Copy button (components/updates/post-body.tsx).
+const markdown = new Marked({
+  renderer: {
+    code({ text, lang }) {
+      if (lang !== "prompt") return false
+      return `<figure class="update-prompt not-prose"><figcaption><span>Prompt</span><button type="button" data-copy>Copy</button></figcaption><pre><code>${escapeHtml(text)}</code></pre></figure>`
+    },
+  },
+})
+
 /** Markdown to HTML. A link whose text starts with "Play" is drawn as a button. */
 export function renderPost(post: Update): string {
-  const html = marked.parse(post.body, { async: false })
+  const html = markdown.parse(post.body, { async: false })
   return html.replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="update-play stage-brass">$2</a>')
+}
+
+/** The post as a markdown file to download: its title, date and link, then its body. */
+export function postMarkdown(post: Update): string {
+  return `# ${post.title}\n\n${formatPostDate(post.date)} · https://d20adventures.com/updates/${post.slug}\n\n${post.body.trim()}\n`
 }
 
 export function formatPostDate(date: string): string {
