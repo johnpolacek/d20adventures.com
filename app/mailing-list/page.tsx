@@ -4,6 +4,10 @@ import { MailingListForm } from "@/components/forms/mailing-list-form"
 import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@d20/ui/card"
+import { notFound } from "next/navigation"
+
+// Hidden from players for now. Set to true to bring the signup page back.
+const MAILING_LIST_ENABLED = false
 
 export const dynamic = "force-dynamic"
 
@@ -16,6 +20,8 @@ async function handleLeaveWaitlist() {
 }
 
 export default async function WaitlistPage() {
+  if (!MAILING_LIST_ENABLED) notFound()
+
   // Check if required environment variables are configured
   const missingEnvVars = [
     {

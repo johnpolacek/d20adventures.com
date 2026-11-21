@@ -19,7 +19,7 @@ const sections: LegalSection[] = [
           <strong>Games:</strong> your heroes, what you type, the story and any images you upload.
         </li>
         <li>
-          <strong>Messages:</strong> what you send through the contact form, feedback or the mailing list.
+          <strong>Messages:</strong> what you send through the contact form or feedback.
         </li>
         <li>
           <strong>Basic tech data:</strong> such as your IP address and browser, kept by the services that host the site.
