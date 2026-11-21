@@ -74,6 +74,8 @@ Whatever Lyra says of the crate is her verdict, true or not. No check stands bet
 
 If Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.
 
+Lyra's fee is to be paid in Kordavos once the job is done. If she asks after it, Silas puts her off until then.
+
 Silas pays only on Lyra's word. Until she gives her verdict the scrollcase stays in his hands and the elves stay aboard.
 
 A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
@@ -89,8 +91,8 @@ Legacy runtime flag: skipInitialNpcTurns was true.
 ## Transitions
 
 - To [[encounter:the-transaction]] when If Lyra verbally confirms the magic properties of the shipment
-- To [[encounter:the-fake]] when If Lyra says the shipment has no magical properties
-- To [[encounter:the-disturbance]] when If Poppen or Thalbern causes a distraction or anyone aboard notices either of them
+- To [[encounter:the-fake]] when Lyra says the shipment is fake or has no magical properties, whether or not it is true. Take this at once: Silas weighs her word in The Fake, not here.
+- To [[encounter:the-disturbance]] when Poppen or Thalbern causes a distraction, anyone aboard notices either of them, or a sentry hears a noise from the bank and turns toward it
 
 ## Migration Context
 
