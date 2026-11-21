@@ -45,10 +45,10 @@ body:has(.updates-page),
 html[data-update-theme="dark"] body:has(.updates-page),
 :where(html[data-update-theme="dark"]) .up-surface:not([data-up-theme]),
 .up-surface[data-up-theme="dark"] {
-  --up-bg: #1c1712;
-  --up-raise: #251f18;
-  --up-code: #211b15;
-  --up-bar: #0f0c09;
+  --up-bg: #15110d;
+  --up-raise: #1f1a14;
+  --up-code: #1a1611;
+  --up-bar: #0a0806;
   --up-bar-line: #2c251d;
   --up-line: #3a3127;
   --up-line-strong: #52463a;
@@ -61,8 +61,8 @@ html[data-update-theme="dark"] body:has(.updates-page),
   --up-accent-line: rgb(169 189 224 / 0.45);
   --up-slot: rgb(169 189 224 / 0.12);
   --up-slot-text: #c6d4ee;
-  --up-on-accent: #1c1712;
-  --up-btn: #2a231b;
+  --up-on-accent: #15110d;
+  --up-btn: #241e17;
   --up-grain: 0.1;
   --up-grain-blend: screen;
   --up-glow: radial-gradient(ellipse 70% 520px at 50% 0, rgb(255 184 104 / 0.06), rgb(255 184 104 / 0) 70%);
