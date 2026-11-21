@@ -21,10 +21,12 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
         const answer = await session.ask(prompt)
         if (answer.failed || !answer.text.trim()) throw new Error("failed")
         result = answer
-      } catch {
+      } catch (error) {
         session.close()
         session = undefined
-        if (attempt > 0) throw new Error(`${provider} could not finish this request. Check its sign-in or usage limit, then retry.`)
+        // The session's own reason goes with it: a failed lockdown or a timeout is not a usage limit.
+        const reason = error instanceof Error && error.message !== "failed" ? ` (${error.message})` : ""
+        if (attempt > 0) throw new Error(`${provider} could not finish this request${reason}. Check its sign-in or usage limit, then retry.`)
       }
     }
     return result.text.trim()
