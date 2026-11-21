@@ -4,7 +4,7 @@ import { Toaster } from "@d20/ui/toast"
 import SiteFooter from "@/components/layout/footer"
 import Header from "@/components/layout/header"
 import { PageTransition } from "@/components/layout/page-transition"
-import { siteConfig } from "@/lib/config"
+import { SITE_URL, siteConfig } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 import { Providers } from "./providers"
@@ -37,6 +37,9 @@ const syne = Syne_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  // Each page names itself as the one true address, without its query string.
+  alternates: { canonical: "./" },
   title: siteConfig.title,
   description: siteConfig.description,
   icons: {

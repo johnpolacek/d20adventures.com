@@ -1,10 +1,11 @@
+import { SITE_URL } from "@/lib/config"
 import { getPosts } from "@/lib/updates"
 
 export const dynamic = "force-static"
 // Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
 export const revalidate = 3600
 
-const SITE = "https://d20adventures.com"
+const SITE = SITE_URL
 
 function escape(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")

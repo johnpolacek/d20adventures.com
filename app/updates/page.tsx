@@ -11,7 +11,7 @@ export const revalidate = 3600
 export const metadata: Metadata = {
   title: "Updates | D20 Adventures",
   description: "What's new in D20 Adventures.",
-  alternates: { types: { "application/rss+xml": "/updates/rss.xml" } },
+  alternates: { canonical: "./", types: { "application/rss+xml": "/updates/rss.xml" } },
 }
 
 export default async function UpdatesPage() {

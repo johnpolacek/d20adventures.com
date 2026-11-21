@@ -62,6 +62,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { adventurePlanId } = await params
   return {
     title: `D20 Adventures | ${reverseSlugify(adventurePlanId)}`,
+    // A game in play is its players' own, not a page for search.
+    robots: { index: false, follow: false },
   }
 }
 
