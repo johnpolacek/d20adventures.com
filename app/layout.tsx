@@ -24,14 +24,14 @@ const literata = Literata({
 
 const cinzel = Cinzel_Decorative({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-cinzel",
   display: "swap",
   weight: "400",
 })
 
 const syne = Syne_Mono({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-syne-mono",
   display: "swap",
   weight: "400",
 })

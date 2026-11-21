@@ -20,6 +20,7 @@ import { rattle, verdict as sound, type Verdict } from "../sound/dice"
 import { eyebrow, useShort } from "./hud"
 import { DeathSaveMarks, RollDetails } from "./roll-parts"
 import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollHeading, rollNeed, rollSpeech, verdictOf } from "./roll-view"
+import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS } from "./roll-tones"
 
 // When each part arrives, in ms from the start: the die lands, the total follows, then the verdict.
 const LAND = 1250
@@ -27,7 +28,7 @@ const TOTAL = LAND + 350
 const VERDICT = TOTAL + 450
 export const ROLL_SECONDS = (VERDICT + 900) / 1000
 
-const CRITICAL = "#ffd88a"
+const CRITICAL = ROLL_CRITICAL
 // The light under a die still to land.
 const WAITING = "#fef3c7"
 
@@ -94,7 +95,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
 
   const verdict = made ? verdictOf(made) : ""
   const margin = made ? marginText(made) : ""
-  const tone = crit ? CRITICAL : made?.success ? "#b7d38a" : "#e39a7c"
+  const tone = crit ? CRITICAL : made?.success ? ROLL_SUCCESS : ROLL_FAILURE
   const landed = step >= 1
   const two = dice.length > 1
   const size = two ? (compact ? 56 : row ? 84 : 104) : compact ? 72 : row ? 112 : 132

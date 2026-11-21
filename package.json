@@ -119,7 +119,6 @@
     "react-google-recaptcha": "^3.1.0",
     "slugify": "^1.6.9",
     "tailwind-merge": "^3.7.0",
-    "tailwindcss-animate": "^1.0.7",
     "three": "^0.183.2",
     "uuid": "^14.0.3",
     "waait": "^1.0.5",

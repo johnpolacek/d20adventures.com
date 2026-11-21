@@ -96,7 +96,7 @@ export default function TurnCharacterList() {
                           {standing.hitPoints}/{standing.maximum} HP{standing.temporary ? ` +${standing.temporary} Temporary` : ""} · AC {standing.armorClass}
                         </span>
                       ) : (
-                        <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : standing.kind === "stable" ? "#b7d38a" : WOUND_TONE.Dead }}>
+                        <span style={{ color: standing.kind === "wound" ? WOUND_TONE[standing.word] : standing.kind === "stable" ? "var(--color-roll-success)" : WOUND_TONE.Dead }}>
                           {standingWords(standing).split(",")[0]}
                         </span>
                       )}

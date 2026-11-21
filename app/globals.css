@@ -9,8 +9,8 @@
 
   --font-body: var(--font-rethink-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-rethink-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: ['var(--font-display)'];
-  --font-mono: ['var(--font-mono)'];
+  --font-display: var(--font-cinzel), Georgia, serif;
+  --font-mono: var(--font-syne-mono), ui-monospace, monospace;
   --font-serif: var(--font-literata), Georgia, serif;
 
   @keyframes float {

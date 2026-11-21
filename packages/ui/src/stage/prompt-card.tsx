@@ -431,7 +431,7 @@ function ContestRoll({
           <Total natural={natural} modifier={roll.modifier} />
         </div>
       </div>
-      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase transition-opacity duration-150", total === null ? "opacity-0" : total >= roll.dc ? "text-[#b7d38a]" : "text-[#e39a7c]")}>
+      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase transition-opacity duration-150", total === null ? "opacity-0" : total >= roll.dc ? "text-roll-success" : "text-roll-failure")}>
         {total === null ? "" : `${total} against ${roll.dc} · ${total >= roll.dc ? "success" : "failure"}`}
       </div>
     </div>

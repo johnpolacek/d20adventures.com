@@ -195,7 +195,7 @@ function StandingRow({ standing: s }: { standing: Standing }) {
         ) : (
           <span
             className="font-display text-[13px] font-bold tracking-[0.1em] uppercase"
-            style={{ color: s.kind === "wound" ? WOUND_TONE[s.word] : s.kind === "stable" ? "#b7d38a" : WOUND_TONE.Dead }}
+            style={{ color: s.kind === "wound" ? WOUND_TONE[s.word] : s.kind === "stable" ? "var(--color-roll-success)" : WOUND_TONE.Dead }}
           >
             {standingWords(s).split(",")[0]}
           </span>

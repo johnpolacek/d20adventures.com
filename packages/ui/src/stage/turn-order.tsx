@@ -162,7 +162,7 @@ export function TurnOrder({
                       <span
                         className={cn(
                           "absolute inset-x-0 bottom-0 bg-stage-ink/85 font-sans tabular-nums leading-tight",
-                          hero ? "text-stage-cream" : "tracking-wide text-[#e39a7c]",
+                          hero ? "text-stage-cream" : "tracking-wide text-roll-failure",
                           compact ? "text-[8px]" : active ? "text-[11px]" : "text-[9px]"
                         )}
                       >
@@ -230,7 +230,7 @@ export function TurnOrder({
         {passed && (
           <div className={cn("flex items-baseline gap-2 [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "mt-0.5" : "mt-1")}>
             <span className={cn("font-sans font-medium tracking-[0.26em] text-stage-muted uppercase", compact ? "text-[7px]" : "text-[9px]")}>Passed Over</span>
-            <span className={cn("font-serif text-[#e39a7c]", compact ? "text-[10px]" : "text-[13px]")}>{passed}</span>
+            <span className={cn("font-serif text-roll-failure", compact ? "text-[10px]" : "text-[13px]")}>{passed}</span>
           </div>
         )}
       </Presence>

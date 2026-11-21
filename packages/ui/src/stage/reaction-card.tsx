@@ -46,7 +46,7 @@ function Countdown({ left, compact }: { left: number; compact: boolean }) {
   const low = left <= 5000
   return (
     <div className={cn("h-[3px] w-full overflow-hidden rounded-full bg-black/40", compact ? "mt-1.5" : "mt-2.5")} aria-hidden="true">
-      <div className="h-full origin-left rounded-full transition-transform duration-100 ease-linear" style={{ transform: `scaleX(${share})`, backgroundColor: low ? "#e39a7c" : "var(--color-stage-gold)" }} />
+      <div className="h-full origin-left rounded-full transition-transform duration-100 ease-linear" style={{ transform: `scaleX(${share})`, backgroundColor: low ? "var(--color-roll-failure)" : "var(--color-stage-gold)" }} />
     </div>
   )
 }
@@ -90,7 +90,7 @@ export function ReactionCard({
     ;(choice === "take" ? onTake : onPass)?.()
   }
   const clock = (
-    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-[#e39a7c]" : "text-stage-cream", compact ? "text-[13px]" : "text-[15px]")} aria-hidden="true">
+    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-roll-failure" : "text-stage-cream", compact ? "text-[13px]" : "text-[15px]")} aria-hidden="true">
       {seconds}s
     </span>
   )

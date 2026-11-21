@@ -13,6 +13,7 @@ import { cn, entrance, type MotionProps, staggered } from "../utils"
 import { eyebrow, Pill, panel, useJoined } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
 import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollHeading, rollSpeech, verdictOf } from "./roll-view"
+import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS } from "./roll-tones"
 
 // The story in order: its paragraphs, each dice roll where it was called for, and each class feature used.
 export type JournalEntry = string | { roll: RollView } | { feature: FeatureView }
@@ -63,7 +64,7 @@ function Die({ natural, dropped = false, critical = false }: { natural: number; 
 export function RollLine({ roll, className }: { roll: RollView; className?: string }) {
   const crit = isCritical(roll)
   const verdict = verdictOf(roll)
-  const tone = crit ? "#ffd88a" : roll.success ? "#b7d38a" : "#e39a7c"
+  const tone = crit ? ROLL_CRITICAL : roll.success ? ROLL_SUCCESS : ROLL_FAILURE
   const dice = roll.dice && roll.dice.length > 1 ? roll.dice : [roll.natural]
   const kept = dice.indexOf(roll.natural)
   const mode = roll.mode ? modeName(roll.mode) : null

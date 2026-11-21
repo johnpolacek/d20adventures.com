@@ -592,7 +592,7 @@ export function LevelUp({
 
       <footer className="mt-4 border-t border-stage-line/20 pt-3">
         <Presence show={Boolean(stopped) || left.length > 0} motion="fade" initial={false} asChild>
-          <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-[#e39a7c]" : "text-stage-cream/70")} role={stopped ? "alert" : undefined}>
+          <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-roll-failure" : "text-stage-cream/70")} role={stopped ? "alert" : undefined}>
             {stopped ?? `Still to choose: ${left.join(", ")}.`}
           </p>
         </Presence>

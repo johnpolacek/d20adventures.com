@@ -8,12 +8,13 @@
 import { cn } from "../utils"
 import { eyebrow } from "./hud"
 import { conditionSentence, type DamageView, type DeathSavesView, type FeatureView, featureSpeech, type HarmView, harmSentence, type RollView, takenDiffers } from "./roll-view"
+import { ROLL_FAILURE, ROLL_SUCCESS } from "./roll-tones"
 
 // A damage type as the engine keeps it, "piercing", in title case for the screen.
 const titled = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
 
-const SUCCESS = "#b7d38a"
-const FAILURE = "#e39a7c"
+const SUCCESS = ROLL_SUCCESS
+const FAILURE = ROLL_FAILURE
 
 // Each die as it fell, its flat bonus, the damage type, and the sum.
 function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus: number; type?: string; total: number; compact: boolean }) {

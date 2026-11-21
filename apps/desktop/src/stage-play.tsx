@@ -1312,7 +1312,7 @@ export function StagePlay(props: {
             {turn && (
               <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
                 <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
-                {passed && <p className="mb-3 font-serif text-sm text-[#e39a7c]">Passed Over · {passed}</p>}
+                {passed && <p className="mb-3 font-serif text-sm text-roll-failure">Passed Over · {passed}</p>}
                 {/* Another player's hero acts from their own screen. */}
                 {actor?.type === "pc" && !aiActor ? (
                   <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
