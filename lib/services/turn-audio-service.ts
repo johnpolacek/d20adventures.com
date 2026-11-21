@@ -2,7 +2,8 @@ import { createHash } from "node:crypto"
 import { decrementUserTokensAction } from "@/app/_actions/tokens"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { storyHash as hashStory, narratedParagraphs, type StorySegment, segmentsFromStory } from "@/lib/ai/story-segments"
-import { synthesizeSegment } from "@/lib/ai/tts"
+import { synthesizeSegment, TTS_MODEL } from "@/lib/ai/tts"
+import { budgetOpen, costOf, recordSpend } from "@/lib/gm-server/budget"
 import { assignVoices, type VoiceAssignment, voiceForSpeaker } from "@/lib/ai/tts-voices"
 import { pcmDurationSec, pcmToWav } from "@/lib/audio/wav"
 import { isAwsConfigured } from "@/lib/aws"
@@ -101,6 +102,9 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   }))
   const newChars = newParagraphs.reduce((sum, p) => sum + p.text.length, 0)
   const estimatedTokens = estimateNarrationCharge(newChars)
+
+  // The site pays for narration, so none is made once the day's budget is spent. The story reads on without it.
+  if (estimatedTokens > 0 && !(await budgetOpen())) return { ok: false, reason: "error" }
 
   // Balance gate before claiming or doing any AI work.
   if (estimatedTokens > 0) {
@@ -202,6 +206,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
     // the upfront check covers the common case, and breaking cached playback
     // for everyone is worse.
     const totalProviderTokens = ttsInputTokens + ttsOutputTokens
+    await recordSpend(costOf(TTS_MODEL, { inputTokens: ttsInputTokens, outputTokens: ttsOutputTokens }))
     let chargedTokens = 0
     if (totalProviderTokens > 0) {
       if (charge.type === "single") {

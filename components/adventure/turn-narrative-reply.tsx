@@ -20,6 +20,7 @@ import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Presence, Swap } from "@d20/ui/presence"
+import { DEMO_LIMIT_MESSAGE, demoLimitReached } from "@/lib/demo-limit"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
@@ -152,7 +153,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       // The reply was not taken, so the box comes back with the player's words still in it. Being out of tokens is
       // told by the turn's own alert.
       setHasSubmitted(false)
-      if (!(err instanceof Error && err.message.includes("Insufficient tokens"))) setError("The game master could not read that reply. Send it again.")
+      if (await demoLimitReached()) setError(DEMO_LIMIT_MESSAGE)
+      else if (!(err instanceof Error && err.message.includes("Insufficient tokens"))) setError("The game master could not read that reply. Send it again.")
       setLoading(false)
     }
   }
@@ -213,7 +215,9 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       })
     } catch (err) {
       console.error("[handleRollResult] Error in resolvePlayerRollResult:", err)
-      if (err instanceof Error && err.message.includes("Insufficient tokens")) {
+      if (await demoLimitReached()) {
+        setError(DEMO_LIMIT_MESSAGE)
+      } else if (err instanceof Error && err.message.includes("Insufficient tokens")) {
         setError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
       } else if (err instanceof Error) {
         setError(err.message)

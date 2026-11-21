@@ -5,6 +5,7 @@ import { loadLibrary } from "@/asset-library/load"
 import AdventureHome from "@/components/views/adventure-home"
 import AdventurePreview from "@/components/views/adventure-preview"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
+import { budgetOpen } from "@/lib/gm-server/budget"
 import { getCachedSettingAdventures } from "@/lib/setting-cache"
 import { shareImage } from "@/lib/images"
 import { demoAdventure, getLocalWikiAdventureDefinition, isLocalWikiAdventure, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
@@ -53,7 +54,8 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
     if (plan) {
       const library = await loadLibrary().catch(() => null)
       const video = getLocalWikiAdventureDefinition(settingId, adventurePlanId)?.video
-      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} demo={await browserDemo(settingId, adventurePlanId)} />
+      const demo = await browserDemo(settingId, adventurePlanId)
+      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} demo={demo} spent={demo === undefined && !(await budgetOpen())} />
     }
   }
 

@@ -2,6 +2,7 @@ import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import Link from "next/link"
 import type { Character, Library, Place } from "@/asset-library/types"
+import { DEMO_LIMIT_MESSAGE } from "@/lib/demo-limit"
 import { headerImage } from "@/lib/images"
 import { served } from "@/lib/served"
 import type { AdventurePlan } from "@/types/adventure-plan"
@@ -60,12 +61,15 @@ export default function AdventurePreview({
   library,
   video,
   demo,
+  spent,
 }: {
   plan: AdventurePlan
   settingId: string
   library: Library | null
   video?: string
   demo?: { id: string; title: string } | null
+  /** The site's AI budget for today is spent, so no new game starts in a browser. */
+  spent?: boolean
 }) {
   const hosted = demo !== undefined
   const cast = library ? castOf(plan, library) : []
@@ -83,15 +87,16 @@ export default function AdventurePreview({
             <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{hosted ? "Desktop App" : "Play in Browser"}</span>
           </div>
           <div className="flex flex-wrap justify-center gap-4 my-8">
-            {!hosted && (
+            {!hosted && !spent && (
               <Link href={`/settings/${settingId}/${plan.id}/character-select`}>
                 <Button variant="epic">Play</Button>
               </Link>
             )}
             <Link href="/playtest">
-              <Button variant={hosted ? "epic" : "outline"}>Host a Game</Button>
+              <Button variant={hosted || spent ? "epic" : "outline"}>Host a Game</Button>
             </Link>
           </div>
+          {!hosted && spent && <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">{DEMO_LIMIT_MESSAGE}</p>}
           {hosted && (
             <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">
               One player hosts this adventure in the desktop app, and friends join in a browser.

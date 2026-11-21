@@ -12,6 +12,7 @@ import { processPlayerReply } from "@/app/_actions/adventure"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
+import { DEMO_LIMIT_MESSAGE, demoLimitReached } from "@/lib/demo-limit"
 
 export function useTurnActions() {
   const params = useParams()
@@ -73,8 +74,10 @@ export function useTurnActions() {
           return
         }
 
-        // Show actual errors
-        if (errorMessage.includes("Insufficient tokens")) {
+        // Show actual errors. The server hides its own words in production, so a spent day is asked after.
+        if (await demoLimitReached()) {
+          setTokenError(DEMO_LIMIT_MESSAGE)
+        } else if (errorMessage.includes("Insufficient tokens")) {
           setTokenError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
         } else {
           setTokenError("An unexpected error occurred while advancing the turn. Please try again.")

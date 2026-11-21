@@ -10,6 +10,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { markAiControlled } from "@/lib/ai-companions"
 import { canManageResource } from "@/lib/content-permissions"
 import { convex } from "@/lib/convex/server"
+import { assertBudget } from "@/lib/gm-server/budget"
 import { heroMisfit } from "@/lib/heroes/creation"
 import { readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
@@ -40,6 +41,8 @@ export async function createAdventure(input: CreateAdventureInput) {
   const { settingId, adventurePlanId } = input
   // The site's own GM runs only the demo. Every other game is hosted from the desktop app (lib/host/server.ts).
   if (!playsOnSite(settingId, adventurePlanId)) throw new Error("This adventure is played in the desktop app.")
+  // No new game starts once the day's AI budget is spent.
+  await assertBudget()
 
   // Read the adventure plan to get the proper title
   const planPath = `settings/${settingId}/${adventurePlanId}.json`

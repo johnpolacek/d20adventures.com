@@ -3,6 +3,8 @@ import { pcmDurationSec, silencePcm } from "@/lib/audio/wav"
 // @ai-sdk/google has no speech support, so we call the Gemini API directly.
 // Response audio is raw PCM: 24kHz, 16-bit, mono (see lib/audio/wav.ts).
 const DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+/** The narration model in use, as the budget prices it. */
+export const TTS_MODEL = process.env.GEMINI_TTS_MODEL || DEFAULT_TTS_MODEL
 
 export interface TtsUsage {
   inputTokens: number
@@ -39,7 +41,7 @@ interface GeminiTtsResponse {
 async function callGeminiTts(text: string, voice: string, styleInstruction?: string): Promise<TtsResult> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not configured")
-  const model = process.env.GEMINI_TTS_MODEL || DEFAULT_TTS_MODEL
+  const model = TTS_MODEL
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: "POST",

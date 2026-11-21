@@ -382,6 +382,18 @@ export default defineSchema({
     .index("by_token_hash", ["tokenHash"])
     .index("by_user", ["userId"]),
 
+  // What the site's own AI calls cost, a row per day (a date in US Central time), and the daily limit the owner set.
+  // See convex/aiBudget.ts.
+  aiSpend: defineTable({
+    day: v.string(),
+    usd: v.number(),
+    calls: v.number(),
+  }).index("by_day", ["day"]),
+  aiBudget: defineTable({
+    dailyUsd: v.number(),
+    updatedAt: v.number(),
+  }),
+
   userTokenLedger: defineTable({
     userId: v.string(), // Clerk User ID
     alltimeTokens: v.number(), // Total tokens ever granted or purchased by the user

@@ -6,6 +6,8 @@ import { Heading } from "@d20/ui/typography/heading"
 import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
 import { requireAdmin } from "@/lib/auth-utils"
+import { AiBudget } from "@/components/admin/ai-budget"
+import { budgetToday } from "@/lib/gm-server/budget"
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -35,6 +37,8 @@ export default async function AdminPage() {
       </div>
     )
   }
+
+  const budget = await budgetToday().catch(() => null)
 
   return (
     <div className="container py-8 md:py-24">
@@ -99,6 +103,13 @@ export default async function AdminPage() {
             <CardFooter>
               <Link href="/admin/adventure-plans" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Open Workbench</Link>
             </CardFooter>
+          </Card>
+          <Card className="enter-rise" style={{ "--i": 5 } as CSSProperties}>
+            <CardHeader>
+              <CardTitle>AI Budget</CardTitle>
+              <CardDescription>Daily limit on the site’s own AI calls</CardDescription>
+            </CardHeader>
+            <CardContent>{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/60">Unavailable</p>}</CardContent>
           </Card>
         </div>
       </div>

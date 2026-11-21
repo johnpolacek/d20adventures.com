@@ -3,6 +3,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { experimental_generateImage as generateImage } from "ai"
 import type { NextRequest } from "next/server"
 import { AWS_BUCKET_PUBLIC, s3Client } from "@/lib/aws"
+import { budgetOpen, IMAGE_USD, recordSpend } from "@/lib/gm-server/budget"
 import { requireAuthMiddleware } from "../../_auth"
 
 export async function POST(request: NextRequest) {
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "S3 client not initialized", success: false }, { status: 500 })
     }
 
+    if (!(await budgetOpen())) return Response.json({ error: "The site's AI budget for today is spent.", success: false }, { status: 429 })
     const { image } = await generateImage({
       // klein-4b is the low-latency tier (the flux-2 successor to flux-schnell) — this
       // route is synchronous and the user waits on it. Set REPLICATE_MODEL to
@@ -34,6 +36,8 @@ export async function POST(request: NextRequest) {
       prompt: input,
       aspectRatio: aspectRatio || "1:1",
     })
+
+    await recordSpend(IMAGE_USD)
 
     // Upload to S3
     const key = `decks/${userFolder}/${deckId}/${Date.now()}.webp`

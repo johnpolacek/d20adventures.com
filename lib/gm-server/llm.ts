@@ -7,6 +7,10 @@ import { sanitizeUserVisibleProse } from "@/lib/utils/narrative-utils"
 import { currentModel } from "../ai/llm"
 import { composeSystemPrompt } from "../ai/style"
 import { isTokenChargeError, serverBilling } from "./billing"
+import { assertBudget, costOf, isBudgetError, paid, recordSpend } from "./budget"
+
+// The model's name, as the budget prices it.
+const MODEL = currentModel.modelId
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -68,12 +72,14 @@ export function createServerLlm(billing: Billing = serverBilling) {
         throw new Error("User not authenticated")
       }
 
-      result = (await baseGenerateObject({
-        prompt,
-        system: composeSystemPrompt(system),
-        schema: schema as unknown as AISchema,
-        model: currentModel,
-      })) as unknown as GenerateObjectReturn<T>
+      result = (await paid(MODEL, () =>
+        baseGenerateObject({
+          prompt,
+          system: composeSystemPrompt(system),
+          schema: schema as unknown as AISchema,
+          model: currentModel,
+        })
+      )) as unknown as GenerateObjectReturn<T>
 
       const totalTokens = result.usage?.totalTokens ?? 0
       await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation")
@@ -83,7 +89,7 @@ export function createServerLlm(billing: Billing = serverBilling) {
     } catch (error) {
       console.warn("generateObject failed. Error details:", error)
 
-      if (isTokenChargeError(error)) {
+      if (isTokenChargeError(error) || isBudgetError(error)) {
         throw error
       }
 
@@ -133,12 +139,14 @@ export function createServerLlm(billing: Billing = serverBilling) {
 
       // Retry once
       try {
-        result = (await baseGenerateObject({
-          prompt,
-          system: composeSystemPrompt(system),
-          schema: schema as unknown as AISchema,
-          model: currentModel,
-        })) as unknown as GenerateObjectReturn<T>
+        result = (await paid(MODEL, () =>
+          baseGenerateObject({
+            prompt,
+            system: composeSystemPrompt(system),
+            schema: schema as unknown as AISchema,
+            model: currentModel,
+          })
+        )) as unknown as GenerateObjectReturn<T>
 
         console.log("generateObject (retry) raw result:", result)
 
@@ -208,12 +216,19 @@ export function createServerLlm(billing: Billing = serverBilling) {
       throw new Error("User not authenticated")
     }
 
-    return baseStreamObject({
+    await assertBudget()
+    const stream = baseStreamObject({
       prompt,
       system: composeSystemPrompt(system),
       schema: schema as unknown as AISchema,
       model: currentModel,
     })
+    // A stream's usage is known only once it has ended.
+    void Promise.resolve(stream.usage).then(
+      (usage) => recordSpend(costOf(MODEL, usage)),
+      () => {}
+    )
+    return stream
   }
 
   async function generateText({ prompt, system }: StyledPromptOptions): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number } }> {
@@ -225,11 +240,13 @@ export function createServerLlm(billing: Billing = serverBilling) {
         throw new Error("User not authenticated")
       }
 
-      result = await baseGenerateText({
-        prompt,
-        system: composeSystemPrompt(system),
-        model: currentModel,
-      })
+      result = await paid(MODEL, () =>
+        baseGenerateText({
+          prompt,
+          system: composeSystemPrompt(system),
+          model: currentModel,
+        })
+      )
 
       const totalTokens = result.usage?.totalTokens ?? 0
       await chargeForUsageOrThrow(totalTokens, "usage_generate_text", "generateText operation")
@@ -241,7 +258,7 @@ export function createServerLlm(billing: Billing = serverBilling) {
     } catch (error) {
       console.warn("generateText failed. Error details:", error)
 
-      if (isTokenChargeError(error)) {
+      if (isTokenChargeError(error) || isBudgetError(error)) {
         throw error
       }
 
@@ -256,11 +273,13 @@ export function createServerLlm(billing: Billing = serverBilling) {
 
       // Retry once
       try {
-        result = await baseGenerateText({
-          prompt,
-          system: composeSystemPrompt(system),
-          model: currentModel,
-        })
+        result = await paid(MODEL, () =>
+          baseGenerateText({
+            prompt,
+            system: composeSystemPrompt(system),
+            model: currentModel,
+          })
+        )
 
         console.log("generateText (retry) raw result:", result)
 
