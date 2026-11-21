@@ -52,7 +52,7 @@ Every post carries a number, a screenshot or a clip, or it doesn’t ship.
 
 ## Stages
 
-1. Miner, run by hand, writing candidates to `content/queue`.
+1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. `content/queue` is gitignored for now, because the repo is public and the drafts quote sessions.
 2. Queue page reading and writing those files.
 3. Scheduler for Buffer.
 4. Weekly run documented, first week seeded from the 3D figures post.
