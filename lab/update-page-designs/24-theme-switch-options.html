@@ -94,6 +94,8 @@ h2 + p { margin: 0 0 24px; color: var(--muted); }
 .seg button:hover { color: var(--strong) !important; }
 .seg button[aria-checked="true"] { background: var(--bg) !important; color: var(--strong) !important; box-shadow: 0 1px 2px rgb(40 26 10 / 0.18); }
 :root[data-theme="dark"] .seg button[aria-checked="true"] { background: #3a3127 !important; box-shadow: none; }
+.seg-both button { display: inline-flex !important; align-items: center; gap: 6px; }
+.seg-both svg { width: 15px !important; height: 15px !important; }
 .seg svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
 /* 9 Candle: unlit by day, lit by night. */
@@ -140,7 +142,7 @@ h2 + p { margin: 0 0 24px; color: var(--muted); }
   <p class="lede">Click any switch. The whole page changes, so each one can be seen by day and by night.</p>
 
   <section class="option">
-    <p class="option-head"><span class="option-num">01</span><span class="option-name">Word</span><span class="live">Live Now</span><span class="option-note">Names the look it switches to.</span></p>
+    <p class="option-head"><span class="option-num">01</span><span class="option-name">Word</span><span class="option-note">Names the look it switches to.</span></p>
     <div class="strip">
       <span class="brand"><img src="../../public/images/d20.jpg" alt="" width="32" height="32"><b>D20</b><span>Adventures</span></span>
       <button type="button" class="sw sw-word" data-toggle aria-label="Switch Between Light and Dark"><span class="when-light">Dark</span><span class="when-dark">Light</span></button>
@@ -227,19 +229,27 @@ h2 + p { margin: 0 0 24px; color: var(--muted); }
     </div>
   </section>
 
+  <section class="option">
+    <p class="option-head"><span class="option-num">12</span><span class="option-name">Segmented Icons And Words</span><span class="live">Live Now</span><span class="option-note">06 and 07 together. On a phone it keeps the icons.</span></p>
+    <div class="strip">
+      <span class="brand is-sepia"><img src="../../public/images/d20.jpg" alt="" width="32" height="32"><b>D20</b><span>Adventures</span></span>
+      <span class="seg seg-both" role="radiogroup" aria-label="Look"><button type="button" role="radio" data-set="light"><svg><use href="#sun"/></svg>Light</button><button type="button" role="radio" data-set="dark"><svg><use href="#moon"/></svg>Dark</button></span>
+    </div>
+  </section>
+
   <h2>Logo Tone</h2>
-  <p>The same mark in three tones. The first is live on the Updates pages now.</p>
+  <p>The same mark in three tones. Sepia Ink is live on the Updates pages now.</p>
 
   <section class="option">
     <div class="strip">
       <span class="brand"><img src="../../public/images/d20.jpg" alt="" width="32" height="32"><b>D20</b><span>Adventures</span></span>
-      <span class="tone-name">Ink Blue <span class="live">Live Now</span></span>
+      <span class="tone-name">Ink Blue</span>
     </div>
   </section>
   <section class="option">
     <div class="strip">
       <span class="brand is-sepia"><img src="../../public/images/d20.jpg" alt="" width="32" height="32"><b>D20</b><span>Adventures</span></span>
-      <span class="tone-name">Sepia Ink</span>
+      <span class="tone-name">Sepia Ink <span class="live">Live Now</span></span>
     </div>
   </section>
   <section class="option">
