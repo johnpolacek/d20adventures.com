@@ -68,7 +68,7 @@ export function FloorPlanButton(props: PlanProps) {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <Button size="sm" onClick={() => setOpen(true)} className="bg-[#3d3115] ring-4 ring-[#5f4e24] hover:bg-[#3d3115]">
+      <Button variant="plain" onClick={() => setOpen(true)} className="inline-flex items-center rounded-md bg-[#3d3115] px-3 py-1 text-sm text-action-50 ring-4 ring-[#5f4e24] transition-colors duration-150 hover:text-white">
         <svg viewBox="0 0 24 24" className="mr-1 h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" />
           <path d="M9 4v14M15 6v14" />

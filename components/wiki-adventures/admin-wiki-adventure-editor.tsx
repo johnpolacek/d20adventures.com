@@ -281,7 +281,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   className="min-h-32 resize-none rounded-md border-editor-ink-550 bg-editor-ink-925 px-4 py-3 font-serif text-base leading-6 text-editor-ink-50 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-editor-gold-225 focus-visible:ring-editor-gold-225/35"
                 />
                 <Button
-                  size="sm"
+                  variant="plain"
                   onClick={sendMessage}
                   disabled={busy || !prompt.trim()}
                   className="mt-3 h-11 w-full gap-2 rounded-md border border-primary-100/35 bg-primary-700/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-primary-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] duration-150 ease-snap hover:scale-[1.01] hover:bg-primary-600 active:scale-[0.96] disabled:border-primary-100/20 disabled:bg-primary-800/65 disabled:text-primary-50/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-primary-800/65 disabled:active:scale-100"

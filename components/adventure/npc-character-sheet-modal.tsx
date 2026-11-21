@@ -24,7 +24,7 @@ export function NPCCharacterSheetModal({ character, open, onOpenChange }: NPCCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-display text-accent-300">{character.name}</DialogTitle>
+          <DialogTitle className="text-2xl">{character.name}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">

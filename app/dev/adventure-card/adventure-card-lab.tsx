@@ -3,7 +3,7 @@
 import { X } from "lucide-react"
 import type { ReactNode } from "react"
 import { buttonClassName, buttonStyle } from "@d20/ui/button"
-import { Chip, SectionPlate, siteLabel, siteOutline } from "@d20/ui/site"
+import { Chip, SectionPlate, siteLabel } from "@d20/ui/site"
 import { cn } from "@/lib/utils"
 
 // Sample save, shaped like the desktop app's SaveSummary plus what a richer card could ask for: the current scene's art,
@@ -587,10 +587,10 @@ function Confirming({ title }: { title: string }) {
       <div className="flex flex-col items-center text-center">
         <h3 className="font-display text-3xl text-white">Archive {title}?</h3>
         <div className="mt-6 flex items-center gap-4">
-          <span className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>Cancel</span>
+          <span className={buttonClassName("outline", "default", "px-6 font-display")}>Cancel</span>
           <Epic>Archive</Epic>
         </div>
-        <span className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70">Delete Permanently</span>
+        <span className={buttonClassName("destructive", "xs", "mt-5 font-display")}>Delete Permanently</span>
       </div>
     </div>
   )

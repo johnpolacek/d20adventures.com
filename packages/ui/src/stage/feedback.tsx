@@ -5,7 +5,7 @@
 
 import { Star, X } from "lucide-react"
 import { type ReactNode, useEffect, useRef, useState } from "react"
-import { Button } from "../button"
+import { Button, buttonClassName } from "../button"
 import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "../feedback-rules"
 import { FileInput, FileInputTrigger } from "../file-input"
 import { Label } from "../label"
@@ -13,7 +13,7 @@ import { Presence, Swap } from "../presence"
 import { Textarea } from "../textarea"
 import { Tip } from "../tooltip"
 import { cn, entrance, type MotionProps } from "../utils"
-import { eyebrow, Pill, panel, pillClass } from "./hud"
+import { eyebrow, Pill, panel } from "./hud"
 
 export type FeedbackStart = { kind: FeedbackDraft["kind"]; rating?: number }
 
@@ -325,9 +325,9 @@ export function FeedbackPanel({
                 disabled={state === "sending" || shots.length >= MAX_SCREENSHOTS}
                 className="flex"
               >
-                <FileInputTrigger className={pillClass()}>Add Screenshot</FileInputTrigger>
+                <FileInputTrigger className={buttonClassName("outline", "xs")}>Add Screenshot</FileInputTrigger>
               </FileInput>
-              <Pill active disabled={empty || state === "sending"} onClick={() => void send()}>
+              <Pill variant="primary" disabled={empty || state === "sending"} onClick={() => void send()}>
                 {state === "sending" ? "Sending…" : "Send"}
               </Pill>
             </div>

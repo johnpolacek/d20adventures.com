@@ -174,7 +174,7 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
             >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleBanConfirm} disabled={isLoading}>
+            <AlertDialogAction variant={selectedUser?.banned ? "primary" : "destructive"} onClick={handleBanConfirm} disabled={isLoading}>
               {selectedUser?.banned ? "Unban User" : "Ban User"}
             </AlertDialogAction>
           </AlertDialogFooter>

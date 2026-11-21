@@ -6,7 +6,7 @@ import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import { Presence } from "@d20/ui/presence"
-import { Chip, Rule, SectionPlate, siteLabel, siteOutline } from "@d20/ui/site"
+import { Chip, Rule, SectionPlate, siteLabel } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
@@ -45,17 +45,13 @@ function PageShell(props: { title: string; children: ReactNode }) {
 function RemoveButton(props: { confirming: boolean; label: string; confirmLabel: string; className?: string; disabled?: boolean; onBlur: () => void; onClick: () => void }) {
   return (
     <Button
-      variant="plain"
-      type="button"
+      variant="destructive"
+      size="xs"
       disabled={props.disabled}
       aria-label={props.confirming ? props.confirmLabel : props.label}
       onBlur={props.onBlur}
       onClick={props.onClick}
-      className={cn(
-        "grid h-6 place-items-center rounded-md transition-[color,background-color,scale] duration-150 ease-snap active:scale-90 disabled:opacity-40",
-        props.confirming ? "bg-red-600/80 px-2 font-mono text-xxs text-white hover:bg-red-600" : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
-        props.className
-      )}
+      className={cn(props.confirming ? "px-2 font-mono text-xxs" : "w-7 px-0", props.className)}
     >
       <span key={props.confirming ? "confirm" : "ask"} className="enter-pop grid place-items-center">
         {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
@@ -147,20 +143,14 @@ function CardRemove(props: {
               Archive {props.title}?
             </h3>
             <div className="mt-6 flex items-center gap-4">
-              <Button variant="plain" type="button" autoFocus onClick={onCancel} className={cn(siteOutline, "active:scale-[0.97] px-6 py-2 font-display text-sm")}>
+              <Button variant="outline" autoFocus onClick={onCancel} className="px-6 font-display">
                 Cancel
               </Button>
               <Button variant="plain" type="button" disabled={props.disabled} onClick={props.onArchive} className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
                 Archive
               </Button>
             </div>
-            <Button
-              variant="plain"
-              type="button"
-              disabled={props.disabled}
-              onClick={props.onDelete}
-              className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70 transition-colors duration-150 hover:bg-red-900/40 hover:text-red-200 active:bg-red-900/60 disabled:opacity-40"
-            >
+            <Button variant="destructive" size="xs" disabled={props.disabled} onClick={props.onDelete} className="mt-5 font-display">
               Delete Permanently
             </Button>
           </div>
@@ -180,7 +170,7 @@ function ArchivedRow(props: { planId: string; title: string; kicker: string; bus
         <div className="font-display text-lg text-white/80">{props.title}</div>
         {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
       </div>
-      <Button variant="plain" type="button" disabled={props.busy} onClick={props.onRestore} className={cn(siteOutline, "active:scale-[0.97] px-4 py-1.5 font-display text-sm")}>
+      <Button variant="outline" disabled={props.busy} onClick={props.onRestore} className="font-display">
         Restore
       </Button>
       {props.children}
@@ -430,7 +420,7 @@ export function AdventuresPage(props: {
                     <Details a={a} className="mt-4" />
                     <div className="mt-4 flex justify-center">
                       {a.locked ? (
-                        <span className={cn(siteOutline, "px-4 py-1.5 text-sm")}>Details</span>
+                        <span className={buttonClassName("outline", "default")}>Details</span>
                       ) : (
                         <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Play</span>
                       )}
@@ -481,7 +471,7 @@ export function AdventuresPage(props: {
               <Details a={featured} />
               <div className="flex items-center gap-5">
                 {featured.locked ? (
-                  <span className={cn(siteOutline, "px-4 py-1.5")}>Details</span>
+                  <span className={buttonClassName("outline", "default")}>Details</span>
                 ) : (
                   <span className={buttonClassName("epic", undefined, "text-xl")} style={buttonStyle("epic")}>Play</span>
                 )}
@@ -620,7 +610,7 @@ export function CharactersPage(props: {
                     disabled={props.busy}
                     onClick={() => props.onPaint!(h)}
                     aria-label={`Paint ${h.name}`}
-                    className={cn(siteOutline, "active:scale-[0.97] absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
+                    className={buttonClassName("outline", "xs", "absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
                   >
                     <span key={props.painting === h.id ? "busy" : "idle"} className="enter-fade">
                       {props.painting === h.id ? "Painting…" : "Paint"}

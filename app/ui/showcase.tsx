@@ -16,7 +16,9 @@ import {
 } from "@d20/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
 import { Badge } from "@d20/ui/badge"
-import { Button, buttonClassName } from "@d20/ui/button"
+import { Button, buttonClassName, type ButtonSize, type ButtonVariant, Option } from "@d20/ui/button"
+import { Pill } from "@d20/ui/stage/hud"
+import { XIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cardVariants } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
@@ -32,7 +34,7 @@ import { toast } from "@d20/ui/toast"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationLink, PaginationList, PaginationNext, PaginationPrevious } from "@d20/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
-import { Chip, Option, Rule, SectionPlate, siteLabel } from "@d20/ui/site"
+import { Chip, Rule, SectionPlate, siteLabel } from "@d20/ui/site"
 import { Switch } from "@d20/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import { Textarea } from "@d20/ui/textarea"
@@ -267,15 +269,112 @@ function CardVariants() {
 
 type Tile = { name: string; wide?: boolean; full?: boolean; demo: ReactNode }
 
+// The rank of looks, top to bottom, each at every size, then its disabled state.
+const ranks: { variant: ButtonVariant; use: string }[] = [
+  { variant: "epic", use: "the one call of a screen" },
+  { variant: "primary", use: "a panel's main action, the default" },
+  { variant: "outline", use: "a secondary action" },
+  { variant: "ghost", use: "back, cancel, later" },
+  { variant: "destructive", use: "delete, leave, ban" },
+]
+const sizes: ButtonSize[] = ["xs", "sm", "default", "lg"]
+
+function ButtonDemo() {
+  return (
+    <div className="flex flex-col gap-5">
+      {ranks.map((r) => (
+        <div key={r.variant} className="flex flex-col gap-2 border-b border-white/10 pb-4">
+          <span className={siteLabel}>
+            {r.variant} <span className="normal-case tracking-normal text-white/50">{r.use}</span>
+          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            {sizes.map((size) => (
+              <Button key={size} variant={r.variant} size={size}>
+                {size === "default" ? "Default" : size.toUpperCase()}
+              </Button>
+            ))}
+            <Button variant={r.variant} disabled>
+              Disabled
+            </Button>
+          </div>
+        </div>
+      ))}
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>
+          emboss <span className="normal-case tracking-normal text-white/50">the nav's sign-in</span>
+        </span>
+        <div className="flex flex-wrap items-center gap-4">
+          <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal">
+            Sign In
+          </Button>
+          <Button variant="outline" size="icon" aria-label="Close">
+            <XIcon className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function OptionDemo() {
   const [pick, setPick] = useState("str")
+  const [tier, setTier] = useState("auto")
   return (
-    <div className="flex flex-wrap gap-2">
-      {["str", "dex", "con", "int", "wis", "cha"].map((a) => (
-        <Option key={a} active={pick === a} onClick={() => setPick(a)} className="uppercase">
-          {a}
-        </Option>
-      ))}
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>Option</span>
+        <div className="flex flex-wrap gap-2">
+          {["str", "dex", "con", "int", "wis", "cha"].map((a) => (
+            <Option key={a} aria-pressed={pick === a} active={pick === a} onClick={() => setPick(a)} className="uppercase">
+              {a}
+            </Option>
+          ))}
+          <Option disabled>Taken</Option>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className={siteLabel}>Pill, on the stage</span>
+        <div className="flex flex-wrap gap-2">
+          {["step", "auto"].map((t) => (
+            <Pill key={t} aria-pressed={tier === t} active={tier === t} onClick={() => setTier(t)} className="capitalize">
+              {t}
+            </Pill>
+          ))}
+          <Pill variant="ghost">Later</Pill>
+          <Pill variant="primary">Take Level 2</Pill>
+          <Pill variant="primary" disabled>
+            Take Level 2
+          </Pill>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FieldsDemo() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="ui-name">Hero Name</Label>
+        <Input id="ui-name" placeholder="Tharos the Bold" />
+        <Input placeholder="Disabled" disabled />
+        <Input placeholder="Invalid" aria-invalid />
+        <Select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choose a class" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fighter">Fighter</SelectItem>
+            <SelectItem value="rogue">Rogue</SelectItem>
+            <SelectItem value="wizard">Wizard</SelectItem>
+            <SelectItem value="cleric">Cleric</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="ui-act">Your Action</Label>
+        <Textarea id="ui-act" placeholder="What do you do?" rows={4} />
+      </div>
     </div>
   )
 }
@@ -300,28 +399,7 @@ const tiles: Tile[] = [
   { name: "Typography", full: true, demo: <TypographyDemo /> },
   { name: "Narration", full: true, demo: <NarrationDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
-  {
-    name: "Button",
-    wide: true,
-    demo: (
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="epic">Epic</Button>
-        <Button variant="epic" size="xs">
-          Epic xs
-        </Button>
-        <Button variant="brick">Brick</Button>
-        <Button variant="emboss">Emboss</Button>
-        <Button variant="outline">Outline</Button>
-        <Button variant="ghost">Ghost</Button>
-        <Button variant="ai">AI</Button>
-        <Button variant="sparkle">Sparkle</Button>
-        <Button variant="destructive">Destructive</Button>
-        <Button variant="outline" disabled>
-          Disabled
-        </Button>
-      </div>
-    ),
-  },
+  { name: "Button", full: true, demo: <ButtonDemo /> },
   {
     name: "Badge",
     demo: (
@@ -343,38 +421,9 @@ const tiles: Tile[] = [
       </div>
     ),
   },
-  { name: "Option", demo: <OptionDemo /> },
+  { name: "Option", wide: true, demo: <OptionDemo /> },
   { name: "Switch", demo: <SwitchDemo /> },
-  {
-    name: "Input",
-    demo: (
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="ui-name">Hero name</Label>
-        <Input id="ui-name" placeholder="Tharos the Bold" />
-        <Input placeholder="Disabled" disabled />
-      </div>
-    ),
-  },
-  {
-    name: "Textarea",
-    demo: <Textarea placeholder="What do you do?" rows={4} />,
-  },
-  {
-    name: "Select",
-    demo: (
-      <Select defaultValue="fighter">
-        <SelectTrigger className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="fighter">Fighter</SelectItem>
-          <SelectItem value="rogue">Rogue</SelectItem>
-          <SelectItem value="wizard">Wizard</SelectItem>
-          <SelectItem value="cleric">Cleric</SelectItem>
-        </SelectContent>
-      </Select>
-    ),
-  },
+  { name: "Fields", wide: true, demo: <FieldsDemo /> },
   {
     name: "Dialog",
     demo: (
@@ -386,9 +435,8 @@ const tiles: Tile[] = [
             <DialogDescription>Runes glow faintly across the stone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="epic" size="xs">
-              Continue
-            </Button>
+            <Button variant="ghost">Leave It</Button>
+            <Button>Read the Runes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -401,12 +449,12 @@ const tiles: Tile[] = [
         <AlertDialogTrigger className={buttonClassName("destructive")}>Delete</AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this hero?</AlertDialogTitle>
-            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>Delete This Hero?</AlertDialogTitle>
+            <AlertDialogDescription>Runes glow faintly across the stone. This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction>Delete</AlertDialogAction>
+            <AlertDialogAction variant="destructive">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

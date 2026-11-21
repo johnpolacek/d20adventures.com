@@ -208,7 +208,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
         <Dialog open={showSignInPrompt && !isSignedIn} onOpenChange={setShowSignInPrompt}>
           <DialogContent className="bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600 text-white">
             <DialogHeader className="sm:text-center">
-              <DialogTitle style={textShadow} className="font-display text-2xl text-accent-300">
+              <DialogTitle style={textShadow} className="text-2xl">
                 Sign in to start your adventure
               </DialogTitle>
               <DialogDescription className="text-primary-50 text-base">

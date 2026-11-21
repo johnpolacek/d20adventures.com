@@ -1,9 +1,9 @@
 import { type AnimationEventHandler, type CSSProperties, useEffect, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, Option } from "@d20/ui/button"
 import { Presence, Swap } from "@d20/ui/presence"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
-import { Chip, Option, siteLabel, siteOutline } from "@d20/ui/site"
+import { Chip, siteLabel } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { AdventureInfo, CatalogInfo } from "../runtime/game"
@@ -16,9 +16,7 @@ import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
 // The small controls over a roster hero's card.
-const mini = cn(siteOutline, "active:scale-[0.97] px-2 py-0.5 font-mono text-xxs")
 // A text-only control: the quiet way out beside the main action.
-const ghost = "rounded-md px-4 py-2 text-sm text-action-50/80 transition-[color,opacity] duration-150 ease-snap hover:text-white active:opacity-70 disabled:pointer-events-none disabled:opacity-50"
 // A CLI by name, until its model is known and when it will not say.
 const CLI: Record<string, string> = { claude: "Claude", codex: "Codex", grok: "Grok", antigravity: "Antigravity" }
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
@@ -359,21 +357,21 @@ export function NewGame(props: {
                       {p.hero && (
                         <div className="absolute top-3 left-3 flex gap-1">
                           {props.onEdit && (
-                            <Button variant="plain" type="button" className={mini} disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
+                            <Button variant="outline" size="xs" className="font-mono text-xxs" disabled={props.busy} onClick={() => props.onEdit!(p.hero!)} aria-label={`Edit ${p.name}`}>
                               Edit
                             </Button>
                           )}
                           {props.onPaint && (
-                            <Button variant="plain" type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                            <Button variant="outline" size="xs" className="font-mono text-xxs" disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
                               <span key={props.painting === p.id ? "busy" : "idle"} className="enter-fade">
                                 {props.painting === p.id ? "Painting…" : "Paint"}
                               </span>
                             </Button>
                           )}
                           <Button
-                            variant="plain"
-                            type="button"
-                            className={cn(mini, deleting === p.id && "border-red-400/60 bg-red-600/80 text-white hover:bg-red-600")}
+                            variant={deleting === p.id ? "destructive" : "outline"}
+                            size="xs"
+                            className="font-mono text-xxs"
                             disabled={props.busy}
                             aria-label={deleting === p.id ? `Confirm deleting ${p.name}` : `Delete ${p.name}`}
                             onBlur={() => setDeleting(null)}
@@ -430,7 +428,7 @@ export function NewGame(props: {
           <p className="text-sm text-accent-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>
         </Presence>
         {props.onCancel && (
-          <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
+          <Button variant="ghost" disabled={props.busy} onClick={props.onCancel}>
             Cancel
           </Button>
         )}
@@ -507,7 +505,7 @@ function GameMaster(props: { providers: string[]; models: Record<string, GmModel
             if (c) props.onProvider(c.provider, c.model)
           }}
         >
-          <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "active:scale-[0.97] h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
+          <SelectTrigger aria-label="Game Master" className={buttonClassName("outline", "sm", "h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="border-white/20 bg-black text-white ring-[6px] ring-black">
@@ -561,7 +559,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
               {!info.owned && <div className="mt-2 font-display text-4xl text-accent-300">{price(info.priceCents)}</div>}
               <p className="mt-3 text-base text-zinc-300">{status}</p>
               <Presence show={Boolean(!info.owned && !props.linked && props.onLink)} motion="fade" asChild>
-                <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
+                <Button variant="outline" className="mt-4" onClick={props.onLink}>
                   Link account
                 </Button>
               </Presence>
@@ -572,7 +570,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <div className="flex-1" />
         {props.onCancel && (
-          <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
+          <Button variant="ghost" disabled={props.busy} onClick={props.onCancel}>
             Cancel
           </Button>
         )}
@@ -608,7 +606,7 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
         <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">{props.mark}</span>
         <span className="truncate font-display text-sm">{props.title}</span>
         {props.sub && <span className="-mt-2 truncate text-xs text-white/70">{props.sub}</span>}
-        <span className={cn(siteOutline, "mt-auto px-1 py-1 text-center text-xs")}>{props.action}</span>
+        <span className={buttonClassName("outline", "sm", "mt-auto px-1 text-center text-xs")}>{props.action}</span>
       </Button>
     </li>
   )

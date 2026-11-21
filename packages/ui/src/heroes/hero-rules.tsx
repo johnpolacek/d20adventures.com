@@ -10,7 +10,9 @@ import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
 import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "../stage/level-up-view"
 import { Presence, Swap } from "../presence"
-import { Option, siteField, siteLabel } from "../site"
+import { Option } from "../button"
+import { fieldClass } from "../input"
+import { siteLabel } from "../site"
 import { cn, entrance, type MotionProps, staggered } from "../utils"
 import type { HeroRulesKit } from "./use-hero-rules"
 
@@ -321,7 +323,7 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white/60">{ABILITY_NAMES[ability].slice(0, 3)}</span>
                   <select
                     aria-label={ABILITY_NAMES[ability]}
-                    className={cn(siteField, "bg-black/30 px-1 text-center")}
+                    className={cn(fieldClass, "px-1 text-center")}
                     value={choices.abilityScores[ability]}
                     onChange={(event) => place(ability, Number(event.target.value))}
                   >

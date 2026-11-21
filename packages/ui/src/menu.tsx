@@ -1,6 +1,6 @@
 import { Menu, MenuContent as BaseMenuContent, MenuItem as BaseMenuItem, MenuSeparator as BaseMenuSeparator, MenuTrigger } from "@ui-sdk/react/menu"
 import type { ComponentProps, ReactNode } from "react"
-import { popupMotionClass } from "./dialog"
+import { popupMotionClass, popupSurface } from "./dialog"
 import { cn } from "./utils"
 
 type WithNodes<T> = Omit<T, "className" | "children"> & { className?: string; children?: ReactNode }
@@ -9,7 +9,7 @@ function MenuContent({ className, sideOffset = 6, ...props }: WithNodes<Componen
   return (
     <BaseMenuContent
       sideOffset={sideOffset}
-      className={cn("min-w-40 origin-(--transform-origin) rounded-xl border border-white/20 bg-black/90 p-1 text-white shadow-lg ring-4 ring-black outline-hidden", popupMotionClass, className)}
+      className={cn(popupSurface, "min-w-40 origin-(--transform-origin) p-1", popupMotionClass, className)}
       {...props}
     />
   )

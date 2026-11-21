@@ -1,6 +1,6 @@
 import { HoverCard as BaseHoverCard, HoverCardContent as BaseHoverCardContent, HoverCardTrigger as BaseHoverCardTrigger } from "@ui-sdk/react/hover-card"
 import type { ComponentProps } from "react"
-import { popupMotionClass } from "./dialog"
+import { popupMotionClass, popupSurface } from "./dialog"
 import { cn } from "./utils"
 
 const HoverCard = BaseHoverCard
@@ -11,7 +11,7 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
     <BaseHoverCardContent
       align={align}
       sideOffset={sideOffset}
-      className={cn("bg-black text-white w-64 origin-(--transform-origin) rounded-md border p-4 shadow-md outline-hidden", popupMotionClass, className)}
+      className={cn(popupSurface, "w-64 origin-(--transform-origin) p-4 text-sm", popupMotionClass, className)}
       {...props}
     />
   )

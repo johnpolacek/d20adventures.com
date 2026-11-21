@@ -52,9 +52,9 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         {onDelete && (
           <Button
             type="button"
-            variant="ghost"
+            variant="destructive"
             size="icon"
-            className="absolute bottom-2 right-2 p-0 h-6 w-6 bg-red-900/30 hover:bg-red-600/70 text-red-500/70 z-20"
+            className="absolute bottom-2 right-2 z-20 size-7"
             onClick={(e) => {
               e.stopPropagation()
               onDelete()

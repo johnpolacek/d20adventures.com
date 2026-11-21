@@ -33,7 +33,7 @@ export function DeleteAdventureButton({ adventureId, title }: { adventureId: str
 
   return (
     <div ref={root} className="flex flex-col items-start gap-1">
-      <Button className="text-xs text-red-300 border-red-800/60 hover:bg-red-900/40 hover:text-red-200" variant="outline" size="sm" onClick={handleDelete} disabled={isDeleting}>
+      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
         <Swap id={isDeleting ? "busy" : "idle"} as="span">
           {isDeleting ? "Deleting..." : "Delete"}
         </Swap>

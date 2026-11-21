@@ -108,7 +108,7 @@ export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads",
           {isUsableUrl ? (
             <>
               <Image src={displayUrl} alt="" fill className="object-cover" />
-              <Button variant="ghost" size="icon" className="absolute h-6 w-6 p-0 right-2 top-2 text-red-500 hover:text-red-500 bg-black/50 hover:bg-black/60" onClick={onRemove}>
+              <Button variant="destructive" size="icon" aria-label="Remove image" className="absolute right-2 top-2 size-7" onClick={onRemove}>
                 <X className="h-4 w-4" />
               </Button>
             </>

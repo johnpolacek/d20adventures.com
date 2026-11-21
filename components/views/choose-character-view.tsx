@@ -99,7 +99,7 @@ export default function ChooseCharacterView({
               {adventureTeaser}
             </div>
             <Link href={`/settings/${settingId}/play`}>
-              <Button variant="ghost" className="mt-2 text-sm bg-primary-800 px-4 text-primary-300 hover:text-primary-200" size="sm">
+              <Button variant="ghost" className="mt-2" size="sm">
                 <ChevronDoubleLeftIcon className="w-3 h-3" /> Back to Setting Adventures
               </Button>
             </Link>

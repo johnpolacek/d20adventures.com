@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, Option } from "@d20/ui/button"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Input } from "@d20/ui/input"
 import { Presence, Swap } from "@d20/ui/presence"
-import { Option, siteField, siteLabel, siteOutline } from "@d20/ui/site"
+import { siteLabel } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
@@ -20,8 +20,8 @@ function InviteLink({ label, url }: { label: string; url: string }) {
     })
   return (
     <div className="flex gap-2">
-      <Input plain readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className={cn(siteField, "flex-1 text-sm")} />
-      <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-4 text-sm")} onClick={copy}>
+      <Input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className="flex-1 text-sm" />
+      <Button variant="outline" size="sm" className="px-4" onClick={copy}>
         <Swap id={copied ? "copied" : "copy"} motion="pop" as="span" className="inline-block">
           {copied ? "Copied" : "Copy"}
         </Swap>
@@ -66,8 +66,8 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
           void send()
         }}
       >
-        <Input plain value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className={cn(siteField, "flex-1 text-sm")} />
-        <Button variant="plain" type="submit" className={cn(siteOutline, "active:scale-[0.97] px-4 text-sm")} disabled={sending || !draft.trim()}>
+        <Input value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className="flex-1 text-sm" />
+        <Button variant="outline" size="sm" type="submit" className="px-4" disabled={sending || !draft.trim()}>
           Send
         </Button>
       </form>
@@ -149,7 +149,7 @@ function useSheet(userId: string, read: ReadSheet, characterId?: string) {
   }
   const root = { open: open && Boolean(hero), onOpenChange: (next: boolean) => void onOpenChange(next) }
   const button = (
-    <CollapsibleTrigger className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={reading}>
+    <CollapsibleTrigger className={buttonClassName("outline", "sm")} disabled={reading}>
       Sheet
     </CollapsibleTrigger>
   )
@@ -176,19 +176,19 @@ function useNote(action: string, who: string, busy: boolean, onSend: (note?: str
             onSend(note.trim() || undefined)
           }}
         >
-          <Input plain
+          <Input
             ref={field}
             value={note}
             maxLength={300}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Note for the guest"
             aria-label={`Note for ${who}`}
-            className={cn(siteField, "flex-1 text-sm")}
+            className="flex-1 text-sm"
           />
-          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 text-sm")} onClick={() => setNote(null)}>
+          <Button variant="outline" size="sm" onClick={() => setNote(null)}>
             Cancel
           </Button>
-          <Button variant="plain" type="submit" className={cn(siteOutline, "active:scale-[0.97] border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
+          <Button variant="destructive" size="sm" type="submit" disabled={busy}>
             {action}
           </Button>
         </form>
@@ -220,7 +220,7 @@ function Guest({
         <span className="min-w-0 flex-1 truncate font-display text-lg">{guest.name}</span>
         <Presence show={!note.open} motion="fade" initial={false} className="flex items-center gap-3">
           {button}
-          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+          <Button variant="outline" size="sm" disabled={busy} onClick={note.start}>
             Remove
           </Button>
         </Presence>
@@ -258,10 +258,10 @@ function Request({
         </div>
         <Presence show={!note.open} motion="fade" initial={false} className="flex items-center gap-3">
           {button}
-          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+          <Button variant="outline" size="sm" disabled={busy} onClick={note.start}>
             Reject
           </Button>
-          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-500")} disabled={busy} onClick={() => onAnswer(true)}>
+          <Button variant="primary" size="sm" disabled={busy} onClick={() => onAnswer(true)}>
             Approve
           </Button>
         </Presence>
@@ -384,7 +384,7 @@ export function HostedLobby(props: {
         <div className="mt-8 flex items-center gap-3">
           <span className="font-mono text-xs text-white/60">{props.gm}</span>
           <div className="flex-1" />
-          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-4 py-2 text-sm")} onClick={props.onHome}>
+          <Button variant="outline" onClick={props.onHome}>
             Home
           </Button>
           <Button variant="epic" className="text-xl" disabled={props.busy || nobody || (props.summary.watching && guests.length === 0)} onClick={() => props.onStart(ais)}>

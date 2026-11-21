@@ -12,7 +12,7 @@ export const emboss = {
     boxShadow: "-1px 1px 8px 3px rgba(0,0,0,.25) inset",
   } as CustomCSSProperties,
   className:
-    "bg-primary-700 text-base font-bold opacity-90 cursor-pointer border-2 sm:border-4 hover:border-primary-400 transition-all ease-in-out duration-500 hover:scale-105 border-primary-500 text-action-50 hover:text-white disabled:bg-zinc-600 disabled:opacity-50 uppercase tracking-widest px-6 rounded-md py-1",
+    "bg-primary-700 text-base font-bold opacity-90 border-2 sm:border-4 not-disabled:hover:border-primary-400 not-disabled:hover:scale-105 border-primary-500 text-action-50 not-disabled:hover:text-white uppercase tracking-widest px-6 rounded-md py-1",
 }
 
 export const paper = {

@@ -325,7 +325,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                     </AlertDialogTrigger>
                     <AlertDialogContent className="sm:max-w-sm">
                       <AlertDialogHeader>
-                        <AlertDialogTitle className="text-accent-300 font-bold text-center">Skip turn</AlertDialogTitle>
+                        <AlertDialogTitle className="text-center">Skip Turn</AlertDialogTitle>
                         <AlertDialogDescription>Choose to skip to after another player with lower initiative, or skip your entire turn.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <div className="flex flex-col gap-2">
@@ -334,7 +334,8 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                             {lowerCandidates.map((c) => (
                               <AlertDialogAction
                                 key={c.id}
-                                className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-colors duration-150"
+                                variant="outline"
+                                className="justify-start"
                                 onClick={() => {
                                   console.log("[TurnNarrativeReply] Skip after selected", c.id)
                                   void handleDefer(c.id, false)
@@ -347,7 +348,8 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                           </div>
                         )}
                         <AlertDialogAction
-                          className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-colors duration-150"
+                          variant="outline"
+                                className="justify-start"
                           onClick={() => {
                             console.log("[TurnNarrativeReply] Skip entire turn selected")
                             void handleDefer(undefined, true)
@@ -356,7 +358,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                         >
                           Skip entire turn
                         </AlertDialogAction>
-                        <AlertDialogCancel className="mt-2">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
                       </div>
                     </AlertDialogContent>
                   </AlertDialog>

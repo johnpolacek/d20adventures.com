@@ -45,21 +45,10 @@ export function useJoined() {
 export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-accent"
 export const panel = "stage-grain rounded-md border border-foreground/25 bg-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"
 
-/** A pill's class names, for a control that only looks like one, such as a file picker's trigger. */
-export function pillClass(active?: boolean, className?: string) {
-  return cn(
-    "rounded-hud border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color,background-color,scale] duration-150 ease-snap not-disabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-40",
-    active ? "stage-stone" : "stage-navy border-foreground/25 text-foreground hover:border-accent/60",
-    className
-  )
-}
-
-export function Pill({ active, className, children, ...rest }: Omit<ButtonProps, "variant" | "size"> & { active?: boolean }) {
-  return (
-    <Button variant="plain" type="button" className={pillClass(active, className)} {...rest}>
-      {children}
-    </Button>
-  )
+/** The HUD's small button: the outline button at its smallest. `active` marks the chosen one of a set, and `variant="primary"` the
+ * action a panel waits on. */
+export function Pill({ variant = "outline", size = "xs", ...rest }: ButtonProps) {
+  return <Button variant={variant} size={size} type="button" {...rest} />
 }
 
 // A chevron, or two, thin and a little uneven, as if drawn by hand: the strokes bow and cross at the tip. It is as tall as

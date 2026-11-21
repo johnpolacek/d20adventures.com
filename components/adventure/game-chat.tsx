@@ -330,7 +330,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
   const expandedDialogContent = (
     <DialogContent className="w-full max-w-4xl bg-primary-800 text-white border-4 border-primary-600">
       <DialogHeader>
-        <DialogTitle className="font-display text-accent-300">Game Chat</DialogTitle>
+        <DialogTitle>Game Chat</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col gap-3">
         <ChatMessageList

@@ -1123,7 +1123,7 @@ export function StagePlay(props: {
           {city && <Pill onClick={() => setOpen(open === "map" ? null : "map")}>Map</Pill>}
           <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
           {props.onChat && (
-            <Pill active={unread > 0} onClick={() => setOpen(open === "chat" ? null : "chat")}>
+            <Pill variant={unread > 0 ? "primary" : "outline"} onClick={() => setOpen(open === "chat" ? null : "chat")}>
               Chat{unread > 0 ? ` · ${unread}` : ""}
             </Pill>
           )}
@@ -1241,7 +1241,7 @@ export function StagePlay(props: {
               {owed.length > 0 && (
                 <div className="mb-3 flex flex-wrap justify-center gap-2">
                   {owed.map((c) => (
-                    <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
+                    <Pill key={c.id} variant="primary" onClick={() => setLevelling(c.id)}>
                       Level Up {c.name}
                     </Pill>
                   ))}
@@ -1265,7 +1265,7 @@ export function StagePlay(props: {
           <Presence show={on && !ended && owed.length > 0 && !levelHero} motion="drop" asChild>
             <div className="absolute top-24 left-1/2 z-raised flex -translate-x-1/2 flex-wrap justify-center gap-2">
               {owed.map((c) => (
-                <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
+                <Pill key={c.id} variant="primary" onClick={() => setLevelling(c.id)}>
                   Level Up {c.name}
                 </Pill>
               ))}

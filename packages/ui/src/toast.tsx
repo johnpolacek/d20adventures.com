@@ -2,6 +2,8 @@
 
 import { Toast, ToastClose, ToastDescription, ToastRegion, ToastTitle, toast } from "@ui-sdk/react/toast"
 import { XIcon } from "lucide-react"
+import { popupSurface } from "./dialog"
+import { cn } from "./utils"
 
 // A collapsed stack at the top centre of the window: the newest toast in front, the ones behind peeking out under it,
 // all of them fanned out on hover or focus.
@@ -37,7 +39,7 @@ function Toaster() {
       </style>
       <ToastRegion data-d20="" side="top" align="center">
         {() => (
-          <Toast className="flex items-start gap-3 rounded-lg border border-white/20 bg-black/90 p-4 pr-10 font-sans text-sm text-white shadow-lg ring-4 ring-black data-[type=error]:border-red-700/60 data-[type=error]:text-red-200 data-[type=success]:border-emerald-600/50">
+          <Toast className={cn(popupSurface, "flex items-start gap-3 p-4 pr-10 font-sans text-sm data-[type=error]:border-red-700/60 data-[type=error]:text-red-200 data-[type=success]:border-emerald-600/50")}>
             <div className="flex flex-col gap-0.5">
               <ToastTitle className="font-medium" />
               <ToastDescription className="text-white/70" />

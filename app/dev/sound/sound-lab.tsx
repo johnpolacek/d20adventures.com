@@ -42,7 +42,7 @@ export function SoundLab() {
       <div className={row}>
         <span className={head}>Sound</span>
         <Button
-          variant={on ? "brick" : "outline"}
+          variant="outline" active={on}
           onClick={() => {
             setSoundOn(!on)
             setOn(!on)
@@ -71,7 +71,7 @@ export function SoundLab() {
       <div className={row}>
         <span className={head}>Element</span>
         {ELEMENTS.map((e) => (
-          <Button key={e ?? "none"} variant={element === e ? "brick" : "outline"} onClick={() => setElement(e)}>
+          <Button key={e ?? "none"} variant="outline" active={element === e} onClick={() => setElement(e)}>
             {e ?? "none"}
           </Button>
         ))}
@@ -103,7 +103,7 @@ export function SoundLab() {
       <div className={row}>
         <span className={head}>Ambience</span>
         {AMBIENCE_BEDS.map((b) => (
-          <Button key={b} variant={beds.includes(b) ? "brick" : "outline"} onClick={() => toggleBed(b)}>
+          <Button key={b} variant="outline" active={beds.includes(b)} onClick={() => toggleBed(b)}>
             {b}
           </Button>
         ))}

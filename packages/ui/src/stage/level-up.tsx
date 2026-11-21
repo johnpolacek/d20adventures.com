@@ -92,7 +92,6 @@ function Options({ label, from, picked, most, onPick }: { label: string; from: r
         <Pill
           {...(one ? { role: "radio", "aria-checked": on } : { "aria-pressed": on })}
           active={on}
-          className="px-2 py-1 text-[11px]"
           onClick={() => onPick(one ? (on ? [] : [option.id]) : toggled(picked, option.id, most))}
         >
           {option.name}
@@ -191,7 +190,6 @@ function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOff
               aria-pressed={on}
               active={on}
               disabled={!!blocked}
-              className="px-2 py-1 text-[11px]"
               onClick={() => {
                 if (on) onPick(picked.filter((pick) => pick.option !== option.id))
                 else if (!nested) onPick(togglePick(offer, picked, option.id))
@@ -410,7 +408,7 @@ export function LevelUp({
                       <Pill
                         key={ability}
                         active={added > 0}
-                        className="px-2 py-1 text-[11px] tabular-nums"
+                        className="tabular-nums"
                         aria-label={`${ABILITY_NAMES[ability as AbilityId]} ${sheet.abilityScores[ability]} plus ${added}`}
                         onClick={() => raiseAbility(ability as AbilityId)}
                       >
@@ -605,7 +603,7 @@ export function LevelUp({
               Choose For Me
             </Pill>
           </span>
-          <Pill active disabled={sending || left.length > 0} onClick={() => void take()}>
+          <Pill variant="primary" disabled={sending || left.length > 0} onClick={() => void take()}>
             {sending ? "Taking…" : `Take Level ${options.level}`}
           </Pill>
         </div>

@@ -465,7 +465,7 @@ export function RollLooks() {
           <Pill active={compact} onClick={() => setCompact((c) => !c)}>
             Compact
           </Pill>
-          <Pill active className="px-6" onClick={() => setTake((t) => t + 1)}>
+          <Pill variant="primary" className="px-6" onClick={() => setTake((t) => t + 1)}>
             Roll All Again
           </Pill>
         </div>

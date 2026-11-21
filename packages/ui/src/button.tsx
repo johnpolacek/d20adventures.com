@@ -1,122 +1,110 @@
-import { SparklesIcon } from "@heroicons/react/24/outline"
 import { Button as BaseButton } from "@ui-sdk/react/button"
-import { cva } from "class-variance-authority"
 import type { ComponentProps, CSSProperties, ReactNode } from "react"
 import { emboss } from "./graphics/styles"
 import { textShadow } from "./typography/styles"
 import { cn } from "./utils"
 
-// "plain" adds no classes at all: for a control with a look of its own, like a stage card or a map pin.
-export type ButtonVariant = "epic" | "brick" | "emboss" | "outline" | "ghost" | "ai" | "sparkle" | "destructive" | "plain"
-// lg and sm add nothing today. Callers pass them, so they stay accepted.
-export type ButtonSize = "default" | "lg" | "sm" | "icon" | "xs"
+// One button, in a rank of looks. Pick the lowest rank that reads.
+//   epic         the one call of a screen: start, continue, sign in
+//   primary      the main action of a panel or form, and the default
+//   outline      a secondary action, or one choice among several (with `active`)
+//   ghost        a quiet action: back, cancel, later
+//   destructive  delete, leave, ban
+//   emboss       the nav's sign-in and sign-up
+//   plain        no look at all, for a control with one of its own, like a stage card or a map pin
+export type ButtonVariant = "epic" | "primary" | "outline" | "ghost" | "destructive" | "emboss" | "plain"
+export type ButtonSize = "xs" | "sm" | "default" | "lg" | "icon"
 
 export type ButtonProps = Omit<ComponentProps<typeof BaseButton>, "className" | "style" | "children"> & {
   variant?: ButtonVariant
   size?: ButtonSize
+  /** Chosen, for a button that is one choice among several. */
+  active?: boolean
   className?: string
   style?: CSSProperties
   children?: ReactNode
 }
 
-const outline =
-  "bg-transparent border-2 bg-action-950/70 hover:bg-action-950/80 border-action-600/90 text-base px-3 py-1 disabled:opacity-100 disabled:saturate-0 disabled:brightness-50"
-
-// Class names for elements styled like a shadcn button, outside Button itself.
-export const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-400 disabled:pointer-events-none disabled:opacity-50 disabled:border-transparent select-none",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary-400 text-white shadow hover:bg-primary-400/90",
-        destructive: "bg-red-700 text-white shadow-sm hover:bg-red-700/90",
-        outline,
-        secondary: "bg-zinc-800 text-white shadow-sm hover:bg-zinc-800/80",
-        ghost: "hover:bg-zinc-800 hover:text-white",
-        link: "text-primary-300 underline-offset-4 hover:underline",
-        sparkle: cn(outline, "scale-90 sm:scale-100 -left-1 sm:left-0"),
-      },
-      size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
-        xs: "h-7 rounded-md px-2.5 text-xs",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
+// Disabled keeps its colour, dimmed and desaturated, so it reads as not yet rather than broken.
+const disabled =
+  "disabled:cursor-not-allowed disabled:opacity-60 disabled:saturate-[.7] data-disabled:pointer-events-none data-disabled:opacity-60 data-disabled:saturate-[.7]"
+const base = cn(
+  "inline-flex select-none items-center justify-center gap-1.5 transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] duration-150 ease-snap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/70",
+  disabled
 )
 
-export const baseButtonClass =
-  "inline-flex gap-1 items-center justify-center transition-[scale,color,background-color,border-color,opacity,filter,box-shadow] ease-snap duration-150 text-action-50 hover:text-white hover:scale-105 active:scale-100 disabled:bg-zinc-600 disabled:opacity-50 disabled:pointer-events-none data-disabled:opacity-50 data-disabled:pointer-events-none px-3 rounded-md py-1 disabled:border-transparent select-none"
-export const epicButtonClass = cn(
-  baseButtonClass,
-  "px-8 py-3 bg-action-600 font-bold brightness-110 saturate-[1.2] scale-105 active:scale-100 hover:scale-110 border-[rgba(0,0,0,.66)] disabled:opacity-90 border-4 rounded-full font-display tracking-widest bg-[url('/images/app/backgrounds/buried.png')]"
-)
-export const aiButtonClass = cn(
-  baseButtonClass,
-  "bg-black/10 hover:bg-black/20 hover:scale-100 mix-blend-hard-light text-lg sm:text-2xl border-double border-8 px-6 rounded-full border-white/20 hover:border-white/30 font-mono"
-)
-export const brickButtonClass =
-  "font-serif bg-action-600 saturate-[1.2] brightness-110 rounded-2xl border-4 border-action-900 text-white ml-[2px] px-2 py-[2px] rounded text-sm transition-[scale,filter] ease-snap duration-150 hover:scale-105 active:scale-95 bg-[url('/images/app/backgrounds/buried.png')]"
+// The plain controls: one face, one border, one press.
+const control = "rounded-md border-2 font-sans font-medium leading-tight not-disabled:active:scale-[0.97]"
+
+const looks: Record<Exclude<ButtonVariant, "plain">, string> = {
+  epic: "rounded-full border-[rgba(0,0,0,.66)] bg-action-600 bg-[url('/images/app/backgrounds/buried.png')] font-display font-bold tracking-widest text-action-50 brightness-110 saturate-[1.2] scale-105 not-disabled:hover:scale-110 not-disabled:hover:text-white not-disabled:active:scale-100",
+  primary: cn(control, "stage-stone"),
+  outline: cn(control, "border-action-200/20 bg-action-950/70 text-action-50 not-disabled:hover:border-action-200/35 not-disabled:hover:bg-action-950/90 not-disabled:hover:text-white"),
+  ghost: cn(control, "border-transparent bg-transparent text-action-50/80 not-disabled:hover:bg-white/5 not-disabled:hover:text-white"),
+  destructive: cn(control, "border-red-400/50 bg-red-950/70 text-red-100 not-disabled:hover:border-red-400/80 not-disabled:hover:bg-red-800/80 not-disabled:hover:text-white"),
+  emboss: emboss.className,
+}
+
+// The chosen state of a choice, in the primary colour of selection.
+const chosen: Partial<Record<ButtonVariant, string>> = {
+  outline: "border-primary-400 bg-primary-600 text-white not-disabled:hover:border-primary-300 not-disabled:hover:bg-primary-600",
+  ghost: "bg-white/10 text-white",
+}
+
+const controlSizes: Record<ButtonSize, string> = {
+  xs: "min-h-7 px-2.5 py-0.5 text-xs",
+  sm: "min-h-8 px-3 py-1 text-sm",
+  default: "min-h-9 px-4 py-1.5 text-sm",
+  lg: "min-h-11 px-6 py-2 text-base",
+  icon: "size-9 p-0",
+}
+
+const epicSizes: Record<ButtonSize, string> = {
+  xs: "border-2 px-4 py-1 text-xs",
+  sm: "border-[3px] px-6 py-2 text-sm",
+  default: "border-4 px-8 py-3 text-base",
+  lg: "border-4 px-10 py-4 text-lg",
+  icon: "border-2 size-10 p-0",
+}
 
 export const epicButtonStyle = {
   ...textShadow,
   boxShadow: "-4px -8px 0px 0px #0006 inset, 4px 4px 0px 0px #FFF7 inset, -4px -8px 36px 0px rgba(0,0,0,.5) inset, -3px -3px 6px 1px rgba(255,255,255,0.5) inset",
-}
-// A small epic button's bevel is half as deep, so the shine along its top stays thin.
-export const epicSmallButtonStyle = {
-  ...textShadow,
-  boxShadow: "-2px -4px 0px 0px #0006 inset, 2px 2px 0px 0px #FFF7 inset, -2px -4px 18px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0px rgba(255,255,255,0.5) inset",
 }
 // The full bevel and outline at two thirds, so a small button reads like a big one shrunk down.
 export const epicReducedButtonStyle = {
   textShadow: Array(6).fill("0 0 1.3px #000").join(", "),
   boxShadow: "-2.6px -5.3px 0px 0px #0006 inset, 2.6px 2.6px 0px 0px #FFF7 inset, -2.6px -5.3px 24px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0.7px rgba(255,255,255,0.5) inset",
 }
-
-const outlineClass = "bg-transparent bg-action-950/70 hover:bg-action-950/80 border-2 border-action-200/20 text-base px-3 py-1.5 select-none"
-
-const variantClasses: Record<ButtonVariant, string> = {
-  epic: epicButtonClass,
-  brick: brickButtonClass,
-  emboss: emboss.className,
-  ai: aiButtonClass,
-  outline: outlineClass,
-  sparkle: cn(outlineClass, "text-[11px] sm:text-xs"),
-  ghost: "bg-transparent border-2 border-transparent px-2 py-1",
-  plain: "",
-  destructive: "bg-red-600 text-white shadow-sm hover:bg-red-700",
-}
-
-const sizeClasses: Partial<Record<ButtonSize, string>> = {
-  icon: "h-9 w-9",
-  xs: "px-5 py-1 text-xs",
+// The smallest epic button's bevel is half as deep, so the shine along its top stays thin.
+export const epicSmallButtonStyle = {
+  ...textShadow,
+  boxShadow: "-2px -4px 0px 0px #0006 inset, 2px 2px 0px 0px #FFF7 inset, -2px -4px 18px 0px rgba(0,0,0,.5) inset, -2px -2px 4px 0px rgba(255,255,255,0.5) inset",
 }
 
 /** The class names of a button, for an element that only looks like one. */
-export function buttonClassName(variant?: ButtonVariant, size?: ButtonSize, className?: string) {
-  if (variant === "plain") return cn(size && sizeClasses[size], className)
-  return cn(baseButtonClass, variant && variantClasses[variant], size && sizeClasses[size], className)
+export function buttonClassName(variant: ButtonVariant = "primary", size?: ButtonSize, className?: string, active?: boolean) {
+  if (variant === "plain") return cn(size && controlSizes[size], className)
+  const sizes = variant === "epic" ? epicSizes : variant === "emboss" ? undefined : controlSizes
+  return cn(base, looks[variant], sizes?.[size ?? "default"], active && chosen[variant], className)
 }
 
 /** The inline style of a button, for an element that only looks like one. */
-export function buttonStyle(variant?: ButtonVariant, size?: ButtonSize): CSSProperties | undefined {
-  if (variant === "epic") return size === "xs" ? epicSmallButtonStyle : epicButtonStyle
+export function buttonStyle(variant: ButtonVariant = "primary", size?: ButtonSize): CSSProperties | undefined {
+  if (variant === "epic") return size === "xs" || size === "icon" ? epicSmallButtonStyle : size === "sm" ? epicReducedButtonStyle : epicButtonStyle
   if (variant === "emboss") return emboss.style
-  if (variant === "ai") return { boxShadow: "0px 0px 10px 2px rgba(0,0,0,.5) inset" }
   return undefined
 }
 
-export function Button({ variant, size, className, style, children, ...props }: ButtonProps) {
+export function Button({ variant = "primary", size, active, className, style, children, ...props }: ButtonProps) {
   return (
-    <BaseButton {...props} className={buttonClassName(variant, size, className)} style={style ?? buttonStyle(variant, size)}>
-      {variant === "sparkle" && <SparklesIcon className="w-4 h-4 text-accent-200" />}
+    <BaseButton {...props} className={buttonClassName(variant, size, className, active)} style={style ?? buttonStyle(variant, size)}>
       {children}
     </BaseButton>
   )
+}
+
+/** One choice among several: the outline button, filled with the selection colour when chosen. */
+export function Option({ active, size = "sm", ...rest }: Omit<ButtonProps, "variant">) {
+  return <Button variant="outline" type="button" size={size} active={active} {...rest} />
 }

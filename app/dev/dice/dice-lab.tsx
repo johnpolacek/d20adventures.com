@@ -133,7 +133,7 @@ export function DiceLab() {
             <div className="font-sans text-[9px] font-medium tracking-[0.26em] text-accent uppercase">Stageview · roll card</div>
             <h1 className="mt-1.5 font-display text-[30px]">The d20</h1>
           </div>
-          <Pill active className="rounded-full px-6 py-2 font-display text-[13px] font-bold tracking-[0.12em]" onClick={() => setGo((g) => g + 1)}>
+          <Pill variant="primary" className="rounded-full px-6 py-2 font-display text-[13px] font-bold tracking-[0.12em]" onClick={() => setGo((g) => g + 1)}>
             Roll all
           </Pill>
         </div>

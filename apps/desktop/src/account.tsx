@@ -1,9 +1,9 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName } from "@d20/ui/button"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@d20/ui/menu"
 import { Presence, Swap } from "@d20/ui/presence"
-import { Rule, siteOutline } from "@d20/ui/site"
+import { Rule } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { AccountResponse, AccountState, LinkState } from "../runtime/account"
@@ -147,10 +147,10 @@ function Waiting({ account: a }: { account: Account }) {
       <CodeTiles code={a.link.userCode} />
       <p className="text-sm text-zinc-300">Approve this code on the website.</p>
       <div className="flex justify-center gap-2">
-        <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} onClick={() => void openSite(a.link!.verifyPath)}>
+        <Button variant="outline" size="sm" onClick={() => void openSite(a.link!.verifyPath)}>
           Open website
         </Button>
-        <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} onClick={a.stop}>
+        <Button variant="outline" size="sm" onClick={a.stop}>
           Cancel
         </Button>
       </div>
@@ -177,7 +177,7 @@ export function AccountBadge({ account: a }: { account: Account }) {
               </MenuTrigger>
               <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
                 <p className="truncate px-1 text-sm text-zinc-300">{state.account}</p>
-                <MenuItem className={cn(siteOutline, "active:scale-[0.97] mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-action-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
+                <MenuItem className={buttonClassName("outline", "sm", "mt-3 w-full justify-center data-highlighted:bg-action-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
                   Unlink
                 </MenuItem>
               </MenuContent>

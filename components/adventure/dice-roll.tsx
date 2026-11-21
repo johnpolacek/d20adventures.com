@@ -70,9 +70,10 @@ export default function DiceRoll({
 
   return (
     <Button
+      variant="plain"
       aria-label="Roll D20"
       className={cn(
-        "group text-2xl brightness-125 contrast-150 font-display flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-action-600 rounded-full ring-4 ring-action-800 border border-action-400/50 bg-[url('/images/app/backgrounds/buried.png')]",
+        "group text-2xl text-action-50 brightness-125 contrast-150 font-display transition-[scale,filter] duration-150 ease-snap not-disabled:hover:scale-105 disabled:saturate-50 select-none flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-action-600 rounded-full ring-4 ring-action-800 border border-action-400/50 bg-[url('/images/app/backgrounds/buried.png')]",
         className,
         rolling && "pointer-events-none"
       )}
