@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
 import { toast } from "@d20/ui/toast"
 import { sendContactEmail } from "@/app/_actions/contact"
@@ -21,12 +21,15 @@ interface ContactFormProps {
 export function ContactForm({ subject = "Contact Message", onSuccess, requireCaptcha = false }: ContactFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const captchaRef = useRef<ReCAPTCHA>(null)
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
 
-    const formData = new FormData(event.currentTarget)
+    // React clears currentTarget once the handler awaits, so hold the form now.
+    const form = event.currentTarget
+    const formData = new FormData(form)
     const data = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
@@ -47,8 +50,9 @@ export function ContactForm({ subject = "Contact Message", onSuccess, requireCap
           description: "We'll get back to you as soon as possible.",
         })
         onSuccess?.()
-        // Reset form
-        event.currentTarget.reset()
+        form.reset()
+        // A reCAPTCHA token works once, so the next message needs a fresh check.
+        captchaRef.current?.reset()
         setCaptchaToken(null)
       } else {
         throw new Error(result.error)
@@ -80,7 +84,7 @@ export function ContactForm({ subject = "Contact Message", onSuccess, requireCap
         </div>
         {requireCaptcha && (
           <div className="w-full">
-            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
+            <ReCAPTCHA ref={captchaRef} sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
           </div>
         )}
       </div>
