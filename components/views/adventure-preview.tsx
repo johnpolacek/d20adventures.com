@@ -1,18 +1,12 @@
 import { Button } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import Link from "next/link"
-import type { Character, Library, Place } from "@/asset-library/types"
 import { DEMO_LIMIT_MESSAGE } from "@/lib/demo-limit"
 import { headerImage } from "@/lib/images"
-import { served } from "@/lib/served"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
-// An adventure's public page: what it is, a gameplay video when it has one, and its cast and places from the asset
-// library. Only what a player meets early is shown, so the page gives nothing away.
-
-const FIGURES = "/asset-library/characters"
-const CAST = 8
-const PLACES = 6
+// An adventure's public page: what it is, how to play it, and a gameplay video when it has one. It shows no cast and
+// no places, which would give the story away.
 
 export function partyLabel(party: AdventurePlan["party"]) {
   if (party[0] === 1 && party[1] === 1) return "Single Player"
@@ -20,37 +14,6 @@ export function partyLabel(party: AdventurePlan["party"]) {
   return `${party[0]}-${party[1]} Players`
 }
 
-// The heroes, then whoever else has a 3D figure, by how much of the adventure they are in.
-function castOf(plan: AdventurePlan, library: Library): Character[] {
-  // The library names a character by its stage id, which is not the adventure's own, so heroes are matched by name.
-  const heroes = new Set(plan.premadePlayerCharacters.map((c) => c.name))
-  const hero = (c: Character) => heroes.has(c.name) || Boolean(c.figure?.party)
-  const names = new Set<string>()
-  return library.characters
-    .filter((c) => c.group === plan.id && (c.figure || hero(c)))
-    .sort((a, b) => Number(hero(b)) - Number(hero(a)) || b.scenes - a.scenes)
-    .filter((c) => !names.has(c.name) && names.add(c.name))
-    .slice(0, CAST)
-}
-
-// The first places the story reaches.
-function placesOf(plan: AdventurePlan, library: Library): Place[] {
-  const order = (p: Place) => p.story?.[plan.id]?.order ?? Number.POSITIVE_INFINITY
-  return library.places
-    .filter((p) => p.picture && p.story?.[plan.id])
-    .sort((a, b) => order(a) - order(b))
-    .slice(0, PLACES)
-}
-
-// A set's title as a heading: "Kordavos: the night lanes" reads "Kordavos: The Night Lanes".
-const SMALL = new Set(["a", "an", "and", "at", "by", "for", "in", "of", "on", "the", "to"])
-const titleCase = (title: string) =>
-  title
-    .split(" ")
-    .map((word, i, words) => (i > 0 && !words[i - 1].endsWith(":") && SMALL.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
-    .join(" ")
-
-const portrait = (c: Character) => served(c.figure?.thumb ? `${FIGURES}/${c.figure.id}/${c.figure.thumb}` : c.front)
 const heading = "font-display text-xl font-bold text-primary-200 mt-14 mb-4"
 
 // `demo` is given when this adventure is not played in a browser, being hosted from the desktop app: it names the
@@ -58,22 +21,18 @@ const heading = "font-display text-xl font-bold text-primary-200 mt-14 mb-4"
 export default function AdventurePreview({
   plan,
   settingId,
-  library,
   video,
   demo,
   spent,
 }: {
   plan: AdventurePlan
   settingId: string
-  library: Library | null
   video?: string
   demo?: { id: string; title: string } | null
   /** The site's AI budget for today is spent, so no new game starts in a browser. */
   spent?: boolean
 }) {
   const hosted = demo !== undefined
-  const cast = library ? castOf(plan, library) : []
-  const places = library ? placesOf(plan, library) : []
   const premade = plan.premadePlayerCharacters.length > 0
 
   return (
@@ -93,7 +52,9 @@ export default function AdventurePreview({
               </Link>
             )}
             <Link href="/playtest">
-              <Button variant={hosted || spent ? "epic" : "outline"}>Host a Game</Button>
+              <Button variant="epic" className="bg-fuchsia-600 text-fuchsia-50">
+                Host a Game
+              </Button>
             </Link>
           </div>
           {!hosted && spent && <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">{DEMO_LIMIT_MESSAGE}</p>}
@@ -128,35 +89,6 @@ export default function AdventurePreview({
                   allowFullScreen
                 />
               </div>
-            </section>
-          )}
-
-          {cast.length > 0 && (
-            <section>
-              <h3 className={heading}>Cast</h3>
-              <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {cast.map((c) => (
-                  <li key={c.id} className="rounded-lg border border-accent-200/20 bg-black/60 p-3 text-center">
-                    <img src={portrait(c)} alt="" loading="lazy" className="aspect-[3/4] w-full object-contain" />
-                    <div className="mt-2 font-display text-white">{c.name}</div>
-                    <div className="text-sm text-zinc-400">{c.role}</div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {places.length > 0 && (
-            <section>
-              <h3 className={heading}>Places</h3>
-              <ul className="grid sm:grid-cols-2 gap-4">
-                {places.map((p) => (
-                  <li key={p.id} className="overflow-hidden rounded-lg border border-accent-200/20 bg-black/60">
-                    <img src={served(p.picture as string)} alt="" loading="lazy" className="aspect-[3/2] w-full object-cover" />
-                    <div className="px-3 py-2 font-display text-white">{titleCase(p.title)}</div>
-                  </li>
-                ))}
-              </ul>
             </section>
           )}
         </div>

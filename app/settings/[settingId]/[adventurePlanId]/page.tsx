@@ -1,7 +1,6 @@
 import { introTurn } from "@d20/gm-core/story/turn"
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { loadLibrary } from "@/asset-library/load"
 import AdventureHome from "@/components/views/adventure-home"
 import AdventurePreview from "@/components/views/adventure-preview"
 import { loadAdventurePlanFromStorage } from "@/lib/adventure-plan-storage"
@@ -52,10 +51,9 @@ export default async function AdventureHomePage(props: { params: Promise<{ setti
   if (!selectedCharacterId) {
     const plan = await published(settingId, adventurePlanId)
     if (plan) {
-      const library = await loadLibrary().catch(() => null)
       const video = getLocalWikiAdventureDefinition(settingId, adventurePlanId)?.video
       const demo = await browserDemo(settingId, adventurePlanId)
-      return <AdventurePreview plan={plan} settingId={settingId} library={library?.setting === settingId ? library : null} video={video} demo={demo} spent={demo === undefined && !(await budgetOpen())} />
+      return <AdventurePreview plan={plan} settingId={settingId} video={video} demo={demo} spent={demo === undefined && !(await budgetOpen())} />
     }
   }
 
