@@ -41,7 +41,7 @@ const FACE = "50,22 19,72 81,72"
 const EDGES = "M50 22L50 3M50 22L9 27M50 22L91 27M19 72L9 27M19 72L9 73M19 72L50 97M81 72L91 27M81 72L91 73M81 72L50 97"
 // Indigo, as on the roll card, and gold for a Critical Hit.
 const DIE = { fill: "#26215c", line: "#8f87d6", face: "#2f2a70", number: "#fef3c7" }
-const GOLD = { fill: "#a87a2c", line: "#ffd88a", face: "#d8a64c", number: "#3a220c" }
+const GOLD = { fill: "#a87a2c", line: ROLL_CRITICAL, face: "#d8a64c", number: "#3a220c" }
 
 // A die not kept is dimmed.
 function Die({ natural, dropped = false, critical = false }: { natural: number; dropped?: boolean; critical?: boolean }) {

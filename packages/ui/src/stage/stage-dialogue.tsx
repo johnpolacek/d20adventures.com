@@ -26,7 +26,7 @@ const FADE_OUT_MS = 120
 // A bubble is a band of paint: straight top and bottom with fine rules, ends that wash out into the set. The wash takes
 // `fade` px at each end, and the words keep `room` px of solid paint clear of it.
 const WASH = { wide: { fade: 80, room: 12 }, compact: { fade: 44, room: 8 } }
-const PLAIN = { band: "#120d1c", accent: "#fcd34d", text: "#f4ecdc" }
+const PLAIN = { band: "#120d1c", accent: "var(--color-accent)", text: "#f4ecdc" }
 export interface Bubble {
   key: number
   anchor: Anchor
@@ -199,7 +199,7 @@ function BubbleView({ bubble, compact, moving, backdrop }: { bubble: Bubble; com
       ref={ref}
       style={{ ["--pad" as string]: `${fade + room}px` }}
       className={cn(
-        "group absolute top-0 left-0 isolate w-max origin-bottom text-center font-serif text-(--ink) italic opacity-0 transition-opacity [text-shadow:0_1px_2px_#0009] [text-wrap:balance] [--accent:#fcd34d] [--band:#120d1c] [--ink:#f4ecdc]",
+        "group absolute top-0 left-0 isolate w-max origin-bottom text-center font-serif text-(--ink) italic opacity-0 transition-opacity [text-shadow:0_1px_2px_#0009] [text-wrap:balance] [--accent:var(--color-accent)] [--band:#120d1c] [--ink:#f4ecdc]",
         "px-(--pad) data-[side=l]:pr-[22px] data-[side=l]:text-right data-[side=r]:pl-[22px] data-[side=r]:text-left",
         compact ? "max-w-[300px] py-2 text-[14px] leading-[1.32]" : "max-w-[500px] pt-[15px] pb-4 text-[18px] leading-[1.34]"
       )}

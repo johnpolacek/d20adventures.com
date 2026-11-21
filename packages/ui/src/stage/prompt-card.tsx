@@ -134,7 +134,7 @@ function GmMusing({ note }: { note?: string }) {
 
 // The card's look: dark glass with a warm glow at the top, where the hero's portrait sits.
 const candlelit =
-  "stage-grain rounded-xl border border-accent/20 bg-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_#fcd34d33] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,#fcd34d26,transparent_70%)]"
+  "stage-grain rounded-xl border border-accent/20 bg-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_color-mix(in_srgb,var(--color-accent)_20%,transparent)] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,color-mix(in_srgb,var(--color-accent)_15%,transparent),transparent_70%)]"
 // A hero's choices: ghost pills in the serif.
 const choice =
   "rounded-full border border-foreground/20 px-4 py-1.5 font-serif text-[16px] text-foreground/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-accent hover:bg-accent/10 hover:text-accent"
@@ -152,7 +152,7 @@ function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; a
       aria-current={big || undefined}
       className={cn(
         "m-0 shrink-0 overflow-hidden rounded-full bg-background transition-[opacity,scale] duration-150 ease-snap active:scale-95",
-        big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-accent),0_0_36px_#fcd34d44]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_#fcd34d66] hover:opacity-90",
+        big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-accent),0_0_36px_color-mix(in_srgb,var(--color-accent)_27%,transparent)]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_color-mix(in_srgb,var(--color-accent)_40%,transparent)] hover:opacity-90",
         big ? (compact ? "h-11 w-11" : "h-[88px] w-[88px]") : compact ? "h-7 w-7" : "h-11 w-11"
       )}
     >

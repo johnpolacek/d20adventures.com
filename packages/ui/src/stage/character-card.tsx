@@ -152,7 +152,7 @@ function Spellcasting({ casting }: { casting: SheetSpellcasting }) {
                 <span
                   key={i}
                   className="inline-block h-2 w-2 rotate-45 border border-accent"
-                  style={{ backgroundColor: i < s.left ? "var(--color-accent)" : "transparent", boxShadow: i < s.left ? "0 0 6px #fcd34d66" : undefined }}
+                  style={{ backgroundColor: i < s.left ? "var(--color-accent)" : "transparent", boxShadow: i < s.left ? "0 0 6px color-mix(in srgb, var(--color-accent) 40%, transparent)" : undefined }}
                 />
               ))}
             </span>

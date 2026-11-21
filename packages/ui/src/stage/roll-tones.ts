@@ -3,3 +3,5 @@
 export const ROLL_SUCCESS = "#b7d38a"
 export const ROLL_FAILURE = "#e39a7c"
 export const ROLL_CRITICAL = "#ffd88a"
+// A roll still to make. The same pale gold as `accent-soft`.
+export const ROLL_WAITING = "#fef3c7"

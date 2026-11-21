@@ -20,7 +20,7 @@ import { rattle, verdict as sound, type Verdict } from "../sound/dice"
 import { eyebrow, useShort } from "./hud"
 import { DeathSaveMarks, RollDetails } from "./roll-parts"
 import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollHeading, rollNeed, rollSpeech, verdictOf } from "./roll-view"
-import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS } from "./roll-tones"
+import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS, ROLL_WAITING } from "./roll-tones"
 
 // When each part arrives, in ms from the start: the die lands, the total follows, then the verdict.
 const LAND = 1250
@@ -30,7 +30,7 @@ export const ROLL_SECONDS = (VERDICT + 900) / 1000
 
 const CRITICAL = ROLL_CRITICAL
 // The light under a die still to land.
-const WAITING = "#fef3c7"
+const WAITING = ROLL_WAITING
 
 // `onRoll` makes a roll still to make, and `onVerdict` hears when the verdict is in.
 export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll: RollView | RollAsk; compact?: boolean; onRoll?: () => void; onVerdict?: () => void }) {
