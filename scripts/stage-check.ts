@@ -8,11 +8,14 @@
 
 import { existsSync, readFileSync } from "node:fs"
 import type { Footprint } from "@d20/stage/builders/types"
+import type { CastMember } from "@d20/stage/figures/standees"
 import { createStubLibrary } from "@d20/stage/materials/library"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
 import { frameShot, resolveCast, resolveShots } from "@d20/stage/spec/resolve"
-import { type StagingSpec, stagingSpecSchema } from "@d20/stage/spec/staging"
+import { type Sight, viewCost } from "@d20/stage/spec/sight"
+import { type StagingShot, type StagingSpec, stagingSpecSchema } from "@d20/stage/spec/staging"
+import { clearView } from "@d20/stage/spec/view"
 import { doorways, onFootprint, reachOver, routeOver } from "@d20/stage/spec/walk"
 import { tripodPoints, tripodView } from "@d20/stage/tripod"
 import * as THREE from "three"
@@ -55,7 +58,63 @@ async function checkSet(label: string, raw: unknown) {
   )
   const unused = Object.keys(set.materials).filter((n) => ![...built.batch.buckets.keys()].some((m) => m.name === n))
   if (unused.length) console.log(`  unused materials: ${unused.join(", ")}`)
-  return { set, footprints: built.footprints, doors: doorways(built.anchors) }
+  return { set, footprints: built.footprints, doors: doorways(built.anchors), sight: built.sight }
+}
+
+// The views the desktop takes of whoever acts, and of an actor and their target when no authored shot is on both.
+const SUBJECT_SHOT = (subject: string) => ({ subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
+const PAIR_SHOT = (subject: string) => ({ subject, distance: 6, angle: 25, height: 1.8, lookHeight: 1.2, fov: 48 })
+
+// Every view of the cast where they stand, as the stage takes it (spec/view.ts): which ones the solver had to move off
+// their framing, and which still hide someone behind something solid once it has. Hidden views warn and do not fail yet.
+// STAGE_SIGHT=all also lists every moved view with what its framing cost before the move.
+function checkSightlines(key: string, set: ReturnType<typeof parseSet>, sight: Sight, staging: StagingSpec, cast: ReturnType<typeof resolveCast>) {
+  const seen = (m: CastMember) => ({ x: m.x, z: m.z, y: m.y, height: m.height, down: m.down })
+  const member = (id: string) => {
+    const m = cast.find((c) => c.id === id)
+    if (!m) throw new Error(`staging ${key}: a view is on unknown cast member ${id}`)
+    return m
+  }
+  const views: { kind: string; name: string; shot: StagingShot; ids: string[] }[] = []
+  for (const [name, s] of Object.entries(staging.shots))
+    if ("subject" in s) views.push({ kind: "authored", name, shot: s, ids: [s.subject] })
+    else if ("subjects" in s) views.push({ kind: "authored", name, shot: s, ids: s.subjects })
+  for (const c of cast) views.push({ kind: "subject", name: `on ${c.id}`, shot: SUBJECT_SHOT(c.id), ids: [c.id] })
+  // The app frames two together only when they are near enough to share a picture.
+  for (const a of cast) for (const t of cast) if (a !== t && Math.hypot(a.x - t.x, a.z - t.z) < 14) views.push({ kind: "pair", name: `${a.id} at ${t.id}`, shot: PAIR_SHOT(t.id), ids: [t.id, a.id] })
+  const cost = (r: { position: number[]; target: number[]; fov: number }, ids: string[]) =>
+    viewCost(
+      sight,
+      { position: r.position as [number, number, number], target: r.target as [number, number, number], fov: r.fov, aspect: 1.6 },
+      ids.map((id) => seen(member(id)))
+    )
+  const show = (v: ReturnType<typeof viewCost>) => `hidden ${v.hidden.toFixed(2)}, out ${v.out.toFixed(2)}, cover ${v.cover.toFixed(2)}`
+  let moved = 0
+  const hidden: string[] = []
+  const all = process.env.STAGE_SIGHT === "all"
+  for (const v of views) {
+    const r = clearView({ shot: v.shot, cast, ids: v.ids, sight, box: set.camera, rooms: set.rooms, aspect: 1.6, seen })
+    const after = cost(r.shot, v.ids)
+    if (r.moved) moved++
+    if (after.hidden > 0.2) hidden.push(`${v.kind} ${v.name}${r.moved ? " (moved)" : ""}: ${show(after)}`)
+    if (all && r.moved) {
+      // What the solver changed: how far round it swung, how much nearer or farther, and how much higher.
+      const first = frameShot(v.shot, cast)
+      const [tx, ty, tz] = first.target
+      const ox = first.position[0] - tx
+      const oz = first.position[2] - tz
+      const nx = r.shot.position[0] - tx
+      const nz = r.shot.position[2] - tz
+      const swing = (Math.atan2(ox * nz - oz * nx, ox * nx + oz * nz) * 180) / Math.PI
+      const scale = Math.hypot(nx, nz) / Math.max(Math.hypot(ox, oz), 1e-6)
+      const lift = r.shot.position[1] - ty - (first.position[1] - ty)
+      console.log(
+        `  moved ${v.kind} ${v.name}: was ${show(cost(first, v.ids))}, now ${show(after)}, swing ${swing.toFixed(0)}, scale ${scale.toFixed(2)}, lift ${lift.toFixed(1)}`
+      )
+    }
+  }
+  console.log(`  sight: ${views.length} views, ${moved} moved, ${hidden.length} hidden`)
+  for (const h of hidden) console.log(`  WARN hidden ${h}`)
 }
 
 // Every cast member walking to every labelled mark and to conversation distance of every other cast member, as the
@@ -199,6 +258,7 @@ async function main() {
     console.log(`PASS staging ${key}: ${cast.length} cast (${cast.map((c) => c.id).join(", ")}), ${Object.keys(shots).length} shots (${Object.keys(shots).join(", ")})`)
     if (set.painted && staging.painted) checkPainted(set.painted, { ...shots, ...Object.fromEntries(cast.map((c) => [`on ${c.id}`, frameShot(HERO_SHOT(c.id), cast)])) })
     checkWalks(set, footprints, doors, cast)
+    checkSightlines(key, set, built.sight, staging, cast)
   }
 }
 

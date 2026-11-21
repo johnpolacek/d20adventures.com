@@ -8,9 +8,10 @@
 // lists them, and its README says where they came from.
 //
 // The set is not changed. Every tree in it is still built, where and as tall as the set says, so the engine keeps its
-// footprints: what blocks a walk, a camera and a sight line stays as it was. Its trees are only given materials of
-// their own, so that what was built of them can be put out of sight, and a model is stood on each one's footprint, as
-// tall as it was. Models are drawn as instances, in three weights by how far they stand from where the scene is played.
+// footprints: what blocks a walk stays as it was. Its trees are only given materials of their own, so that what was
+// built of them can be put out of sight, and a model is stood on each one's footprint, as tall as it was. A model is
+// thicker than the tree it replaces and spreads roots, which no footprint knows: the camera asks the GPU what a view
+// really shows before it takes one (Stage.drawn). Models are drawn as instances, in three weights by how far they stand from where the scene is played.
 
 import type { Stage } from "@d20/stage"
 import * as THREE from "three"

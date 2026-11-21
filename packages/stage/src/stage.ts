@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
@@ -22,7 +23,9 @@ import { skyMaterial } from "./sky"
 import { buildSetGeometry, populateCrowd } from "./spec/build"
 import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/resolve"
 import { type SetSpec, setSpecSchema } from "./spec/set"
+import { figurePoints, type Lens, roomAt, type Seen, type Sight, viewCost } from "./spec/sight"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
+import { clearView, type ViewCost } from "./spec/view"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
 import { Floor } from "./surface"
 import { driftIn, fitView, minFov, type Spot, type TripodPoint, tripodView, type View } from "./tripod"
@@ -178,6 +181,11 @@ export class Stage {
   private footprints: Footprint[] = []
   // What the free camera may not pass into: walls, towers, houses and stalls, not crates or ropes.
   private solids: Footprint[] = []
+  // What hides a figure from the camera: the set's solid geometry as built, roots and crooked trunks included.
+  private sight: Sight = { x0: 0, z0: 0, w: 0, d: 0, bits: new Uint32Array(0) }
+  private shotsFor: { key: string; shots: Record<string, ResolvedShot> } | null = null
+  // The view last asked for, to take again when someone it follows stops where it no longer shows them.
+  private asked: { which: string | StagingShot; follow: string[]; duration: number } | null = null
   // The player is steering the camera, not a shot.
   private driving = false
   private doors: ReturnType<typeof doorways> = []
@@ -335,6 +343,7 @@ export class Stage {
     this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
+    this.sight = built.sight
     this.solids = built.footprints.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.top === undefined && f.hw * f.hd >= 1.5))
     this.doors = doorways(built.anchors)
     this.statics = built.batch.flush(this.world)
@@ -586,15 +595,19 @@ export class Stage {
   }
   // Set and staging shots, framed on where the cast stands now (group and subject shots follow the characters).
   get shots(): Record<string, ResolvedShot> {
+    // Hosts ask on every render, and the answer only changes when someone moves or the window changes shape.
+    const key = `${this.camera.aspect.toFixed(3)}|${this.cast.map((c) => `${c.x.toFixed(2)},${c.z.toFixed(2)},${(c.y ?? 0).toFixed(2)},${c.ry.toFixed(2)},${this.isOnStage(c.id)},${this.isLow(c.id)},${this.isDown(c.id)}`).join(";")}`
+    if (this.shotsFor?.key === key) return this.shotsFor.shots
     const out = resolveShots(this.set, this.staging, this.cast)
-    // Named shots on one character swing clear of walls and cabins like inline ones (see clearFrame).
+    // Named shots on the cast swing clear of trees, walls and cabins like inline ones (see clearView).
     for (const [k, s] of Object.entries(this.staging?.shots ?? {}))
-      if ("subject" in s)
+      if (!("position" in s))
         try {
-          out[k] = this.clearFrame(s)
+          out[k] = this.clearView(s, "subject" in s ? [s.subject] : s.subjects)
         } catch {
           // An unknown subject keeps the authored framing.
         }
+    this.shotsFor = { key, shots: out }
     return out
   }
   // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
@@ -603,15 +616,18 @@ export class Stage {
     let s: ResolvedShot | undefined
     const authored = typeof which === "string" ? this.staging?.shots[which] : which
     const painted = this.painted?.on ? this.painted : null
+    const on = [...(authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []), ...follow]
     try {
       // A painted set frames the subject from a painted point, so there is no camera to swing clear of the walls.
       if (painted && authored) s = frameShot(authored, this.cast)
-      else s = authored && "subject" in authored ? this.clearFrame(authored, true) : typeof which === "string" ? this.shots[which] : frameShot(which, this.cast)
+      // Any view of the cast is taken from where nothing hides them. A view of the place alone is as its author framed it.
+      else s = authored ? this.clearView(authored, on, true, true) : typeof which === "string" ? this.shots[which] : undefined
     } catch {
       s = undefined
     }
     if (!s) return false
-    this.framed = new Set([...(authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []), ...follow])
+    this.asked = { which, follow, duration }
+    this.framed = new Set(on)
     // A walker the new shot is not on is let go. One it is on is followed from where they stand now.
     for (const id of this.followed.keys()) if (!this.framed.has(id)) this.followed.delete(id)
     for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
@@ -658,86 +674,137 @@ export class Stage {
     }
     return true
   }
-  // A shot on one character, swung round them (and then drawn in) until neither the camera nor its view of them passes
-  // through anything solid, such as a cabin the character stands in front of. Other shots frame as authored.
-  // With `turn`, a subject the camera had to swing far round turns toward it, so their card is never seen edge on.
-  private clearFrame(which: StagingShot, turn = false): ResolvedShot {
-    const first = frameShot(which, this.cast)
-    if (!("subject" in which) || !this.footprints.length) return first
-    const c = this.cast.find((m) => m.id === which.subject)
-    if (!c) return first
-    // The sight line falls from the camera to the subject's look height, and passes over anything lower (a crate).
-    const look = which.lookHeight + (c.y ?? 0)
-    const clear = (x: number, y: number, z: number) => {
-      const len = Math.hypot(c.x - x, c.z - z)
-      // Fine steps: cabin walls are a hand's width thick.
-      const n = Math.max(2, Math.ceil(len / 0.05))
-      for (let i = 0; i <= n; i++) {
-        const t = i / n
-        if (t * len > len - 0.3) break
-        if (onFootprint(this.footprints, x + (c.x - x) * t, z + (c.z - z) * t, y + (look - y) * t)) return false
-      }
-      return true
+  // A view of the cast, taken from where nothing solid hides anyone it is on (see spec/view.ts). `ids` are the shot's
+  // own subjects and then whoever else it is to keep in the picture. Solid is the set as built (spec/sight.ts), not its
+  // footprints, so a tree counts for its roots and its lean as well as its trunk. With `sure`, the views it would take
+  // are also put to the GPU, which knows what a look stood in the set after it was built.
+  // With `turn`, a single subject the camera had to swing far round turns toward it, so they are not seen from behind.
+  private clearView(which: StagingShot, ids: string[], turn = false, sure = false): ResolvedShot {
+    const { shot, moved } = clearView({
+      shot: which,
+      cast: this.cast,
+      ids,
+      sight: this.sight,
+      box: this.set.camera,
+      rooms: this.set.rooms,
+      aspect: this.camera.aspect,
+      lens: (fov) => this.lens(fov),
+      crowd: this.crowd.people,
+      present: (m) => this.isOnStage(m.id),
+      seen: this.seenAs,
+      truth: sure ? (lens, figures) => this.drawn(lens, figures) : undefined,
+    })
+    const c = "subject" in which ? this.cast.find((m) => m.id === which.subject) : undefined
+    if (turn && moved && c && "subject" in which && new Set(ids).size === 1) {
+      const bearing = Math.atan2(shot.position[0] - c.x, shot.position[2] - c.z)
+      const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
+      if (Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
     }
-    // Where the set's camera box would pull the camera, so the test sees where it really ends up. It also needs elbow
-    // room: a camera brushing a post shows nothing but the post.
-    const { min, max } = this.set.camera
-    const fit = (r: ResolvedShot): ResolvedShot => ({ ...r, position: [0, 1, 2].map((i) => THREE.MathUtils.clamp(r.position[i], min[i], max[i])) as [number, number, number] })
-    const roomy = (x: number, y: number, z: number) =>
-      ![
-        [0, 0],
-        [0.45, 0],
-        [-0.45, 0],
-        [0, 0.45],
-        [0, -0.45],
-      ].some(([dx, dz]) => onFootprint(this.footprints, x + dx, z + dz, y - 0.3))
-    // How badly people spoil a view: anyone in the sight line (a shorter person in front is looked over), or close
-    // enough beside the lens to fill the frame. Cast count for much more than the crowd, which the renderer fades.
-    const crowding = (x: number, y: number, z: number) => {
-      const dx = c.x - x
-      const dz = c.z - z
-      const len2 = dx * dx + dz * dz
-      const spoils = (m: { x: number; z: number }, height: number) => {
-        const t = ((m.x - x) * dx + (m.z - z) * dz) / len2
-        if (t <= 0 || t >= 1) return false
-        const off = Math.hypot(x + dx * t - m.x, z + dz * t - m.z)
-        return (off < 0.4 && y + (look - y) * t < height) || (off < 1.1 && Math.hypot(m.x - x, m.z - z) < 1.8)
+    return shot
+  }
+  // What a lens would really show of some figures: the scene drawn small from there with its own materials, cast and
+  // crowd left out, and its depth read back. This is the truth of what is on screen. A look stands modelled trees
+  // where the set built its own, thicker in the shader than anything the set knows, and only what is drawn knows that.
+  // A few milliseconds, so it is asked when a shot is taken and never each frame. Null where it cannot be had.
+  private probe: { seen: THREE.WebGLRenderTarget; read: THREE.WebGLRenderTarget; pack: FullScreenQuad; camera: THREE.PerspectiveCamera; bytes: Uint8Array } | null = null
+  private drawn(lens: Lens, figures: readonly Seen[]): ViewCost | null {
+    const W = 160
+    const H = 100
+    const NEAR = 0.3
+    const FAR = 250
+    try {
+      this.probe ??= {
+        seen: new THREE.WebGLRenderTarget(W, H, { depthTexture: new THREE.DepthTexture(W, H, THREE.FloatType) }),
+        read: new THREE.WebGLRenderTarget(W, H, { depthBuffer: false, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }),
+        // Metres from the lens, whole in one byte and the rest in the next: a byte target reads back everywhere.
+        pack: new FullScreenQuad(
+          new THREE.ShaderMaterial({
+            uniforms: { tDepth: { value: null } },
+            depthTest: false,
+            depthWrite: false,
+            vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+            fragmentShader: `varying vec2 vUv; uniform sampler2D tDepth;
+void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 * ${NEAR.toFixed(1)} * ${FAR.toFixed(1)} / (${(FAR + NEAR).toFixed(1)} - z * ${(FAR - NEAR).toFixed(1)}), 254.0);
+ gl_FragColor = vec4(floor(d) / 255.0, fract(d), 0.0, 1.0); }`,
+          })
+        ),
+        camera: new THREE.PerspectiveCamera(50, 1, NEAR, FAR),
+        bytes: new Uint8Array(W * H * 4),
       }
-      let score = 0
-      for (const m of this.cast) if (m !== c && this.isOnStage(m.id) && spoils(m, m.height)) score += 3
-      // The crowd in the way fades from view (Crowd.occlude), so it costs little: a clear view is still better.
-      for (const p of this.crowd.people) if (Math.hypot(p.x - x, p.y + 1.1 - y, p.z - z) >= 1.1 && spoils(p, (p.kind === "child" ? 1.2 : 1.7) * p.s)) score += 0.2
-      return score
-    }
-    // Someone in a room is framed from inside it if any spot there will do. A camera out on deck, looking in through
-    // the door, is tried only when nowhere in the room can see them.
-    const room = this.set.rooms.find(({ box: b }) => c.x > b[0] && c.z > b[2] && c.x < b[3] && c.z < b[5])?.box
-    // Of the views clear of walls, the one with the fewest people in the way. Swinging round or drawing in costs a
-    // little, so a view far from the authored one, such as the subject's back, has to be worth it: one bystander at the
-    // edge of the frame is better than looking at the subject from behind.
-    let best: { r: ResolvedShot; score: number } | undefined
-    for (const pass of room ? [1, 0] : [0]) {
-      for (const [scale, drawn] of [
-        [1, 0],
-        [0.75, 0.2],
-        [0.55, 0.5],
-      ])
-        for (const swing of [0, 30, -30, 60, -60, 90, -90, 135, -135, 180]) {
-          const r = fit(frameShot({ ...which, angle: which.angle + swing, distance: which.distance * scale }, this.cast))
-          const [x, y, z] = r.position
-          if (room && pass && !(x > room[0] && y > room[1] && z > room[2] && x < room[3] && y < room[4] && z < room[5])) continue
-          if (Math.hypot(x - c.x, z - c.z) <= 1.5 || !roomy(x, y, z) || !clear(x, y, z)) continue
-          const score = crowding(x, y, z) + drawn + (Math.abs(swing) >= 135 ? 2.5 : Math.abs(swing) / 90)
-          if (!best || score < best.score) best = { r, score }
+      const { seen, read, pack, camera, bytes } = this.probe
+      camera.fov = lens.fov
+      camera.aspect = lens.aspect
+      camera.position.set(lens.position[0], lens.position[1], lens.position[2])
+      camera.lookAt(lens.target[0], lens.target[1], lens.target[2])
+      camera.updateProjectionMatrix()
+      camera.updateMatrixWorld()
+      const r = this.renderer
+      const hide = [this.crowd.group, this.standees.group, this.models.group, this.effects.group]
+      const was = hide.map((h) => h.visible)
+      const target = r.getRenderTarget()
+      const shadows = r.shadowMap.autoUpdate
+      for (const h of hide) h.visible = false
+      r.shadowMap.autoUpdate = false
+      try {
+        r.setRenderTarget(seen)
+        r.clear()
+        r.render(this.scene, camera)
+        ;(pack.material as THREE.ShaderMaterial).uniforms.tDepth.value = seen.depthTexture
+        r.setRenderTarget(read)
+        pack.render(r)
+        r.readRenderTargetPixels(read, 0, 0, W, H, bytes)
+      } finally {
+        r.setRenderTarget(target)
+        r.shadowMap.autoUpdate = shadows
+        hide.forEach((h, i) => {
+          h.visible = was[i]
+        })
+      }
+      const depthAt = (i: number, j: number) => bytes[(j * W + i) * 4] + bytes[(j * W + i) * 4 + 1] / 255
+      const forward = camera.getWorldDirection(V())
+      const p = V()
+      const hid = { worst: 0, sum: 0 }
+      const off = { worst: 0, sum: 0 }
+      let nearest = FAR
+      let ground = Number.POSITIVE_INFINITY
+      for (const c of figures) {
+        const points = figurePoints(c, lens.position)
+        let lost = 0
+        let outside = 0
+        for (const [x, y, z] of points) {
+          const depth = p.set(x, y, z).sub(camera.position).dot(forward)
+          p.set(x, y, z).project(camera)
+          if (depth < NEAR || Math.abs(p.x) > 0.94 || Math.abs(p.y) > 0.94) {
+            outside++
+            continue
+          }
+          if (depthAt(Math.min(W - 1, Math.floor((p.x * 0.5 + 0.5) * W)), Math.min(H - 1, Math.floor((p.y * 0.5 + 0.5) * H))) < depth - 0.4) lost++
         }
-      if (best) break
+        hid.worst = Math.max(hid.worst, lost / points.length)
+        hid.sum += lost / points.length
+        off.worst = Math.max(off.worst, outside / points.length)
+        off.sum += outside / points.length
+        nearest = Math.min(nearest, p.set(c.x, (c.y ?? 0) + c.height * 0.6, c.z).sub(camera.position).dot(forward))
+        ground = Math.min(ground, c.y ?? 0)
+      }
+      // The middle of the picture: what stands there nearer than anyone, and is not the ground or what grows low on it.
+      let filled = 0
+      let all = 0
+      for (let j = Math.floor(H * 0.25); j < H * 0.7; j += 3)
+        for (let i = Math.floor(W * 0.15); i < W * 0.85; i += 3) {
+          all++
+          const d = depthAt(i, j)
+          if (d >= nearest - 0.8) continue
+          p.set(((i + 0.5) / W) * 2 - 1, ((j + 0.5) / H) * 2 - 1, 0.5)
+            .unproject(camera)
+            .sub(camera.position)
+          if (camera.position.y + (p.y * d) / p.dot(forward) > ground + 0.9) filled++
+        }
+      const n = Math.max(1, figures.length)
+      return { hidden: (hid.worst + hid.sum / n) / 2, out: (off.worst + off.sum / n) / 2, cover: filled / Math.max(1, all) }
+    } catch {
+      return null
     }
-    if (!best) return first
-    const [x, , z] = best.r.position
-    const bearing = Math.atan2(x - c.x, z - c.z)
-    const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
-    if (turn && Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
-    return best.r
   }
   // Whether the camera is on its way to a view, or the picture has dipped. A painted set's slow drift in is not counted.
   // What is pinned to someone on screen, such as a speech bubble, waits for this to end.
@@ -1118,23 +1185,45 @@ export class Stage {
     const n = Math.max(1, this.framed.size)
     dx /= n
     dz /= n
-    if (Math.abs(dx) + Math.abs(dz) < 1e-6 || this.cut) return
-    const d = V(dx, 0, dz)
     const tr = this.transition
-    if (this.tripod) {
-      this.tripod.want.target.add(d)
-      if (tr) tr.from.target.add(d)
-      this.refit()
-      return
+    if (Math.abs(dx) + Math.abs(dz) >= 1e-6 && !this.cut) {
+      const d = V(dx, 0, dz)
+      if (this.tripod) {
+        this.tripod.want.target.add(d)
+        if (tr) tr.from.target.add(d)
+        this.refit()
+        return
+      }
+      // Where going along would walk the camera into a trunk or a wall, it stays and turns after them instead.
+      const next = (tr ? tr.to.pos : this.camera.position).clone().add(d)
+      const along = roomAt(this.sight, next.x, next.y, next.z)
+      if (along) this.camera.position.add(d)
+      this.controls?.target.add(d)
+      if (tr) {
+        if (along) {
+          tr.from.pos.add(d)
+          tr.to.pos.add(d)
+        }
+        tr.from.target.add(d)
+        tr.to.target.add(d)
+      }
     }
-    this.camera.position.add(d)
-    this.controls?.target.add(d)
-    if (tr) {
-      tr.from.pos.add(d)
-      tr.from.target.add(d)
-      tr.to.pos.add(d)
-      tr.to.target.add(d)
-    }
+    // The last of them has stopped. The view was framed on where they stood when it was taken: if it hides them where
+    // they stand now, it is taken again.
+    if (this.followed.size || this.tripod || this.cut || this.driving || !this.asked || !this.controls) return
+    if (!this.hides(tr ? tr.to.pos : this.camera.position, tr ? tr.to.target : this.controls.target)) return
+    const { which, follow, duration } = this.asked
+    this.shot(which, { follow, duration })
+  }
+  // A cast member as the sight test sees them: where they stand and how much of them there is to hide.
+  private seenAs = (m: CastMember) => ({ x: m.x, z: m.z, y: m.y, height: this.isLow(m.id) ? m.height * 0.6 : m.height, down: this.isDown(m.id) })
+  // Whether a view from a point hides those the current shot is on, by more than a shoulder.
+  private hides(from: THREE.Vector3, target: THREE.Vector3) {
+    const figures = this.cast.filter((m) => this.framed.has(m.id) && this.isOnStage(m.id))
+    if (!figures.length) return false
+    const lens = { position: [from.x, from.y, from.z] as const, target: [target.x, target.y, target.z] as const, fov: this.activeFov ? this.lens(this.activeFov) : this.camera.fov, aspect: this.camera.aspect }
+    const v = viewCost(this.sight, lens, figures.map(this.seenAs))
+    return v.hidden > 0.2 || v.out > 0.3 || v.cover > 0.3
   }
   // A slow move round what the camera looks at, level, at the shot's pace. A painted set cannot: its camera stands on
   // a painted point. During a shot's ease in, the point it eases to moves round as well.
@@ -1148,7 +1237,12 @@ export class Stage {
     this.sweepLeft -= step
     if (this.sweepLeft <= 1e-4) this.circling = 0
     const a = way * step
-    const turn = (pos: THREE.Vector3, about: THREE.Vector3) => pos.sub(about).applyAxisAngle(V(0, 1, 0), a).add(about)
+    const turn = (pos: THREE.Vector3, about: THREE.Vector3) => {
+      const next = pos.clone().sub(about).applyAxisAngle(V(0, 1, 0), a).add(about)
+      // The move ends short of a trunk or a wall, and short of putting one between the lens and its subjects.
+      if (!roomAt(this.sight, next.x, next.y, next.z) || (this.hides(next, about) && !this.hides(pos, about))) this.circling = 0
+      else pos.copy(next)
+    }
     const tr = this.transition
     if (tr) return void turn(tr.to.pos, tr.to.target)
     turn(this.camera.position, this.controls.target)
@@ -1658,6 +1752,14 @@ export class Stage {
   }
 
   dispose() {
+    if (this.probe) {
+      this.probe.seen.depthTexture?.dispose()
+      this.probe.seen.dispose()
+      this.probe.read.dispose()
+      this.probe.pack.material.dispose()
+      this.probe.pack.dispose()
+      this.probe = null
+    }
     this.running = false
     cancelAnimationFrame(this.raf)
     // Walks in progress end where they are, so nothing awaiting them hangs on a disposed stage.

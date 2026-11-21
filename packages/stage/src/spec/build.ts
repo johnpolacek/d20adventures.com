@@ -7,6 +7,7 @@ import { Batch, DEG, M4, resetGeometryCache } from "../kit/geometry"
 import { createRand, hashSeed, type Rand } from "../kit/rng"
 import type { MaterialLibrary } from "../materials/library"
 import { type CrowdGroup, LIMITS, objectEnvelope, type SetSpec, setSpecSchema } from "./set"
+import { buildSight, type Sight } from "./sight"
 import { onFootprint } from "./walk"
 
 export class SetBuildError extends Error {
@@ -24,6 +25,8 @@ export interface BuiltGeometry {
   footprints: Footprint[]
   anchors: Anchor[]
   placed: number
+  // What hides someone from a camera: the set's solid geometry, as built (see sight.ts).
+  sight: Sight
 }
 
 const ENVELOPE_KEYS = new Set(["type", "id", "at", "yaw", "materials"])
@@ -124,7 +127,22 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
   } finally {
     resetGeometryCache()
   }
-  return { batch, extras, footprints, anchors, placed }
+  return { batch, extras, footprints, anchors, placed, sight: buildSight(batch.buckets, spec.materials, castGround(spec)) }
+}
+
+// Where the cast can stand, with room for a camera about them: round the set's marks and what its own views look at,
+// and no farther than the camera may go. A set with neither is taken whole.
+function castGround(spec: SetSpec): [number, number, number, number] {
+  const { min, max } = spec.camera
+  const at = [...Object.values(spec.marks).map((m) => m.at), ...Object.values(spec.shots).map((s) => [s.target[0], s.target[2]])]
+  if (!at.length) return [min[0], min[2], max[0], max[2]]
+  const ROOM = 16
+  return [
+    Math.max(min[0], Math.min(...at.map((p) => p[0])) - ROOM),
+    Math.max(min[2], Math.min(...at.map((p) => p[1])) - ROOM),
+    Math.min(max[0], Math.max(...at.map((p) => p[0])) + ROOM),
+    Math.min(max[2], Math.max(...at.map((p) => p[1])) + ROOM),
+  ]
 }
 
 // ── Crowd population from the spec's groups ──────────────────────────────────
