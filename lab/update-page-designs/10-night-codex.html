@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From 2D Art to Rigged Animated 3D Figures | D20 Adventures</title>
+<meta name="description" content="How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..600&family=Rethink+Sans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: dark;
+  --desk: #0d0a08;
+  --leaf: #1c1713;
+  --card: #231c16;
+  --card-2: #292119;
+  --ink: #e0d2b5;
+  --ink-soft: #bfae8f;
+  --ink-mute: #a3916f;
+  --gold: #d4b06a;
+  --gold-deep: #9c7c3c;
+  --gold-line: rgba(212, 176, 106, 0.3);
+  --verm: #e8846a;
+  --verm-line: rgba(232, 132, 106, 0.34);
+  --blue: #a9c4ef;
+  --blue-deep: #1f2f5c;
+  --blue-line: rgba(169, 196, 239, 0.22);
+  --rule: rgba(224, 210, 181, 0.13);
+  --main: 40rem;
+  --gutter: 3rem;
+  --margin: 13rem;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--desk); }
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: "Literata", Georgia, serif;
+  font-optical-sizing: auto;
+  font-weight: 380;
+  font-size: 1.125rem;
+  line-height: 1.72;
+  letter-spacing: 0.003em;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+b, strong { font-weight: 600; }
+a { color: var(--blue); text-decoration-color: rgba(169, 196, 239, 0.4); text-decoration-thickness: 1px; text-underline-offset: 0.2em; transition: color 150ms, text-decoration-color 150ms; }
+a:hover { color: #d3e2fa; text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Site chrome */
+.site-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.7rem clamp(1rem, 3vw, 2.25rem);
+  background: #120e0b;
+  border-bottom: 1px solid var(--gold-line);
+}
+.brand { display: flex; align-items: center; gap: 0.6rem; color: var(--gold); text-decoration: none; font-family: "Cinzel Decorative", serif; font-size: 1.25rem; line-height: 1; white-space: nowrap; }
+.brand img { width: 30px; height: 30px; }
+.brand:hover { color: #e6c98a; }
+.auth { display: flex; gap: 0.6rem; }
+.btn-blue {
+  display: inline-block; padding: 0.45rem 1rem; font-family: "Cinzel Decorative", serif; font-size: 0.95rem; line-height: 1.2;
+  color: #fff; background: #1e3a8a; text-decoration: none; border: 1px solid #3a5cc0; border-radius: 3px; white-space: nowrap;
+}
+.btn-blue:hover { color: #fff; background: #1d4ed8; }
+.site-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; max-width: 69rem; margin: 0 auto; padding: 2rem clamp(1rem, 3vw, 2rem) 2.5rem; font-family: "Rethink Sans", system-ui, sans-serif; font-size: 0.85rem; color: var(--ink-mute); }
+.site-foot nav { display: flex; gap: 1.25rem; }
+.site-foot a { color: var(--ink-soft); text-decoration: none; }
+.site-foot a:hover { color: var(--ink); text-decoration: underline; }
+
+/* The leaf */
+.desk { padding: clamp(1.5rem, 4vw, 3.5rem) 16px 0; }
+.leaf {
+  position: relative;
+  max-width: 69rem;
+  margin: 0 auto;
+  background: var(--leaf);
+  border: 1px solid rgba(212, 176, 106, 0.16);
+  padding: 4rem 3.5rem 2.5rem;
+}
+.leaf::before, .leaf::after { content: ""; position: absolute; pointer-events: none; }
+.leaf::before { inset: 16px; border: 1px solid var(--gold-line); }
+.leaf::after { inset: 21px; border: 1px solid rgba(212, 176, 106, 0.12); }
+
+.leaf-head { position: relative; text-align: center; max-width: 46rem; margin: 0 auto 2.75rem; }
+.back { position: absolute; top: -1.6rem; left: 0; }
+.back, .rubric-label { font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--verm); font-weight: 600; text-decoration: none; }
+.back:hover { color: var(--blue); }
+.back::before { content: "\2039"; margin-right: 0.4em; font-size: 1.1em; }
+.kicker { display: block; margin: 0.5rem 0 1.1rem; }
+h1 { font-family: "Cinzel Decorative", serif; font-weight: 400; font-size: clamp(2rem, 1.2rem + 3.4vw, 3.6rem); line-height: 1.12; color: var(--gold); margin: 0; letter-spacing: 0.005em; text-wrap: balance; }
+h1 .red { color: var(--verm); }
+.dek { font-style: italic; font-size: 1.2rem; line-height: 1.55; color: var(--ink-soft); margin: 1.25rem auto 0; max-width: 36rem; text-wrap: pretty; }
+.byline { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.35rem 0.9rem; margin-top: 1.5rem; font-size: 0.82rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); }
+.byline b { color: var(--blue); font-weight: 600; }
+.byline .loz { width: 6px; height: 6px; background: var(--verm); transform: rotate(45deg); }
+.fleuron { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1.75rem auto 0; max-width: 22rem; }
+.fleuron::before, .fleuron::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(212, 176, 106, 0), var(--gold-deep)); }
+.fleuron::after { background: linear-gradient(270deg, rgba(212, 176, 106, 0), var(--gold-deep)); }
+.fleuron svg { width: 44px; height: 14px; flex: none; }
+
+/* Text column */
+.body { max-width: var(--main); margin: 0 auto; }
+.body > p, .body li { text-wrap: pretty; hyphens: manual; }
+.body p { margin: 0 0 1.2em; }
+.lead { font-size: 1.3rem; line-height: 1.6; }
+.lead::first-letter {
+  float: left;
+  font-family: "Cinzel Decorative", serif;
+  font-weight: 700;
+  font-size: 4.6rem;
+  line-height: 1;
+  color: #ecd391;
+  padding: 0.16em 0.2em 0.12em;
+  margin: 0.32rem 0.7rem 0 0;
+  border: 3px double var(--gold);
+  outline: 1px solid var(--verm);
+  outline-offset: 3px;
+  background-color: var(--blue-deep);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cg fill='none' stroke='%23d4b06a' stroke-opacity='.3' stroke-width='1'%3E%3Cpath d='M14 4c3 3 3 7 0 10c-3-3-3-7 0-10zM14 24c-3-3-3-7 0-10c3 3 3 7 0 10zM4 14c3-3 7-3 10 0c-3 3-7 3-10 0zM24 14c-3 3-7 3-10 0c3-3 7-3 10 0z'/%3E%3C/g%3E%3Ccircle cx='0' cy='0' r='1.6' fill='%23e8846a' fill-opacity='.5'/%3E%3Ccircle cx='28' cy='0' r='1.6' fill='%23e8846a' fill-opacity='.5'/%3E%3Ccircle cx='0' cy='28' r='1.6' fill='%23e8846a' fill-opacity='.5'/%3E%3Ccircle cx='28' cy='28' r='1.6' fill='%23e8846a' fill-opacity='.5'/%3E%3C/svg%3E");
+  background-size: 28px 28px;
+}
+
+h2 {
+  position: relative;
+  font-family: "Cinzel Decorative", serif;
+  font-weight: 400;
+  font-size: clamp(1.45rem, 1.2rem + 0.9vw, 1.85rem);
+  line-height: 1.25;
+  color: var(--gold);
+  margin: 3.6rem 0 1.1rem;
+  clear: both;
+  scroll-margin-top: 1.5rem;
+  text-wrap: balance;
+}
+h2 .num { display: inline-block; color: var(--verm); font-family: "Literata", serif; font-weight: 600; font-size: 0.78em; letter-spacing: 0.06em; margin-right: 0.6rem; }
+h2::after {
+  content: ""; display: block; height: 9px; margin-top: 0.55rem;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9'%3E%3Cpath d='M4.5 0L9 4.5 4.5 9 0 4.5z' fill='%23e8846a'/%3E%3C/svg%3E") 0 50% / 9px 9px no-repeat,
+    linear-gradient(90deg, rgba(212, 176, 106, 0.6), rgba(212, 176, 106, 0.3) 45%, rgba(212, 176, 106, 0)) 15px 50% / calc(100% - 15px) 1px no-repeat;
+}
+h2 + p::first-letter {
+  float: left; font-family: "Cinzel Decorative", serif; font-weight: 700; font-size: 3.15em; line-height: 0.9; margin: 0.08em 0.12em 0 0; color: var(--verm);
+}
+.body section:nth-of-type(even) h2 + p::first-letter { color: var(--gold); }
+
+.body ul { list-style: none; padding: 0; margin: 0 0 1.3em; }
+.body ul li { position: relative; padding-left: 1.5rem; margin-bottom: 0.45em; }
+.body ul li::before { content: ""; position: absolute; left: 0.2rem; top: 0.7em; width: 6px; height: 6px; background: var(--verm); transform: rotate(45deg); }
+.body ul li:nth-child(even)::before { background: var(--gold); }
+
+/* Margin notes */
+.gloss { font-size: 0.88rem; line-height: 1.5; color: var(--ink-soft); margin: 0 0 1.5rem; }
+.gloss .rubric-label { display: block; margin-bottom: 0.35rem; font-size: 0.7rem; }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc li { display: flex; gap: 0.6rem; padding: 0.3rem 0; border-bottom: 1px solid var(--rule); }
+.toc li span { flex: none; width: 1.9rem; color: var(--gold); font-weight: 600; font-size: 0.76rem; letter-spacing: 0.06em; padding-top: 0.12em; }
+.toc a { color: var(--ink-soft); text-decoration: none; }
+.toc a:hover { color: var(--ink); text-decoration: underline; }
+.quote { font-style: italic; font-size: 1.05rem; line-height: 1.45; color: var(--verm); border-top: 1px solid var(--verm-line); border-bottom: 1px solid var(--verm-line); padding: 0.7rem 0; }
+.quote p { margin: 0; }
+.stat .fig { display: block; font-family: "Cinzel Decorative", serif; font-weight: 700; font-size: 2rem; line-height: 1.05; color: var(--gold); font-variant-numeric: lining-nums; }
+.stat .sep { font-family: "Literata", serif; font-style: normal; font-weight: 400; color: var(--verm); font-size: 0.7em; padding: 0 0.1em; }
+.stat .fig + .fig { margin-top: 0.4rem; }
+.stat small { display: block; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* Plates */
+.plate { margin: 2.2rem 0 2.4rem; display: flex; flex-direction: column; clear: both; }
+.plate .mount { order: 1; padding: 0.55rem; background: var(--card); border: 1px solid var(--gold-line); }
+.plate.tall .mount { width: 100%; max-width: 25rem; margin: 0 auto; }
+.plate img { display: block; width: 100%; height: auto; background: #2c241c; }
+.plate figcaption { order: 2; margin: 0.75rem 0 0; font-size: 0.92rem; line-height: 1.5; color: var(--ink-soft); }
+.plate.tall figcaption { max-width: 25rem; margin-inline: auto; width: 100%; }
+.plate figcaption .rubric-label { display: inline; margin-right: 0.5em; font-size: 0.7rem; }
+.video-frame { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Ledger */
+.ledger { margin: 1.6rem 0 1.8rem; padding: 1.4rem 1.4rem 1.2rem; background: var(--card); border: 1px solid var(--gold-line); }
+.ledger-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-bottom: 2px solid var(--gold-deep); padding-bottom: 0.5rem; }
+.ledger-head h3 { margin: 0; font-family: "Cinzel Decorative", serif; font-weight: 700; font-size: 1.35rem; color: var(--gold); line-height: 1.2; }
+.ledger-head span { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); }
+.ledger table { width: 100%; border-collapse: collapse; font-size: 1rem; line-height: 1.5; }
+.ledger th { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); text-align: left; padding: 0.55rem 0.6rem 0.35rem; border-bottom: 1px solid var(--blue-line); }
+.ledger td { padding: 0.6rem 0.6rem; vertical-align: top; border-bottom: 1px solid var(--rule); }
+.ledger .no { width: 2.6rem; text-align: right; padding-left: 0; color: var(--blue); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; padding-top: 0.72rem; }
+.ledger th.no { color: var(--ink-mute); font-size: 0.68rem; padding-top: 0.55rem; }
+.ledger .entry { border-left: 3px double var(--verm-line); padding-left: 0.9rem; }
+.ledger .cost { width: 5.6rem; text-align: right; white-space: nowrap; border-left: 3px double var(--verm-line); font-variant-numeric: tabular-nums lining-nums; padding-right: 0; }
+.ledger td.cost { font-weight: 600; color: var(--verm); }
+.ledger td.cost.free { font-weight: 400; font-style: italic; color: var(--ink-mute); }
+.ledger tfoot td { border-bottom: 0; padding-top: 0.75rem; }
+.ledger tfoot tr:first-child td { border-top: 1px solid var(--gold-deep); }
+.ledger tfoot .label { text-align: right; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; padding-top: 0.95rem; }
+.ledger tfoot .cost { font-size: 1.3rem; color: var(--gold); font-weight: 700; }
+.ledger tfoot tr:first-child .cost span { border-bottom: 3px double var(--gold-deep); padding-bottom: 0.05rem; }
+.ledger tfoot tr + tr td { padding-top: 0.25rem; }
+.ledger tfoot tr + tr .cost { font-size: 1rem; font-weight: 600; color: var(--blue); }
+
+/* Prompt slips */
+.slip { position: relative; margin: 1.6rem 0 2rem; background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--blue); font-family: "Rethink Sans", system-ui, sans-serif; }
+.slip-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 0.6rem 0.55rem 1rem; border-bottom: 1px dashed var(--rule); }
+.slip-head .rubric-label { font-family: "Literata", serif; font-size: 0.68rem; }
+.slip-title { flex: 1; min-width: 0; font-weight: 600; font-size: 0.95rem; color: var(--ink); line-height: 1.3; }
+.slip button { font: 600 0.8rem/1 "Rethink Sans", system-ui, sans-serif; cursor: pointer; border-radius: 3px; }
+.copy { flex: none; color: var(--blue); background: transparent; border: 1px solid rgba(169, 196, 239, 0.45); padding: 0.45rem 0.75rem; min-width: 4.6rem; transition: background-color 150ms, color 150ms; }
+.copy:hover, .copy.done { background: var(--blue); color: #14110e; border-color: var(--blue); }
+.slip-body { position: relative; overflow: hidden; }
+.slip pre { margin: 0; padding: 0.95rem 1.1rem 1.1rem; font-family: var(--mono); font-size: 0.84rem; line-height: 1.7; color: #d6c8ab; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.slip.collapsible:not(.open) .slip-body { max-height: 13.5rem; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.slot { color: var(--verm); background: rgba(232, 132, 106, 0.09); box-shadow: inset 0 -1px 0 var(--verm-line); border-radius: 2px; padding: 0 0.1em; }
+.toggle { display: none; width: 100%; padding: 0.6rem 1rem; text-align: left; color: var(--ink-soft); background: transparent; border: 0; border-top: 1px dashed var(--rule); border-radius: 0 !important; }
+.slip.collapsible .toggle { display: block; }
+.toggle:hover { color: var(--gold); background: rgba(212, 176, 106, 0.05); }
+.toggle::after { content: " \25BE"; }
+.slip.open .toggle::after { content: " \25B4"; }
+
+/* Closing */
+.closing { clear: both; text-align: center; margin-top: 3rem; }
+.closing p { margin: 0 0 1.4rem; }
+.seal {
+  display: inline-block; margin-top: 0.5rem; padding: 0.85rem 1.8rem;
+  font-family: "Cinzel Decorative", serif; font-weight: 700; font-size: 1.05rem; line-height: 1.2; letter-spacing: 0.02em;
+  color: #fff; background: #1e3a8a; text-decoration: none;
+  border: 1px solid #3a5cc0; box-shadow: inset 0 0 0 3px #1e3a8a, inset 0 0 0 4px var(--gold);
+  border-radius: 3px; transition: background-color 150ms;
+}
+.seal:hover { color: #fff; background: #1d4ed8; box-shadow: inset 0 0 0 3px #1d4ed8, inset 0 0 0 4px var(--gold); }
+.leaf-foot { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; max-width: var(--main); margin: 3rem auto 0; padding-top: 1rem; border-top: 1px solid var(--gold-line); font-size: 0.85rem; }
+.leaf-foot a { color: var(--verm); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.76rem; text-decoration: none; }
+.leaf-foot a:hover { color: var(--blue); text-decoration: underline; }
+
+/* Narrow: notes inline */
+@media (max-width: 1099px) {
+  .gloss { max-width: var(--main); }
+  .toc { margin: 0 auto 2.2rem; padding: 1rem 1.1rem 0.8rem; border: 1px solid var(--rule); background: var(--card); }
+  .stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1.2rem; padding: 0.7rem 0; border-top: 1px solid var(--gold-line); border-bottom: 1px solid var(--gold-line); }
+  .stat .rubric-label { flex-basis: 100%; margin: 0; }
+  .stat .fig + .fig { margin-top: 0; }
+  .stat small { flex-basis: 100%; }
+  .quote { text-align: center; max-width: 30rem; margin-inline: auto; }
+}
+@media (max-width: 700px) {
+  body { font-size: 1.06rem; }
+  .desk { padding: 0; }
+  .leaf { padding: 3.6rem 1.35rem 2rem; border-left: 0; border-right: 0; }
+  .leaf::before { inset: 8px; }
+  .leaf::after { inset: 12px; }
+  .back { top: -2.2rem; }
+  .lead { font-size: 1.16rem; }
+  .lead::first-letter { font-size: 3.6rem; margin-right: 0.55rem; }
+  .ledger { padding: 1rem 0.8rem 0.9rem; }
+  .ledger table { font-size: 0.93rem; }
+  .ledger .no { width: 1.9rem; padding-right: 0.45rem; }
+  .ledger .entry { padding-left: 0.6rem; padding-right: 0.45rem; }
+  .ledger .cost { width: 4.2rem; padding-left: 0.4rem; }
+  .ledger-head { flex-wrap: wrap; }
+  .slip pre { font-size: 0.8rem; padding: 0.85rem 0.85rem 1rem; }
+  .plate .mount { padding: 0.35rem; }
+  .site-head { padding: 0.55rem 0.75rem; }
+  .brand { font-size: 1rem; gap: 0.4rem; }
+  .brand img { width: 26px; height: 26px; }
+  .btn-blue { font-size: 0.78rem; padding: 0.4rem 0.6rem; }
+  .auth { gap: 0.4rem; }
+}
+@media (max-width: 380px) {
+  .brand span { font-size: 0.9rem; }
+  .btn-blue { padding: 0.38rem 0.5rem; }
+}
+
+/* Wide: true margin column */
+@media (min-width: 1100px) {
+  .leaf { padding: 5rem 4rem 3rem 6rem; }
+  .body, .leaf-foot { margin-left: 0; max-width: var(--main); }
+  .leaf-head { margin-left: 0; max-width: calc(var(--main) + var(--gutter) + var(--margin)); }
+  h2 .num { position: absolute; left: -4.4rem; top: 0.16em; width: 3.6rem; min-width: 0; margin: 0; text-align: right; }
+  .gloss, .plate figcaption { float: right; clear: right; width: var(--margin); margin-right: calc(-1 * (var(--margin) + var(--gutter))); }
+  .plate { display: block; clear: none; }
+  h2 { clear: left; }
+  .plate.film { display: flex; }
+  .plate.film figcaption { float: none; width: auto; margin: 0.7rem 0 0; border-top: 0; padding-top: 0; }
+  .plate.film figcaption .rubric-label { display: inline; margin-right: 0.5em; }
+  .plate figcaption { margin-top: 0.3rem; font-size: 0.88rem; padding-top: 0.5rem; border-top: 1px solid var(--verm-line); }
+  .plate figcaption .rubric-label { display: block; margin: 0 0 0.3rem; }
+  .plate.tall figcaption { max-width: none; width: var(--margin); margin-inline: 0 calc(-1 * (var(--margin) + var(--gutter))); }
+  .toc { margin-top: 0.4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-head">
+  <a class="brand" href="#"><img src="../../public/images/d20-white.svg" alt="" width="30" height="30"><span>D20 Adventures</span></a>
+  <nav class="auth" aria-label="Account">
+    <a class="btn-blue" href="#">Sign In</a>
+    <a class="btn-blue" href="#">Sign Up</a>
+  </nav>
+</header>
+
+<main class="desk">
+  <article class="leaf">
+    <header class="leaf-head">
+      <a class="back" href="#">Updates</a>
+      <span class="rubric-label kicker">Update</span>
+      <h1><span class="red">F</span>rom 2D Art to Rigged Animated 3D Figures</h1>
+      <p class="dek">How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong.</p>
+      <div class="byline">
+        <span>By <b>John Polacek</b></span><i class="loz" aria-hidden="true"></i>
+        <time datetime="2026-11-21">November 21, 2026</time><i class="loz" aria-hidden="true"></i>
+        <span>9 Min Read</span>
+      </div>
+      <div class="fleuron" aria-hidden="true">
+        <svg viewBox="0 0 44 14"><path d="M22 1l5 6-5 6-5-6z" fill="#e8846a"/><path d="M22 4.5l2 2.5-2 2.5-2-2.5z" fill="#1c1713"/><circle cx="11" cy="7" r="2" fill="#d4b06a"/><circle cx="33" cy="7" r="2" fill="#d4b06a"/><circle cx="4" cy="7" r="1.2" fill="#e8846a"/><circle cx="40" cy="7" r="1.2" fill="#e8846a"/></svg>
+      </div>
+    </header>
+
+    <div class="body">
+      <nav class="gloss toc" aria-label="Contents">
+        <span class="rubric-label">Contents</span>
+        <ol>
+          <li><span>I</span><a href="#the-short-version">The Short Version</a></li>
+          <li><span>II</span><a href="#the-pose-sheet-decides-everything">The Pose Sheet Decides Everything</a></li>
+          <li><span>III</span><a href="#trying-every-generator">Trying Every Generator</a></li>
+          <li><span>IV</span><a href="#hands-are-the-hard-part">Hands Are the Hard Part</a></li>
+          <li><span>V</span><a href="#borrowed-moves">Borrowed Moves</a></li>
+          <li><span>VI</span><a href="#the-asset-library">The Asset Library</a></li>
+          <li><span>VII</span><a href="#try-it-yourself">Try It Yourself</a></li>
+        </ol>
+      </nav>
+
+      <p class="lead">Until this week, characters in <a href="https://d20adventures.com">The Midnight Summons</a> and other adventures were flat painted standee art.</p>
+
+      <figure class="plate film">
+        <figcaption><span class="rubric-label">Film</span>D20 Adventures gameplay with the new 3D figures.</figcaption>
+        <div class="mount">
+          <div class="video-frame">
+            <iframe src="https://www.youtube-nocookie.com/embed/kOnKwsX0O0U" title="D20 Adventures gameplay with the new 3D figures" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          </div>
+        </div>
+      </figure>
+
+      <aside class="gloss quote"><p>&ldquo;Steal whatever is useful.&rdquo;</p></aside>
+      <p>I researched what other people were doing, experimented myself and now I&rsquo;m writing up the whole pipeline that I landed on. Everything here is in the <a href="https://github.com/johnpolacek/d20adventures.com">repo on Github</a>, and the full notes are in <a href="https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md">asset-library/README.md</a>. Steal whatever is useful. Or by all means, tell me how I can do it better.</p>
+
+      <section>
+        <h2 id="the-short-version"><span class="num" aria-hidden="true">I</span>The Short Version</h2>
+        <aside class="gloss stat"><span class="rubric-label">Per Figure</span><span class="fig">$2.30</span><span class="fig">15 Min</span><small>Most of it waiting</small></aside>
+        <p>A figure now costs $2.30 and about fifteen minutes, most of it waiting:</p>
+
+        <figure class="ledger">
+          <div class="ledger-head"><h3>Ledger</h3><span>One Figure</span></div>
+          <table>
+            <thead><tr><th class="no" scope="col">No.</th><th class="entry" scope="col">Step</th><th class="cost" scope="col">Cost</th></tr></thead>
+            <tbody>
+              <tr><td class="no">I</td><td class="entry">Write a short brief for the character.</td><td class="cost free">Free</td></tr>
+              <tr><td class="no">II</td><td class="entry">Have an image model paint a pose sheet, front and back.</td><td class="cost free">Free</td></tr>
+              <tr><td class="no">III</td><td class="entry">Find the joints on the sheet with <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker">MediaPipe</a>.</td><td class="cost free">Free</td></tr>
+              <tr><td class="no">IV</td><td class="entry">Send the front and back to <a href="https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d">Hi3D v3.0 on fal</a> for the model.</td><td class="cost">$2.10</td></tr>
+              <tr><td class="no">V</td><td class="entry">Rig it with <a href="https://hyper3d.ai">Hyper3D</a> to a human skeleton with fingers.</td><td class="cost">$0.20</td></tr>
+              <tr><td class="no">VI</td><td class="entry">Copy free animation clips onto it from <a href="https://quaternius.com">Quaternius</a> and <a href="https://mesh2motion.org">Mesh2Motion</a>.</td><td class="cost free">Free</td></tr>
+              <tr><td class="no">VII</td><td class="entry">Clean it up in headless Blender, make three detail levels, and judge it blind.</td><td class="cost free">Free</td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td></td><td class="label">Total</td><td class="cost"><span>$2.30</span></td></tr>
+              <tr><td></td><td class="label">Time</td><td class="cost">15 Min</td></tr>
+            </tfoot>
+          </table>
+        </figure>
+
+        <p>The only steps that cost money are the model and the rig. Every answer gets saved, so nothing is paid for twice and every later rebuild is free.</p>
+      </section>
+
+      <section>
+        <h2 id="the-pose-sheet-decides-everything"><span class="num" aria-hidden="true">II</span>The Pose Sheet Decides Everything</h2>
+        <p>The 3D generator only knows what the picture shows it. So the most important step is free.</p>
+
+        <figure class="plate tall">
+          <figcaption><span class="rubric-label">Plate I</span>Thalbern&rsquo;s pose sheet, standing with arms out and hands open on a flat grey background.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/pose-sheet.webp" alt="Thalbern's pose sheet, standing with arms out and hands open on a flat grey background" width="900" height="1200" loading="lazy"></div>
+        </figure>
+
+        <p>What makes a good sheet: arms held away from the body with background showing between them, hands empty and open, the face lit and in focus, flat grey behind, and a back view of the same person in the same clothes. Anything held in the hands gets fused into the arm, so weapons come off the sheet and the game puts them back in later. If the back view is missing, the generator makes one up. Wollandora&rsquo;s leafy mantle came back as a plain dark cloak.</p>
+
+        <p>This is the prompt that paints the sheet, with the character&rsquo;s front and back cards attached:</p>
+
+        <figure class="slip">
+          <div class="slip-head"><span class="rubric-label">Prompt</span><span class="slip-title">Paint The Pose Sheet</span><button type="button" class="copy">Copy</button></div>
+          <div class="slip-body"><pre>The attached images are the front and the back of a painted game character: <span class="slot">[WHO THEY ARE]</span>. Make one landscape reference sheet of the SAME person as a photorealistic costume photograph, for building a 3D model.
+
+Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles: on the left the front view, on the right the back view from directly behind with no face visible.
+
+Pose, in both views: standing straight, feet a little apart, both arms held out from the body at about 40 degrees with a clear gap of background between each arm and the body, hands open with fingers apart, palms toward the thighs. Nothing in the hands. <span class="slot">[WHERE THE WEAPONS GO, FOR EXAMPLE: THE SWORD IS SHEATHED AT THE HIP AND THE BOW IS LEFT OUT.]</span> Neutral face, mouth closed, looking straight ahead.
+
+Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.
+
+Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.</pre></div>
+          <button type="button" class="toggle" aria-expanded="false">Show Full Prompt</button>
+        </figure>
+
+        <p>For a beast like the owlbear, ask for &ldquo;a photorealistic studio photograph of a living animal&rdquo; standing on its hind legs, so you don&rsquo;t get a person in a costume.</p>
+      </section>
+
+      <section>
+        <h2 id="trying-every-generator"><span class="num" aria-hidden="true">III</span>Trying Every Generator</h2>
+        <p>I didn&rsquo;t know which generator to use, so I tried a bunch of them on Thalbern. Tripo H3.1 first, then Rodin Gen-2.5, then Rodin&rsquo;s model rigged by Meshy with Meshy&rsquo;s own moves, then Hyper3D&rsquo;s shell skinning (which was far worse), and finally Hi3D.</p>
+
+        <p>To keep myself honest, every round gets judged blind. A fresh agent is shown the character&rsquo;s card, the pose sheet and the same fifteen pictures of the figure each time, and told nothing about what changed. Judges differ by about a point, so a one point gain is noise. What the judge is really good for is a list of faults by name, which tells you what to fix next.</p>
+
+        <figure class="slip">
+          <div class="slip-head"><span class="rubric-label">Prompt</span><span class="slip-title">Blind Judge</span><button type="button" class="copy">Copy</button></div>
+          <div class="slip-body"><pre>You are judging a 3D game character against its target. Attached are the target (the character's card and the pose sheet the model was made from) and fifteen pictures of the figure: face close-ups, front, back, three-quarter views and two action poses. You have not seen any earlier version. Do not guess what changed.
+
+Score each from 0 to 2, in halves, for a total out of 10:
+- Likeness: 0 another person or outfit, 1 the same person with clear differences, 2 the person on the card.
+- Face: 0 waxy, smeared, doubled or dead-eyed, 1 a face with faults a player would notice, 2 holds up in a close-up.
+- Build and hands: 0 misshapen, 1 a person with faults a player would notice, 2 right from every side.
+- Materials: 0 clay, plastic or blur, 1 the right kind of surface with flaws, 2 reads as leather, cloth, metal, skin and hair.
+- Poses: 0 broken, 1 reads as the move with visible faults, 2 clean.
+
+Benchmark: a character in a shipping fantasy RPG seen from the same distance. Then list every fault you see, worst first, each with where it is on the figure.</pre></div>
+          <button type="button" class="toggle" aria-expanded="false">Show Full Prompt</button>
+        </figure>
+
+        <figure class="plate">
+          <figcaption><span class="rubric-label">Plate II</span>Thalbern&rsquo;s face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/rodin-vs-hi3d-2.webp" alt="Thalbern's face and chest three ways: Rodin as shipped, Hi3D as made, and Hi3D with the gloss turned down and his face painted on" width="1600" height="1108" loading="lazy"></div>
+        </figure>
+
+        <aside class="gloss stat"><span class="rubric-label">Blind Scores</span><span class="fig">4 <i class="sep">/</i> 4 <i class="sep">/</i> 5</span><small>Rodin, Hi3D, Hi3D after two free fixes</small></aside>
+        <p>Rodin scored a 4. Hi3D as it came also scored a 4, but for different reasons. Its outfit and gear match the sheet much more closely, and the studs, buckles and straps are actual things instead of melted lumps. Two free fixes got it to a 5:</p>
+        <ul>
+          <li>Turn the gloss down on anything that isn&rsquo;t metal. Hi3D&rsquo;s leather looked wet.</li>
+          <li>Paint the pose sheet&rsquo;s face back onto the model. Generators repaint the face from memory and it comes back softer.</li>
+        </ul>
+
+        <p>For the face, the build crops the head off the sheet, makes it bigger and sharper, then lays those pixels back onto the front of the model&rsquo;s head and fades them out toward the ears:</p>
+
+        <figure class="slip">
+          <div class="slip-head"><span class="rubric-label">Prompt</span><span class="slip-title">Sharpen The Face</span><button type="button" class="copy">Copy</button></div>
+          <div class="slip-body"><pre>The attached image is a small, soft crop of a studio photograph: one person's head, seen from directly in front on a grey background. Make one square image that is the SAME photograph of the SAME head at far higher resolution, as if the original had been taken with a much better camera.
+
+Keep everything where it is: the same framing and crop, the head the same size and in the same place, the same face, expression, eyes, brows, nose, mouth, ears, hair and whatever is worn in the hair, the same soft even light, the same grey background. Change no proportion and move no feature.
+
+Add only what a sharper photograph would show: skin texture and pores, freckles, eyelashes, the detail of the irises with a small catch light, the lines of the lips, single hairs. Natural skin, not retouched, not shiny. Mouth closed. No text.</pre></div>
+          <button type="button" class="toggle" aria-expanded="false">Show Full Prompt</button>
+        </figure>
+
+        <p>One catch: if the model&rsquo;s nose sits a few millimetres away from the sheet&rsquo;s, you get two noses. The build finds the tip of the model&rsquo;s nose and moves the paint to match.</p>
+
+        <p>Every judge put the eyes and the hair in its worst three, on both models. Neither generator makes eyes that hold up in a close-up yet.</p>
+      </section>
+
+      <section>
+        <h2 id="hands-are-the-hard-part"><span class="num" aria-hidden="true">IV</span>Hands Are the Hard Part</h2>
+        <aside class="gloss quote"><p>&ldquo;why are you stuck on this?!&rdquo;</p></aside>
+        <p>Generated hands come out stubby or garbled, and a hand that holds something is worse. At one point I typed &ldquo;why are you stuck on this?!&rdquo;</p>
+
+        <p>Wollandora carries a staff on her card. The trick that finally gave her real fingers around it was weird. The pose sheet paints her hand closed around a short rod in flat pure blue (#0000ff), a color nothing else on the figure is. The generator models real fingers and a thumb around it, the rig cuts out everything blue, and the staff goes through the hole. It worked, but the figures in the game now go a simpler way. The game puts the staff, sword and bow in their hands.</p>
+
+        <p>The other hand matters too. The build lays the fingers around a grip, hangs the empty hand at ease, and never lets an elbow go straight.</p>
+
+        <figure class="plate tall">
+          <figcaption><span class="rubric-label">Plate III</span>A dwarf fighter&rsquo;s hands before and after the hand fix.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/hands.webp" alt="A dwarf fighter's hands before and after the hand fix" width="1000" height="1200" loading="lazy"></div>
+        </figure>
+      </section>
+
+      <section>
+        <h2 id="borrowed-moves"><span class="num" aria-hidden="true">V</span>Borrowed Moves</h2>
+        <p>The clips are borrowed from free libraries and copied onto each figure&rsquo;s own skeleton. That mostly works, but a clip made for one body does strange things on another. Arms go through faces and shoulders flatten. So the build gives the shoulder and the forearm an extra bone each to share the twist, and for the bow shot and the sword cut it solves the arms to points instead of trusting the clip.</p>
+
+        <aside class="gloss stat"><span class="rubric-label">Sword Cuts</span><span class="fig">8</span><small>Tried and ranked blind</small></aside>
+        <p>The <a href="https://d20adventures.com/settings/realm-of-myr/assets?id=thalbern&amp;clip=Swing">sword cut</a> was its own saga. I tried eight different cuts and had them ranked blind. The new swing was lame, and so was the new thrust. The one in the game now just stops where the blow lands instead of finishing in a crouch with the blade in the floor.</p>
+
+        <figure class="plate">
+          <figcaption><span class="rubric-label">Plate IV</span>Three of the eight sword cuts tried on Thalbern, frame by frame.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/sword-cuts.webp" alt="Three of the eight sword cuts tried on Thalbern, frame by frame" width="1600" height="883" loading="lazy"></div>
+        </figure>
+      </section>
+
+      <section>
+        <h2 id="the-asset-library"><span class="num" aria-hidden="true">VI</span>The Asset Library</h2>
+        <aside class="gloss stat"><span class="rubric-label">Realm of Myr</span><span class="fig">150+</span><small>Characters</small><span class="fig">34</span><small>Places</small></aside>
+        <p>All of this lives in the <a href="https://d20adventures.com/settings/realm-of-myr/assets">asset library</a>, and it&rsquo;s live. It has over 150 characters and 34 places from the Realm of Myr. Click a character with a figure and you can turn it around, play its clips and step through them a frame at a time. Places are built right in your browser, and you can fly the camera around with W A S D. Here&rsquo;s <a href="https://d20adventures.com/settings/realm-of-myr/assets?env=valkarr-forest-trail&amp;scene=the-midnight-summons/owlbear-confrontation&amp;view=stage">the owlbear fight in the Valkarr woods</a>.</p>
+
+        <figure class="plate">
+          <figcaption><span class="rubric-label">Plate V</span>The asset library&rsquo;s character tab, with the party and the other characters made in 3D.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library.webp" alt="The asset library's character tab, with the party and the other characters made in 3D" width="1600" height="772" loading="lazy"></div>
+        </figure>
+
+        <p>With so many tries it got hard to tell which figure was the real one. Thalbern alone had eight. So each character gets one card, and opening it shows the current version, the earlier ones and the trials, with who made the model, who rigged it and when.</p>
+
+        <figure class="plate">
+          <figcaption><span class="rubric-label">Plate VI</span>Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure.</figcaption>
+          <div class="mount"><img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/library-versions.webp" alt="Thalbern in the asset library, with his current version, two earlier versions and five trials listed beside the figure" width="1600" height="1035" loading="lazy"></div>
+        </figure>
+
+        <p>Since the pipeline worked on Thalbern, the characters for Covert Cargo, the next adventure, are already in the library.</p>
+      </section>
+
+      <section>
+        <h2 id="try-it-yourself"><span class="num" aria-hidden="true">VII</span>Try It Yourself</h2>
+        <p>I built all of this with Claude Code. If you want to build something like it, hand your coding agent this:</p>
+
+        <figure class="slip">
+          <div class="slip-head"><span class="rubric-label">Prompt</span><span class="slip-title">Build It Yourself</span><button type="button" class="copy">Copy</button></div>
+          <div class="slip-body"><pre>Read asset-library/README.md in https://github.com/johnpolacek/d20adventures.com. It describes a pipeline that turns a painted character card into a rigged, animated 3D figure: a pose sheet from an image model, joints found with MediaPipe, a model from Hi3D v3.0 on fal, a rig from Hyper3D, clips borrowed from free libraries, cleanup in headless Blender, and a blind judge.
+
+Build the smallest version of it for my project. Start with one character and the free steps only: the brief, the pose sheet and the joints. Show me the sheet before anything that costs money runs. Save every paid answer so it is never paid for twice.</pre></div>
+          <button type="button" class="toggle" aria-expanded="false">Show Full Prompt</button>
+        </figure>
+
+        <p>And if you just want to look around the code:</p>
+
+        <figure class="slip">
+          <div class="slip-head"><span class="rubric-label">Prompt</span><span class="slip-title">Tour The Code</span><button type="button" class="copy">Copy</button></div>
+          <div class="slip-body"><pre>Clone https://github.com/johnpolacek/d20adventures.com and walk me through how asset-library/pipeline/build.ts and pilot.ts make a 3D figure, step by step, with what each step costs.</pre></div>
+          <button type="button" class="toggle" aria-expanded="false">Show Full Prompt</button>
+        </figure>
+
+        <p>Other stuff that landed this week:</p>
+        <ul>
+          <li>Sound, with combat cues and night ambience in the Valkarr woods.</li>
+          <li>Hiding. Slip into thick growth and watch the owlbear come out.</li>
+          <li>A ring on the ground marks whose turn it is.</li>
+          <li>Speech is painted into the scene instead of sitting in bubbles.</li>
+          <li>Narration is set in Literata, with drop caps.</li>
+        </ul>
+
+        <p>The whole thing is open source on <a href="https://github.com/johnpolacek/d20adventures.com">Github</a>.</p>
+      </section>
+
+      <div class="closing">
+        <div class="fleuron" aria-hidden="true" style="margin-bottom:1.75rem">
+          <svg viewBox="0 0 44 14"><path d="M22 1l5 6-5 6-5-6z" fill="#e8846a"/><path d="M22 4.5l2 2.5-2 2.5-2-2.5z" fill="#1c1713"/><circle cx="11" cy="7" r="2" fill="#d4b06a"/><circle cx="33" cy="7" r="2" fill="#d4b06a"/><circle cx="4" cy="7" r="1.2" fill="#e8846a"/><circle cx="40" cy="7" r="1.2" fill="#e8846a"/></svg>
+        </div>
+        <p>Want to run a game on your own Mac and help shape it? <a href="/playtest">Become a playtester</a>.</p>
+        <p><a href="https://d20adventures.com" class="seal">Play The Midnight Summons</a></p>
+      </div>
+    </div>
+
+    <footer class="leaf-foot">
+      <a href="#">Updates</a>
+      <a href="#" download>Download as Markdown</a>
+    </footer>
+  </article>
+</main>
+
+<footer class="site-foot">
+  <span>&copy; 2026 D20 Adventures</span>
+  <nav aria-label="Footer"><a href="#">Updates</a><a href="/playtest">Playtest</a><a href="https://github.com/johnpolacek/d20adventures.com">Github</a></nav>
+</footer>
+
+<script>
+(function () {
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(); } catch (e) { reject(e); }
+      document.body.removeChild(ta);
+    });
+  }
+  document.querySelectorAll('.slip').forEach(function (slip, i) {
+    var pre = slip.querySelector('pre');
+    var body = slip.querySelector('.slip-body');
+    var btn = slip.querySelector('.copy');
+    var toggle = slip.querySelector('.toggle');
+    body.id = 'prompt-' + (i + 1);
+    toggle.setAttribute('aria-controls', body.id);
+    var timer;
+    btn.addEventListener('click', function () {
+      copyText(pre.textContent).then(function () {
+        btn.textContent = 'Copied'; btn.classList.add('done');
+      }, function () { btn.textContent = 'Failed'; }).then(function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1800);
+      });
+    });
+    function measure() {
+      var open = slip.classList.contains('open');
+      slip.classList.remove('collapsible');
+      if (pre.scrollHeight > 260) slip.classList.add('collapsible');
+      if (open) slip.classList.add('open');
+    }
+    toggle.addEventListener('click', function () {
+      var open = slip.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? 'Show Less' : 'Show Full Prompt';
+      if (!open && slip.getBoundingClientRect().top < 0) slip.scrollIntoView({ block: 'start' });
+    });
+    measure();
+    window.addEventListener('resize', measure);
+  });
+})();
+</script>
+</body>
+</html>
