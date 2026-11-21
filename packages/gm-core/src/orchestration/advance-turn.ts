@@ -193,9 +193,9 @@ export function createAdvanceTurn(ports: GmPorts) {
             .filter((character) => !isDead(character) && !character.fled)
             // Initiative was rolled as the encounter began. Every round keeps that order.
             .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-      // Entering the rescue encounter brings every hero who is down but not dead back to 1 hit point. Then a dying
-      // hero's turn is their Death Saving Throw.
-      const rescuing = isTransition && artifacts.manifest.rescue?.encounterId === nextEncounter.id
+      // Entering the rescue encounter, or one marked `revive`, brings every hero who is down but not dead back to 1 hit
+      // point. Then a dying hero's turn is their Death Saving Throw.
+      const rescuing = isTransition && (artifacts.manifest.rescue?.encounterId === nextEncounter.id || !!nextEncounter.revive)
       // Where the next encounter is on the same set, the scene goes on: those it stages where the last one did stay
       // where they stood.
       const positions = (characters: readonly TurnCharacter[]) => new Map(characters.flatMap((character) => (character.position ? [[character.id, character.position] as const] : [])))

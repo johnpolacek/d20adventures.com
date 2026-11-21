@@ -64,6 +64,8 @@ const commonFrontmatterSchema = z.object({
   roundBudget: z.number().int().positive().optional(),
   // The party takes this rest as the encounter opens: the night before the ball, an hour at the inn.
   rest: z.enum(["short", "long"]).optional(),
+  // A hero down but not dead comes to at 1 hit point as the encounter opens: the cold river wakes one thrown in.
+  revive: z.boolean().optional(),
   // Magic items the encounter gives, each by its SRD id, and when: `on: enter` or `on: leave`, with `to` naming the
   // transition where it is given on leaving by one alone. Each is read and checked below, so a wrong one is a finding.
   loot: z.array(z.unknown()).optional(),
@@ -179,6 +181,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       transitions: extractedTransitions,
       roundBudget: frontmatter.roundBudget,
       rest: frontmatter.rest,
+      ...(frontmatter.revive ? { revive: true as const } : {}),
       ...(frontmatter.loot?.length ? { loot: frontmatter.loot.flatMap((entry) => lootSchema.safeParse(entry).data ?? []) } : {}),
       validationStatus: extractedTransitions.every((entry) => entry.publishResolved) ? "valid" : options.mode === "publish" ? "blocked" : "draftOnly",
     }

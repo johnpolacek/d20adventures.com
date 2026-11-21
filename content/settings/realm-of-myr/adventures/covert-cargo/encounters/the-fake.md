@@ -11,12 +11,15 @@ landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Reinhard will follow Silas’s lead and orders."
+    side: "none"
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Silas will want to figure out who is telling lies - Lyra or Aelar. He will not attack the elves under any circumstances. If he is out of options, he will simply accept the shipment and complete the Transaction."
+    side: "none"
     initialInitiative: 0
   - id: "npcs-1749184389465"
     behavior: "Aelar will vigorously defend his honor. He does not wish for a fight but will defend himself if necessary."
+    side: "none"
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-fake/7b96ca3c-db72-4559-8f8d-59dacbba3185.png?t=1749300003015"
 ---

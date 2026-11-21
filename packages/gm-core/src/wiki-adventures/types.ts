@@ -143,6 +143,8 @@ export type RuntimeEncounter = {
   roundBudget?: number
   // A rest the party takes as the encounter opens, the first time they come to it.
   rest?: "short" | "long"
+  // A hero down but not dead comes to at 1 hit point as the encounter opens, as on entering the adventure's rescue.
+  revive?: true
   // The magic items the encounter gives, and when: on entering it or on leaving it (../sheet/loot).
   loot?: Loot[]
   validationStatus: "valid" | "draftOnly" | "blocked"

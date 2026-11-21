@@ -11,12 +11,15 @@ landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Determined to complete the mission to secure the artifact."
+    side: "none"
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Silas is the brains of the mission and is tasked to make sure everything goes as planned."
+    side: "none"
     initialInitiative: 0
   - id: "npcs-1749184389465"
     behavior: "Eager to have the shipment verified"
+    side: "none"
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png?t=1749244761507"
 ---
@@ -68,6 +71,10 @@ The crate stays closed. No one may see inside, so Lyra must judge it by magecraf
 If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his sword and threaten her.
 
 If Lyra successfully casts a spell on the crate to detect magic, she will be detect an ancient potent enchantment on an object within the crate. On a highly successful roll of 18 or higher, she will determine its purpose to be related to concepts of binding promises, loyalty, and solemn vows. On a 20, she will be able to name the item as the Verodynian Oath Stone of the First Clans.
+
+Silas pays only on Lyra's word. Until she gives her verdict the scrollcase stays in his hands and the elves stay aboard.
+
+A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
 

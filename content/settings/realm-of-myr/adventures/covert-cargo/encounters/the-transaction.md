@@ -10,10 +10,12 @@ adventureId: "covert-cargo"
 landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749163978757"
-    behavior: "Reinhard silently awaits Silas’s instructions but will not let Lyra leave (if she tries to)"
+    behavior: "Reinhard waits on Silas's word and says little, but will not let Lyra leave (if she tries to)"
+    side: "none"
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Silas is pleased, the mission is almost over."
+    side: "none"
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836"
 ---

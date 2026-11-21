@@ -48,6 +48,8 @@ export function createAdventure(ports: GmPorts) {
       originalPlayerInput,
     })
     const rollRequirementDetails: RollRequirement = reading.roll
+    // With `playerDeath: false` a blow the hero draws as they move leaves them Stable instead of dead.
+    const rules = { playerDeath: (await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId))?.playerDeath }
 
     if (rollRequirementDetails) {
       await ports.store.submitReply({
@@ -58,7 +60,7 @@ export function createAdventure(ports: GmPorts) {
       })
       // A Bonus Action used beside the roll is applied now, before the die is thrown. A hero dropped as they moved
       // throws nothing: their turn is over, and the others play on.
-      const { fell } = await applyReading({ turnId, characterId, reading })
+      const { fell } = await applyReading({ turnId, characterId, reading, rules })
       // A fall ends the hero's turn: a Legendary creature may act on it (../sheet/legendary-actions).
       if (fell) await afterHeroTurn(turnId, characterId)
       if (fell && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
@@ -72,7 +74,7 @@ export function createAdventure(ports: GmPorts) {
       rollRequirement: undefined,
     })
     // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
-    const { fell } = await applyReading({ turnId, characterId, reading })
+    const { fell } = await applyReading({ turnId, characterId, reading, rules })
     // A spell or a feature that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
     const quiet = reading.cast ?? reading.feature
     if (quiet && !fell) await resolveCast({ turnId, characterId, cast: quiet })

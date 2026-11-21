@@ -378,7 +378,9 @@ export const riverboat = defineBuilder(
             piece(cuts[j], cuts[j + 1], 0, q.y0)
             piece(cuts[j], cuts[j + 1], q.y1, Hc)
           } else piece(cuts[j], cuts[j + 1], 0, Hc)
-          if (!q?.door) ctx.footprint(...at((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw, undefined, Hc)
+          // An open window stands only as high as its sill for the rules, so one on the bank can shoot or cast through
+          // it from cover. A shuttered one is wall.
+          if (!q?.door) ctx.footprint(...at((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw, undefined, q && !q.shut ? q.y0 : Hc)
         }
         for (const q of opens) {
           if (q.door) continue

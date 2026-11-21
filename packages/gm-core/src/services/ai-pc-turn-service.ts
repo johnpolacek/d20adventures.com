@@ -269,7 +269,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         rollRequirement: rollRequirement ?? undefined,
       })
       // A Bonus Action, and an action with no roll, leave their mark now. With no roll, submitReply marked the character complete.
-      await applyReading({ turnId, characterId, reading })
+      await applyReading({ turnId, characterId, reading, rules: { playerDeath: plan?.playerDeath } })
       // With no roll the companion's turn is over, and a Legendary creature may act on it (../sheet/legendary-actions).
       if (!rollRequirement) return afterHeroTurn(turnId, characterId)
 

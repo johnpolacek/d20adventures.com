@@ -8,6 +8,7 @@ title: "Overboard"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 landmark: "valkarr-woods/forest-pier"
+revive: true
 ---
 
 ## Intro

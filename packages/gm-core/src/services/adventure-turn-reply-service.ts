@@ -1,6 +1,7 @@
 import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
 import { checkBonus } from "../sheet/check"
+import type { DeathRules } from "../sheet/death"
 import { choiceRule, classConcentrationModes, type Featured } from "../sheet/class-rules"
 import type { ConditionEntry } from "../sheet/condition-entry"
 import { afterHarm } from "../sheet/death"
@@ -128,7 +129,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
    * story as a beat of its own. `fell` says an Opportunity Attack dropped the hero as they moved: the rest of their
    * turn is lost.
    */
-  async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading }): Promise<{ fell?: true }> {
+  async function applyReading(args: { turnId: string; characterId: string; reading: TurnReading; rules?: DeathRules }): Promise<{ fell?: true }> {
     const { action, bonus, move, ruling, rest, choices, loud } = args.reading
     if (!action && !bonus && !move && !ruling && !rest && !choices && !loud) return {}
     const turn = await ports.store.getTurn({ turnId: args.turnId })
@@ -173,6 +174,8 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
         d20: rollD20,
         roll: rollDie,
+        // With `playerDeath: false` a blow that would kill the hero leaves them Stable at 0 Hit Points.
+        rules: args.rules,
       })
       const mover = characters.find((character) => character.id === args.characterId)
       // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
