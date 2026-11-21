@@ -146,4 +146,6 @@ Other stuff that landed this week:
 
 The whole thing is open source on [Github](https://github.com/johnpolacek/d20adventures.com).
 
+Want to run a game on your own Mac and help shape it? [Become a playtester](/playtest).
+
 [Play The Midnight Summons](https://d20adventures.com)
