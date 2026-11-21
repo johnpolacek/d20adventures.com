@@ -116,6 +116,8 @@ html:has(.updates-page) {
 
 /* The site header, as a washed strip of its parchment. By night it is darker than the page, and its veins show. */
 body:has(.updates-page) [data-site-header] {
+  /* The strip has no Sign In or Sign Up to give it its height. */
+  min-height: 59px;
   background: var(--up-bar) !important;
   filter: none !important;
   border-bottom: 1px solid var(--up-bar-line);
@@ -131,14 +133,13 @@ html[data-update-theme="dark"] body:has(.updates-page) .site-header-parchment im
   opacity: 1;
   filter: brightness(0.56) contrast(3.2) brightness(0.24);
 }
-/* The header's blues come from a filter over the whole bar. The strip drops it, so the mark and the buttons take it themselves. */
-body:has(.updates-page) [data-site-brand],
-body:has(.updates-page) [data-site-header] > div:last-child > :not(.up-theme-toggle) {
-  filter: saturate(2) hue-rotate(330deg) contrast(1.1);
+/* The mark sits in the page's ink blue, quieter than the site's bright blue, which comes from a filter the strip drops. */
+body:has(.updates-page) [data-site-brand] {
+  filter: hue-rotate(330deg) saturate(0.85) sepia(0.22) contrast(1.05);
 }
 /* The mark is drawn to multiply onto parchment. On the dark strip it is turned light and screened on. */
 html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand] {
-  filter: saturate(2) hue-rotate(330deg) contrast(1.1) invert(1) hue-rotate(180deg);
+  filter: hue-rotate(330deg) saturate(0.85) sepia(0.22) invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
 }
 body:has(.updates-page) [data-site-header] .text-white\/60 {
@@ -765,11 +766,5 @@ body:has(.updates-page) main + footer {
   .up-prompt pre {
     padding: 14px;
     font-size: 12.5px;
-  }
-}
-/* Under this width the header has no room for the switch, and the page follows the reader's system. */
-@media (max-width: 379px) {
-  .up-theme-toggle {
-    display: none;
   }
 }

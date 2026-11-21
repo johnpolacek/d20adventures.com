@@ -8,7 +8,8 @@ import { Presence, Swap } from "@d20/ui/presence"
 import { useTokens } from "@/lib/context/TokenContext"
 import TokenCount from "./token-count"
 
-export default function AuthButtons() {
+/** The header's account corner: Sign In and Sign Up, or the player's tokens and menu. `signedOut` false leaves out the two buttons. */
+export default function AuthButtons({ signedOut = true }: { signedOut?: boolean }) {
   const { tokensRemaining } = useTokens()
   const { user, isSignedIn } = useUser()
   const [mounted, setMounted] = useState(false)
@@ -16,6 +17,8 @@ export default function AuthButtons() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  if (!signedOut && (!mounted || !isSignedIn)) return null
 
   // Prevent hydration mismatch by showing a neutral state until mounted
   if (!mounted) {
