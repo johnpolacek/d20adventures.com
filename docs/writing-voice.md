@@ -149,6 +149,7 @@ Product in the subject slot, the receipt linked instead of narrated, and the ope
 - Name the tech. Real tool names tell the people who use them that this is for them, and they get searched. Vague “with AI” doesn’t.
 - Price is not a draw. Leave costs in the post.
 - One idea per title. Two glued with “and” is two titles.
+- When a topic still feels narrow, round up every gotcha from the same subject into one post. Three figure fixes (the Gumby arm, the blue rod, the lame sword swing) became “Getting AI-Made 3D Characters Ready for a Real Game”, with fifteen gotchas from the model to the game’s camera.
 - Picture the one reader who needs this, and title their problem, not the feature. The narrator piece is for a developer whose game writes its own text and can’t hire voice actors for it: “Pricing a narrator: $0.29 a game on Gemini vs $0 on Kokoro” became “Add Real-Time Voice to Your Game’s AI-Generated Text”.
 - Zoom out from the incident to the topic. One bug is too narrow to draw anyone in. Title the bigger subject it belongs to, and use the bug as an example inside. “The game suggested a spell that could never work” became a piece on the challenges of running an AI game master, with the owlbear spell as one of its stories.
 - Frame the goal the reader wants, not the failures. “Building an AI Game Master That Plays by the D&D Rules” beat “The Hard Parts of Building an AI Game Master” and “What Goes Wrong When an AI Runs Your D&D Game”. The failures are stories inside the post.
