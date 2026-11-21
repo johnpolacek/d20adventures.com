@@ -169,6 +169,8 @@ function StoryArt({ src }: { src: string }) {
   )
 }
 const FADE_MS = 1600
+// How fast a paragraph is taken to be read before Continue presses itself, in words a minute.
+const CONTINUE_WPM = 200
 function Painting({ src, shown, onLoad, onError }: { src: string; shown: boolean; onLoad: () => void; onError: () => void }) {
   const img = useRef<HTMLImageElement>(null)
   useEffect(() => {
@@ -817,6 +819,8 @@ export function StagePlay(props: {
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
   }, [auto, reading, busy, text, paragraphs, paragraph])
+  // Stepping through, Continue presses itself once the paragraph has had time to be read. A roll waits as it does in auto.
+  const continueMs = busy || !text.length ? undefined : Math.round((paragraphs[paragraph]?.roll ? ROLL_SECONDS + 1.5 : readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
@@ -1164,6 +1168,7 @@ export function StagePlay(props: {
                 count={text.length}
                 compact={compact}
                 step={!auto}
+                autoMs={continueMs}
                 onReplay={() => {
                   setParagraph(0)
                   setReading(true)

@@ -8,6 +8,7 @@
 // And reactions: an offer to the player's hero with its countdown, one for another player's hero, and standing orders.
 
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
+import { readingSeconds } from "@d20/stage/beats"
 import { type ReactNode, useEffect, useState } from "react"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
@@ -17,7 +18,7 @@ import { type CardCharacter, type CardMode, type CardRoll, PromptCard } from "@d
 import { ReactionCard, StandingOrders } from "@d20/ui/stage/reaction-card"
 import { heroReactions } from "@d20/ui/stage/reaction-view"
 import { FeatureEntry } from "@d20/ui/stage/roll-parts"
-import { RollResult } from "@d20/ui/stage/roll-result"
+import { ROLL_SECONDS, RollResult } from "@d20/ui/stage/roll-result"
 import type { FeatureView, RollAsk, RollView } from "@d20/ui/stage/roll-view"
 import { type OrderEntry, TurnOrder } from "@d20/ui/stage/turn-order"
 
@@ -580,6 +581,7 @@ export function RollLooks() {
               count={story.length}
               compact={compact}
               step
+              autoMs={Math.round((story[paragraph].roll ? ROLL_SECONDS + 1.5 : readingSeconds(story[paragraph].text, 200)) * 1000)}
               onReplay={() => setParagraph(0)}
               onBack={() => setParagraph((n) => Math.max(0, n - 1))}
               onNext={() => setParagraph((n) => Math.min(story.length - 1, n + 1))}

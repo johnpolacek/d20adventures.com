@@ -55,7 +55,7 @@ export interface BeatHooks {
 // Reading time for a spoken line: long enough to read in a bubble, short enough to keep the scene moving.
 export const lineSeconds = (text: string) => Math.min(9, 1.3 + text.length * 0.052)
 // Reading time for a narrated paragraph, at about 170 words a minute while the scene plays.
-export const readingSeconds = (text: string) => 1.5 + text.trim().split(/\s+/).length / 2.8
+export const readingSeconds = (text: string, wpm = 168) => 1.5 + text.trim().split(/\s+/).length / (wpm / 60)
 
 // Where the scene stood when a paragraph began: the camera's shot, and the cast members the beats move or turn.
 interface Mark {
