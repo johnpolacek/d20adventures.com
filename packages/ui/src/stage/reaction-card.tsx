@@ -46,7 +46,7 @@ function Countdown({ left, compact }: { left: number; compact: boolean }) {
   const low = left <= 5000
   return (
     <div className={cn("h-[3px] w-full overflow-hidden rounded-full bg-black/40", compact ? "mt-1.5" : "mt-2.5")} aria-hidden="true">
-      <div className="h-full origin-left rounded-full transition-transform duration-100 ease-linear" style={{ transform: `scaleX(${share})`, backgroundColor: low ? "var(--color-roll-failure)" : "var(--color-stage-gold)" }} />
+      <div className="h-full origin-left rounded-full transition-transform duration-100 ease-linear" style={{ transform: `scaleX(${share})`, backgroundColor: low ? "var(--color-roll-failure)" : "var(--color-accent)" }} />
     </div>
   )
 }
@@ -90,7 +90,7 @@ export function ReactionCard({
     ;(choice === "take" ? onTake : onPass)?.()
   }
   const clock = (
-    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-roll-failure" : "text-stage-cream", compact ? "text-[13px]" : "text-[15px]")} aria-hidden="true">
+    <span className={cn("shrink-0 font-serif font-semibold tabular-nums", left <= 5000 ? "text-roll-failure" : "text-foreground", compact ? "text-[13px]" : "text-[15px]")} aria-hidden="true">
       {seconds}s
     </span>
   )
@@ -101,20 +101,20 @@ export function ReactionCard({
         <section
           role="alertdialog"
           aria-label={`${reactionName(reaction)} for ${hero}`}
-          className={cn(panel, "border-stage-brass/50 text-left", compact ? "px-3 py-2" : "px-5 pt-4 pb-4", className)}
+          className={cn(panel, "border-primary/50 text-left", compact ? "px-3 py-2" : "px-5 pt-4 pb-4", className)}
           style={style}
           onAnimationEnd={onAnimationEnd}
         >
           <div className="flex items-center gap-2.5">
             {portrait && (
-              <img src={portrait} alt="" className={cn("shrink-0 rounded-full border border-stage-gold/60 object-cover object-top", compact ? "h-5 w-5" : "h-7 w-7")} />
+              <img src={portrait} alt="" className={cn("shrink-0 rounded-full border border-accent/60 object-cover object-top", compact ? "h-5 w-5" : "h-7 w-7")} />
             )}
             <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>
               {reactionName(reaction)} · {hero.split(" ")[0]}
             </span>
             {clock}
           </div>
-          <p className={cn("font-serif text-stage-cream", compact ? "mt-1 line-clamp-2 text-[12px] leading-snug" : "mt-2 text-[15px] leading-[1.5]")}>{text}</p>
+          <p className={cn("font-serif text-foreground", compact ? "mt-1 line-clamp-2 text-[12px] leading-snug" : "mt-2 text-[15px] leading-[1.5]")}>{text}</p>
           <Countdown left={left} compact={compact} />
           <div className={cn("flex items-center justify-end gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-3")}>
             <Pill disabled={Boolean(chosen)} active={chosen === "pass"} onClick={() => pick("pass")}>
@@ -127,7 +127,7 @@ export function ReactionCard({
           </div>
         </section>
       ) : (
-        <section aria-live="polite" className={cn(panel, "border-stage-brass/50", compact ? "px-3 py-2" : "px-4 py-3", className)} style={style} onAnimationEnd={onAnimationEnd}>
+        <section aria-live="polite" className={cn(panel, "border-primary/50", compact ? "px-3 py-2" : "px-4 py-3", className)} style={style} onAnimationEnd={onAnimationEnd}>
           <div className="flex items-center gap-3">
             <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>{`${hero} Is Deciding`}</span>
             {clock}
@@ -162,7 +162,7 @@ export function StandingOrders({
           const order = picked[row.id] ?? row.order
           return (
             <div key={row.id} role="radiogroup" aria-label={row.name} className={cn("flex flex-wrap items-center gap-x-3 gap-y-1.5", compact && "gap-x-2")}>
-              <span className="min-w-[8.5rem] font-serif text-[13px] text-stage-cream">{row.name}</span>
+              <span className="min-w-[8.5rem] font-serif text-[13px] text-foreground">{row.name}</span>
               <span className="flex gap-1">
                 {ORDERS.map((o) => (
                   <Pill

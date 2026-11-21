@@ -69,20 +69,20 @@ export function CharacterCard({
         type="button"
         onClick={onClose}
         aria-label="Close card"
-        className="absolute top-2.5 right-3 z-10 text-[22px] leading-none text-stage-muted transition-[color,scale] duration-150 ease-snap hover:text-stage-cream active:scale-90"
+        className="absolute top-2.5 right-3 z-10 text-[22px] leading-none text-muted-foreground transition-[color,scale] duration-150 ease-snap hover:text-foreground active:scale-90"
       >
         ×
       </Button>
       {/* Another character's card takes this one's place. */}
       <Swap id={info.id}>
         {info.portrait && (
-          <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
+          <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-primary/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
         )}
         <div className={eyebrow}>{info.role}</div>
         <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
         {info.standing && <StandingRow standing={info.standing} />}
         <Presence show={Boolean(info.conditions)} motion="fade" initial={false} asChild>
-          <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>
+          <p className="mb-2.5 font-serif text-[13px] text-foreground italic">{info.conditions}</p>
         </Presence>
         {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
         {info.items && <MagicItems items={info.items} className="mt-4 mb-2.5" />}
@@ -91,7 +91,7 @@ export function CharacterCard({
         {info.details?.map((section) => (
           <div key={section.label}>
             <h3 className={cn(eyebrow, "mt-4 mb-2")}>{section.label}</h3>
-            <ul className="space-y-2 text-xs leading-relaxed text-stage-cream">
+            <ul className="space-y-2 text-xs leading-relaxed text-foreground">
               {section.items.map((item, index) => (
                 <li key={`${index}:${item}`}>{item}</li>
               ))}
@@ -116,9 +116,9 @@ export function CharacterCard({
 }
 
 const stat = (label: string, value: string) => (
-  <span className="flex items-baseline gap-1.5 rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
-    <span className={cn(eyebrow, "text-stage-muted")}>{label}</span>
-    <span className="font-serif text-[15px] font-semibold tabular-nums text-stage-cream">{value}</span>
+  <span className="flex items-baseline gap-1.5 rounded-[3px] border border-foreground/25 bg-black/30 px-2 py-1">
+    <span className={cn(eyebrow, "text-muted-foreground")}>{label}</span>
+    <span className="font-serif text-[15px] font-semibold tabular-nums text-foreground">{value}</span>
   </span>
 )
 const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
@@ -146,27 +146,27 @@ function Spellcasting({ casting }: { casting: SheetSpellcasting }) {
         </div>
         {casting.slots.map((s) => (
           <div key={s.level} className="mt-2 flex items-center gap-2">
-            <span className={cn(eyebrow, "text-stage-muted")}>Level {s.level} Slots</span>
+            <span className={cn(eyebrow, "text-muted-foreground")}>Level {s.level} Slots</span>
             <span className="inline-flex items-center gap-1.5">
               {Array.from({ length: s.total }, (_, i) => (
                 <span
                   key={i}
-                  className="inline-block h-2 w-2 rotate-45 border border-stage-gold"
-                  style={{ backgroundColor: i < s.left ? "var(--color-stage-gold)" : "transparent", boxShadow: i < s.left ? "0 0 6px #fcd34d66" : undefined }}
+                  className="inline-block h-2 w-2 rotate-45 border border-accent"
+                  style={{ backgroundColor: i < s.left ? "var(--color-accent)" : "transparent", boxShadow: i < s.left ? "0 0 6px #fcd34d66" : undefined }}
                 />
               ))}
             </span>
-            <span className="font-serif text-[13px] tabular-nums text-stage-cream">
+            <span className="font-serif text-[13px] tabular-nums text-foreground">
               {s.left} / {s.total}
             </span>
           </div>
         ))}
-        <ul className="mt-2 space-y-1 text-xs leading-relaxed text-stage-cream">
+        <ul className="mt-2 space-y-1 text-xs leading-relaxed text-foreground">
           {lists
             .filter(([, names]) => names.length)
             .map(([label, names]) => (
               <li key={label}>
-                <span className={cn(eyebrow, "mr-2 text-stage-muted")}>{label}</span>
+                <span className={cn(eyebrow, "mr-2 text-muted-foreground")}>{label}</span>
                 {names.join(", ")}
               </li>
             ))}
@@ -187,8 +187,8 @@ function StandingRow({ standing: s }: { standing: Standing }) {
             {s.temporary ? stat("Temporary Hit Points", String(s.temporary)) : null}
             {stat("Armor Class", String(s.armorClass))}
             {s.inspired ? (
-              <span className="flex items-baseline rounded-[3px] border border-stage-line/25 bg-black/30 px-2 py-1">
-                <span className={cn(eyebrow, "text-stage-cream")}>Heroic Inspiration</span>
+              <span className="flex items-baseline rounded-[3px] border border-foreground/25 bg-black/30 px-2 py-1">
+                <span className={cn(eyebrow, "text-foreground")}>Heroic Inspiration</span>
               </span>
             ) : null}
           </>

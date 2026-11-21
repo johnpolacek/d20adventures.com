@@ -288,7 +288,7 @@ export function CityMapInset({ map, trail, onOpen, className, style, onAnimation
       type="button"
       onClick={onOpen}
       aria-label="Open the map"
-      className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color,scale] duration-150 ease-snap hover:border-stage-gold active:scale-[0.98]", entrance("enter-fade", className))}
+      className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color,scale] duration-150 ease-snap hover:border-accent active:scale-[0.98]", entrance("enter-fade", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
     >
@@ -318,13 +318,13 @@ export function CityMapPanel({ map, trail, compact, onClose, className, style, o
       onAnimationEnd={onAnimationEnd}
       aria-label="Map"
     >
-      <header className="flex flex-wrap items-center gap-2 border-b border-stage-line/20 px-5 py-3">
+      <header className="flex flex-wrap items-center gap-2 border-b border-foreground/20 px-5 py-3">
         <div className="mr-3">
           <div className={eyebrow}>Map</div>
           <Swap id={title} asChild>
             <h2 className="font-serif text-xl">{title}</h2>
           </Swap>
-          <p className="text-xs text-stage-muted">You are at {placeName(map, here)}</p>
+          <p className="text-xs text-muted-foreground">You are at {placeName(map, here)}</p>
         </div>
         {(map.districts.length > 0 || underground) && (
           <Pill active={view === "all"} onClick={() => setView("all")}>

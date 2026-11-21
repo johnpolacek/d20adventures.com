@@ -14,7 +14,7 @@ export function LevelUpLab({ heroes }: { heroes: { name: string; image?: string;
   const picked = heroes[hero]
   const sheet = picked.sheets[Math.min(level, picked.sheets.length - 1)]
   return (
-    <div className="min-h-screen bg-stage-ink p-6 font-sans text-stage-cream">
+    <div className="min-h-screen bg-background p-6 font-sans text-foreground">
       <div className="mb-4 flex flex-wrap gap-2">
         {heroes.map((h, index) => (
           <Pill key={h.name} active={index === hero} onClick={() => setHero(index)}>
@@ -51,7 +51,7 @@ export function LevelUpLab({ heroes }: { heroes: { name: string; image?: string;
           onClose={() => setSaid("Later")}
         />
       </div>
-      {said && <pre className="mt-6 max-w-[560px] whitespace-pre-wrap font-mono text-[11px] text-stage-cream/80">{said}</pre>}
+      {said && <pre className="mt-6 max-w-[560px] whitespace-pre-wrap font-mono text-[11px] text-foreground/80">{said}</pre>}
     </div>
   )
 }

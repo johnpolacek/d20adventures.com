@@ -68,23 +68,23 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
             setCallout(false)
             onClick()
           }}
-          className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter,scale] duration-150 ease-snap active:scale-95"
+          className="stage-stone grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter,scale] duration-150 ease-snap active:scale-95"
         >
           <ThumbsUpDownSolid />
         </Button>
       </Tip>
       <Presence show={callout} motion="drop" asChild>
-        <div className={cn(panel, "absolute right-0 z-50 flex items-center gap-2 border-stage-gold/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
+        <div className={cn(panel, "absolute right-0 z-50 flex items-center gap-2 border-accent/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
           {/* The pointer, under the middle of the button. */}
-          <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-stage-gold/60 bg-stage-panel" />
-          <span className="font-display text-sm tracking-wide whitespace-nowrap text-stage-cream">Give Us Feedback</span>
+          <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-accent/60 bg-panel" />
+          <span className="font-display text-sm tracking-wide whitespace-nowrap text-foreground">Give Us Feedback</span>
           <Button
             variant="plain"
             type="button"
             aria-label="Dismiss"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => setCallout(false)}
-            className="grid size-6 place-items-center rounded-full text-stage-cream/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-stage-cream active:scale-90"
+            className="grid size-6 place-items-center rounded-full text-foreground/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-foreground active:scale-90"
           >
             <X className="size-3.5" />
           </Button>
@@ -97,7 +97,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
 const NO_FILES: File[] = []
 
 const field =
-  "w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-stage-cream transition-colors duration-150 placeholder:text-stage-cream/35 focus:border-stage-gold/70 focus:outline-none"
+  "w-full resize-none rounded-[3px] border border-foreground/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-foreground transition-colors duration-150 placeholder:text-foreground/35 focus:border-accent/70 focus:outline-none"
 
 function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: (rating: number) => void; size?: string }) {
   const [hover, setHover] = useState(0)
@@ -114,7 +114,7 @@ function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: 
           onClick={() => onChange(n)}
           className="p-0.5 transition-[scale] duration-150 ease-snap hover:scale-110 active:scale-95"
         >
-          <Star className={cn(size, "transition-colors duration-150", n <= (hover || value) ? "fill-stage-gold text-stage-gold" : "text-stage-cream/40")} strokeWidth={1.5} />
+          <Star className={cn(size, "transition-colors duration-150", n <= (hover || value) ? "fill-accent text-accent" : "text-foreground/40")} strokeWidth={1.5} />
         </Button>
       ))}
     </div>
@@ -124,10 +124,10 @@ function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: 
 /** The rating row on an adventure's closing panel. A star opens the feedback panel with that rating. */
 export function EndingRating({ sent, onRate }: { sent: boolean; onRate: (rating: number) => void }) {
   return (
-    <div className="mt-5 border-t border-stage-line/15 pt-4">
+    <div className="mt-5 border-t border-foreground/15 pt-4">
       <div className={eyebrow}>{sent ? "Thank You" : "How Was It?"}</div>
       <Swap id={sent ? "sent" : "ask"}>
-        {sent ? <p className="mt-2 font-serif text-sm text-stage-cream/75">Your feedback was sent.</p> : <div className="mt-2">{<Stars value={0} onChange={onRate} />}</div>}
+        {sent ? <p className="mt-2 font-serif text-sm text-foreground/75">Your feedback was sent.</p> : <div className="mt-2">{<Stars value={0} onChange={onRate} />}</div>}
       </Swap>
     </div>
   )
@@ -245,7 +245,7 @@ export function FeedbackPanel({
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="grid size-7 shrink-0 place-items-center rounded-full text-stage-cream/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-stage-cream active:scale-90"
+          className="grid size-7 shrink-0 place-items-center rounded-full text-foreground/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-foreground active:scale-90"
         >
           <X className="size-4" />
         </Button>
@@ -256,7 +256,7 @@ export function FeedbackPanel({
         {gate ? (
           <div className="mt-4">{gate}</div>
         ) : state === "sent" ? (
-          <p className="mt-6 mb-2 text-center font-display text-lg text-stage-gold">Thank You</p>
+          <p className="mt-6 mb-2 text-center font-display text-lg text-accent">Thank You</p>
         ) : (
           <>
             <div className="mt-4 grid gap-3">
@@ -290,13 +290,13 @@ export function FeedbackPanel({
                 <ul className="flex flex-wrap gap-2">
                   {shots.map((shot) => (
                     <li key={shot.url} className="enter-pop relative">
-                      <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-stage-line/25 object-cover" />
+                      <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-foreground/25 object-cover" />
                       <Button
                         variant="plain"
                         type="button"
                         aria-label={`Remove ${shot.file.name}`}
                         onClick={() => remove(shot.url)}
-                        className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full border border-stage-line/40 bg-stage-panel text-stage-cream transition-[border-color,scale] duration-150 ease-snap hover:border-stage-gold active:scale-90"
+                        className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full border border-foreground/40 bg-panel text-foreground transition-[border-color,scale] duration-150 ease-snap hover:border-accent active:scale-90"
                       >
                         <X className="size-3" />
                       </Button>
@@ -331,7 +331,7 @@ export function FeedbackPanel({
                 {state === "sending" ? "Sending…" : "Send"}
               </Pill>
             </div>
-            <p className="mt-3 text-[10px] leading-relaxed tracking-wide text-stage-muted">Sent with the adventure, encounter and turn you are on.</p>
+            <p className="mt-3 text-[10px] leading-relaxed tracking-wide text-muted-foreground">Sent with the adventure, encounter and turn you are on.</p>
           </>
         )}
       </Swap>

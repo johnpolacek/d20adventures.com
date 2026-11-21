@@ -285,7 +285,7 @@ function CardFlow({ roll, answer, actor }: { roll: CardRoll; answer: (dice: numb
   const [key, setKey] = useState(0)
   const mode: CardMode = { kind: "roll", roll, made, resolving: Boolean(made && !result), ...(result ? { result } : {}) }
   return (
-    <div className="relative h-[600px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+    <div className="relative h-[600px] overflow-hidden rounded-md border border-foreground/15 bg-background">
       <Pill
         className="absolute top-3 left-3 z-40"
         onClick={() => {
@@ -350,7 +350,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
   const [start, setStart] = useState(() => Date.now())
   const [said, setSaid] = useState("")
   const text = "Reinhard Voss is leaving Lyra Ashgrove's reach. Lyra Ashgrove may strike with Dagger."
-  const stage = "relative h-[300px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink"
+  const stage = "relative h-[300px] overflow-hidden rounded-md border border-foreground/15 bg-background"
   const placed = `absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`
   const answer = (take: boolean) => setSaid(take ? "Take It" : "Let It Pass")
   return (
@@ -399,7 +399,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
         <Box title="11 · Reaction · Another Player's Hero" className={stage}>
           <ReactionCard key={`c${start}`} reaction="opportunity-attack" hero={LYRA} expiresAt={start + 20_000} text={text} mine={false} compact={compact} className={placed} />
         </Box>
-        <Box title="11 · Reaction · Phone Width" className="relative h-[300px] w-[360px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="11 · Reaction · Phone Width" className="relative h-[300px] w-[360px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <ReactionCard
             key={`d${start}`}
             reaction="opportunity-attack"
@@ -423,7 +423,7 @@ function ReactionLooks({ compact }: { compact: boolean }) {
             onChange={(changed) => setSaid(JSON.stringify(changed))}
           />
         </Box>
-        <Box title="11 · Card · Lyra, Standing Orders" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="11 · Card · Lyra, Standing Orders" className="relative h-[720px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <CharacterCard
             info={{
               id: "lyra",
@@ -564,10 +564,10 @@ export function RollLooks() {
             })}
           />
         </Box>
-        <Box title="7 · Card · Party Row, Temporary Hit Points" className="relative h-[380px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="7 · Card · Party Row, Temporary Hit Points" className="relative h-[380px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <PromptCard mode={{ kind: "hold", prompt: "What does Lyra do?" }} actor={PARTY[3]} party={PARTY} compact={compact} onReply={() => {}} onRoll={() => {}} onPick={() => {}} />
         </Box>
-        <Box title="8 · Card · Suggestions Loading, Then Wrapping" className="relative h-[480px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="8 · Card · Suggestions Loading, Then Wrapping" className="relative h-[480px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <SuggestionsFlow actor={PARTY[0]} compact={compact} />
         </Box>
         <Box title="Narration">
@@ -592,15 +592,15 @@ export function RollLooks() {
         </Box>
       </div>
 
-      <Box title="Turn Order · Wrenna Stunned and Passed Over" className="relative h-[230px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+      <Box title="Turn Order · Wrenna Stunned and Passed Over" className="relative h-[230px] overflow-hidden rounded-md border border-foreground/15 bg-background">
         <TurnOrder order={ORDER} activeId="owlbear" turnId="owlbear" label="Owlbear" passed="Wrenna Faelendar, Stunned" compact={compact} onPick={() => {}} />
       </Box>
-      <Box title="7 · Turn Order · Lasting Spells and Temporary Hit Points" className="relative h-[230px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+      <Box title="7 · Turn Order · Lasting Spells and Temporary Hit Points" className="relative h-[230px] overflow-hidden rounded-md border border-foreground/15 bg-background">
         <TurnOrder order={SPELLS_ORDER} activeId="lyra" turnId="lyra" label={LYRA} compact={compact} onPick={() => {}} />
       </Box>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6">
-        <Box title="Journal" className="relative h-[760px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="Journal" className="relative h-[760px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <Journal turns={JOURNAL} chat={[]} compact={compact} onClose={() => {}} />
         </Box>
         {[
@@ -609,25 +609,25 @@ export function RollLooks() {
           { id: "owlbear", name: "Owlbear", role: "Monstrosity", at: 4 },
           { id: "thug", name: "Warehouse Thug", role: "Human Thug", at: 7 },
         ].map(({ at, ...info }) => (
-          <Box key={info.id} title={`Card · ${info.name}`} className="relative h-[520px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+          <Box key={info.id} title={`Card · ${info.name}`} className="relative h-[520px] overflow-hidden rounded-md border border-foreground/15 bg-background">
             <CharacterCard info={{ ...info, standing: ORDER[at].standing, conditions: ORDER[at].conditions }} compact={compact} onClose={() => {}} />
           </Box>
         ))}
-        <Box title="6 and 7 · Card · Lyra, Wizard 1" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="6 and 7 · Card · Lyra, Wizard 1" className="relative h-[720px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <CharacterCard
             info={{ id: "lyra", name: LYRA, role: "Human Wizard", standing: SPELLS_ORDER[0].standing, conditions: SPELLS_ORDER[0].conditions, spellcasting: LYRA_CASTING }}
             compact={compact}
             onClose={() => {}}
           />
         </Box>
-        <Box title="6 · Card · Milos, Cleric 3" className="relative h-[720px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="6 · Card · Milos, Cleric 3" className="relative h-[720px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <CharacterCard
             info={{ id: "milos", name: "Milos Radan", role: "Human Cleric", standing: { kind: "hero", hitPoints: 21, maximum: 24, armorClass: 18 }, spellcasting: MILOS_CASTING }}
             compact={compact}
             onClose={() => {}}
           />
         </Box>
-        <Box title="7 · Card · Reinhard, NPC" className="relative h-[520px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+        <Box title="7 · Card · Reinhard, NPC" className="relative h-[520px] overflow-hidden rounded-md border border-foreground/15 bg-background">
           <CharacterCard
             info={{ id: "reinhard", name: "Reinhard Voss", role: "Human Mage", standing: SPELLS_ORDER[2].standing, conditions: SPELLS_ORDER[2].conditions }}
             compact={compact}

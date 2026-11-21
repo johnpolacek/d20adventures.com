@@ -71,12 +71,12 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
   const margin = roll.kind === "death" ? marginText(roll) : ""
   const term = (sign: string, n: number) => (
     <>
-      <span className="text-[12px] text-stage-muted">{sign}</span>
+      <span className="text-[12px] text-muted-foreground">{sign}</span>
       <span className="text-[14px]">{n}</span>
     </>
   )
   return (
-    <div className={cn("my-3 flex items-start gap-3 rounded-[3px] border border-l-2 border-stage-line/15 bg-black/30 py-2 pr-3 pl-2", className)} style={{ borderLeftColor: tone }}>
+    <div className={cn("my-3 flex items-start gap-3 rounded-[3px] border border-l-2 border-foreground/15 bg-black/30 py-2 pr-3 pl-2", className)} style={{ borderLeftColor: tone }}>
       <span className="sr-only">{rollSpeech(roll)}</span>
       <div className="flex shrink-0 gap-0.5">
         {dice.map((d, i) => (
@@ -86,28 +86,28 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
       <div aria-hidden="true" className="min-w-0 flex-1">
         <div className={cn(eyebrow, "overflow-hidden text-ellipsis whitespace-nowrap")}>{rollHeading(roll, roll.character)}</div>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <div className="flex items-baseline gap-x-1.5 whitespace-nowrap font-serif tabular-nums text-stage-cream">
+          <div className="flex items-baseline gap-x-1.5 whitespace-nowrap font-serif tabular-nums text-foreground">
             <span className="text-[14px]">{roll.natural}</span>
             {roll.modifier !== undefined && term(roll.modifier < 0 ? "−" : "+", Math.abs(roll.modifier))}
             {roll.inspired !== undefined && (
               <>
                 {term("+", roll.inspired)}
-                <span className="font-sans text-[8px] tracking-[0.2em] text-stage-muted uppercase">Inspiration</span>
+                <span className="font-sans text-[8px] tracking-[0.2em] text-muted-foreground uppercase">Inspiration</span>
               </>
             )}
             {(roll.adds ?? []).map((a, i) => (
               <Fragment key={i}>
                 {term(a.amount < 0 ? "−" : "+", Math.abs(a.amount))}
-                <span className="font-sans text-[8px] tracking-[0.2em] text-stage-muted uppercase">{a.from}</span>
+                <span className="font-sans text-[8px] tracking-[0.2em] text-muted-foreground uppercase">{a.from}</span>
               </Fragment>
             ))}
-            <span className="text-[12px] text-stage-muted">=</span>
-            <span className="text-[19px] font-bold text-stage-gold">{roll.total}</span>
-            <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-stage-muted uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>
+            <span className="text-[12px] text-muted-foreground">=</span>
+            <span className="text-[19px] font-bold text-accent">{roll.total}</span>
+            <span className="ml-1.5 font-sans text-[9px] tracking-[0.2em] text-muted-foreground uppercase">{roll.versus ? "vs" : againstLabel(roll.kind)}</span>
             <span className="text-[14px]">{roll.versus ?? roll.dc}</span>
           </div>
           <span className="flex shrink-0 items-center gap-2">
-            {mode && <span className="font-serif text-[12px] font-semibold text-stage-gold">{mode}</span>}
+            {mode && <span className="font-serif text-[12px] font-semibold text-accent">{mode}</span>}
             <span
               className="rounded-[3px] border px-1.5 py-0.5 font-display text-[10px] font-bold tracking-[0.06em] uppercase"
               style={{ color: tone, borderColor: tone, boxShadow: `${crit ? `0 0 10px ${tone}55, ` : ""}inset 0 0 6px ${tone}33`, textShadow: `0 0 6px ${tone}55` }}
@@ -116,7 +116,7 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
             </span>
           </span>
         </div>
-        {margin && <div className="mt-1 font-serif text-[12px] text-stage-muted italic">{margin}</div>}
+        {margin && <div className="mt-1 font-serif text-[12px] text-muted-foreground italic">{margin}</div>}
         {roll.kind === "death" && roll.deathSaves && (
           <div className="mt-1.5">
             <DeathSaveMarks saves={roll.deathSaves} compact />
@@ -131,10 +131,10 @@ export function RollLine({ roll, className }: { roll: RollView; className?: stri
 // Between the turns of one scene: a rule with the turn's place in it, 2 of 5.
 function Divider({ n, of }: { n: number; of: number }) {
   return (
-    <div className="my-3 flex items-center gap-3 font-sans text-[9px] tracking-[0.26em] text-stage-muted uppercase">
-      <span className="h-px flex-1 bg-stage-line/15" />
+    <div className="my-3 flex items-center gap-3 font-sans text-[9px] tracking-[0.26em] text-muted-foreground uppercase">
+      <span className="h-px flex-1 bg-foreground/15" />
       {n} of {of}
-      <span className="h-px flex-1 bg-stage-line/15" />
+      <span className="h-px flex-1 bg-foreground/15" />
     </div>
   )
 }
@@ -152,7 +152,7 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
   }
   return (
     <form
-      className="flex gap-2 border-t border-stage-line/20 px-5 py-3"
+      className="flex gap-2 border-t border-foreground/20 px-5 py-3"
       onSubmit={(e) => {
         e.preventDefault()
         void send()
@@ -165,7 +165,7 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Say something"
         aria-label="Table chat message"
-        className="min-w-0 flex-1 rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-stage-cream transition-colors duration-150 placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none"
+        className="min-w-0 flex-1 rounded-[3px] border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
       />
       <Pill type="submit" disabled={sending || !draft.trim()}>
         Send
@@ -194,14 +194,14 @@ function Story({ turns }: { turns: JournalTurn[] }) {
           <article key={t.number}>
             {scene.length > 1 && <Divider n={n + 1} of={scene.length} />}
             {t.reply && (
-              <div className="mb-2 border-l border-stage-brass/50 pl-3 font-serif text-[13px] text-stage-muted italic">
-                <span className="not-italic text-[9px] tracking-[0.2em] text-stage-gold uppercase">{t.reply.name}</span>
+              <div className="mb-2 border-l border-primary/50 pl-3 font-serif text-[13px] text-muted-foreground italic">
+                <span className="not-italic text-[9px] tracking-[0.2em] text-accent uppercase">{t.reply.name}</span>
                 <div>{t.reply.text}</div>
               </div>
             )}
             {t.paragraphs.map((p, i) =>
               typeof p === "string" ? (
-                <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
+                <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-soft-foreground", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
                   {p}
                 </p>
               ) : "roll" in p ? (
@@ -225,7 +225,7 @@ function Chat({ chat, scroller }: { chat: ChatLine[]; scroller: RefObject<HTMLDi
   }, [chat.length, scroller])
   return chat.map((m, i) => (
     <p key={i} className={cn("mb-2 text-[12px] leading-relaxed", joined(i) && "enter-rise")}>
-      <span className="font-serif text-[#f3d6a6]">{m.from}</span> <span className="text-stage-sage">{m.text}</span>
+      <span className="font-serif text-[#f3d6a6]">{m.from}</span> <span className="text-soft-foreground">{m.text}</span>
     </p>
   ))
 }
@@ -262,7 +262,7 @@ export function Journal({
       style={style}
       onAnimationEnd={onAnimationEnd}
     >
-      <div className="flex items-center justify-between border-b border-stage-line/20 px-5 pt-4 pb-2">
+      <div className="flex items-center justify-between border-b border-foreground/20 px-5 pt-4 pb-2">
         <div className="flex gap-4">
           {(["story", "chat"] as const).map((t) => (
             <Button
@@ -270,13 +270,13 @@ export function Journal({
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cn(eyebrow, "pb-1 transition-colors duration-150", tab === t ? "border-b border-stage-gold" : "text-stage-muted hover:text-stage-gold")}
+              className={cn(eyebrow, "pb-1 transition-colors duration-150", tab === t ? "border-b border-accent" : "text-muted-foreground hover:text-accent")}
             >
               {t === "story" ? "The story so far" : "Table chat"}
             </Button>
           ))}
         </div>
-        <Button variant="plain" type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-stage-muted transition-[color,scale] duration-150 ease-snap hover:text-stage-cream active:scale-90">
+        <Button variant="plain" type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-muted-foreground transition-[color,scale] duration-150 ease-snap hover:text-foreground active:scale-90">
           ×
         </Button>
       </div>

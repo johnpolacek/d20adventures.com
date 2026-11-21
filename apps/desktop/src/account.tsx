@@ -219,7 +219,7 @@ export function FeedbackLink({ account: a }: { account: Account }) {
         <Waiting account={a} />
       ) : (
         <div className="space-y-4">
-          <p className="font-serif text-stage-cream/80">Link this computer to your account to send feedback.</p>
+          <p className="font-serif text-foreground/80">Link this computer to your account to send feedback.</p>
           <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy} onClick={() => void a.start()}>
             {a.busy ? "Opening…" : "Link Account"}
           </Button>

@@ -103,7 +103,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
     >
       <Presence show={Boolean(state && !save)} motion="fade" asChild>
         {state && !save && (
-          <div className="absolute inset-0 z-40 grid place-items-center bg-stage-ink/70">
+          <div className="absolute inset-0 z-40 grid place-items-center bg-background/70">
             <section className={cn(panel, "enter-pop w-[min(480px,92vw)] p-8 text-center")}>
               <div className={eyebrow}>{state.hostOnline ? "Waiting for the host to start" : "The host is offline"}</div>
               <h1 className="mt-3 font-display text-4xl">{state.adventure.title}</h1>

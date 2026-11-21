@@ -55,7 +55,7 @@ function Number_({ shown, rolling, size = 32 }: { shown: number | null; rolling:
   return (
     <span
       key={shown ?? "roll"}
-      className={cn("relative font-serif leading-none text-stage-parchment [text-shadow:0_1px_3px_#000d]", rolling ? "d20-flip" : shown !== null && "d20-land")}
+      className={cn("relative font-serif leading-none text-accent-soft [text-shadow:0_1px_3px_#000d]", rolling ? "d20-flip" : shown !== null && "d20-land")}
       style={{ fontSize: shown === null ? 11 : size, letterSpacing: shown === null ? "0.2em" : undefined }}
     >
       {shown ?? "ROLL"}
@@ -113,11 +113,11 @@ function useRollOn(go: number, roll: () => void) {
 
 function Take({ name, note, children }: { name: string; note: string; children: ReactNode }) {
   return (
-    <div className="stage-grain flex flex-col items-center gap-4 rounded-md border border-stage-line/25 bg-stage-panel/95 px-6 pt-6 pb-5">
+    <div className="stage-grain flex flex-col items-center gap-4 rounded-md border border-foreground/25 bg-panel/95 px-6 pt-6 pb-5">
       <div className="grid h-[130px] place-items-center">{children}</div>
       <div className="text-center">
         <div className="font-display text-[18px] text-[#f3d6a6]">{name}</div>
-        <div className="mt-1 max-w-[200px] font-serif text-[12px] leading-snug text-stage-muted">{note}</div>
+        <div className="mt-1 max-w-[200px] font-serif text-[12px] leading-snug text-muted-foreground">{note}</div>
       </div>
     </div>
   )
@@ -126,11 +126,11 @@ function Take({ name, note, children }: { name: string; note: string; children: 
 export function DiceLab() {
   const [go, setGo] = useState(0)
   return (
-    <main className="min-h-screen bg-stage-ink px-8 py-10 font-sans text-stage-cream">
+    <main className="min-h-screen bg-background px-8 py-10 font-sans text-foreground">
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-8 flex items-end justify-between gap-6">
           <div>
-            <div className="font-sans text-[9px] font-medium tracking-[0.26em] text-stage-gold uppercase">Stageview · roll card</div>
+            <div className="font-sans text-[9px] font-medium tracking-[0.26em] text-accent uppercase">Stageview · roll card</div>
             <h1 className="mt-1.5 font-display text-[30px]">The d20</h1>
           </div>
           <Pill active className="rounded-full px-6 py-2 font-display text-[13px] font-bold tracking-[0.12em]" onClick={() => setGo((g) => g + 1)}>

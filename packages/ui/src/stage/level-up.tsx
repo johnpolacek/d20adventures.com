@@ -66,7 +66,7 @@ function Section({ title, count, index, children }: { title: string; count?: str
     <section className="enter-rise mt-4" style={staggered(index)}>
       <h3 className={cn(eyebrow, "mb-2 flex items-baseline justify-between gap-3")}>
         <span>{title}</span>
-        {count && <span className="tabular-nums tracking-[0.12em] text-stage-cream/70">{count}</span>}
+        {count && <span className="tabular-nums tracking-[0.12em] text-foreground/70">{count}</span>}
       </h3>
       {children}
     </section>
@@ -76,7 +76,7 @@ function Section({ title, count, index, children }: { title: string; count?: str
 function Labeled({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
     <div className={className}>
-      <div className="mb-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">{label}</div>
+      <div className="mb-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">{label}</div>
       {children}
     </div>
   )
@@ -133,7 +133,7 @@ function SpellOptions({
     <div className="space-y-2">
       {levels.map((level) => (
         <div key={level} className="flex gap-2">
-          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">Level {level}</span>
+          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">Level {level}</span>
           <Options
             label={`${label}, level ${level}`}
             from={from.filter((spell) => spell.level === level).map((spell) => ({ ...spell, note: spell.school ? sentence(spell.school) : undefined }))}
@@ -159,7 +159,7 @@ function SpellPicks({ offer, picked, onPick }: { offer: PicksOffer; picked: read
     <div className="space-y-2">
       {offer.slots.map(([level]) => (
         <div key={level} className="flex gap-2">
-          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">Level {level}</span>
+          <span className="w-12 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">Level {level}</span>
           <Options
             label={`${offer.feature.name}, level ${level}`}
             from={from.filter((option) => option.level === level)}
@@ -202,7 +202,7 @@ function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOff
               }}
             >
               {option.name}
-              {blocked && <span className="ml-1 text-stage-cream/50">· {blocked}</span>}
+              {blocked && <span className="ml-1 text-foreground/50">· {blocked}</span>}
             </Pill>
           )
         })}
@@ -265,7 +265,7 @@ function BookPicks({
           const mine = chosen.filter((id) => from.some((spell) => spell.id === id))
           return (
             <div key={row.level} className="flex gap-2">
-              <span className="w-16 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">
+              <span className="w-16 shrink-0 pt-1 font-sans text-[10px] uppercase tracking-[0.14em] text-foreground/60">
                 {row.label} {mine.length}/{row.most}
               </span>
               <Options
@@ -319,7 +319,7 @@ export function LevelUp({
 
   if (!rules || !options || !picks) {
     return (
-      <section key="loading" className={cn(panel, "p-6 text-center font-serif text-stage-cream", entrance("enter-pop", className))} style={style} onAnimationEnd={onAnimationEnd} aria-label={`${hero} Levels Up`}>
+      <section key="loading" className={cn(panel, "p-6 text-center font-serif text-foreground", entrance("enter-pop", className))} style={style} onAnimationEnd={onAnimationEnd} aria-label={`${hero} Levels Up`}>
         Loading…
       </section>
     )
@@ -362,14 +362,14 @@ export function LevelUp({
     // A panel the caller places, not a modal: the desktop app dims the stage behind it, and the lab draws it inline.
     <section
       key="choices"
-      className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", entrance("enter-pop", className))}
+      className={cn(panel, "flex max-h-full flex-col text-foreground", compact ? "p-4" : "p-6", entrance("enter-pop", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
       aria-label={`${hero} Levels Up`}
     >
       <header className="flex items-center gap-3">
         {portrait && (
-          <img src={portrait} alt="" className="h-12 w-12 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
+          <img src={portrait} alt="" className="h-12 w-12 shrink-0 rounded-full border border-accent/60 object-cover object-top" />
         )}
         <div className="min-w-0">
           <div className={eyebrow}>Level Up</div>
@@ -380,7 +380,7 @@ export function LevelUp({
       </header>
 
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
-        <p className="font-serif text-[13px] text-stage-cream/85">
+        <p className="font-serif text-[13px] text-foreground/85">
           Hit Point Maximum {options.hitPointMaximum}
           {options.features.length > 0 && <> · {options.features.map((feature) => feature.name).join(", ")}</>}
         </p>
@@ -553,7 +553,7 @@ export function LevelUp({
         {options.spells && (
           <Section index={place++} title="Prepared Spells" count={`${picks.spells.length} of ${toPick.count}`}>
             {(options.spells.dropped || toPick.kept.size > 0) && (
-              <p className="mb-2 font-serif text-[12px] text-stage-cream/70">
+              <p className="mb-2 font-serif text-[12px] text-foreground/70">
                 Now always prepared:{" "}
                 {[
                   ...(options.spells.dropped ?? []).map((spell) => spell.name),
@@ -590,9 +590,9 @@ export function LevelUp({
         )}
       </div>
 
-      <footer className="mt-4 border-t border-stage-line/20 pt-3">
+      <footer className="mt-4 border-t border-foreground/20 pt-3">
         <Presence show={Boolean(stopped) || left.length > 0} motion="fade" initial={false} asChild>
-          <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-roll-failure" : "text-stage-cream/70")} role={stopped ? "alert" : undefined}>
+          <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-roll-failure" : "text-foreground/70")} role={stopped ? "alert" : undefined}>
             {stopped ?? `Still to choose: ${left.join(", ")}.`}
           </p>
         </Presence>

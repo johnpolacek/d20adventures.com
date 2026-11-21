@@ -126,7 +126,7 @@ function GmMusing({ note }: { note?: string }) {
   }, [note])
   const line = note ?? MUSINGS[order[at % order.length]]
   return (
-    <div key={line} className={cn("mt-1.5 font-serif text-[14px] text-stage-parchment italic", leaving ? "gm-musing-out" : "gm-musing-in")}>
+    <div key={line} className={cn("mt-1.5 font-serif text-[14px] text-accent-soft italic", leaving ? "gm-musing-out" : "gm-musing-in")}>
       {line}
     </div>
   )
@@ -134,10 +134,10 @@ function GmMusing({ note }: { note?: string }) {
 
 // The card's look: dark glass with a warm glow at the top, where the hero's portrait sits.
 const candlelit =
-  "stage-grain rounded-xl border border-stage-gold/20 bg-stage-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_#fcd34d33] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,#fcd34d26,transparent_70%)]"
+  "stage-grain rounded-xl border border-accent/20 bg-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_#fcd34d33] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,#fcd34d26,transparent_70%)]"
 // A hero's choices: ghost pills in the serif.
 const choice =
-  "rounded-full border border-stage-line/20 px-4 py-1.5 font-serif text-[16px] text-stage-cream/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-stage-gold hover:bg-stage-gold/10 hover:text-stage-gold"
+  "rounded-full border border-foreground/20 px-4 py-1.5 font-serif text-[16px] text-foreground/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-accent hover:bg-accent/10 hover:text-accent"
 
 // The hero whose turn it is, a gold ring breaking the card's top edge, with the rest of the party in smaller rings
 // beside it to switch to.
@@ -151,8 +151,8 @@ function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; a
       aria-label={c.standing ? `${c.name}, ${standingWords(c.standing)}` : c.name}
       aria-current={big || undefined}
       className={cn(
-        "m-0 shrink-0 overflow-hidden rounded-full bg-stage-ink transition-[opacity,scale] duration-150 ease-snap active:scale-95",
-        big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-stage-gold),0_0_36px_#fcd34d44]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_#fcd34d66] hover:opacity-90",
+        "m-0 shrink-0 overflow-hidden rounded-full bg-background transition-[opacity,scale] duration-150 ease-snap active:scale-95",
+        big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-accent),0_0_36px_#fcd34d44]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_#fcd34d66] hover:opacity-90",
         big ? (compact ? "h-11 w-11" : "h-[88px] w-[88px]") : compact ? "h-7 w-7" : "h-11 w-11"
       )}
     >
@@ -264,7 +264,7 @@ const signed = (n: number) => (n < 0 ? `\u2212${-n}` : `+${n}`)
 
 function Total({ natural, modifier }: { natural: number | null; modifier: number }) {
   return (
-    <div className="mt-2 font-serif text-[13px] text-stage-parchment tabular-nums">
+    <div className="mt-2 font-serif text-[13px] text-accent-soft tabular-nums">
       {natural === null ? "\u00a0" : `${natural} ${modifier < 0 ? "\u2212" : "+"} ${Math.abs(modifier)} = ${natural + modifier}`}
     </div>
   )
@@ -318,7 +318,7 @@ function SingleRoll({
   return (
     <div>
       <div className={eyebrow}>{dice === null ? `${title} Needed` : title}</div>
-      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-foreground">{prompt}</p>}
       <div className={cn("mx-auto max-w-[440px] text-left", compact ? "mt-1.5" : "mt-3")}>
         <RollResult
           compact={compact}
@@ -386,15 +386,15 @@ function ContestRoll({
   }
   const side = (name: string, skill: string, detail: string) => (
     <>
-      <div className="text-[9px] tracking-[0.2em] text-stage-gold uppercase">{name}</div>
+      <div className="text-[9px] tracking-[0.2em] text-accent uppercase">{name}</div>
       <div className={cn("font-display text-[#f3d6a6]", compact ? "text-base" : "mt-0.5 text-[22px]")}>{skill}</div>
-      <div className="mb-2.5 text-[10px] tracking-wider text-stage-muted uppercase">{detail}</div>
+      <div className="mb-2.5 text-[10px] tracking-wider text-muted-foreground uppercase">{detail}</div>
     </>
   )
   return (
     <div>
       <div className={eyebrow}>Contest</div>
-      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-stage-cream">{prompt}</p>}
+      {prompt && !compact && <p className="mx-auto mt-2 max-w-[440px] font-serif text-[14px] leading-[1.5] text-foreground">{prompt}</p>}
       <div className={cn("flex items-start justify-center", compact ? "mt-1 gap-4" : "mt-3 gap-7")}>
         {roll.versus && (
           <>
@@ -403,14 +403,14 @@ function ContestRoll({
               <D20 auto land={roll.versus.natural} compact={compact} onRoll={setTheirs} />
               <Total natural={theirs} modifier={roll.versus.modifier} />
             </div>
-            <div className={cn("self-center font-display text-stage-muted", compact ? "text-sm" : "text-lg")}>vs</div>
+            <div className={cn("self-center font-display text-muted-foreground", compact ? "text-sm" : "text-lg")}>vs</div>
           </>
         )}
         <div className="flex flex-col items-center">
           {side(actor.name.split(" ")[0], roll.skill, signed(roll.modifier))}
           {roll.mode && (
-            <div className="-mt-1.5 mb-2 max-w-[200px] truncate font-serif text-[12px] text-stage-muted italic">
-              <span className="font-semibold text-stage-gold not-italic">{modeName(roll.mode)}</span>
+            <div className="-mt-1.5 mb-2 max-w-[200px] truncate font-serif text-[12px] text-muted-foreground italic">
+              <span className="font-semibold text-accent not-italic">{modeName(roll.mode)}</span>
               {roll.reasons?.length ? ` · ${roll.reasons.join(", ")}` : ""}
             </div>
           )}
@@ -577,7 +577,7 @@ export function PromptCard({
           {/* A short question reads well in the capitals of the display face. A longer ask from the GM stays in the serif. */}
           <p
             className={cn(
-              mode.prompt.length <= 60 ? "font-display text-stage-gold [text-shadow:0_1px_6px_#000]" : "font-serif text-stage-cream",
+              mode.prompt.length <= 60 ? "font-display text-accent [text-shadow:0_1px_6px_#000]" : "font-serif text-foreground",
               compact ? "my-1 line-clamp-3 text-[14px] leading-snug" : cn("mb-4 leading-[1.35]", mode.prompt.length <= 60 ? "text-[22px]" : "text-[19px]")
             )}
           >
@@ -592,10 +592,10 @@ export function PromptCard({
                       key={i}
                       aria-hidden
                       style={{ animationDelay: `${i * 200}ms` }}
-                      className={cn(choice, "flex w-[30%] animate-pulse items-center justify-center not-italic hover:border-stage-line/20 hover:bg-transparent", compact && "px-3 py-0.5 text-[12px]")}
+                      className={cn(choice, "flex w-[30%] animate-pulse items-center justify-center not-italic hover:border-foreground/20 hover:bg-transparent", compact && "px-3 py-0.5 text-[12px]")}
                     >
                       &nbsp;
-                      <span className="h-[0.5em] w-2/3 rounded-full bg-stage-cream/15" />
+                      <span className="h-[0.5em] w-2/3 rounded-full bg-foreground/15" />
                       &nbsp;
                     </span>
                   ))
@@ -608,7 +608,7 @@ export function PromptCard({
                           choice,
                           "max-w-full truncate active:scale-[0.97]",
                           compact && "px-3 py-0.5 text-[12px]",
-                          draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold",
+                          draft === s.text && "border-accent bg-accent/10 text-accent",
                           rising && "enter-rise"
                         )}
                         style={rising ? staggered(i) : undefined}
@@ -623,7 +623,7 @@ export function PromptCard({
                   ))}
             </div>
           )}
-          <div className="relative flex items-end gap-2 rounded-[22px] border border-stage-line/15 bg-black/55 p-1.5 pl-4 transition-colors focus-within:border-stage-gold/50">
+          <div className="relative flex items-end gap-2 rounded-[22px] border border-foreground/15 bg-black/55 p-1.5 pl-4 transition-colors focus-within:border-accent/50">
             <Textarea
               plain
               ref={box}
@@ -640,7 +640,7 @@ export function PromptCard({
               rows={1}
               placeholder={demo && !draft ? "" : `What does ${actor.name.split(" ")[0]} say and do?`}
               className={cn(
-                "field-sizing-content block max-h-32 min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-left font-serif text-stage-cream placeholder:text-stage-muted/60 focus:outline-none disabled:cursor-not-allowed",
+                "field-sizing-content block max-h-32 min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-left font-serif text-foreground placeholder:text-muted-foreground/60 focus:outline-none disabled:cursor-not-allowed",
                 compact ? "text-[13px]" : "text-[16px]"
               )}
             />
@@ -651,7 +651,7 @@ export function PromptCard({
               onClick={() => send()}
               disabled={!draft.trim()}
               className={cn(
-                "grid shrink-0 place-items-center rounded-full bg-stage-gold text-black transition-[opacity,filter,scale] duration-150 ease-snap hover:brightness-110 enabled:active:scale-90 disabled:opacity-35",
+                "grid shrink-0 place-items-center rounded-full bg-accent text-black transition-[opacity,filter,scale] duration-150 ease-snap hover:brightness-110 enabled:active:scale-90 disabled:opacity-35",
                 compact ? "h-7 w-7" : "h-9 w-9"
               )}
             >
@@ -659,7 +659,7 @@ export function PromptCard({
             </Button>
             <Presence show={demo && !draft} motion="fade" initial={false} asChild>
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                <span className={cn("font-sans font-medium tracking-[0.22em] text-stage-gold/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
+                <span className={cn("font-sans font-medium tracking-[0.22em] text-accent/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
                   Demo only · Click Suggest for a reply
                 </span>
               </div>
@@ -667,7 +667,7 @@ export function PromptCard({
           </div>
           <Presence show={Boolean(warning)} motion="rise" asChild>
             {warning && (
-              <div role="alert" className={cn("rounded-lg border border-stage-gold/30 bg-black/50 text-left font-serif text-stage-cream", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
+              <div role="alert" className={cn("rounded-lg border border-accent/30 bg-black/50 text-left font-serif text-foreground", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
                 <p>
                   {warning}. {actor.name.split(" ")[0]} would spend a spell slot for nothing.
                 </p>
@@ -693,7 +693,7 @@ export function PromptCard({
                 </Pill>
               )}
               {onSkip && (
-                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors duration-150 hover:text-stage-cream">
+                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-muted-foreground transition-colors duration-150 hover:text-foreground">
                   Skip
                 </Button>
               )}
@@ -729,13 +729,13 @@ export function PromptCard({
       {mode.kind === "thinking" && mode.who && (
         <div className="flex items-center justify-center gap-3 py-1 text-left">
           {mode.who.portrait && (
-            <div className={cn("shrink-0 border border-stage-gold bg-stage-ink p-[2px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-9 w-8" : "h-14 w-12")}>
+            <div className={cn("shrink-0 border border-accent bg-background p-[2px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-9 w-8" : "h-14 w-12")}>
               <img src={mode.who.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
             </div>
           )}
           <div className="min-w-0">
             <div className={cn(eyebrow, "animate-pulse")}>{mode.who.name}&apos;s turn</div>
-            {mode.note && <div className="mt-1 font-serif text-[13px] text-stage-sage italic">{mode.note}</div>}
+            {mode.note && <div className="mt-1 font-serif text-[13px] text-soft-foreground italic">{mode.note}</div>}
           </div>
         </div>
       )}

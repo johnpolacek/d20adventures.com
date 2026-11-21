@@ -170,11 +170,11 @@ const palettes: { name: string; note: string; swatches: { label: string; classNa
     name: "Stage",
     note: "the encounter HUD",
     swatches: [
-      { label: "gold", className: "bg-stage-gold" },
-      { label: "brass", className: "bg-stage-brass" },
-      { label: "parchment", className: "bg-stage-parchment" },
-      { label: "muted", className: "bg-stage-muted" },
-      { label: "sage", className: "bg-stage-sage" },
+      { label: "gold", className: "bg-accent" },
+      { label: "brass", className: "bg-primary" },
+      { label: "parchment", className: "bg-accent-soft" },
+      { label: "muted", className: "bg-muted-foreground" },
+      { label: "sage", className: "bg-soft-foreground" },
     ],
   },
 ]

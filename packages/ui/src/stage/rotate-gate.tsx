@@ -37,17 +37,17 @@ export async function requestLandscape() {
 export function RotatePrompt({ className, style, onAnimationEnd }: MotionProps) {
   return (
     <div
-      className={cn("fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-stage-ink px-8 text-center", entrance("enter-fade", className))}
+      className={cn("fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-background px-8 text-center", entrance("enter-fade", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
       role="alert"
     >
-      <svg viewBox="0 0 64 64" className="h-20 w-20 animate-[spin_2.4s_ease-in-out_infinite] text-stage-gold" aria-hidden="true">
+      <svg viewBox="0 0 64 64" className="h-20 w-20 animate-[spin_2.4s_ease-in-out_infinite] text-accent" aria-hidden="true">
         <rect x="20" y="6" width="24" height="44" rx="4" fill="none" stroke="currentColor" strokeWidth="3" />
         <circle cx="32" cy="44" r="2" fill="currentColor" />
       </svg>
-      <div className="font-serif text-2xl text-stage-gold">Turn your phone sideways</div>
-      <p className="max-w-xs font-sans text-[11px] tracking-[0.2em] uppercase text-stage-sage">The adventure plays in landscape.</p>
+      <div className="font-serif text-2xl text-accent">Turn your phone sideways</div>
+      <p className="max-w-xs font-sans text-[11px] tracking-[0.2em] uppercase text-soft-foreground">The adventure plays in landscape.</p>
     </div>
   )
 }

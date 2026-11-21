@@ -27,7 +27,7 @@ function Control({ label, children, ...rest }: Omit<ButtonProps, "variant" | "si
         variant="plain"
         type="button"
         aria-label={label}
-        className="stage-leather grid h-7 w-7 place-items-center rounded-full border border-stage-line/25 text-stage-cream transition-[filter,border-color,background-color,scale] duration-150 ease-snap hover:border-stage-gold enabled:active:scale-90 disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
+        className="stage-navy grid h-7 w-7 place-items-center rounded-full border border-foreground/25 text-foreground transition-[filter,border-color,background-color,scale] duration-150 ease-snap hover:border-accent enabled:active:scale-90 disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
         {...rest}
       >
         {children}
@@ -153,9 +153,9 @@ export function Narration({
       onAnimationEnd={onAnimationEnd}
     >
       <div ref={inner} className={compact ? "px-3 pt-2 pb-2" : "px-5 pt-4 pb-3"}>
-        <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-stage-gold", compact ? "mb-1" : "mb-2")}>
+        <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-accent", compact ? "mb-1" : "mb-2")}>
           {shownHeading}
-          {timed && paused && <span className="ml-auto text-stage-muted">Paused</span>}
+          {timed && paused && <span className="ml-auto text-muted-foreground">Paused</span>}
         </div>
         {shownRoll ? (
           <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
@@ -168,7 +168,7 @@ export function Narration({
         ) : (
           <p
             className={cn(
-              "font-serif text-stage-cream transition-opacity duration-150",
+              "font-serif text-foreground transition-opacity duration-150",
               visible ? "opacity-100" : "opacity-0",
               compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]",
               timed && "cursor-pointer"
@@ -182,7 +182,7 @@ export function Narration({
           {/* Long narrations get smaller dots, so the row stays one line beside the controls. */}
           <div className={cn("flex min-w-0 flex-wrap", count > 10 ? "gap-[3px]" : "gap-1")} role="presentation">
             {Array.from({ length: count }, (_, i) => (
-              <span key={i} className={cn("rounded-full transition-colors duration-150", count > 10 ? "h-1 w-1" : "h-1.5 w-1.5", i <= index ? "bg-stage-gold" : "bg-stage-line/20")} />
+              <span key={i} className={cn("rounded-full transition-colors duration-150", count > 10 ? "h-1 w-1" : "h-1.5 w-1.5", i <= index ? "bg-accent" : "bg-foreground/20")} />
             ))}
           </div>
           <div className="flex shrink-0 items-center gap-1.5">

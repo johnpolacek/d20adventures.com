@@ -1236,7 +1236,7 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on && Boolean(ended && !busy && !reading)} motion="rise" asChild>
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
-              <div className="text-[10px] tracking-[.3em] text-stage-gold">THE END</div>
+              <div className="text-[10px] tracking-[.3em] text-accent">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
               {owed.length > 0 && (
                 <div className="mb-3 flex flex-wrap justify-center gap-2">
@@ -1315,7 +1315,7 @@ export function StagePlay(props: {
                 {passed && <p className="mb-3 font-serif text-sm text-roll-failure">Passed Over · {passed}</p>}
                 {/* Another player's hero acts from their own screen. */}
                 {actor?.type === "pc" && !aiActor ? (
-                  <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
+                  <p className="text-sm text-muted-foreground">Waiting for {actor.name.split(" ")[0]}</p>
                 ) : (
                   <Button variant="epic" size="xs" className="py-1.5 text-sm" onClick={() => props.onContinue(turn._id)}>
                     {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}

@@ -17,54 +17,47 @@
   --color-primary-900: #07070E;
   --color-primary-950: #000000;
 
-  /* Stageview's HUD, in the website's colours: black ground and panels, white text, amber accents and the primary
-     scale for frames. The names are from the warm Kordavos prototype and wait for a rename. */
-  --color-stage-ink: #000000;
-  --color-stage-panel: #000000;
-  --color-stage-gold: #fcd34d;
-  --color-stage-brass: #7067b7;
-  --color-stage-line: #ffffff;
-  --color-stage-cream: #ffffff;
-  --color-stage-parchment: #fef3c7;
-  --color-stage-muted: #b3b3b8;
-  --color-stage-sage: #d9d9de;
+  /* Colours with no UI SDK role: the gold accent, its pale tint, the black of a HUD panel and a softer white. */
+  --color-accent: #fcd34d;
+  --color-accent-soft: #fef3c7;
+  --color-panel: #000000;
+  --color-soft-foreground: #d9d9de;
 
   /* A roll's outcome, in the HUD, the journal and the turn list. packages/ui/src/stage/roll-tones.ts holds the same
      values for styles that add alpha to them. */
   --color-roll-success: #b7d38a;
   --color-roll-failure: #e39a7c;
   --color-roll-critical: #ffd88a;
+
+  /* UI SDK's roles, in our colours. Literal values here let Tailwind work out an alpha like `border-foreground/15`.
+     The muted, border, input and destructive values are Tailwind's zinc-900, zinc-800, zinc-700 and red-700. */
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-muted: oklch(21% 0.006 285.885);
+  --color-muted-foreground: #b3b3b8;
+  --color-border: oklch(27.4% 0.006 286.033);
+  --color-input: oklch(37% 0.013 285.805);
+  --color-primary: #7067b7;
+  --color-primary-foreground: #ffffff;
+  --color-destructive: oklch(50.5% 0.213 27.518);
+  --color-ring: #7067b7;
+  --color-overlay: rgb(0 0 0 / 0.7);
 }
 
-/* UI SDK's role tokens, in our colours. Its web.css reads these, and the utilities below expose them, so a part styled
-   with `bg-background` or `border-border` follows the theme. web.css is not imported yet. */
+/* UI SDK's web.css and parts read the --ui-* names. web.css is not imported yet. */
 :root {
-  --ui-background: #000000;
-  --ui-foreground: #ffffff;
-  --ui-muted: var(--color-zinc-900);
-  --ui-muted-foreground: #b3b3b8;
-  --ui-border: var(--color-zinc-800);
-  --ui-input: var(--color-zinc-700);
-  --ui-primary: #7067b7;
-  --ui-primary-foreground: #ffffff;
-  --ui-destructive: var(--color-red-700);
-  --ui-ring: #7067b7;
-  --ui-ring-border: #8a83c4;
-  --ui-overlay: rgb(0 0 0 / 0.7);
-}
-
-@theme inline {
-  --color-background: var(--ui-background);
-  --color-foreground: var(--ui-foreground);
-  --color-muted: var(--ui-muted);
-  --color-muted-foreground: var(--ui-muted-foreground);
-  --color-border: var(--ui-border);
-  --color-input: var(--ui-input);
-  --color-primary: var(--ui-primary);
-  --color-primary-foreground: var(--ui-primary-foreground);
-  --color-destructive: var(--ui-destructive);
-  --color-ring: var(--ui-ring);
-  --color-overlay: var(--ui-overlay);
+  --ui-background: var(--color-background);
+  --ui-foreground: var(--color-foreground);
+  --ui-muted: var(--color-muted);
+  --ui-muted-foreground: var(--color-muted-foreground);
+  --ui-border: var(--color-border);
+  --ui-input: var(--color-input);
+  --ui-primary: var(--color-primary);
+  --ui-primary-foreground: var(--color-primary-foreground);
+  --ui-destructive: var(--color-destructive);
+  --ui-ring: var(--color-ring);
+  --ui-ring-border: var(--color-primary-300);
+  --ui-overlay: var(--color-overlay);
 }
 
 /* Motion, the same in both apps. A part comes in with `enter-*` and goes with `exit-*`: fade, rise (up from below), drop
@@ -404,7 +397,7 @@
   background-image: url("/images/app/backgrounds/black-paper.png");
   background-size: 260px;
 }
-@utility stage-brass {
+@utility stage-stone {
   border-color: rgb(0 0 0 / 0.66);
   background-color: #2563eb;
   background-image: url("/images/app/backgrounds/buried.png");
@@ -421,7 +414,7 @@
     filter: brightness(1.22) saturate(1.2);
   }
 }
-@utility stage-leather {
+@utility stage-navy {
   background-color: rgb(23 37 84 / 0.7);
   box-shadow: 0 2px 8px #00000066;
   &:hover:not(:disabled) {

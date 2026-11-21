@@ -21,16 +21,16 @@ export function CopyBlock({ label, text, className }: { label: string; text: str
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-stage-gold/25 bg-black/70 text-left shadow-[inset_0_0_40px_#000c,0_8px_24px_#0008]", className)}>
-      <div className="flex items-center justify-between gap-4 border-b border-stage-gold/15 bg-primary-800/60 py-2 pr-2 pl-4">
-        <span className="font-sans text-[10px] font-medium tracking-[0.26em] text-stage-gold uppercase">{label}</span>
+    <div className={cn("overflow-hidden rounded-lg border border-accent/25 bg-black/70 text-left shadow-[inset_0_0_40px_#000c,0_8px_24px_#0008]", className)}>
+      <div className="flex items-center justify-between gap-4 border-b border-accent/15 bg-primary-800/60 py-2 pr-2 pl-4">
+        <span className="font-sans text-[10px] font-medium tracking-[0.26em] text-accent uppercase">{label}</span>
         <Button
           variant="plain"
           type="button"
           onClick={copy}
           className={cn(
             "flex cursor-pointer items-center gap-1.5 rounded-[3px] border px-2.5 py-1 font-sans text-[11px] tracking-wide transition-[color,border-color,scale] duration-150 ease-snap active:scale-95",
-            copied ? "border-emerald-400/60 text-emerald-300" : "border-stage-line/25 text-stage-cream hover:border-stage-gold/60 hover:text-stage-gold"
+            copied ? "border-emerald-400/60 text-emerald-300" : "border-foreground/25 text-foreground hover:border-accent/60 hover:text-accent"
           )}
         >
           <Swap id={copied ? "copied" : "copy"} asChild motion="pop">

@@ -109,23 +109,23 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
   const saves = roll.kind === "death" ? (made ? (step >= 3 ? made.deathSaves : undefined) : roll.deathSaves) : undefined
   const term = (sign: string, n: number, label?: string, show = true) => (
     <span className={cn("transition-opacity duration-300", show ? "opacity-100" : "opacity-0")}>
-      <span className={cn("text-stage-muted", compact ? "text-[14px]" : "text-[18px]")}>{sign}</span>
-      <span className={cn("ml-2", compact ? "text-[18px]" : "text-[24px]", label && "text-stage-gold")}>{n}</span>
-      {label && <span className={cn(eyebrow, "ml-1 align-middle text-stage-muted", compact && "text-[7px]")}>{label}</span>}
+      <span className={cn("text-muted-foreground", compact ? "text-[14px]" : "text-[18px]")}>{sign}</span>
+      <span className={cn("ml-2", compact ? "text-[18px]" : "text-[24px]", label && "text-accent")}>{n}</span>
+      {label && <span className={cn(eyebrow, "ml-1 align-middle text-muted-foreground", compact && "text-[7px]")}>{label}</span>}
     </span>
   )
   // Who rolls what, and what gives the roll Advantage or Disadvantage.
   const heading = (
     <>
-      <div className={cn("flex items-center gap-2", row ? eyebrow : "justify-center font-serif text-[15px] leading-[1.4] text-stage-cream")}>
+      <div className={cn("flex items-center gap-2", row ? eyebrow : "justify-center font-serif text-[15px] leading-[1.4] text-foreground")}>
         {roll.portrait && (
-          <img src={roll.portrait} alt="" className="h-6 w-6 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
+          <img src={roll.portrait} alt="" className="h-6 w-6 shrink-0 rounded-full border border-accent/60 object-cover object-top" />
         )}
         <span className={cn("line-clamp-2", row && "leading-[1.5]")}>{rollHeading(roll, first)}</span>
       </div>
       {roll.mode && (
-        <div className={cn("truncate font-serif text-stage-muted italic", compact ? "text-[11px]" : row ? "mt-1 text-[13px]" : "mt-0.5 text-[13px]")}>
-          <span className="font-semibold text-stage-gold not-italic">{modeName(roll.mode)}</span>
+        <div className={cn("truncate font-serif text-muted-foreground italic", compact ? "text-[11px]" : row ? "mt-1 text-[13px]" : "mt-0.5 text-[13px]")}>
+          <span className="font-semibold text-accent not-italic">{modeName(roll.mode)}</span>
           {roll.reasons?.length ? ` · ${roll.reasons.join(", ")}` : ""}
         </div>
       )}
@@ -167,7 +167,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
                 </>
               )}
               {gold && step >= 3 && <span className="roll-rays absolute -inset-6 rounded-full" />}
-              {waiting && <span className="roll-pulse pointer-events-none absolute top-0 left-0 rounded-full border border-stage-gold/55" style={{ width: size, height: size }} />}
+              {waiting && <span className="roll-pulse pointer-events-none absolute top-0 left-0 rounded-full border border-accent/55" style={{ width: size, height: size }} />}
               {lit && <span className="roll-shock pointer-events-none absolute top-0 left-0 rounded-full border-2" style={{ width: size, height: size, borderColor: tone }} />}
               <span className={cn("absolute top-0 left-0 transition-[filter] duration-500", lit && "die-land")} style={{ filter: `${glow}drop-shadow(0 3px 6px #000c)` }}>
                 <D20Solid size={size} roll={tumble} seconds={LAND / 1000} tone={gold ? "gold" : undefined} numbered face={n || undefined} idle={!made} />
@@ -186,13 +186,13 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             lasting spells = total. Both against the DC or the Armor Class. */}
         <div
           className={cn(
-            "flex gap-2 font-serif font-semibold tabular-nums text-stage-cream",
+            "flex gap-2 font-serif font-semibold tabular-nums text-foreground",
             compact ? "mt-0.5 items-baseline" : row ? "mt-1.5 items-baseline" : "min-h-11 flex-wrap items-baseline justify-center gap-y-0"
           )}
         >
           {need ? (
             <span className={cn("font-normal", compact ? "text-[12px]" : "text-[15px]")}>
-              Roll <span className={cn("mx-0.5 font-bold text-stage-gold", compact ? "text-[18px]" : "text-[24px]")}>{need.number}</span> {need.words}
+              Roll <span className={cn("mx-0.5 font-bold text-accent", compact ? "text-[18px]" : "text-[24px]")}>{need.number}</span> {need.words}
             </span>
           ) : (
             <>
@@ -203,18 +203,18 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
                 <Fragment key={i}>{term(a.amount < 0 ? "−" : "+", Math.abs(a.amount), a.from, step >= 2)}</Fragment>
               ))}
               <span className={cn("transition-opacity duration-300", step >= 2 ? "opacity-100" : "opacity-0")}>
-                <span className={cn("text-stage-muted", compact ? "text-[14px]" : "text-[18px]")}>=</span>
-                <span className={cn("ml-2 font-bold text-stage-gold", compact ? "text-[26px]" : "text-[38px]", step >= 2 && "roll-rise")}>{step >= 3 ? total : (counted ?? total)}</span>
+                <span className={cn("text-muted-foreground", compact ? "text-[14px]" : "text-[18px]")}>=</span>
+                <span className={cn("ml-2 font-bold text-accent", compact ? "text-[26px]" : "text-[38px]", step >= 2 && "roll-rise")}>{step >= 3 ? total : (counted ?? total)}</span>
               </span>
             </>
           )}
           <span
             className={cn(
-              "shrink-0 self-center rounded-sm border border-stage-line/25 font-sans font-normal tracking-[0.2em] text-stage-muted uppercase",
+              "shrink-0 self-center rounded-sm border border-foreground/25 font-sans font-normal tracking-[0.2em] text-muted-foreground uppercase",
               compact ? "ml-auto px-1.5 py-0.5 text-[9px]" : row ? "ml-auto px-2 py-1 text-[10px]" : "ml-1.5 px-2 py-1 text-[10px]"
             )}
           >
-            {againstLabel(roll.kind)} <span className={cn("font-serif font-semibold tracking-normal text-stage-cream", compact ? "text-[13px]" : "text-[17px]")}>{roll.dc}</span>
+            {againstLabel(roll.kind)} <span className={cn("font-serif font-semibold tracking-normal text-foreground", compact ? "text-[13px]" : "text-[17px]")}>{roll.dc}</span>
           </span>
         </div>
         {/* The verdict, slammed in between two rules, and by how much the roll made or missed its number. Silent until the die has landed. */}
@@ -233,9 +233,9 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
                 {verdict}
               </span>
               {!row && <span className="h-px w-12 shrink" style={{ background: `linear-gradient(270deg, transparent, ${tone})` }} />}
-              {row && margin && <span className={cn("min-w-0 truncate font-serif text-stage-muted italic", compact ? "text-[11px]" : "text-[13px]")}>{margin}</span>}
+              {row && margin && <span className={cn("min-w-0 truncate font-serif text-muted-foreground italic", compact ? "text-[11px]" : "text-[13px]")}>{margin}</span>}
             </div>
-            {!row && <div className={cn("min-h-[18px] font-serif text-[13px] leading-[18px] text-stage-muted italic", step >= 3 ? "enter-fade" : "opacity-0")}>{margin}</div>}
+            {!row && <div className={cn("min-h-[18px] font-serif text-[13px] leading-[18px] text-muted-foreground italic", step >= 3 ? "enter-fade" : "opacity-0")}>{margin}</div>}
           </>
         )}
         {saves && (

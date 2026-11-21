@@ -258,7 +258,7 @@ export function Plate({ line, compact = false, docked = false, className, style,
       key={line.key}
       className={cn(
         !leaving && "plate-in",
-        "pointer-events-none z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
+        "pointer-events-none z-20 flex items-stretch rounded-[5px] stage-grain border border-primary/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
         compact ? "p-1.5" : "p-[11px]",
         docked
           ? "w-full"
@@ -273,17 +273,17 @@ export function Plate({ line, compact = false, docked = false, className, style,
       onAnimationEnd={onAnimationEnd}
     >
       {line.portrait && (
-        <div className={cn("relative flex-none border border-stage-brass bg-stage-ink p-[3px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-[74px] w-[58px]" : "h-[140px] w-[112px]")}>
+        <div className={cn("relative flex-none border border-primary bg-background p-[3px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-[74px] w-[58px]" : "h-[140px] w-[112px]")}>
           <img src={line.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)_contrast(1.02)_brightness(.98)]" />
           <div className="pointer-events-none absolute inset-[3px] shadow-[inset_0_0_20px_#1c1410aa,inset_0_0_0_1px_#f3d6a622]" />
         </div>
       )}
       <div className={cn("flex min-w-0 flex-col justify-center", compact ? "px-2.5" : "py-1 pr-2.5 pl-4")}>
         <div className={cn("font-serif leading-[1.1] text-[#f3d6a6]", compact ? "text-[15px]" : "text-[21px]")}>{line.name}</div>
-        {line.role && !compact && <div className="mt-1 text-[8.5px] tracking-[0.22em] text-stage-gold uppercase">{line.role}</div>}
+        {line.role && !compact && <div className="mt-1 text-[8.5px] tracking-[0.22em] text-accent uppercase">{line.role}</div>}
         <div
           className={cn(
-            "border-t border-stage-brass/25 font-serif text-stage-cream italic",
+            "border-t border-primary/25 font-serif text-foreground italic",
             compact ? "mt-1.5 line-clamp-2 pt-1.5 text-[12px] leading-snug" : "mt-2.5 line-clamp-4 pt-2.5 text-[15px] leading-[1.45]"
           )}
         >

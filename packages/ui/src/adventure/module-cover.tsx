@@ -13,13 +13,13 @@ export function ModuleCover(props: { id: string; title: string; players: [number
       <div data-intro="shade" className="absolute inset-x-0 top-0 bg-gradient-to-b from-black via-black/60 to-transparent px-[7%] pt-[11%] pb-[24%]">
         <h1
           data-intro="title"
-          className="font-display leading-[1.04] text-stage-cream [text-shadow:0_2px_8px_#000,0_0_2px_#000]"
+          className="font-display leading-[1.04] text-foreground [text-shadow:0_2px_8px_#000,0_0_2px_#000]"
           style={{ fontSize: `min(12.5cqw, ${(84 / (longest * 0.74)).toFixed(2)}cqw)` }}
         >
           {props.title}
         </h1>
       </div>
-      <figcaption className="absolute right-[5%] bottom-[4%] font-sans text-[max(9px,3.8cqw)] font-medium uppercase tracking-[0.22em] text-stage-cream/90">
+      <figcaption className="absolute right-[5%] bottom-[4%] font-sans text-[max(9px,3.8cqw)] font-medium uppercase tracking-[0.22em] text-foreground/90">
         {/* The tracking trails the last letter, so the pill's right side pads that much less. */}
         <span data-intro="players" className="block rounded-full bg-black/70 py-[0.5em] pr-[0.78em] pl-[1em]">
           {playersLine(props.players)}

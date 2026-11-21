@@ -17,4 +17,4 @@ export const dropCap =
 
 /** The same, two lines deep, for small text like the stage journal. */
 export const dropCapSmall =
-  "first-letter:float-left first-letter:mt-0.5 first-letter:mr-1.5 first-letter:font-display first-letter:text-[2.6em] first-letter:leading-[0.8] first-letter:text-stage-gold"
+  "first-letter:float-left first-letter:mt-0.5 first-letter:mr-1.5 first-letter:font-display first-letter:text-[2.6em] first-letter:leading-[0.8] first-letter:text-accent"

@@ -123,7 +123,7 @@ export function TurnOrder({
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "stage-brass pointer-events-none absolute left-1/2 z-10 grid -translate-x-1/2 place-items-center rounded-full border shadow-[0_0_0_2px_#1c1410,0_2px_6px_#000a]",
+                      "stage-stone pointer-events-none absolute left-1/2 z-10 grid -translate-x-1/2 place-items-center rounded-full border shadow-[0_0_0_2px_#1c1410,0_2px_6px_#000a]",
                       compact ? "-top-1.5 h-3 w-3" : "-top-2 h-4 w-4"
                     )}
                   >
@@ -140,8 +140,8 @@ export function TurnOrder({
                     aria-label={name}
                     aria-current={active ? "true" : undefined}
                     className={cn(
-                      "relative overflow-hidden border bg-stage-ink p-[2px] shadow-[0_4px_14px_#0008] transition-[opacity,border-color,scale] duration-150 ease-snap active:scale-95",
-                      active || turn ? "border-stage-gold shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-stage-brass/50 opacity-75 hover:opacity-100",
+                      "relative overflow-hidden border bg-background p-[2px] shadow-[0_4px_14px_#0008] transition-[opacity,border-color,scale] duration-150 ease-snap active:scale-95",
+                      active || turn ? "border-accent shadow-[0_0_0_2px_#1c1410,0_0_18px_#e3b67c55]" : "border-primary/50 opacity-75 hover:opacity-100",
                       s?.kind === "dead" && "grayscale",
                       compact ? (active ? "h-12 w-10" : "h-9 w-7") : active ? "h-[78px] w-[62px]" : "h-[58px] w-[46px]",
                       c.npc && !active && !turn && "border-[#8a4a3a]/70"
@@ -150,7 +150,7 @@ export function TurnOrder({
                     {c.portrait ? (
                       <img src={c.portrait} alt="" className="block h-full w-full object-cover object-top [filter:sepia(.2)_saturate(.88)]" />
                     ) : (
-                      <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-stage-gold">
+                      <span aria-hidden="true" className="grid h-full place-items-center font-display text-sm text-accent">
                         {c.name
                           .split(" ")
                           .slice(0, 2)
@@ -161,8 +161,8 @@ export function TurnOrder({
                     {band && (
                       <span
                         className={cn(
-                          "absolute inset-x-0 bottom-0 bg-stage-ink/85 font-sans tabular-nums leading-tight",
-                          hero ? "text-stage-cream" : "tracking-wide text-roll-failure",
+                          "absolute inset-x-0 bottom-0 bg-background/85 font-sans tabular-nums leading-tight",
+                          hero ? "text-foreground" : "tracking-wide text-roll-failure",
                           compact ? "text-[8px]" : active ? "text-[11px]" : "text-[9px]"
                         )}
                       >
@@ -178,13 +178,13 @@ export function TurnOrder({
                       <svg viewBox="0 0 20 23" className="absolute inset-0 h-full w-full drop-shadow-[0_1px_2px_#000c]">
                         <path d="M10 1 19 4v7c0 6-4 9.5-9 11C5 20.5 1 17 1 11V4Z" fill="#1c1410" stroke="#e3b67c" strokeWidth="1.2" />
                       </svg>
-                      <span className={cn("relative font-serif font-semibold tabular-nums leading-none text-stage-parchment", compact ? "text-[7px]" : "text-[10px]")}>{hero.armorClass}</span>
+                      <span className={cn("relative font-serif font-semibold tabular-nums leading-none text-accent-soft", compact ? "text-[7px]" : "text-[10px]")}>{hero.armorClass}</span>
                     </span>
                   )}
                 </Presence>
                 <Presence show={health !== undefined} motion="fade" initial={false} asChild>
                   {health !== undefined && (
-                    <div className={cn("w-full border border-stage-brass/50 bg-stage-ink", compact ? "mt-0.5 h-[4px]" : "mt-1 h-[6px]")}>
+                    <div className={cn("w-full border border-primary/50 bg-background", compact ? "mt-0.5 h-[4px]" : "mt-1 h-[6px]")}>
                       {/* The bar is scaled, not resized, so a wound costs no layout. */}
                       <div className="h-full origin-left transition-[transform,background-color] duration-300 ease-out" style={{ transform: `scaleX(${health / 100})`, backgroundColor: healthColor(health) }} />
                     </div>
@@ -218,18 +218,18 @@ export function TurnOrder({
       </div>
       {label && (
         <Swap id={label} asChild>
-          <div className={cn("font-display tracking-[0.08em] text-stage-parchment [text-shadow:0_1px_8px_#000,0_0_2px_#000]", compact ? "mt-1 text-[13px]" : "mt-2 text-[19px]")}>{label}</div>
+          <div className={cn("font-display tracking-[0.08em] text-accent-soft [text-shadow:0_1px_8px_#000,0_0_2px_#000]", compact ? "mt-1 text-[13px]" : "mt-2 text-[19px]")}>{label}</div>
         </Swap>
       )}
       <Presence show={Boolean(label && labelled?.conditions)} motion="fade" initial={false} asChild>
         {label && labelled?.conditions && (
-          <div className={cn("font-serif text-stage-cream italic [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "text-[10px]" : "text-[13px]")}>{labelled.conditions}</div>
+          <div className={cn("font-serif text-foreground italic [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "text-[10px]" : "text-[13px]")}>{labelled.conditions}</div>
         )}
       </Presence>
       <Presence show={Boolean(passed)} motion="fade" initial={false} asChild>
         {passed && (
           <div className={cn("flex items-baseline gap-2 [text-shadow:0_1px_6px_#000,0_0_2px_#000]", compact ? "mt-0.5" : "mt-1")}>
-            <span className={cn("font-sans font-medium tracking-[0.26em] text-stage-muted uppercase", compact ? "text-[7px]" : "text-[9px]")}>Passed Over</span>
+            <span className={cn("font-sans font-medium tracking-[0.26em] text-muted-foreground uppercase", compact ? "text-[7px]" : "text-[9px]")}>Passed Over</span>
             <span className={cn("font-serif text-roll-failure", compact ? "text-[10px]" : "text-[13px]")}>{passed}</span>
           </div>
         )}

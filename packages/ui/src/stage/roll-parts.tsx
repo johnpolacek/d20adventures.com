@@ -24,7 +24,7 @@ function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus:
         <span
           key={i}
           className={cn(
-            "inline-grid place-items-center self-center rounded-[3px] border border-stage-line/30 bg-black/35 font-serif font-semibold leading-none text-stage-parchment",
+            "inline-grid place-items-center self-center rounded-[3px] border border-foreground/30 bg-black/35 font-serif font-semibold leading-none text-accent-soft",
             compact ? "h-4 min-w-4 px-0.5 text-[10px]" : "h-5 min-w-5 px-1 text-[12px]"
           )}
         >
@@ -33,17 +33,17 @@ function DiceSum({ dice, bonus, type, total, compact }: { dice: number[]; bonus:
       ))}
       {bonus !== 0 && (
         <span>
-          <span className="text-stage-muted">{bonus < 0 ? "−" : "+"}</span> {Math.abs(bonus)}
+          <span className="text-muted-foreground">{bonus < 0 ? "−" : "+"}</span> {Math.abs(bonus)}
         </span>
       )}
-      <span className="text-stage-muted">=</span>
-      <span className="font-semibold text-stage-gold">{total}</span>
-      {type && <span className="text-stage-muted italic">{type}</span>}
+      <span className="text-muted-foreground">=</span>
+      <span className="font-semibold text-accent">{total}</span>
+      {type && <span className="text-muted-foreground italic">{type}</span>}
     </span>
   )
 }
 
-const line = (compact: boolean) => cn("flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-serif text-stage-cream", compact ? "text-[11px]" : "text-[13px]")
+const line = (compact: boolean) => cn("flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-serif text-foreground", compact ? "text-[11px]" : "text-[13px]")
 
 function DamageLines({ damage, compact }: { damage: DamageView[]; compact: boolean }) {
   return (
@@ -74,7 +74,7 @@ export function HarmLines({ harm, compact }: { harm: HarmView[]; compact: boolea
 export function DeathSaveMarks({ saves, compact = false, label = true }: { saves: DeathSavesView; compact?: boolean; label?: boolean }) {
   const marks = (count: number, tone: string, name: string) => (
     <span className="inline-flex items-center gap-1">
-      {label && <span className={cn(eyebrow, "text-stage-muted", compact && "text-[8px]")}>{name}</span>}
+      {label && <span className={cn(eyebrow, "text-muted-foreground", compact && "text-[8px]")}>{name}</span>}
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -124,7 +124,7 @@ export function RollDetails({ roll, compact = false, className }: { roll: RollVi
  */
 export function FeatureEntry({ feature, compact = false, className }: { feature: FeatureView; compact?: boolean; className?: string }) {
   return (
-    <div className={cn("rounded-[3px] border border-l-2 border-stage-line/15 border-l-stage-gold bg-black/30", compact ? "px-2 py-1.5" : "px-3 py-2", className)}>
+    <div className={cn("rounded-[3px] border border-l-2 border-foreground/15 border-l-accent bg-black/30", compact ? "px-2 py-1.5" : "px-3 py-2", className)}>
       <span className="sr-only">{featureSpeech(feature)}</span>
       <div aria-hidden="true">
         <div className={cn(eyebrow, "truncate")}>

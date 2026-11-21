@@ -67,7 +67,7 @@ function ItemHero({ hero, onOpen }: { hero: (typeof HEROES)[number]; onOpen: () 
         <h3 className={eyebrow}>Card · {hero.name}</h3>
         <Pill onClick={onOpen}>Site Sheet</Pill>
       </div>
-      <div className="relative h-[620px] overflow-hidden rounded-md border border-stage-line/15 bg-stage-ink">
+      <div className="relative h-[620px] overflow-hidden rounded-md border border-foreground/15 bg-background">
         {view && (
           <CharacterCard
             info={{

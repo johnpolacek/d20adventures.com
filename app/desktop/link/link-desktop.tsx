@@ -22,7 +22,7 @@ const formatCode = (code: string) => {
 // The code from the app, as two rows of parchment tiles.
 function CodeTiles({ code }: { code: string }) {
   const c = clean(code)
-  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-[3px] font-display text-2xl text-stage-ink shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
+  const tile = "stage-parchment grid h-12 w-9 place-items-center rounded-[3px] font-display text-2xl text-background shadow-[inset_0_-2px_0_#0003,0_2px_6px_#0008]"
   return (
     <div className="flex items-center justify-center gap-1.5" role="img" aria-label={`Code ${formatCode(code)}`}>
       {[...c.slice(0, 4)].map((ch, i) => (
@@ -30,7 +30,7 @@ function CodeTiles({ code }: { code: string }) {
           {ch}
         </span>
       ))}
-      <span className="mx-1 h-[2px] w-3 bg-stage-gold/70" />
+      <span className="mx-1 h-[2px] w-3 bg-accent/70" />
       {[...c.slice(4)].map((ch, i) => (
         <span key={`b${i}`} className={tile}>
           {ch}
@@ -99,15 +99,15 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
       <Image fill src="/stage/covers/welcome-to-kordavos.jpg" alt="" className="scale-105 object-cover blur-[2px]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#0008,#000d_70%)]" />
       <Presence show={isLoaded} asChild>
-        <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-stage-cream")}>
+        <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-foreground")}>
           <div className={eyebrow}>D20 Adventures · Desktop</div>
           <h1 className="mt-3 font-display text-3xl leading-tight">{linked ? "Linked" : "Link this computer"}</h1>
-          <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-stage-gold/80 to-transparent" />
+          <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-accent/80 to-transparent" />
 
           <Swap id={!isSignedIn ? "sign-in" : linked ? "linked" : pending ? "pending" : "code"} motion="rise" exit="fade">
             {!isSignedIn ? (
               <div className="space-y-6">
-                <p className="font-serif text-stage-cream/85">Sign in to link the app to your account.</p>
+                <p className="font-serif text-foreground/85">Sign in to link the app to your account.</p>
                 <SignInButton mode="modal">
                   <Button variant="epic">Sign in</Button>
                 </SignInButton>
@@ -115,7 +115,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
             ) : linked ? (
               <div className="space-y-2 font-serif">
                 <p className="text-lg">{linked}</p>
-                <p className="text-stage-cream/75">Return to the app. Your adventures download there.</p>
+                <p className="text-foreground/75">Return to the app. Your adventures download there.</p>
               </div>
             ) : pending ? (
               <div className="space-y-6">
@@ -147,7 +147,7 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                   placeholder="ABCD-EFGH"
                   autoComplete="off"
                   spellCheck={false}
-                  className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-stage-ink uppercase placeholder:text-stage-ink/30 focus:outline-none focus:ring-2 focus:ring-stage-gold"
+                  className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
                   Continue
@@ -167,10 +167,10 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
               <ul className="space-y-2">
                 {devices.map((device, i) => (
                   <Presence key={device.id} show={!unlinked.includes(device.id)} asChild motion="rise" exit="left" index={i}>
-                    <li className="stage-leather flex items-center justify-between gap-4 rounded-[3px] border border-stage-line/20 px-3 py-2">
+                    <li className="stage-navy flex items-center justify-between gap-4 rounded-[3px] border border-foreground/20 px-3 py-2">
                       <div className="min-w-0">
                         <div className="truncate font-serif">{device.name}</div>
-                        <div className="text-[11px] text-stage-muted">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
+                        <div className="text-[11px] text-muted-foreground">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
                       </div>
                       <Pill onClick={() => revoke(device.id)}>Unlink</Pill>
                     </li>

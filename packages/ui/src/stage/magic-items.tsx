@@ -13,20 +13,20 @@ export function MagicItems({ items, className }: { items: readonly ItemView[]; c
       <ul className="space-y-1.5">
         {items.map((item, index) => (
           <li key={`${index}:${item.name}`} className="enter-rise flex flex-wrap items-baseline gap-x-2 text-xs leading-relaxed" style={staggered(index)}>
-            <span className="font-serif text-[13px] text-stage-cream">
+            <span className="font-serif text-[13px] text-foreground">
               {item.name}
-              {item.count && <span className="text-stage-muted"> ×{item.count}</span>}
+              {item.count && <span className="text-muted-foreground"> ×{item.count}</span>}
             </span>
-            <span className="text-stage-muted">{item.gives ?? item.kind}</span>
+            <span className="text-muted-foreground">{item.gives ?? item.kind}</span>
             {item.charges && (
-              <span className="text-[10px] uppercase tracking-[0.14em] text-stage-muted">
+              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 {item.charges.left} of {item.charges.max} Charges
               </span>
             )}
             {item.attuned !== undefined && (
-              <span className={cn("text-[10px] uppercase tracking-[0.14em]", item.attuned ? "text-stage-gold" : "text-stage-muted")}>{item.attuned ? "Attuned" : "Not Attuned"}</span>
+              <span className={cn("text-[10px] uppercase tracking-[0.14em]", item.attuned ? "text-accent" : "text-muted-foreground")}>{item.attuned ? "Attuned" : "Not Attuned"}</span>
             )}
-            {item.unworn && <span className="text-[10px] uppercase tracking-[0.14em] text-stage-muted">Not In Use</span>}
+            {item.unworn && <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Not In Use</span>}
           </li>
         ))}
       </ul>

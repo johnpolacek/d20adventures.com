@@ -15,7 +15,7 @@ export function HeroCreatorLab() {
   const [said, setSaid] = useState("")
   const [round, setRound] = useState(0)
   return (
-    <div className="relative min-h-screen bg-stage-ink text-white">
+    <div className="relative min-h-screen bg-background text-white">
       <HeroCreator
         key={round}
         options={WELCOME}

@@ -68,7 +68,7 @@ const markdown = new Marked({
 /** Markdown to HTML. A link whose text starts with "Play" is drawn as a button. */
 export function renderPost(post: Update): string {
   const html = markdown.parse(post.body, { async: false })
-  return html.replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="update-play stage-brass">$2</a>')
+  return html.replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="update-play stage-stone">$2</a>')
 }
 
 /** The post as a markdown file to download: its title, date and link, then its body. */
