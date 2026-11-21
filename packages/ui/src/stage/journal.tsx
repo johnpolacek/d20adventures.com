@@ -165,7 +165,7 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Say something"
         aria-label="Table chat message"
-        className="min-w-0 flex-1 rounded-hud border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-xs text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none"
+        className="min-w-0 flex-1 rounded-hud border border-foreground/25 bg-black/35 px-3 py-2 font-serif text-xs text-foreground transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-accent/70 focus:outline-none focus:ring-2 focus:ring-accent/35"
       />
       <Pill type="submit" disabled={sending || !draft.trim()}>
         Send

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { type CSSProperties, useState } from "react"
 import { createPracticeAdventure } from "@/app/_actions/create-adventure"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@d20/ui/card"
 import { Presence } from "@d20/ui/presence"
 import type { PCTemplate } from "@/types/character"
@@ -139,10 +139,8 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
               Selected: {selected.length} / {maxParty}
             </div>
             <div className="flex items-center gap-3">
-              <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`}>
-                <Button variant="outline" size="sm">
-                  Back to Plan
-                </Button>
+              <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`} className={buttonClassName("outline", "sm")} style={buttonStyle("outline", "sm")}>
+                Back to Plan
               </Link>
               <Button variant="epic" size="sm" className="px-4 py-1 text-xs tracking-wide border-2" onClick={handleStartPractice} disabled={isStarting || options.length === 0}>
                 {isStarting ? "Starting Practice..." : "Start Practice Run"}

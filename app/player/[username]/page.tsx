@@ -8,7 +8,7 @@ import { getPracticeReportsForUser } from "@/app/_actions/adventure-reports"
 import { getUserCharacters } from "@/app/_actions/character"
 import FullPageImage from "@/components/layout/fullpage-image"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { pictureAt } from "@/lib/images"
 import { loadAdventurePlanForRuntime } from "@/lib/wiki-adventures/plan-view"
@@ -81,10 +81,8 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                     You don&apos;t have any characters yet. <br />
                     Join an adventure to get started.
                   </p>
-                  <Link href="/settings/realm-of-myr/play">
-                    <Button variant="epic" className="text-sm" size="sm">
-                      Join an Adventure
-                    </Button>
+                  <Link href="/settings/realm-of-myr/play" className={buttonClassName("epic", "sm", "text-sm")} style={buttonStyle("epic", "sm")}>
+                    Join an Adventure
                   </Link>
                 </div>
               </div>
@@ -110,7 +108,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                             </div>
                           ) : (
-                            <div className="w-full h-32 flex items-center justify-center bg-black/60 text-white/30 text-xs">No Image</div>
+                            <div className="w-full h-32 flex items-center justify-center bg-black/60 text-white/60 text-xs">No Image</div>
                           )
                         })()}
                         <span className="text-white text-xl text-center px-2 truncate w-full my-2">{adv.title}</span>
@@ -120,10 +118,8 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
                           </span>
                           <span className="text-3xs px-2 py-1 rounded font-mono bg-white/10 text-white/80">{adv.status || "active"}</span>
                         </div>
-                        <Link href={`/settings/${adv.settingId}/${adv.planId || adv.adventurePlanId}/${adv._id || adv.id}`}>
-                          <Button variant="epic" className="text-sm" size="sm">
-                            {adv.status === "active" ? "Continue" : "View"}
-                          </Button>
+                        <Link href={`/settings/${adv.settingId}/${adv.planId || adv.adventurePlanId}/${adv._id || adv.id}`} className={buttonClassName("epic", "sm", "text-sm")} style={buttonStyle("epic", "sm")}>
+                          {adv.status === "active" ? "Continue" : "View"}
                         </Link>
                       </div>
                     </div>

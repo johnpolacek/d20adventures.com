@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { getTurnNavigationInfo, loadAdventureWithTurnByOrder } from "@/app/_actions/load-adventure"
 import TurnNavigation from "@/components/adventure/turn-navigation"
 import { loadFloorView } from "@/components/floorplan/load-floor"
-import { Button } from "@d20/ui/button"
+import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Id } from "@/convex/_generated/dataModel"
 import { isDev } from "@/lib/auth-utils"
@@ -142,9 +142,7 @@ export default async function TurnPage({ params }: PageProps) {
       />
       {canEdit && (
         <div className="w-full flex justify-end p-8">
-          <Link className="z-20" href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`}>
-            <Button>Edit</Button>
-          </Link>
+          <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`} className={buttonClassName("primary", undefined, "z-20")} style={buttonStyle("primary", undefined)}>Edit</Link>
         </div>
       )}
     </div>

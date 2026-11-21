@@ -139,7 +139,7 @@ export function StageHud({
         className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap", hidden && "opacity-0")}
         style={{ background: "linear-gradient(180deg,rgba(28,18,12,.42),transparent 18%,transparent 58%,rgba(22,13,9,.84))" }}
       />
-      <div className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
+      <div inert={hidden} className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
         <header className={cn("absolute flex items-center justify-between", compact ? "top-3 right-4 left-4" : "top-7 right-10 left-10")}>
           <div className="flex min-w-0 items-center gap-3.5">
             <svg viewBox="0 0 50 58" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.2" className={cn("flex-none text-accent", compact ? "h-8 w-7" : "h-12 w-10")}>

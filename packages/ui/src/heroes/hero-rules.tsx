@@ -168,7 +168,7 @@ function FeaturePicks({ offer, picked, known, onPick }: { offer: PicksOffer; pic
               }}
             >
               {option.name}
-              {blocked && <span className="ml-1 text-white/40">· {blocked}</span>}
+              {blocked && <span className="ml-1 text-white/60">· {blocked}</span>}
             </Option>
           )
         })}
@@ -338,7 +338,7 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
                       +{added}
                     </Option>
                   ) : (
-                    <span className="py-1.5 text-sm text-white/30">+0</span>
+                    <span className="py-1.5 text-sm text-white/55">+0</span>
                   )}
                   <span className="font-display text-lg text-accent-300 tabular-nums">{choices.abilityScores[ability] + added}</span>
                 </div>

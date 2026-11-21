@@ -50,7 +50,7 @@ function PartySlotAvatar({
         {image ? (
           <Image src={pictureAt(image, 64)} alt={name || label} fill className="object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-2xl font-display">?</div>
+          <div className="absolute inset-0 flex items-center justify-center text-white/60 text-2xl font-display">?</div>
         )}
         <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/10" />
       </div>
@@ -176,10 +176,10 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
                 onClick={() => setShowCompanions(true)}
                 className="enter-pop flex flex-col items-center gap-1 cursor-pointer transition-transform duration-150 ease-snap active:scale-[0.96] hover:-translate-y-0.5"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors duration-150">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/60 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors duration-150">
                   +
                 </div>
-                <span className="text-4xs font-mono tracking-wide uppercase text-white/40">Open</span>
+                <span className="text-4xs font-mono tracking-wide uppercase text-white/60">Open</span>
                 <span className="text-xs text-transparent select-none">&nbsp;</span>
               </Button>
             </Tip>

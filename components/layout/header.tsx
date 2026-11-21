@@ -42,14 +42,14 @@ export default function Header() {
             src="/images/d20.jpg"
           />
           <div className="flex flex-col">
-            <h1 className={cn(!isBig && "scale-[.8] sm:scale-[.6] -ml-5 sm:-ml-12 font-semibold")} aria-label="D20 Adventures">
+            <div className={cn(!isBig && "scale-[.8] sm:scale-[.6] -ml-5 sm:-ml-12 font-semibold")}>
               <span className="sr-only">D20 Adventures</span>
               <span aria-hidden="true">
                 <span className={cn("text-2xl sm:text-4xl text-primary-600 mr-1", !isBig && "text-2xl")}>D20</span>
                 <span className={cn("text-xl sm:text-3xl text-primary-500 relative -top-px", !isBig && "text-xl")}>A</span>
                 <span className={cn("text-lg sm:text-2xl text-primary-500 relative -top-[3px]", !isBig && "text-sm")}>dventures</span>
               </span>
-            </h1>
+            </div>
           </div>
         </Link>
         <Presence show={Boolean(settingSlug)} initial={false} asChild motion="left">

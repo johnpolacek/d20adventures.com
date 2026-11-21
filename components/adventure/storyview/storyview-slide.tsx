@@ -50,7 +50,7 @@ export default function StoryviewSlideView({
       </div>
       <p className="text-center font-serif text-xl leading-relaxed md:text-2xl md:leading-relaxed">
         {slide.segments.map((segment, index) => (
-          <span key={`${segment.partIndex}-${index}`} className={cn("transition-colors duration-150", index === segmentIndex ? "text-white" : "text-white/35")}>
+          <span key={`${segment.partIndex}-${index}`} className={cn("transition-colors duration-150", index === segmentIndex ? "text-white" : "text-white/55")}>
             {segment.text}
             {index < slide.segments.length - 1 ? " " : ""}
           </span>

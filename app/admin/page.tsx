@@ -3,7 +3,7 @@ import Link from "next/link"
 import type { CSSProperties } from "react"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
-import { Button } from "@d20/ui/button"
+import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
 import { requireAdmin } from "@/lib/auth-utils"
 
@@ -52,9 +52,7 @@ export default async function AdminPage() {
               <p className="text-sm text-white/60">View user information and manage admin access.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/users" className="w-full">
-                <Button variant="outline">Manage Users</Button>
-              </Link>
+              <Link href="/admin/users" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Users</Link>
             </CardFooter>
           </Card>
           <Card className="enter-rise" style={{ "--i": 1 } as CSSProperties}>
@@ -66,9 +64,7 @@ export default async function AdminPage() {
               <p className="text-sm text-white/60">View and manage newsletter subscribers and preferences.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/mailing-list" className="w-full">
-                <Button variant="outline">Manage Subscribers</Button>
-              </Link>
+              <Link href="/admin/mailing-list" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Subscribers</Link>
             </CardFooter>
           </Card>
           <Card className="enter-rise" style={{ "--i": 2 } as CSSProperties}>
@@ -77,9 +73,7 @@ export default async function AdminPage() {
               <CardDescription>Playtest feedback</CardDescription>
             </CardHeader>
             <CardFooter>
-              <Link href="/admin/feedback" className="w-full">
-                <Button variant="outline">View Feedback</Button>
-              </Link>
+              <Link href="/admin/feedback" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>View Feedback</Link>
             </CardFooter>
           </Card>
           <Card className="enter-rise" style={{ "--i": 3 } as CSSProperties}>
@@ -91,9 +85,7 @@ export default async function AdminPage() {
               <p className="text-sm text-white/60">View and manage adventure information.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/adventures" className="w-full">
-                <Button variant="outline">Manage Adventures</Button>
-              </Link>
+              <Link href="/admin/adventures" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Adventures</Link>
             </CardFooter>
           </Card>
           <Card className="enter-rise" style={{ "--i": 4 } as CSSProperties}>
@@ -105,9 +97,7 @@ export default async function AdminPage() {
               <p className="text-sm text-white/60">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
             </CardContent>
             <CardFooter>
-              <Link href="/admin/adventure-plans" className="w-full">
-                <Button variant="outline">Open Workbench</Button>
-              </Link>
+              <Link href="/admin/adventure-plans" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Open Workbench</Link>
             </CardFooter>
           </Card>
         </div>

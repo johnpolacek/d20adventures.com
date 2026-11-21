@@ -74,8 +74,13 @@ export default function TurnCharacterList() {
                   isDead && "opacity-50 scale-90" // Ensure dead characters are visually distinct
                 )}
                 style={{ "--i": Math.min(index, 8) } as CSSProperties}
-                onClick={() => handleCharacterClick(character)}
               >
+                <button
+                  type="button"
+                  aria-label={character.name}
+                  onClick={() => handleCharacterClick(character)}
+                  className="absolute inset-0 z-20 cursor-pointer rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                />
                 {character.image && <CharacterImage src={pictureAt(character.image, 48)} alt={character.name} />}
                 <div className="z-10">
                   <div className="text-xs sm:text-sm font-bold font-display flex items-center gap-2">

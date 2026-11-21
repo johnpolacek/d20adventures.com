@@ -54,7 +54,7 @@ export default function TurnNavigation({ currentTurnOrder, totalTurns, isLatestT
               </PaginationItem>
               {/* The latest turn lives at the adventure's own path, not at a turn number. */}
               <PaginationItem>
-                <Link href={basePath} aria-label="Go to latest turn" aria-disabled={isLatestTurn || undefined} tabIndex={isLatestTurn ? -1 : undefined} className={cn(paginationLinkClass, "size-6 [&_svg]:size-5")}>
+                <Link href={basePath} aria-label="Go to latest turn" aria-disabled={isLatestTurn || undefined} tabIndex={isLatestTurn ? -1 : undefined} className={cn(paginationLinkClass, "size-8 [&_svg]:size-5")}>
                   <ChevronLastIcon />
                 </Link>
               </PaginationItem>

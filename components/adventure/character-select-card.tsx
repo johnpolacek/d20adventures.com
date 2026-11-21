@@ -1,6 +1,6 @@
 import { UserRoundX } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card } from "@d20/ui/card"
 import Image from "@d20/ui/native-image"
 import { picture } from "@/lib/images"
@@ -30,7 +30,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
         {character.image ? (
           <Image {...picture(character.image, "(min-width: 768px) 400px, 100vw")} alt={character.name} fill={true} className="object-cover w-full h-full" />
         ) : (
-          <span className="text-xs text-white/40">No Image</span>
+          <span className="text-xs text-white/60">No Image</span>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
       </div>
@@ -40,11 +40,17 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
           {character.gender} {character.race} {character.archetype}
         </div>
         {href ? (
-          <Link href={href} className="w-full flex justify-center">
-            <Button variant="epic" className="text-sm" size="sm" disabled={disabled}>
+          <div className="flex w-full justify-center">
+            <Link
+              href={href}
+              className={buttonClassName("epic", "sm", cn("text-sm", disabled && "pointer-events-none opacity-60 saturate-[.7]"))}
+              style={buttonStyle("epic", "sm")}
+              aria-disabled={disabled || undefined}
+              tabIndex={disabled ? -1 : undefined}
+            >
               {buttonLabel}
-            </Button>
-          </Link>
+            </Link>
+          </div>
         ) : (
           <Button variant="epic" className="text-sm" size="sm" disabled={disabled}>
             {buttonLabel}

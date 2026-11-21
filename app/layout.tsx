@@ -81,8 +81,14 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: updateThemeScript }} />
         <Providers>
           <div className="relative flex min-h-screen flex-col">
+            <a
+              href="#main"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[9999] focus:rounded-md focus:bg-black focus:px-4 focus:py-2 focus:font-sans focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+            >
+              Skip to Content
+            </a>
             <Header />
-            <main className="flex-1">
+            <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
               <PageTransition>{children}</PageTransition>
             </main>
             <SiteFooter currentYear={currentYear} />

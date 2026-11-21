@@ -290,6 +290,11 @@ export function StagePlay(props: {
   const unread = chatRead === null ? 0 : chat.filter((m) => (m.at ?? 0) > chatRead).length
   const [cardId, setCardId] = useState<string | null>(null)
   const [hidden, setHidden] = useState(false)
+  // Read by the stage's hotkeys, which stay quiet under a panel or a screen.
+  const openRef = useRef(open)
+  openRef.current = open
+  const overlay = useRef(false)
+  overlay.current = props.overlay || Boolean(levelling)
   const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
   const [sound, setSound] = useState(soundOn)
@@ -930,14 +935,18 @@ export function StagePlay(props: {
   }, [stage, focus])
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).matches?.("input,textarea,select")) return
-      if (e.key.toLowerCase() === "h") setHidden((h) => !h)
+      const target = e.target as HTMLElement
+      if (target.matches?.("input,textarea,select,[contenteditable]")) return
+      // Over the stage, a screen or dialog keeps the keys to itself.
+      if (overlay.current || target.closest?.('[role="dialog"],[role="alertdialog"]') || document.querySelector('[aria-modal="true"]')) return
+      if (e.key.toLowerCase() === "h" && !openRef.current) setHidden((h) => !h)
       // A popup that took Escape prevents its default, so the page stays put.
       if (e.key === "Escape" && !e.defaultPrevented) {
         setOpen(null)
         setCardId(null)
         onEscape?.()
       }
+      if (openRef.current) return
       const view = Object.keys(stage?.shots ?? {})[Number(e.key) - 1]
       if (view) stage?.shot(view)
     }

@@ -97,7 +97,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
 const NO_FILES: File[] = []
 
 const field =
-  "w-full resize-none rounded-hud border border-foreground/25 bg-black/40 px-3 py-2 font-serif text-sm leading-snug text-foreground transition-colors duration-150 placeholder:text-foreground/35 focus:border-accent/70 focus:outline-none"
+  "w-full resize-none rounded-hud border border-foreground/25 bg-black/40 px-3 py-2 font-serif text-sm leading-snug text-foreground transition-colors duration-150 placeholder:text-foreground/35 focus:border-accent/70 focus:outline-none focus:ring-2 focus:ring-accent/35"
 
 function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: (rating: number) => void; size?: string }) {
   const [hover, setHover] = useState(0)

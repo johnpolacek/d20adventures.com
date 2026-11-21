@@ -2,7 +2,7 @@ import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import type { CSSProperties } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
 import ImageHeader from "@d20/ui/image-header"
 import Image from "@d20/ui/native-image"
@@ -123,10 +123,8 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
             <p>{setting.description}</p>
           </div>
           <div className="flex justify-center pt-8 pb-24">
-            <Link href={`/settings/${settingId}`}>
-              <Button variant="epic">
-                Go To Setting
-              </Button>
+            <Link href={`/settings/${settingId}`} className={buttonClassName("epic", undefined)} style={buttonStyle("epic", undefined)}>
+              Go To Setting
             </Link>
           </div>
         </div>

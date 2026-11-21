@@ -630,7 +630,7 @@ export function PromptCard({
                   ))}
             </div>
           )}
-          <div className="relative flex items-end gap-2 rounded-[22px] border border-foreground/15 bg-black/55 p-1.5 pl-4 transition-colors focus-within:border-accent/50">
+          <div className="relative flex items-end gap-2 rounded-[22px] border border-foreground/15 bg-black/55 p-1.5 pl-4 transition-[border-color,box-shadow] focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/35">
             <Textarea
               plain
               ref={box}

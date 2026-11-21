@@ -21,7 +21,7 @@ import { passedOver, passedWords } from "@d20/ui/stage/standing"
 import { Alert, AlertDescription, AlertTitle } from "@d20/ui/alert"
 import { useAdventure } from "@/lib/context/AdventureContext"
 import { cn } from "@/lib/utils"
-import { Button } from "@d20/ui/button"
+import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Presence, Swap } from "@d20/ui/presence"
 import { dropCap } from "@d20/ui/typography/styles"
@@ -111,10 +111,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
           <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
             <Heading variant="h3" as="h4" className="text-red-400">Game Over</Heading>
             <p className="italic text-red-300">All player characters have fallen</p>
-            <Link href={`/settings/${settingId}/play`} className="mt-4">
-              <Button variant="epic" size="sm" className="text-sm">
-                Return to Setting
-              </Button>
+            <Link href={`/settings/${settingId}/play`} className={buttonClassName("epic", "sm", "mt-4 text-sm")} style={buttonStyle("epic", "sm")}>
+              Return to Setting
             </Link>
           </div>
         ) : !currentTurn?.isFinalEncounter ? (

@@ -3,7 +3,7 @@ import { ChevronDoubleLeftIcon } from "@heroicons/react/24/outline"
 import Link from "next/link"
 import { type CSSProperties, useEffect, useState } from "react"
 import PartySetup from "@/components/adventure/party-setup"
-import { Button } from "@d20/ui/button"
+import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import { Card } from "@d20/ui/card"
 import { Swap } from "@d20/ui/presence"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
@@ -98,10 +98,8 @@ export default function ChooseCharacterView({
             <div style={textShadow} className="max-w-4xl mx-auto text-base text-accent-50 text-left text-pretty">
               {adventureTeaser}
             </div>
-            <Link href={`/settings/${settingId}/play`}>
-              <Button variant="ghost" className="mt-2" size="sm">
-                <ChevronDoubleLeftIcon className="w-3 h-3" /> Back to Setting Adventures
-              </Button>
+            <Link href={`/settings/${settingId}/play`} className={buttonClassName("ghost", "sm", "mt-2")} style={buttonStyle("ghost", "sm")}>
+              <ChevronDoubleLeftIcon className="w-3 h-3" /> Back to Setting Adventures
             </Link>
           </Card>
           <div style={textShadowSpread} className="mb-8 text-3xl font-display font-bold text-accent-100">

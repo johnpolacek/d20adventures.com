@@ -1,6 +1,6 @@
 import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
-import { Button } from "@d20/ui/button"
+import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
 import { getCachedSetting } from "@/lib/setting-cache"
@@ -26,17 +26,13 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
         <ImageHeader {...headerImage(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
           <div className="fixed bottom-[4vh] right-[4vh] z-20 space-y-4 flex flex-col items-end">
-            <Link href={`/settings/${settingId}/edit`}>
-              <Button>Edit Setting</Button>
-            </Link>
+            <Link href={`/settings/${settingId}/edit`} className={buttonClassName("primary", undefined)} style={buttonStyle("primary", undefined)}>Edit Setting</Link>
           </div>
         )}
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 whitespace-pre-line">
           <div className="flex justify-center mb-8">
-            <Link href={`/settings/${settingId}/play`}>
-              <Button variant="epic">
-                Go to Adventures
-              </Button>
+            <Link href={`/settings/${settingId}/play`} className={buttonClassName("epic", undefined)} style={buttonStyle("epic", undefined)}>
+              Go to Adventures
             </Link>
           </div>
           <p>{setting.description}</p>
