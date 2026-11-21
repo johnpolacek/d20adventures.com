@@ -11,25 +11,39 @@ use tokio::{
 struct GameLock(Mutex<()>);
 // The host worker while this app hosts a website game: the adventure, its process, and its latest event.
 struct HostWorker(Mutex<Option<(String, Child)>>, Arc<std::sync::Mutex<Value>>);
+// The user's home folder. Windows names it USERPROFILE.
+fn home() -> String {
+    std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .unwrap_or_default()
+}
 fn node() -> Result<PathBuf, String> {
-    let home = std::env::var("HOME").unwrap_or_default();
+    let home = home();
+    let exe = if cfg!(windows) { "node.exe" } else { "node" };
     let mut candidates: Vec<PathBuf> = [
-        ".local/share/fnm/aliases/default/bin/node",
-        ".volta/bin/node",
-        ".local/bin/node",
+        ".local/share/fnm/aliases/default/bin",
+        ".volta/bin",
+        ".local/bin",
     ]
     .iter()
-    .map(|p| PathBuf::from(&home).join(p))
+    .map(|p| PathBuf::from(&home).join(p).join(exe))
     .collect();
-    candidates.extend([
-        PathBuf::from("/opt/homebrew/bin/node"),
-        PathBuf::from("/usr/local/bin/node"),
-    ]);
+    if cfg!(windows) {
+        if let Some(dir) = std::env::var_os("ProgramFiles") {
+            candidates.push(PathBuf::from(dir).join("nodejs").join(exe));
+        }
+    } else {
+        candidates.extend([
+            PathBuf::from("/opt/homebrew/bin/node"),
+            PathBuf::from("/usr/local/bin/node"),
+            PathBuf::from("/usr/bin/node"),
+        ]);
+    }
     if let Some(path) = std::env::var_os("PATH") {
         candidates.extend(
             std::env::split_paths(&path)
                 .filter(|p| p.is_absolute())
-                .map(|p| p.join("node")),
+                .map(|p| p.join(exe)),
         );
     }
     candidates
@@ -96,7 +110,11 @@ async fn suggest_command(app: tauri::AppHandle, command: Value) -> Result<Value,
 // The model a CLI runs comes from the CLI alone, so asking skips the game lock too.
 #[tauri::command]
 async fn model_command(app: tauri::AppHandle, provider: String) -> Result<Value, String> {
-    run_runtime(&app, &serde_json::json!({ "kind": "model", "provider": provider })).await
+    run_runtime(
+        &app,
+        &serde_json::json!({ "kind": "model", "provider": provider }),
+    )
+    .await
 }
 // Account actions only reach the website, so they skip the game lock. The token travels from the Keychain
 // to the runtime over stdin and back, and the webview never sees it.
@@ -240,12 +258,48 @@ fn open_site(path: String) -> Result<(), String> {
     if !path.starts_with('/') || path.starts_with("//") {
         return Err("Invalid page.".into());
     }
-    std::process::Command::new("/usr/bin/open")
-        .arg(format!("{}{}", site_url(), path))
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let url = format!("{}{}", site_url(), path);
+    #[cfg(target_os = "macos")]
+    let mut open = std::process::Command::new("/usr/bin/open");
+    #[cfg(target_os = "linux")]
+    let mut open = std::process::Command::new("xdg-open");
+    #[cfg(windows)]
+    let mut open = {
+        let mut command = std::process::Command::new("rundll32");
+        command.arg("url.dll,FileProtocolHandler");
+        command
+    };
+    open.arg(url).spawn().map_err(|e| e.to_string())?;
     Ok(())
 }
+// What the runtime and the CLIs it starts need from the environment. None of it holds credentials.
+const ENV: &[&str] = &["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR"];
+#[cfg(windows)]
+const PLATFORM_ENV: &[&str] = &[
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "SystemRoot",
+    "SystemDrive",
+    "PATHEXT",
+    "TEMP",
+    "TMP",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "ComSpec",
+    "ProgramData",
+    "ProgramFiles",
+];
+#[cfg(target_os = "linux")]
+const PLATFORM_ENV: &[&str] = &[
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_RUNTIME_DIR",
+    "DBUS_SESSION_BUS_ADDRESS",
+];
+#[cfg(target_os = "macos")]
+const PLATFORM_ENV: &[&str] = &[];
 // A Node process for one of the bundled runtime scripts, with a minimal environment.
 fn runtime_command(
     app: &tauri::AppHandle,
@@ -264,14 +318,17 @@ fn runtime_command(
         .current_dir(data)
         .env_clear()
         .envs(
-            ["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR"]
-                .iter()
+            ENV.iter()
+                .chain(PLATFORM_ENV)
                 .filter_map(|key| std::env::var(key).ok().map(|value| (*key, value))),
         )
         .env("D20_SITE_URL", site_url())
         .stdin(Stdio::piped())
         .stderr(Stdio::null())
         .kill_on_drop(true);
+    // No console window flashes up for it on Windows.
+    #[cfg(windows)]
+    command.creation_flags(0x0800_0000);
     Ok(command)
 }
 async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {

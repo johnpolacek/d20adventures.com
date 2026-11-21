@@ -1,6 +1,5 @@
-import { spawn } from "node:child_process"
 import { createInterface } from "node:readline"
-import { minimalEnv } from "./cli.mjs"
+import { launch, minimalEnv, stop } from "./cli.mjs"
 
 // Protocol metadata and generated game text only. No configuration/auth reads,
 // raw stderr persistence, or proxy access to the host filesystem/terminal.
@@ -12,7 +11,7 @@ export class RpcPeer {
     this.stderrBytes = 0
     this.methods = {}
     this.deniedRequests = 0
-    this.child = spawn(binary, args, { cwd, env, detached: true, stdio: ["pipe", "pipe", "pipe"] })
+    this.child = launch(binary, args, { cwd, env, stdio: ["pipe", "pipe", "pipe"] })
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", (data) => {
       this.stderrBytes += data.length
@@ -106,14 +105,8 @@ export class RpcPeer {
   close() {
     if (this.closed) return
     this.closed = true
-    try {
-      process.kill(-this.child.pid, "SIGTERM")
-    } catch {}
-    const timer = setTimeout(() => {
-      try {
-        process.kill(-this.child.pid, "SIGKILL")
-      } catch {}
-    }, 1000)
+    stop(this.child)
+    const timer = setTimeout(() => stop(this.child, "SIGKILL"), 1000)
     timer.unref()
   }
 }

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import jpeg from "jpeg-js"
 import { PNG } from "pngjs"
 import { runBounded } from "../../desktop-spike/harness/cli.mjs"
 import { imageCommand, imageOutput } from "../../desktop-spike/harness/image-cli.mjs"
@@ -50,12 +51,25 @@ export async function paint(provider: Painter, hero: Pick<Hero, "name" | "race" 
   } catch {
     throw new Error(`${provider} did not return a picture of ${hero.name}. Retry.`)
   }
-  if (!path.toLowerCase().endsWith(".png")) {
+  return cutStandee(await readPicture(path, cwd), hero.race)
+}
+
+// A painted picture as PNG pixels. A Mac converts JPEGs with sips, as it always has. Elsewhere jpeg-js decodes them.
+async function readPicture(path: string, cwd: string) {
+  if (path.toLowerCase().endsWith(".png")) return PNG.sync.read(readFileSync(path))
+  if (process.platform === "darwin") {
     const converted = join(cwd, "standee.png")
     if ((await run("/usr/bin/sips", ["-s", "format", "png", path, "--out", converted])).code !== 0) throw new Error("The painted picture could not be read.")
-    path = converted
+    return PNG.sync.read(readFileSync(converted))
   }
-  return cutStandee(PNG.sync.read(readFileSync(path)), hero.race)
+  try {
+    const { width, height, data } = jpeg.decode(readFileSync(path), { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 1024 })
+    const png = new PNG({ width, height })
+    png.data = Buffer.from(data)
+    return png
+  } catch {
+    throw new Error("The painted picture could not be read.")
+  }
 }
 
 // Painted art lives beside the save, by hero id. Deleting a hero keeps it, so a running adventure keeps its faces.

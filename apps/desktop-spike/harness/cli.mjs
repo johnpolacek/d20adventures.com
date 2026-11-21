@@ -1,51 +1,78 @@
 import { spawn } from "node:child_process"
-import { accessSync, constants, realpathSync } from "node:fs"
+import { accessSync, constants, readFileSync, realpathSync } from "node:fs"
 import { homedir } from "node:os"
-import { isAbsolute, join } from "node:path"
+import { delimiter, dirname, isAbsolute, join } from "node:path"
 import { createInterface } from "node:readline"
 
 export const providers = ["claude", "codex", "antigravity", "grok"]
 // A provider whose executable goes by another name.
 const binaries = { antigravity: "agy" }
+const windows = process.platform === "win32"
+// What each system needs to find a user's folders and run their programs. None of it holds credentials.
+const PLATFORM_ENV = {
+  win32: ["USERPROFILE", "APPDATA", "LOCALAPPDATA", "SystemRoot", "SystemDrive", "PATHEXT", "TEMP", "TMP", "HOMEDRIVE", "HOMEPATH", "ComSpec", "ProgramData", "ProgramFiles"],
+  linux: ["XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS"],
+}
 export function minimalEnv(inherited = process.env) {
   // FilmBrain's credential-free allowlist. Do not copy the parent's API/auth/session env.
-  return Object.fromEntries(["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR"].filter((key) => inherited[key]).map((key) => [key, inherited[key]]))
+  const keys = ["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR", ...(PLATFORM_ENV[process.platform] ?? [])]
+  return Object.fromEntries(keys.filter((key) => inherited[key]).map((key) => [key, inherited[key]]))
 }
 export function locate(name) {
   if (![...providers, "node"].includes(name)) throw new Error("Unsupported executable")
   const binary = binaries[name] ?? name
-  const candidates = [
+  // Windows installs a CLI as an .exe, or as an npm .cmd shim.
+  const names = windows ? [`${binary}.exe`, `${binary}.cmd`] : [binary]
+  const dirs = [
     // Native GUI PATH can contain terminal-injected wrappers. Prefer FilmBrain's
     // known installation locations so the spike launches the player's binary itself.
-    ...[".local/bin", ".local/share/fnm/aliases/default/bin", ".volta/bin", ".bun/bin", ".grok/bin"].map((dir) => join(homedir(), dir, binary)),
-    ...(process.env.PATH ?? "")
-      .split(":")
-      .filter(isAbsolute)
-      .map((dir) => join(dir, binary)),
-    `/opt/homebrew/bin/${binary}`,
-    `/usr/local/bin/${binary}`,
+    ...[".local/bin", ".local/share/fnm/aliases/default/bin", ".volta/bin", ".bun/bin", ".grok/bin"].map((dir) => join(homedir(), dir)),
+    ...(windows && process.env.APPDATA ? [join(process.env.APPDATA, "npm")] : []),
+    ...(process.env.PATH ?? "").split(delimiter).filter(isAbsolute),
+    ...(windows ? [] : ["/opt/homebrew/bin", "/usr/local/bin"]),
   ]
-  for (const candidate of candidates) {
-    try {
-      accessSync(candidate, constants.X_OK)
-      return realpathSync(candidate)
-    } catch {}
-  }
+  for (const dir of dirs)
+    for (const file of names) {
+      const candidate = join(dir, file)
+      try {
+        accessSync(candidate, constants.X_OK)
+        return realpathSync(candidate)
+      } catch {}
+    }
   throw new Error(`${name} not installed`)
+}
+// An npm .cmd shim runs a script or program named in it. Node will not start a .cmd without a shell, and a shell
+// would reread the prompts passed as arguments, so the shim's target is started directly.
+function shimTarget(shim) {
+  const target = /"%dp0%\\([^"]+)"/.exec(readFileSync(shim, "utf8"))?.[1]
+  if (!target) throw new Error("Unreadable command shim")
+  const path = join(dirname(shim), target)
+  return /\.[cm]?js$/i.test(path) ? [process.execPath, [path]] : [path, []]
+}
+// Starts a CLI in its own process group, so stop() ends it with everything it started.
+export function launch(binary, args, options = {}) {
+  const [file, lead] = windows && /\.(cmd|bat)$/i.test(binary) ? shimTarget(binary) : [binary, []]
+  return spawn(file, [...lead, ...args], { ...options, detached: !windows, windowsHide: true })
+}
+export function stop(child, signal = "SIGTERM") {
+  if (!child?.pid) return
+  if (windows) {
+    spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true }).on("error", () => {})
+    return
+  }
+  try {
+    process.kill(-child.pid, signal)
+  } catch {}
 }
 export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeout = 10000, limit = 1_048_576 } = {}) {
   return new Promise((resolve) => {
     const start = performance.now()
-    const child = spawn(binary, args, { cwd, env, stdio: ["pipe", "pipe", "pipe"], detached: true })
+    const child = launch(binary, args, { cwd, env, stdio: ["pipe", "pipe", "pipe"] })
     let stdout = "",
       stderr = "",
       timedOut = false,
       oversized = false
-    const kill = () => {
-      try {
-        process.kill(-child.pid, "SIGKILL")
-      } catch {}
-    }
+    const kill = () => stop(child, "SIGKILL")
     const timer = setTimeout(() => {
       timedOut = true
       kill()
@@ -142,7 +169,7 @@ export class ClaudeSession {
   constructor(cwd, system, model) {
     this.start = performance.now()
     this.requests = 0
-    this.child = spawn(locate("claude"), [...claudeArgs, ...(model ? ["--model", model] : []), "--system-prompt", system], { cwd, env: minimalEnv(), detached: true, stdio: ["pipe", "pipe", "pipe"] })
+    this.child = launch(locate("claude"), [...claudeArgs, ...(model ? ["--model", model] : []), "--system-prompt", system], { cwd, env: minimalEnv(), stdio: ["pipe", "pipe", "pipe"] })
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
@@ -230,8 +257,6 @@ export class ClaudeSession {
     })
   }
   close() {
-    try {
-      process.kill(-this.child.pid, "SIGTERM")
-    } catch {}
+    stop(this.child)
   }
 }

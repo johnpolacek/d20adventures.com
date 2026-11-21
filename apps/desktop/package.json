@@ -26,6 +26,7 @@
     "@hugeicons/core-free-icons": "^4.4.0",
     "@hugeicons/react": "^1.1.10",
     "@tauri-apps/api": "^2.12.5",
+    "jpeg-js": "^0.4.4",
     "lucide-react": "^0.577.0",
     "pngjs": "^7.0.0",
     "react": "19.3.1",

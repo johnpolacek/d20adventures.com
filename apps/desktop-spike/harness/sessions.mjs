@@ -1,8 +1,7 @@
-import { spawn } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { createInterface } from "node:readline"
-import { ClaudeSession, efforts, locate, minimalEnv, runBounded } from "./cli.mjs"
+import { ClaudeSession, efforts, launch, locate, minimalEnv, runBounded, stop } from "./cli.mjs"
 import { RpcPeer } from "./rpc.mjs"
 
 class CodexSession {
@@ -178,7 +177,7 @@ class AntigravitySession {
     mkdirSync(agents, { recursive: true })
     writeFileSync(join(agents, "d20-gm.md"), `---\nname: d20-gm\ndescription: The Game Master for D20 Adventures.\ntools: []\nmainAgent: true\nsubagent: false\n---\n\n${this.system}\n`)
     const args = ["--agent", "d20-gm", ...(picked ? ["--model", picked.slug] : []), "--input-format", "stream-json", "--output-format", "stream-json", "--disable-slash-commands", "--print="]
-    this.child = spawn(locate("antigravity"), args, { cwd: this.cwd, env: minimalEnv(), detached: true, stdio: ["pipe", "pipe", "pipe"] })
+    this.child = launch(locate("antigravity"), args, { cwd: this.cwd, env: minimalEnv(), stdio: ["pipe", "pipe", "pipe"] })
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
@@ -248,9 +247,7 @@ class AntigravitySession {
   }
   close() {
     if (!this.child) return
-    try {
-      process.kill(-this.child.pid, "SIGTERM")
-    } catch {}
+    stop(this.child)
   }
 }
 
