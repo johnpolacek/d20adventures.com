@@ -352,7 +352,7 @@ Environments are not generated. They are built from code, and 41 exist.
 Any set can be seen as built, and a set with a room can be seen as an isometric cut-away:
 
 ```
-http://localhost:3057/settings/realm-of-myr/assets?env=realm-of-myr/dragonbone-inn&view=iso
+http://localhost:3057/settings/realm-of-myr/assets?env=dragonbone-inn&view=iso
 http://localhost:3057/dev/stage-lab?staging=welcome-to-kordavos/the-dragonbone-inn&tier=high&paint=0&iso=45,35,40,17&isolight=1.4,0.3,1.8
 ```
 

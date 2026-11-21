@@ -3,7 +3,7 @@
 //   ?tab=characters                           -> the party, then every character
 //   ?tab=environments&group=covert-cargo      -> the places of one adventure
 //   ?id=garlan&lod=1&clip=Walk                -> a character: its 3D figure at a detail level and in a clip, or its card
-//   ?env=realm-of-myr/dragonbone-inn&view=iso -> a place, as the stage shows it or as an isometric cut-away
+//   ?env=dragonbone-inn&view=iso -> a place, as the stage shows it or as an isometric cut-away
 //
 // In development it is read from the disk on every load, and next.config.ts sends /asset-library/characters to the
 // workspace's own figures. On the site it shows what `pnpm assets:sync` last published to the public bucket under

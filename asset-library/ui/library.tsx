@@ -28,7 +28,7 @@ export interface LibraryConfig {
   files: string
 }
 // And, for a scene, which character's figure stands for a cast id.
-const Config = createContext<LibraryConfig & { figures: Record<string, string> }>({ home: "/settings/realm-of-myr/assets", files: "/asset-library/characters", figures: {} })
+const Config = createContext<LibraryConfig & { figures: Record<string, string>; setting: string }>({ home: "/settings/realm-of-myr/assets", files: "/asset-library/characters", figures: {}, setting: "realm-of-myr" })
 
 type Params = Record<string, string | undefined>
 type Tab = "characters" | "environments" | "images"
@@ -514,7 +514,8 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
     setAt(n?.open ?? "")
   }, [])
   useEffect(() => {
-    history.replaceState(null, "", `${config.home}?env=${env.key}&view=${cut ? "iso" : "stage"}&scene=${staging ?? "empty"}`)
+    const short = env.key.startsWith(`${config.setting}/`) ? env.key.slice(config.setting.length + 1) : env.key
+    history.replaceState(null, "", `${config.home}?env=${short}&view=${cut ? "iso" : "stage"}&scene=${staging ?? "empty"}`)
   }, [env, cut, staging, config.home])
   return (
     <>
@@ -627,7 +628,9 @@ const SHAPES: Record<string, [number, string]> = {
 }
 
 // ── The library ──
-export function AssetLibrary({ library, config, params }: { library: Library; config: LibraryConfig; params: Params }) {
+export function AssetLibrary({ library, config, params: given }: { library: Library; config: LibraryConfig; params: Params }) {
+  // A place's link leaves out the setting the page is already under: ?env=dragonbone-inn. The full key still opens it.
+  const params = given.env && !given.env.includes("/") ? { ...given, env: `${library.setting}/${given.env}` } : given
   const { characters, places, groups } = library
   const pictures = library.pictures ?? []
   const kinds = library.kinds ?? []
@@ -740,8 +743,8 @@ export function AssetLibrary({ library, config, params }: { library: Library; co
   const home = whole && tab === "characters"
   // Which character's figure stands for a cast id, for a scene.
   const provided = useMemo(
-    () => ({ ...config, figures: Object.fromEntries(characters.flatMap((c) => (c.figure ? (c.figure.cast ?? [c.id]).map((id) => [id, c.figure?.id as string]) : []))) }),
-    [config, characters]
+    () => ({ ...config, setting: library.setting, figures: Object.fromEntries(characters.flatMap((c) => (c.figure ? (c.figure.cast ?? [c.id]).map((id) => [id, c.figure?.id as string]) : []))) }),
+    [config, characters, library.setting]
   )
 
   const figureCard = (c: Character, wide: boolean) => (
