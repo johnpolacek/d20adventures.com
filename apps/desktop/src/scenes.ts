@@ -54,7 +54,6 @@ import brokenSilence from "@d20/stage/stagings/the-midnight-summons/broken-silen
 import meetingAtTheStones from "@d20/stage/stagings/the-midnight-summons/meeting-at-the-stones.json"
 import owlbearConfrontation from "@d20/stage/stagings/the-midnight-summons/owlbear-confrontation.json"
 import preparingForTheCity from "@d20/stage/stagings/the-midnight-summons/preparing-for-the-city.json"
-import theMissingRelics from "@d20/stage/stagings/the-midnight-summons/the-missing-relics.json"
 import theOwlbearProwls from "@d20/stage/stagings/the-midnight-summons/the-owlbear-prowls.json"
 import timelyRescue from "@d20/stage/stagings/the-midnight-summons/timely-rescue.json"
 import theFortuneTeller from "@d20/stage/stagings/the-road-to-kordavos/the-fortune-teller.json"
@@ -627,13 +626,6 @@ export const SCENES: Record<string, Scene> = {
     staging: meetingAtTheStones,
     location: "Old Standing Stones",
     where: "Moonlight fills the clearing where a line of ancient standing stones runs beside the river.",
-    party: ["thalbern"],
-  },
-  "the-missing-relics": {
-    set: stonesSet,
-    staging: theMissingRelics,
-    location: "Old Standing Stones",
-    where: "Thalbern and Wollandora talk among the standing stones by the moonlit river.",
     party: ["thalbern"],
   },
   "preparing-for-the-city": {

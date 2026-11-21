@@ -28,7 +28,7 @@ function main() {
   assert.equal(contentRef.planId, MIDNIGHT_SUMMONS_PLAN_ID)
   assert.equal(artifacts.validationReport.status, "passed")
   assert.equal(artifacts.manifest.startEncounterId, "broken-silence")
-  assert.equal(Object.keys(artifacts.encounters).length, 8)
+  assert.equal(Object.keys(artifacts.encounters).length, 7)
   assert.equal(Object.keys(artifacts.characterSheets.premadeCharacters).includes("thalbern"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("wollandora"), true)
   assert.equal(Object.keys(artifacts.characterSheets.npcs).includes("owlbear"), true)

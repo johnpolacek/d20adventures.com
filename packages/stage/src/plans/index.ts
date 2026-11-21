@@ -98,7 +98,6 @@ const ENCOUNTER_PLANS: Record<string, () => Promise<unknown>> = {
   "the-hunt-for-the-assassin": () => import("./encounters/the-hunt-for-the-assassin.json").then((m) => m.default),
   "the-lady-and-the-bishop": () => import("./encounters/the-lady-and-the-bishop.json").then((m) => m.default),
   "the-lavish-corridor": () => import("./encounters/the-lavish-corridor.json").then((m) => m.default),
-  "the-missing-relics": () => import("./encounters/the-missing-relics.json").then((m) => m.default),
   "the-new-dawn": () => import("./encounters/the-new-dawn.json").then((m) => m.default),
   "the-old-grand-library": () => import("./encounters/the-old-grand-library.json").then((m) => m.default),
   "the-owlbear-prowls": () => import("./encounters/the-owlbear-prowls.json").then((m) => m.default),

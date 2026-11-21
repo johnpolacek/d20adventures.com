@@ -18,6 +18,15 @@ type StoryTurn = {
   characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number }[]
 }
 
+/**
+ * Whether the turn ends on a question an NPC put to the players. The game asks the player next, so a round end adds
+ * nothing: in Midnight Summons it told Wollandora waiting and the river sliding by between "Will you go?" and the answer.
+ */
+export function waitsOnAnswer(story: readonly StoryBeat[]): boolean {
+  const last = story[story.length - 1]
+  return last?.kind === "line" && /\?["”’']?\s*$/.test(last.text)
+}
+
 // What a GM step returns when it writes story: its beats, alongside whatever else its schema asks for.
 export const beatsField = { beats: storyOutputSchema }
 export const storyOutputObject = z.object(beatsField)

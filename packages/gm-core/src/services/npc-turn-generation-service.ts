@@ -227,6 +227,8 @@ STYLE AND FORMAT RULES:
 - **LENGTH**: At most 2 short sentences of action and narration, 40 words in all. Spoken lines are extra: give lines the Encounter Instructions script as they are written, once, and otherwise at most 2 short lines. One action for the whole turn, not one between each line.
 - Say nothing this NPC has already said or done in the 'Recent Narrative', and do not describe again what it has already described.
 - A question this NPC has asked that the player has not yet answered is not asked again, in any words. The NPC waits for the answer: the game asks the player.
+- A question the players have already answered, in this scene or an earlier one, is not asked again either, even when the NPC Behavior or Encounter Instructions script it. The NPC acts on the answer they gave.
+- When a player asks this NPC something it knows, it answers now, in these lines, with what the Encounter Instructions give it. It never promises to tell, explain or show later, as in "Listen closely, and I will tell you." Answer and agreement can come in one turn: a player who agrees and asks gets the answer and the thanks together.
 - An event the Encounter Instructions call for this turn may take up to 4 sentences.
 
 If the NPC would realistically skip or pass their turn (e.g., waiting, observing, preparing, doing nothing), set actionType to "skip" or "pass" and write it as an action. For example:

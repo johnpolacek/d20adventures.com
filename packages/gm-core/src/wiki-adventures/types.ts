@@ -19,6 +19,7 @@ export const validationFindingCodes = [
   "id.duplicate",
   "adventure.startEncounter.missing",
   "transition.target.missing",
+  "transition.asksForInformation",
   "character.sheet.invalid",
   "character.rules.missing",
   "character.rules.invalid",

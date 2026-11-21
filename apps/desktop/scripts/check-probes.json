@@ -63,7 +63,7 @@
   {
     "id": "relics-lore",
     "adventure": "the-midnight-summons",
-    "encounter": "the-missing-relics",
+    "encounter": "meeting-at-the-stones",
     "hero": "thalbern",
     "action": "I think back on the elven tales I grew up with, trying to recall what the old songs say of these relics.",
     "checks": ["history", "arcana", "religion"],

@@ -7,8 +7,10 @@ import { buildNextTurnFromProgression } from "@d20/gm-core/services/advance-turn
 import { handleSkipPassNpcTurn } from "@d20/gm-core/services/npc-turn-branch-service"
 import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-turn-service"
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
+import type { StoryBeat } from "@d20/gm-core/story/beats"
 import { ledgerNote } from "@d20/gm-core/story/knowledge"
 import { castRulesNote, npcNoteRules } from "@d20/gm-core/story/limits"
+import { waitsOnAnswer } from "@d20/gm-core/story/turn"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
 import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, paceNote, sceneRound } from "@d20/gm-core/wiki-adventures/runtime-context"
@@ -625,6 +627,33 @@ function roundBudget() {
 
 // An encounter's loot is carried as authored, and the compiler refuses loot that names no real item, a variant or
 // base the item does not take, or a transition the encounter does not have, each with an error finding.
+// A question answered in its own encounter costs a turn: the compiler flags the transition, in every adventure as
+// authored and in one written that way. A scene left on an NPC's question goes straight to the answer.
+function questionsStayInTheScene() {
+  for (const adventureId of ["the-midnight-summons", "welcome-to-kordavos", "covert-cargo", "the-road-to-kordavos"]) {
+    const definition = getLocalWikiAdventureDefinition("realm-of-myr", adventureId)
+    assert.ok(definition)
+    const artifacts = compileAdventureSourceTree(readLocalWikiAdventureSourceFiles(definition), { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+    assert.deepEqual(artifacts.validationReport.findings.filter((finding) => finding.code === "transition.asksForInformation"), [], adventureId)
+  }
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "the-midnight-summons")
+  assert.ok(definition)
+  const files = readLocalWikiAdventureSourceFiles(definition).map((file) =>
+    file.path.endsWith("/meeting-at-the-stones.md")
+      ? { ...file, content: file.content.replace("## Transitions\n", "## Transitions\n\n- To [[encounter:the-owlbear-prowls]] when Thalbern asks for more information\n") }
+      : file
+  )
+  const artifacts = compileAdventureSourceTree(files, { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+  assert.deepEqual(
+    artifacts.validationReport.findings.filter((finding) => finding.code === "transition.asksForInformation").map((finding) => [finding.severity, finding.sourceId]),
+    [["warning", "meeting-at-the-stones"]]
+  )
+  const line = (text: string): StoryBeat => ({ kind: "line", by: { step: "npc", character: "wollandora" }, speaker: "wollandora", text })
+  assert.equal(waitsOnAnswer([line("Will you go?")]), true)
+  assert.equal(waitsOnAnswer([line("Stay close to me.")]), false)
+  assert.equal(waitsOnAnswer([line("Will you go?"), { kind: "narration", by: { step: "npc" }, text: "The river slides past." }]), false)
+}
+
 function lootFindings() {
   const definition = getLocalWikiAdventureDefinition("realm-of-myr", "welcome-to-kordavos")
   assert.ok(definition)
@@ -731,6 +760,7 @@ async function main() {
     await npcFixedOutcome()
     roundBudget()
     lootFindings()
+    questionsStayInTheScene()
     rollsEndWithTheRound()
     await replayTurn()
     await characterPrompts()
@@ -741,7 +771,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, questions kept in the scene, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

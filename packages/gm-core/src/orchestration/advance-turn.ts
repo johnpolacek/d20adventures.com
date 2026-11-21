@@ -27,7 +27,7 @@ import { cleanLearned, learnedField, privateFacts } from "../story/knowledge"
 import { heardNames } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
-import { beatsField, roundBeats, sceneFor, storyProse, turnScript } from "../story/turn"
+import { beatsField, roundBeats, sceneFor, storyProse, turnScript, waitsOnAnswer } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn, rollD20, rollDie } from "../utils/game-utils"
@@ -258,7 +258,9 @@ export function createAdvanceTurn(ports: GmPorts) {
         ...given.map(({ character, name, text }): StoryBeat => ({ kind: "feature", by: { step, character }, character, name, text })),
         ...left.map((text): StoryBeat => ({ kind: "narration", by: { step }, text })),
       ]
-      const story = [...told, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering), ...noticed]
+      // A scene left on an NPC's question goes straight to the player's answer.
+      const roundEnd = transition.kind === "continue" && waitsOnAnswer(turn.story) ? [] : told
+      const story = [...roundEnd, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering), ...noticed]
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,

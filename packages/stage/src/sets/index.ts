@@ -97,7 +97,6 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "the-midnight-summons/timely-rescue": () => import("../stagings/the-midnight-summons/timely-rescue.json").then((m) => m.default),
   "the-midnight-summons/back-home": () => import("../stagings/the-midnight-summons/back-home.json").then((m) => m.default),
   "the-midnight-summons/preparing-for-the-city": () => import("../stagings/the-midnight-summons/preparing-for-the-city.json").then((m) => m.default),
-  "the-midnight-summons/the-missing-relics": () => import("../stagings/the-midnight-summons/the-missing-relics.json").then((m) => m.default),
   "the-midnight-summons/meeting-at-the-stones": () => import("../stagings/the-midnight-summons/meeting-at-the-stones.json").then((m) => m.default),
   "covert-cargo/the-shipment": () => import("../stagings/covert-cargo/the-shipment.json").then((m) => m.default),
   "covert-cargo/the-transaction": () => import("../stagings/covert-cargo/the-transaction.json").then((m) => m.default),

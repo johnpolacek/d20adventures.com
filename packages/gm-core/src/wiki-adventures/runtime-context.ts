@@ -318,6 +318,7 @@ ${packet.graph.rescue ? `\n${rescueNote(packet.graph.rescue, packet.currentEncou
 Your Task:
 1. Decide from what has already happened, including everything this round and roll outcomes. A player's action this round counts even when an NPC spoke after it. If events so far satisfy a listed transition condition, transition now rather than extending a situation that is already resolved. Continue the current encounter only when no listed condition is satisfied yet, or when one depends on a player choice that has not been made.
    A condition is met only when every part of it is. One that needs every hero, or each of them, waits until each has done it: a hero who left or was left out has not. A price, password or check an NPC or the GM notes set on the way on holds as well: no length of fight and no push to end the scene waives it.
+   A decision outranks a question. When a player both decides, such as agreeing to go, and asks for more, and an NPC has answered this round, take the decision's transition. A question the players have already answered, in this scene or an earlier one, satisfies a transition that waits on that answer.
    Improvise freely inside the scene, but open no way out of it that the intro and GM notes do not give: no secret passage, hidden stair or tunnel, no fleeing figure or trail to chase, no new lead toward a place no listed transition names. When the players search for or chase something the notes do not provide, they find nothing more to follow.
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
@@ -325,7 +326,7 @@ Your Task:
 5. Keep the beats short and new. Lengths count narration and action, and an NPC's spoken line is extra.
    - Players have just read everything under 'This Round So Far'. Tell none of it again: no action, roll outcome, description or line of dialogue from this round or from recent turns, and no character repeats what they have already said.
    - A question waiting for a player's answer is not asked again, by anyone, in any words. The game asks the player.
-   - If not transitioning: at most 3 short sentences and 50 words. Say what has changed and what the players now face.
+   - If not transitioning: at most 3 short sentences and 50 words. Say what has changed and what the players now face. When nothing has changed, such as an NPC waiting on an answer, return no beats: [].
    - If transitioning: at most 2 short sentences and 35 words. The target's intro, listed with its transition option, is shown to players straight after your narrative. Carry the story to where that intro begins and stop. Describe nothing the intro describes.
    - An event the GM notes call for at this moment may take up to 5 sentences and 90 words.
    - Keep every fact the players need. Give one telling detail, not several, and cut any sentence that only adds mood.

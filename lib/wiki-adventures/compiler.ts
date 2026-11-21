@@ -291,6 +291,8 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
   }
 }
 
+const ASKS_FOR_INFORMATION = /\b(?:asks?|asking|questions?)\s+(?:\w+\s+)?(?:for|about)\s+(?:more\s+)?(?:information|info|details|answers)\b|\basks?\s+for\s+more\b/i
+
 function extractTransitions(file: ParsedMarkdownFile, encounterIds: Set<string>, mode: ValidationMode, findings: ValidationFinding[]): RuntimeTransition[] {
   const text = file.sections.transitions ?? file.body
   const transitions: RuntimeTransition[] = []
@@ -312,6 +314,20 @@ function extractTransitions(file: ParsedMarkdownFile, encounterIds: Set<string>,
         target: { type: "encounter", id: link.id },
         aiFixable: true,
         suggestedFix: { type: "createStubEncounter", id: link.id },
+      })
+    }
+    // A question costs a whole turn when it leaves the scene: the NPC answers it where it is asked. Transitions are for
+    // what the heroes decide or do.
+    if (ASKS_FOR_INFORMATION.test(sourceLine)) {
+      findings.push({
+        code: "transition.asksForInformation",
+        severity: "warning",
+        sourcePath: file.path,
+        sourceId: String(file.frontmatter.id),
+        sourceType: "encounter",
+        message: `The transition to "${link.id}" fires on a question. Answer it in this encounter's GM notes and transition on a decision.`,
+        target: { type: "encounter", id: link.id },
+        aiFixable: true,
       })
     }
     transitions.push({
