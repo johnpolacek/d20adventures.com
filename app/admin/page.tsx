@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import type { CSSProperties } from "react"
+import { BookOpenIcon, ChevronRightIcon, ClipboardListIcon, InboxIcon, MailIcon, MessageSquareIcon, UsersIcon, type LucideIcon } from "lucide-react"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
-import { buttonClassName, buttonStyle } from "@d20/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@d20/ui/card"
+import { Card } from "@d20/ui/card"
 import { requireAdmin } from "@/lib/auth-utils"
 import { AiBudget } from "@/components/admin/ai-budget"
 import { budgetToday } from "@/lib/gm-server/budget"
@@ -13,6 +13,19 @@ export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "D20 Admin Dashboard",
 }
+
+type Section = { href: string; title: string; note: string; icon: LucideIcon }
+
+const SECTIONS: Section[] = [
+  { href: "/admin/adventure-plans", title: "Adventure Plans", note: "Workbench", icon: ClipboardListIcon },
+  { href: "/admin/adventures", title: "Adventures", note: "Catalog", icon: BookOpenIcon },
+  { href: "/admin/feedback", title: "Feedback", note: "Playtests", icon: MessageSquareIcon },
+  { href: "/admin/users", title: "Users", note: "Accounts", icon: UsersIcon },
+  { href: "/admin/mailing-list", title: "Mailing List", note: "Subscribers", icon: MailIcon },
+]
+
+// The content queue is files on this machine, so it only opens in development.
+const LOCAL_SECTIONS: Section[] = [{ href: "/admin/content", title: "Content Queue", note: "Local", icon: InboxIcon }]
 
 export default async function AdminPage() {
   const { isAdmin, requiresSetup } = await requireAdmin()
@@ -39,77 +52,43 @@ export default async function AdminPage() {
   }
 
   const budget = await budgetToday().catch(() => null)
+  const sections = process.env.NODE_ENV === "development" ? [...SECTIONS, ...LOCAL_SECTIONS] : SECTIONS
 
   return (
-    <div className="container py-8 md:py-24">
-      <div className="mx-auto max-w-6xl">
-        <Heading variant="h3" className="mb-8 text-center">
-          Admin Dashboard
+    <div className="container py-10 md:py-16">
+      <div className="mx-auto max-w-5xl">
+        <Heading variant="h3" className="mb-8">
+          Admin
         </Heading>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="enter-rise">
-            <CardHeader>
-              <CardTitle>Users</CardTitle>
-              <CardDescription>Manage user accounts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-white/60">View user information and manage admin access.</p>
-            </CardContent>
-            <CardFooter>
-              <Link href="/admin/users" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Users</Link>
-            </CardFooter>
-          </Card>
-          <Card className="enter-rise" style={{ "--i": 1 } as CSSProperties}>
-            <CardHeader>
-              <CardTitle>Mailing List</CardTitle>
-              <CardDescription>Manage subscribers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-white/60">View and manage newsletter subscribers and preferences.</p>
-            </CardContent>
-            <CardFooter>
-              <Link href="/admin/mailing-list" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Subscribers</Link>
-            </CardFooter>
-          </Card>
-          <Card className="enter-rise" style={{ "--i": 2 } as CSSProperties}>
-            <CardHeader>
-              <CardTitle>Feedback</CardTitle>
-              <CardDescription>Playtest feedback</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Link href="/admin/feedback" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>View Feedback</Link>
-            </CardFooter>
-          </Card>
-          <Card className="enter-rise" style={{ "--i": 3 } as CSSProperties}>
-            <CardHeader>
-              <CardTitle>Adventures</CardTitle>
-              <CardDescription>Manage adventures</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-white/60">View and manage adventure information.</p>
-            </CardContent>
-            <CardFooter>
-              <Link href="/admin/adventures" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Manage Adventures</Link>
-            </CardFooter>
-          </Card>
-          <Card className="enter-rise" style={{ "--i": 4 } as CSSProperties}>
-            <CardHeader>
-              <CardTitle>Adventure Plans</CardTitle>
-              <CardDescription>Author and improve adventure plans</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-white/60">Chat with migrated adventures, edit key fields, validate source, and export restore bundles.</p>
-            </CardContent>
-            <CardFooter>
-              <Link href="/admin/adventure-plans" className={buttonClassName("outline")} style={buttonStyle("outline", undefined)}>Open Workbench</Link>
-            </CardFooter>
-          </Card>
-          <Card className="enter-rise" style={{ "--i": 5 } as CSSProperties}>
-            <CardHeader>
-              <CardTitle>AI Budget</CardTitle>
-              <CardDescription>Daily limit on the site’s own AI calls</CardDescription>
-            </CardHeader>
-            <CardContent>{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/60">Unavailable</p>}</CardContent>
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+          <nav aria-label="Admin Sections" className="grid gap-3 sm:grid-cols-2 content-start">
+            {sections.map((section, i) => {
+              const Icon = section.icon
+              return (
+                <Link
+                  key={section.href}
+                  href={section.href}
+                  className="enter-rise group flex items-center gap-4 rounded-xl border border-white/15 bg-black/60 px-4 py-4 transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-primary-400/60 hover:bg-black/80 active:scale-[0.98]"
+                  style={{ "--i": i } as CSSProperties}
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/70 ring-1 ring-white/10 transition-colors duration-150 group-hover:bg-primary-500/15 group-hover:text-primary-300 group-hover:ring-primary-400/40">
+                    <Icon className="size-5" />
+                  </span>
+                  <span className="flex min-w-0 grow flex-col">
+                    <span className="font-display text-lg font-bold leading-tight">{section.title}</span>
+                    <span className="text-xs uppercase tracking-wider text-white/40">{section.note}</span>
+                  </span>
+                  <ChevronRightIcon className="size-4 shrink-0 text-white/30 transition-[color,translate] duration-150 group-hover:translate-x-0.5 group-hover:text-white/70" />
+                </Link>
+              )
+            })}
+          </nav>
+          <Card className="enter-rise gap-4 self-start px-5 py-5" style={{ "--i": sections.length } as CSSProperties}>
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-display text-lg font-bold">AI Budget</h2>
+              <span className="text-xs uppercase tracking-wider text-white/40">Today</span>
+            </div>
+            {budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/60">Unavailable</p>}
           </Card>
         </div>
       </div>

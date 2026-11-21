@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation"
 import { siteConfig } from "@/lib/config"
 
 const link = "hover:underline underline-offset-4 transition-opacity duration-150 active:opacity-60"
-const FOOTERLESS_EDITOR_PREFIXES = ["/admin/adventure-plans/", "/admin/wiki-adventures/"]
+const FOOTERLESS = (pathname: string) => pathname === "/admin" || pathname.startsWith("/admin/")
 
 export default function SiteFooter({ currentYear }: { currentYear: number }) {
   const pathname = usePathname()
 
-  if (FOOTERLESS_EDITOR_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+  if (FOOTERLESS(pathname)) {
     return null
   }
 
