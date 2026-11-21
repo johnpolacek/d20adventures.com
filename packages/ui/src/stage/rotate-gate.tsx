@@ -5,6 +5,7 @@
 // fullscreen, which requestLandscape() asks for on the player's first tap.
 
 import { useEffect, useState } from "react"
+import { cn, entrance, type MotionProps } from "../utils"
 
 // Phones only: tablets in portrait keep playing, with the panel as a bottom sheet.
 const PHONE_PORTRAIT = "(pointer: coarse) and (orientation: portrait) and (max-width: 600px)"
@@ -33,9 +34,14 @@ export async function requestLandscape() {
   }
 }
 
-export function RotatePrompt() {
+export function RotatePrompt({ className, style, onAnimationEnd }: MotionProps) {
   return (
-    <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-stage-ink px-8 text-center" role="alert">
+    <div
+      className={cn("fixed inset-0 z-[120] flex flex-col items-center justify-center gap-6 bg-stage-ink px-8 text-center", entrance("enter-fade", className))}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
+      role="alert"
+    >
       <svg viewBox="0 0 64 64" className="h-20 w-20 animate-[spin_2.4s_ease-in-out_infinite] text-stage-gold" aria-hidden="true">
         <rect x="20" y="6" width="24" height="44" rx="4" fill="none" stroke="currentColor" strokeWidth="3" />
         <circle cx="32" cy="44" r="2" fill="currentColor" />

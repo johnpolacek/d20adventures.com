@@ -67,11 +67,11 @@ export default async function PlaytestPage() {
           </div>
 
           <footer className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 border-t border-amber-200/15 px-6 py-4 font-sans text-sm tracking-wide">
-            <a href={repo} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/75 hover:text-amber-200">
+            <a href={repo} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-white/75 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
               <Github className="size-4" />
               View on GitHub
             </a>
-            <a href={installSource} target="_blank" rel="noopener noreferrer" className="text-white/75 underline decoration-amber-200/40 underline-offset-4 hover:text-amber-200">
+            <a href={installSource} target="_blank" rel="noopener noreferrer" className="text-white/75 underline decoration-amber-200/40 underline-offset-4 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
               View the Install Script
             </a>
           </footer>

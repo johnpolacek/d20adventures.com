@@ -60,7 +60,7 @@ export default function DiceRoll({
 
   if (result !== null) {
     return (
-      <div className={cn("flex", result.length > 1 && "scale-75 -mx-8")}>
+      <div className={cn("enter-pop flex", result.length > 1 && "scale-75 -mx-8")}>
         {result.map((die, i) => (
           <DiceRollResult key={i} result={die} />
         ))}
@@ -72,7 +72,7 @@ export default function DiceRoll({
     <Button
       aria-label="Roll D20"
       className={cn(
-        "group text-2xl brightness-125 contrast-150 font-display flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-blue-600 rounded-full ring-4 ring-blue-800 border border-blue-400/50 transition-all ease-in-out duration-500 bg-[url('/images/app/backgrounds/buried.png')]",
+        "group text-2xl brightness-125 contrast-150 font-display flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-blue-600 rounded-full ring-4 ring-blue-800 border border-blue-400/50 bg-[url('/images/app/backgrounds/buried.png')]",
         className,
         rolling && "pointer-events-none"
       )}
@@ -84,7 +84,7 @@ export default function DiceRoll({
       </span>
       <Image
         style={{ transform: rolling ? "rotate(720deg)" : undefined, transition: "transform 1.2s cubic-bezier(.22,1,.36,1)" }}
-        className="inline-block border border-[rgba(255,255,255,.33)] ring-4 ring-blue-600 group-disabled:ring-gray-600 shadow-inner shadow-black rounded-full overflow-hidden p-[2px] transition-all ease-in-out delay-100 duration-[2s]"
+        className="inline-block border border-[rgba(255,255,255,.33)] ring-4 ring-blue-600 group-disabled:ring-gray-600 shadow-inner shadow-black rounded-full overflow-hidden p-[2px]"
         src={icon}
         width={iconSize}
         height={iconSize}

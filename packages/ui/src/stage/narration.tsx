@@ -8,11 +8,15 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, type ButtonProps, epicReducedButtonStyle } from "../button"
 import { Tip } from "../tooltip"
-import { cn } from "../utils"
+import { cn, entrance, type MotionProps } from "../utils"
 import { Chevron, eyebrow, panel } from "./hud"
 import { FeatureEntry } from "./roll-parts"
 import { RollResult } from "./roll-result"
 import type { FeatureView, RollView } from "./roll-view"
+
+// A paragraph gives way to the next: the words fade out, the panel takes its new height, and the new words fade in.
+const SWAP_MS = 150
+const SHOW_MS = 260
 
 function Control({ label, children, ...rest }: Omit<ButtonProps, "variant" | "size"> & { label: string; children: ReactNode }) {
   return (
@@ -21,7 +25,7 @@ function Control({ label, children, ...rest }: Omit<ButtonProps, "variant" | "si
         variant="plain"
         type="button"
         aria-label={label}
-        className="stage-leather grid h-7 w-7 place-items-center rounded-full border border-stage-line/25 text-stage-cream transition-[filter,border-color] hover:border-stage-gold disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
+        className="stage-leather grid h-7 w-7 place-items-center rounded-full border border-stage-line/25 text-stage-cream transition-[filter,border-color,background-color,scale] duration-150 ease-snap hover:border-stage-gold enabled:active:scale-90 disabled:cursor-default disabled:opacity-35 [&_svg]:h-3 [&_svg]:w-3"
         {...rest}
       >
         {children}
@@ -45,7 +49,10 @@ export function Narration({
   onSkip,
   step = false,
   onContinue,
-}: {
+  className,
+  style,
+  onAnimationEnd,
+}: MotionProps & {
   heading: string
   text: string | undefined
   // The paragraph's dice roll, when it is one.
@@ -77,8 +84,8 @@ export function Narration({
       setShownRoll(roll)
       setShownFeature(feature)
       setShownHeading(heading)
-    }, 300)
-    const show = setTimeout(() => setVisible(true), 480)
+    }, SWAP_MS)
+    const show = setTimeout(() => setVisible(true), SHOW_MS)
     return () => {
       clearTimeout(swap)
       clearTimeout(show)
@@ -98,22 +105,28 @@ export function Narration({
   return (
     <section
       aria-live="polite"
-      className={cn(panel, "overflow-hidden transition-[height,opacity] duration-500 ease-out", hidden ? "pointer-events-none opacity-0" : "pointer-events-auto")}
+      className={cn(
+        panel,
+        "overflow-hidden transition-[height,opacity] duration-200 ease-out",
+        hidden ? "pointer-events-none opacity-0" : "pointer-events-auto",
+        entrance("enter-rise", className)
+      )}
       // The panel's 1px border sits outside the measured content.
-      style={{ height: height === undefined ? undefined : height + 2 }}
+      style={{ ...style, height: height === undefined ? undefined : height + 2 }}
+      onAnimationEnd={onAnimationEnd}
     >
       <div ref={inner} className={compact ? "px-3 pt-2 pb-2" : "px-5 pt-4 pb-3"}>
         <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-stage-gold", compact ? "mb-1" : "mb-2")}>{shownHeading}</div>
         {shownRoll ? (
-          <div className={cn("transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
+          <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
             {visible && <RollResult key={`${index}-${shown}`} roll={shownRoll} compact={compact} />}
           </div>
         ) : shownFeature ? (
-          <div className={cn("transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
+          <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
             <FeatureEntry feature={shownFeature} compact={compact} />
           </div>
         ) : (
-          <p className={cn("font-serif text-stage-cream transition-opacity duration-300", visible ? "opacity-100" : "opacity-0", compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>
+          <p className={cn("font-serif text-stage-cream transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "text-[12px] leading-snug" : "text-[15px] leading-[1.65]")}>
             {shown}
           </p>
         )}
@@ -121,7 +134,7 @@ export function Narration({
           {/* Long narrations get smaller dots, so the row stays one line beside the controls. */}
           <div className={cn("flex min-w-0 flex-wrap", count > 10 ? "gap-[3px]" : "gap-1")} role="presentation">
             {Array.from({ length: count }, (_, i) => (
-              <span key={i} className={cn("rounded-full transition-colors duration-500", count > 10 ? "h-1 w-1" : "h-1.5 w-1.5", i <= index ? "bg-stage-gold" : "bg-stage-line/20")} />
+              <span key={i} className={cn("rounded-full transition-colors duration-150", count > 10 ? "h-1 w-1" : "h-1.5 w-1.5", i <= index ? "bg-stage-gold" : "bg-stage-line/20")} />
             ))}
           </div>
           <div className="flex shrink-0 items-center gap-1.5">

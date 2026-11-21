@@ -16,18 +16,20 @@ export function AccountProfile() {
   }
 
   return (
-    <UserProfile
-      appearance={{
-        elements: {
-          rootBox: "mx-auto max-w-3xl",
-          card: "shadow-none",
-        },
-      }}
-      path="/account"
-    >
-      <UserProfile.Page label="Bio" url="bio" labelIcon={<BookText className="h-4 w-4" />}>
-        <BioSection />
-      </UserProfile.Page>
-    </UserProfile>
+    <div className="enter-fade">
+      <UserProfile
+        appearance={{
+          elements: {
+            rootBox: "mx-auto max-w-3xl",
+            card: "shadow-none",
+          },
+        }}
+        path="/account"
+      >
+        <UserProfile.Page label="Bio" url="bio" labelIcon={<BookText className="h-4 w-4" />}>
+          <BioSection />
+        </UserProfile.Page>
+      </UserProfile>
+    </div>
   )
 }

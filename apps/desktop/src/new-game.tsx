@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { type AnimationEventHandler, type CSSProperties, useEffect, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { Button } from "@d20/ui/button"
+import { Presence, Swap } from "@d20/ui/presence"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { Chip, Option, siteLabel, siteOutline } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
@@ -10,13 +11,14 @@ import type { Hero, PartyChoice } from "../runtime/heroes"
 import type { GmModel } from "./bridge"
 import { joinAs, openingParty, type Seat, seatCreated } from "./carry"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
+import { useLeaving } from "@d20/ui/leaving"
 import { portraitFor } from "./scenes"
 
 type Pick = { id: string; name: string; race: string; archetype: string; portrait?: string; hero?: Hero }
 // The small controls over a roster hero's card.
-const mini = cn(siteOutline, "px-2 py-0.5 font-mono text-xxs")
+const mini = cn(siteOutline, "active:scale-[0.97] px-2 py-0.5 font-mono text-xxs")
 // A text-only control: the quiet way out beside the main action.
-const ghost = "rounded-md px-4 py-2 text-sm text-blue-50/80 transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-50"
+const ghost = "rounded-md px-4 py-2 text-sm text-blue-50/80 transition-[color,opacity] duration-150 ease-snap hover:text-white active:opacity-70 disabled:pointer-events-none disabled:opacity-50"
 // A CLI by name, until its model is known and when it will not say.
 const CLI: Record<string, string> = { claude: "Claude", codex: "Codex", grok: "Grok", antigravity: "Antigravity" }
 // An adventure for sale that this app cannot play yet. Owned ones are downloading, or failed to.
@@ -109,6 +111,13 @@ export function NewGame(props: {
   useEffect(() => {
     if (joining) setParty((p) => seatCreated(p, joining, max))
   }, [joining, max])
+  // Heroes come in one after another, and a hero deleted or a guest seat given up is seen to go.
+  const pickRows = useLeaving(picks, (p) => p.id)
+  const seatRows = useLeaving(
+    party.filter((c) => c.open),
+    (c) => c.id,
+    { enter: "pop" }
+  )
   if (lockedInfo) return <LockedAdventure info={lockedInfo} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
   const yours = party.filter((c) => c.who === "you")
@@ -230,7 +239,7 @@ export function NewGame(props: {
                   ))}
                 </fieldset>
               )}
-              {guestPlays && (
+              <Presence show={guestPlays} motion="drop" asChild>
                 <div className="mb-3 flex flex-wrap items-center gap-3">
                   <span className={siteLabel}>{theirs.length > 1 ? "Guests play" : "Guest plays"}</span>
                   <fieldset className="flex" aria-label="Which hero a guest plays">
@@ -241,10 +250,12 @@ export function NewGame(props: {
                       {held.length > 2 ? "Their choice" : "Either hero"}
                     </Option>
                   </fieldset>
-                  {guestsChoose && <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>}
+                  <Presence show={guestsChoose} motion="fade" asChild>
+                    <span className="text-sm text-white/70">{held.length > 2 ? "You choose who plays the rest at Start." : "You play the other."}</span>
+                  </Presence>
                 </div>
-              )}
-              {guestsChoose && held.length > 2 && (
+              </Presence>
+              <Presence show={guestsChoose && held.length > 2} motion="drop" asChild>
                 <div className="mb-3 flex flex-wrap items-center gap-3">
                   <span className={siteLabel}>Each guest picks</span>
                   <fieldset className="flex" aria-label="How many heroes each guest picks">
@@ -261,8 +272,8 @@ export function NewGame(props: {
                     ))}
                   </fieldset>
                 </div>
-              )}
-              {open > 1 && (
+              </Presence>
+              <Presence show={open > 1} motion="drop" asChild>
                 <div className="mb-3 flex flex-wrap items-center gap-3">
                   <span className={siteLabel}>Each player can have up to</span>
                   <fieldset className="flex" aria-label="How many of their own heroes each guest brings">
@@ -280,21 +291,25 @@ export function NewGame(props: {
                   </fieldset>
                   <span className={siteLabel}>{Math.min(bring, open) === 1 ? "character" : "characters"}</span>
                 </div>
-              )}
-              {watching && <p className="mb-3 text-sm text-white/70">{size - ais.length > 1 ? "You watch your guests play." : "You watch your guest play."}</p>}
+              </Presence>
+              <Presence show={watching} motion="drop" asChild>
+                <p className="mb-3 text-sm text-white/70">{size - ais.length > 1 ? "You watch your guests play." : "You watch your guest play."}</p>
+              </Presence>
               {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-2">
-                {picks.map((p) => {
+                {pickRows.map(({ key, item: p, motion }) => {
                   const choice = party.find((c) => c.id === p.id)
                   const full = !choice && !flex && !room
                   return (
                     <li
-                      key={p.id}
+                      key={key}
+                      {...motion}
                       className={cn(
-                        "relative flex flex-col rounded-lg border bg-black transition-all duration-300",
+                        "relative flex flex-col rounded-lg border bg-black transition-[opacity,border-color,box-shadow] duration-150 ease-snap",
                         choice ? "border-primary-400 ring-2 ring-primary-500" : "border-white/10",
                         !choice && !full && "hover:border-white/40",
-                        full && "opacity-40"
+                        full && "opacity-40",
+                        motion.className
                       )}
                     >
                       <Button
@@ -303,7 +318,7 @@ export function NewGame(props: {
                         aria-pressed={Boolean(choice)}
                         disabled={full}
                         onClick={() => toggle(p.id)}
-                        className="flex w-full flex-1 flex-col items-stretch gap-2 p-2 text-left disabled:cursor-default"
+                        className="flex w-full flex-1 flex-col items-stretch gap-2 p-2 text-left transition-opacity duration-150 ease-snap enabled:active:opacity-80 disabled:cursor-default"
                       >
                         <Face pick={p} size="h-24 w-full" />
                         <span className={cn("truncate font-display text-sm", choice?.who === "you" && "text-amber-400")}>{p.name}</span>
@@ -311,33 +326,36 @@ export function NewGame(props: {
                           {p.race} {p.archetype}
                         </span>
                       </Button>
-                      {choice && (
-                        <fieldset className="flex px-2 pb-2" aria-label={`Who plays ${p.name}`}>
-                          {(canInvite ? WHO : WHO.slice(0, 2)).map(([who, label], i, all) => (
-                            <Option
-                              key={who}
-                              active={choice.who === who}
-                              aria-pressed={choice.who === who}
-                              className={cn("flex-1 px-1 py-1 text-xs", i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
-                              // The party keeps a hero for the player, unless another hero is invited or this is the
-                              // only one: then this one can be invited too.
-                              disabled={
-                                (who !== "you" && choice.who === "you" && yours.length === 1 && !(flex || (who === "invite" && (invites.length > 0 || open > 0 || party.length === 1)))) ||
-                                (flex && choice.who === "invite" && who !== "invite" && !room)
-                              }
-                              onClick={() => seat(p.id, who)}
-                            >
-                              {label}
-                            </Option>
-                          ))}
-                        </fieldset>
-                      )}
-                      {!choice && (
-                        <Option className="mx-2 mb-2 px-1 py-1 text-xs disabled:opacity-100" disabled={full} onClick={() => toggle(p.id)}>
-                          Add to Adventure
-                        </Option>
-                      )}
-                      {choice && <Unseat label={`Remove ${p.name} from the party`} onClick={() => toggle(p.id)} />}
+                      <Swap id={choice ? "seated" : "free"} className="flex flex-col">
+                        {choice ? (
+                          <fieldset className="flex px-2 pb-2" aria-label={`Who plays ${p.name}`}>
+                            {(canInvite ? WHO : WHO.slice(0, 2)).map(([who, label], i, all) => (
+                              <Option
+                                key={who}
+                                active={choice.who === who}
+                                aria-pressed={choice.who === who}
+                                className={cn("flex-1 px-1 py-1 text-xs", i > 0 && "-ml-0.5 rounded-l-none", i < all.length - 1 && "rounded-r-none")}
+                                // The party keeps a hero for the player, unless another hero is invited or this is the
+                                // only one: then this one can be invited too.
+                                disabled={
+                                  (who !== "you" && choice.who === "you" && yours.length === 1 && !(flex || (who === "invite" && (invites.length > 0 || open > 0 || party.length === 1)))) ||
+                                  (flex && choice.who === "invite" && who !== "invite" && !room)
+                                }
+                                onClick={() => seat(p.id, who)}
+                              >
+                                {label}
+                              </Option>
+                            ))}
+                          </fieldset>
+                        ) : (
+                          <Option className="mx-2 mb-2 px-1 py-1 text-xs disabled:opacity-100" disabled={full} onClick={() => toggle(p.id)}>
+                            Add to Adventure
+                          </Option>
+                        )}
+                      </Swap>
+                      <Presence show={Boolean(choice)} motion="pop" asChild>
+                        <Unseat label={`Remove ${p.name} from the party`} onClick={() => toggle(p.id)} />
+                      </Presence>
                       {p.hero && (
                         <div className="absolute top-3 left-3 flex gap-1">
                           {props.onEdit && (
@@ -347,7 +365,9 @@ export function NewGame(props: {
                           )}
                           {props.onPaint && (
                             <Button variant="plain" type="button" className={mini} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
-                              {props.painting === p.id ? "Painting…" : "Paint"}
+                              <span key={props.painting === p.id ? "busy" : "idle"} className="enter-fade">
+                                {props.painting === p.id ? "Painting…" : "Paint"}
+                              </span>
                             </Button>
                           )}
                           <Button
@@ -371,24 +391,22 @@ export function NewGame(props: {
                     </li>
                   )
                 })}
-                {party
-                  .filter((c) => c.open)
-                  .map((c) => (
-                    <li key={c.id} className="relative flex flex-col gap-2 rounded-lg border border-dashed border-primary-400 bg-black p-2 ring-2 ring-primary-500">
-                      <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">?</span>
-                      <span className="truncate font-display text-sm">{flex ? "Guest Seat" : "Any Hero"}</span>
-                      <span className="-mt-2 truncate text-xs text-white/70">{flex ? "An invited hero or their own" : "A guest's own hero"}</span>
-                      <fieldset className="flex" aria-label="Approving a guest's hero">
-                        <Option active={!askFirst} aria-pressed={!askFirst} className="flex-1 rounded-r-none px-1 py-1 text-xs" onClick={() => setAskFirst(false)}>
-                          Auto
-                        </Option>
-                        <Option active={askFirst} aria-pressed={askFirst} className="-ml-0.5 flex-1 rounded-l-none px-1 py-1 text-xs" onClick={() => setAskFirst(true)}>
-                          Ask Me
-                        </Option>
-                      </fieldset>
-                      <Unseat label="Remove the open seat" onClick={() => toggle(c.id)} />
-                    </li>
-                  ))}
+                {seatRows.map(({ key, item: c, motion }) => (
+                  <li key={key} {...motion} className={cn("relative flex flex-col gap-2 rounded-lg border border-dashed border-primary-400 bg-black p-2 ring-2 ring-primary-500", motion.className)}>
+                    <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">?</span>
+                    <span className="truncate font-display text-sm">{flex ? "Guest Seat" : "Any Hero"}</span>
+                    <span className="-mt-2 truncate text-xs text-white/70">{flex ? "An invited hero or their own" : "A guest's own hero"}</span>
+                    <fieldset className="flex" aria-label="Approving a guest's hero">
+                      <Option active={!askFirst} aria-pressed={!askFirst} className="flex-1 rounded-r-none px-1 py-1 text-xs" onClick={() => setAskFirst(false)}>
+                        Auto
+                      </Option>
+                      <Option active={askFirst} aria-pressed={askFirst} className="-ml-0.5 flex-1 rounded-l-none px-1 py-1 text-xs" onClick={() => setAskFirst(true)}>
+                        Ask Me
+                      </Option>
+                    </fieldset>
+                    <Unseat label="Remove the open seat" onClick={() => toggle(c.id)} />
+                  </li>
+                ))}
                 {info.options && props.onCreate && <AddCard mark="+" title="New Hero" action="Create New Character" disabled={props.busy || !props.providers.length} onClick={props.onCreate} />}
                 {info.options && canInvite && (
                   <AddCard
@@ -408,45 +426,49 @@ export function NewGame(props: {
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <GameMaster providers={props.providers} models={props.models} provider={props.provider} claudeModel={props.claudeModel} onProvider={props.onProvider} />
         <div className="flex-1" />
-        {hosting && sized && !hostable && <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>}
+        <Presence show={hosting && sized && !hostable} motion="fade" asChild>
+          <p className="text-sm text-amber-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>
+        </Presence>
         {props.onCancel && (
           <Button variant="plain" type="button" className={ghost} disabled={props.busy} onClick={props.onCancel}>
             Cancel
           </Button>
         )}
-        {hosting ? (
-          <Button
-            variant="epic"
-            className="text-xl"
-            disabled={props.busy || !ready || !props.providers.length}
-            onClick={() =>
-              props.linked === true
-                ? props.onHost?.(
-                    yours.map((c) => c.id),
-                    invites,
-                    ais,
-                    open,
-                    askFirst,
-                    watching,
-                    guestsChoose ? Math.min(each, held.length - 1) : undefined,
-                    open > 1 ? Math.min(bring, open) : undefined,
-                    flex
-                  )
-                : props.onLink?.()
-            }
-          >
-            {props.busy ? "Inviting…" : "Invite"}
-          </Button>
-        ) : (
-          <Button
-            variant="epic"
-            className="text-xl"
-            disabled={props.busy || props.waiting || !ready || !props.providers.length}
-            onClick={() => props.onStart(party.map((c) => ({ id: c.id, ai: c.who === "ai" })))}
-          >
-            {props.busy ? "Starting…" : "Play"}
-          </Button>
-        )}
+        <Swap id={hosting ? "invite" : "play"} motion="pop" className="flex">
+          {hosting ? (
+            <Button
+              variant="epic"
+              className="text-xl"
+              disabled={props.busy || !ready || !props.providers.length}
+              onClick={() =>
+                props.linked === true
+                  ? props.onHost?.(
+                      yours.map((c) => c.id),
+                      invites,
+                      ais,
+                      open,
+                      askFirst,
+                      watching,
+                      guestsChoose ? Math.min(each, held.length - 1) : undefined,
+                      open > 1 ? Math.min(bring, open) : undefined,
+                      flex
+                    )
+                  : props.onLink?.()
+              }
+            >
+              {props.busy ? "Inviting…" : "Invite"}
+            </Button>
+          ) : (
+            <Button
+              variant="epic"
+              className="text-xl"
+              disabled={props.busy || props.waiting || !ready || !props.providers.length}
+              onClick={() => props.onStart(party.map((c) => ({ id: c.id, ai: c.who === "ai" })))}
+            >
+              {props.busy ? "Starting…" : "Play"}
+            </Button>
+          )}
+        </Swap>
       </div>
     </section>
   )
@@ -485,7 +507,7 @@ function GameMaster(props: { providers: string[]; models: Record<string, GmModel
             if (c) props.onProvider(c.provider, c.model)
           }}
         >
-          <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
+          <SelectTrigger aria-label="Game Master" className={cn(siteOutline, "active:scale-[0.97] h-auto gap-3 py-2 text-base shadow-none focus-visible:border-primary-400 focus-visible:ring-primary-400/50")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="border-white/20 bg-black text-white ring-[6px] ring-black">
@@ -538,11 +560,11 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
               <div className={siteLabel}>{info.owned ? "In your library" : "Not in your library"}</div>
               {!info.owned && <div className="mt-2 font-display text-4xl text-amber-300">{price(info.priceCents)}</div>}
               <p className="mt-3 text-base text-gray-300">{status}</p>
-              {!info.owned && !props.linked && props.onLink && (
-                <Button variant="plain" type="button" className={cn(siteOutline, "mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
+              <Presence show={Boolean(!info.owned && !props.linked && props.onLink)} motion="fade" asChild>
+                <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] mt-4 px-4 py-1.5 text-sm")} onClick={props.onLink}>
                   Link account
                 </Button>
-              )}
+              </Presence>
             </div>
           </div>
         </div>
@@ -581,7 +603,7 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
         type="button"
         onClick={props.onClick}
         disabled={props.disabled}
-        className="flex h-full w-full flex-col items-stretch gap-2 rounded-lg border border-dashed border-white/30 bg-black p-2 text-left transition-colors hover:border-white/50 disabled:cursor-default disabled:opacity-40"
+        className="flex h-full w-full flex-col items-stretch gap-2 rounded-lg border border-dashed border-white/30 bg-black p-2 text-left transition-[border-color,scale] duration-150 ease-snap hover:border-white/50 active:scale-[.98] disabled:cursor-default disabled:opacity-40"
       >
         <span className="grid h-24 w-full place-items-center rounded-md border border-white/10 bg-white/5 font-display text-3xl text-white/40">{props.mark}</span>
         <span className="truncate font-display text-sm">{props.title}</span>
@@ -592,15 +614,20 @@ function AddCard(props: { mark: string; title: string; sub?: string; action: str
   )
 }
 
-// The x over a party card's corner that takes it out of the party.
-function Unseat(props: { label: string; onClick: () => void }) {
+// The x over a party card's corner that takes it out of the party. It takes the motion Presence gives it.
+function Unseat(props: { label: string; onClick: () => void; className?: string; style?: CSSProperties; onAnimationEnd?: AnimationEventHandler<HTMLElement> }) {
   return (
     <Button
       variant="plain"
       type="button"
       aria-label={props.label}
       onClick={props.onClick}
-      className="absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full border border-white/30 bg-black/80 text-base leading-none text-white/70 transition-colors hover:border-white/60 hover:text-white"
+      style={props.style}
+      onAnimationEnd={props.onAnimationEnd}
+      className={cn(
+        "absolute top-3 right-3 grid h-6 w-6 place-items-center rounded-full border border-white/30 bg-black/80 text-base leading-none text-white/70 transition-[color,border-color,scale] duration-150 ease-snap hover:border-white/60 hover:text-white active:scale-90",
+        props.className
+      )}
     >
       ×
     </Button>

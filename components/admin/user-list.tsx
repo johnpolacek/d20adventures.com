@@ -10,6 +10,7 @@ import { Badge } from "@d20/ui/badge"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Swap } from "@d20/ui/presence"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 
 interface User {
@@ -71,7 +72,6 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
         toast.success(selectedUser.banned ? "User unbanned successfully" : "User banned successfully")
         setShowBanDialog(false)
         setBanReason("")
-        setSelectedUser(null)
       } else {
         toast.error(`Failed to manage user ban status: ${result.error}`)
       }
@@ -103,9 +103,9 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {users.map((user, index) => (
               <React.Fragment key={user.id}>
-                <TableRow>
+                <TableRow className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as React.CSSProperties}>
                   <TableCell>{/* Placeholder for user action button */}</TableCell>
                   <TableCell className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
@@ -122,11 +122,17 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>{user.isAdmin ? <Badge>Admin</Badge> : user.banned ? <Badge variant="destructive">Banned</Badge> : <Badge variant="secondary">User</Badge>}</TableCell>
+                  <TableCell>
+                    <Swap id={user.isAdmin ? "admin" : user.banned ? "banned" : "user"} motion="pop" asChild>
+                      {user.isAdmin ? <Badge>Admin</Badge> : user.banned ? <Badge variant="destructive">Banned</Badge> : <Badge variant="secondary">User</Badge>}
+                    </Swap>
+                  </TableCell>
                   <TableCell>
                     {!user.isAdmin && (
                       <Button variant={user.banned ? "outline" : "destructive"} size="sm" onClick={() => handleBanClick(user)} disabled={isLoading}>
-                        {user.banned ? "Unban User" : "Ban User"}
+                        <Swap id={user.banned ? "unban" : "ban"} as="span">
+                          {user.banned ? "Unban User" : "Ban User"}
+                        </Swap>
                       </Button>
                     )}
                   </TableCell>
@@ -164,7 +170,6 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
               onClick={() => {
                 setShowBanDialog(false)
                 setBanReason("")
-                setSelectedUser(null)
               }}
             >
               Cancel

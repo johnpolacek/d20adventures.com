@@ -5,6 +5,7 @@ import { unsubscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Presence, Swap } from "@d20/ui/presence"
 
 export default function UnsubscribeForm() {
   const [email, setEmail] = useState("")
@@ -30,7 +31,7 @@ export default function UnsubscribeForm() {
   }
 
   return (
-    <>
+    <Swap id={status === "success" ? "done" : "form"}>
       {status === "success" ? (
         <div className="text-center text-green-600 font-semibold py-6">You have been unsubscribed from our mailing list.</div>
       ) : (
@@ -44,9 +45,11 @@ export default function UnsubscribeForm() {
           <Button type="submit" className="w-full" size="lg" variant="destructive">
             Unsubscribe
           </Button>
-          {status === "error" && <div className="text-red-600 text-sm text-center mt-2">{error}</div>}
+          <Presence show={status === "error"} asChild motion="drop">
+            <div className="text-red-600 text-sm text-center mt-2">{error}</div>
+          </Presence>
         </form>
       )}
-    </>
+    </Swap>
   )
 }

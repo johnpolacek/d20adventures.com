@@ -3,10 +3,12 @@ import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Input } from "@d20/ui/input"
+import { Presence, Swap } from "@d20/ui/presence"
 import { Option, siteField, siteLabel, siteOutline } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
 import type { GuestHero, HostedSummary } from "../../../lib/host/server"
+import { type RowMotion, useLeaving } from "@d20/ui/leaving"
 
 // A link to send a friend, with Copy.
 function InviteLink({ label, url }: { label: string; url: string }) {
@@ -19,8 +21,10 @@ function InviteLink({ label, url }: { label: string; url: string }) {
   return (
     <div className="flex gap-2">
       <Input plain readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={label} className={cn(siteField, "flex-1 text-sm")} />
-      <Button variant="plain" type="button" className={cn(siteOutline, "px-4 text-sm")} onClick={copy}>
-        {copied ? "Copied" : "Copy"}
+      <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-4 text-sm")} onClick={copy}>
+        <Swap id={copied ? "copied" : "copy"} motion="pop" as="span" className="inline-block">
+          {copied ? "Copied" : "Copy"}
+        </Swap>
       </Button>
     </div>
   )
@@ -31,6 +35,8 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
   const [draft, setDraft] = useState("")
   const [sending, setSending] = useState(false)
   const list = useRef<HTMLDivElement>(null)
+  // Lines said since the lobby opened come in. The ones already there are simply there.
+  const [before] = useState(chat.length)
   useEffect(() => {
     if (list.current) list.current.scrollTop = list.current.scrollHeight
   }, [chat.length])
@@ -47,7 +53,7 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
       {chat.length > 0 && (
         <div ref={list} className="mb-2 max-h-40 space-y-1 overflow-y-auto text-sm">
           {chat.map((m, i) => (
-            <p key={i}>
+            <p key={i} className={i >= before ? "enter-rise" : undefined}>
               <span className="text-amber-300">{m.from}</span> <span className="text-gray-300">{m.text}</span>
             </p>
           ))}
@@ -61,7 +67,7 @@ function TableChat({ chat, onSend }: { chat: { from: string; text: string }[]; o
         }}
       >
         <Input plain value={draft} maxLength={1000} onChange={(e) => setDraft(e.target.value)} placeholder="Say something" aria-label="Table chat message" className={cn(siteField, "flex-1 text-sm")} />
-        <Button variant="plain" type="submit" className={cn(siteOutline, "px-4 text-sm")} disabled={sending || !draft.trim()}>
+        <Button variant="plain" type="submit" className={cn(siteOutline, "active:scale-[0.97] px-4 text-sm")} disabled={sending || !draft.trim()}>
           Send
         </Button>
       </form>
@@ -143,7 +149,7 @@ function useSheet(userId: string, read: ReadSheet, characterId?: string) {
   }
   const root = { open: open && Boolean(hero), onOpenChange: (next: boolean) => void onOpenChange(next) }
   const button = (
-    <CollapsibleTrigger className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={reading}>
+    <CollapsibleTrigger className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={reading}>
       Sheet
     </CollapsibleTrigger>
   )
@@ -160,50 +166,64 @@ function useNote(action: string, who: string, busy: boolean, onSend: (note?: str
   useEffect(() => {
     if (open) field.current?.focus()
   }, [open])
-  const form = open && (
-    <form
-      className="mt-3 flex gap-2"
-      onSubmit={(e) => {
-        e.preventDefault()
-        onSend(note.trim() || undefined)
-      }}
-    >
-      <Input plain
-        ref={field}
-        value={note}
-        maxLength={300}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Note for the guest"
-        aria-label={`Note for ${who}`}
-        className={cn(siteField, "flex-1 text-sm")}
-      />
-      <Button variant="plain" type="button" className={cn(siteOutline, "px-3 text-sm")} onClick={() => setNote(null)}>
-        Cancel
-      </Button>
-      <Button variant="plain" type="submit" className={cn(siteOutline, "border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
-        {action}
-      </Button>
-    </form>
+  const form = (
+    <Presence show={open} motion="drop" asChild>
+      {open && (
+        <form
+          className="mt-3 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            onSend(note.trim() || undefined)
+          }}
+        >
+          <Input plain
+            ref={field}
+            value={note}
+            maxLength={300}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Note for the guest"
+            aria-label={`Note for ${who}`}
+            className={cn(siteField, "flex-1 text-sm")}
+          />
+          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 text-sm")} onClick={() => setNote(null)}>
+            Cancel
+          </Button>
+          <Button variant="plain" type="submit" className={cn(siteOutline, "active:scale-[0.97] border-red-400/60 bg-red-600/80 px-3 text-sm text-white hover:bg-red-600")} disabled={busy}>
+            {action}
+          </Button>
+        </form>
+      )}
+    </Presence>
   )
   return { open, start: () => setNote(""), form }
 }
 
 // A guest at the table, with their hero's sheet. Remove takes them out before the game starts, with an optional note.
-function Guest({ guest, busy, onSheet, onRemove }: { guest: { userId: string; name: string }; busy: boolean; onSheet: ReadSheet; onRemove: (note?: string) => void }) {
+function Guest({
+  guest,
+  busy,
+  motion,
+  onSheet,
+  onRemove,
+}: {
+  guest: { userId: string; name: string }
+  busy: boolean
+  motion?: RowMotion
+  onSheet: ReadSheet
+  onRemove: (note?: string) => void
+}) {
   const { root, button, sheet } = useSheet(guest.userId, onSheet)
   const note = useNote("Remove", guest.name, busy, onRemove)
   return (
-    <Collapsible render={<li />} {...root}>
+    <Collapsible render={<li {...motion} />} {...root}>
       <div className="flex items-center gap-3">
         <span className="min-w-0 flex-1 truncate font-display text-lg">{guest.name}</span>
-        {!note.open && (
-          <>
-            {button}
-            <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
-              Remove
-            </Button>
-          </>
-        )}
+        <Presence show={!note.open} motion="fade" initial={false} className="flex items-center gap-3">
+          {button}
+          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+            Remove
+          </Button>
+        </Presence>
       </div>
       {note.form}
       {sheet}
@@ -212,11 +232,23 @@ function Guest({ guest, busy, onSheet, onRemove }: { guest: { userId: string; na
 }
 
 // A guest asking for an open seat with their own hero: Approve seats them, Reject takes an optional note for them.
-function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; busy: boolean; onAnswer: (approve: boolean, note?: string) => void; onSheet: ReadSheet }) {
+function Request({
+  request,
+  busy,
+  motion,
+  onAnswer,
+  onSheet,
+}: {
+  request: SeatRequest
+  busy: boolean
+  motion?: RowMotion
+  onAnswer: (approve: boolean, note?: string) => void
+  onSheet: ReadSheet
+}) {
   const { root, button, sheet } = useSheet(request.userId, onSheet, request.characterId)
   const note = useNote("Reject", request.player, busy, (text) => onAnswer(false, text))
   return (
-    <Collapsible render={<li className="rounded-lg border border-white/10 bg-black/50 p-3" />} {...root}>
+    <Collapsible render={<li {...motion} className={cn("rounded-lg border border-white/10 bg-black/50 p-3", motion?.className)} />} {...root}>
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-lg text-amber-300">{request.name}</div>
@@ -224,17 +256,15 @@ function Request({ request, busy, onAnswer, onSheet }: { request: SeatRequest; b
             {[request.race, request.archetype].filter(Boolean).join(" ")} · {request.player}
           </div>
         </div>
-        {!note.open && (
-          <>
-            {button}
-            <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
-              Reject
-            </Button>
-            <Button variant="plain" type="button" className={cn(siteOutline, "border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-600")} disabled={busy} onClick={() => onAnswer(true)}>
-              Approve
-            </Button>
-          </>
-        )}
+        <Presence show={!note.open} motion="fade" initial={false} className="flex items-center gap-3">
+          {button}
+          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} disabled={busy} onClick={note.start}>
+            Reject
+          </Button>
+          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] border-primary-400 bg-primary-600 px-3 py-1 text-sm hover:bg-primary-500")} disabled={busy} onClick={() => onAnswer(true)}>
+            Approve
+          </Button>
+        </Presence>
       </div>
       {note.form}
       {sheet}
@@ -273,6 +303,12 @@ export function HostedLobby(props: {
   const playsOf = (id: string) => plays[id] ?? (unchosen?.[0]?.id === id ? "you" : "ai")
   const ais = unchosen?.filter((h) => playsOf(h.id) === "ai").map((h) => h.id)
   const nobody = Boolean(unchosen?.length && ais?.length === unchosen.length && guests.length === 0)
+  // Links, requests and people at the table come in one after another, and one taken or gone is seen to go.
+  const seatRows = useLeaving(seats, (seat) => seat.id)
+  const requestRows = useLeaving(requests, (r) => `${r.userId}:${r.characterId ?? r.name}`)
+  const unchosenRows = useLeaving(unchosen ?? [], (h) => h.id)
+  const hostRows = useLeaving(hostHeroes, (name) => name, { from: unchosen?.length ?? 0 })
+  const guestRows = useLeaving(guests, (guest) => guest.userId, { from: (unchosen?.length ?? 0) + hostHeroes.length })
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 font-serif text-white">
       <section className={cn(cardVariants({ variant: "frame" }), "max-h-[94%] w-[min(34rem,92vw)] overflow-y-auto p-8 text-left backdrop-blur-xl")}>
@@ -280,42 +316,37 @@ export function HostedLobby(props: {
         <h1 className="mt-2 font-display text-4xl font-bold text-amber-300" style={textShadow}>
           {props.summary.title}
         </h1>
-        {seats.map((seat) => (
-          <div key={seat.id}>
+        {seatRows.map(({ key, item: seat, motion }) => (
+          <div key={key} {...motion}>
             <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · {seat.name}</div>
             <InviteLink label={`Invite link for ${seat.name}`} url={seat.invite} />
           </div>
         ))}
-        {left.length > 1 && (
-          <>
-            <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · Guest's choice · {left.length - 1} open</div>
-            <InviteLink label="Invite link for a guest's choice of hero" url={props.summary.invite} />
-          </>
-        )}
-        {props.summary.open > 0 && (
-          <>
-            <div className={cn(siteLabel, "mt-7 mb-2")}>
-              Invite · {props.summary.flex ? "Open Invite" : "Any hero"} · {props.summary.open} open · {props.summary.approval ? "you approve" : "auto-approve"}
-            </div>
-            <InviteLink label="Invite link for any hero" url={props.summary.openInvite} />
-          </>
-        )}
-        {requests.length > 0 && (
-          <>
-            <div className={cn(siteLabel, "mt-7 mb-2")}>Asking to join · {requests.length}</div>
-            <ul className="space-y-2">
-              {requests.map((r) => (
-                <Request
-                  key={`${r.userId}:${r.characterId ?? r.name}`}
-                  request={r}
-                  busy={props.busy}
-                  onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note, r.characterId)}
-                  onSheet={props.onSheet}
-                />
-              ))}
-            </ul>
-          </>
-        )}
+        <Presence show={left.length > 1}>
+          <div className={cn(siteLabel, "mt-7 mb-2")}>Invite · Guest's choice · {left.length - 1} open</div>
+          <InviteLink label="Invite link for a guest's choice of hero" url={props.summary.invite} />
+        </Presence>
+        <Presence show={props.summary.open > 0}>
+          <div className={cn(siteLabel, "mt-7 mb-2")}>
+            Invite · {props.summary.flex ? "Open Invite" : "Any hero"} · {props.summary.open} open · {props.summary.approval ? "you approve" : "auto-approve"}
+          </div>
+          <InviteLink label="Invite link for any hero" url={props.summary.openInvite} />
+        </Presence>
+        <Presence show={requests.length > 0}>
+          <div className={cn(siteLabel, "mt-7 mb-2")}>Asking to join · {requests.length}</div>
+          <ul className="space-y-2">
+            {requestRows.map(({ key, item: r, motion }) => (
+              <Request
+                key={key}
+                request={r}
+                busy={props.busy}
+                motion={motion}
+                onAnswer={(approve, note) => props.onAnswer(r.userId, approve, note, r.characterId)}
+                onSheet={props.onSheet}
+              />
+            ))}
+          </ul>
+        </Presence>
         {!props.summary.held && (
           <>
             <div className={cn(siteLabel, "mt-7 mb-2")}>Invite link</div>
@@ -325,8 +356,8 @@ export function HostedLobby(props: {
         <div className={cn(siteLabel, "mt-7 mb-2")}>At the table · {props.summary.party.length + (unchosen ? unchosen.length : left.length ? 1 : 0)}</div>
         <ul className="space-y-1">
           {unchosen
-            ? unchosen.map((h) => (
-                <li key={h.id} className="flex items-center gap-3">
+            ? unchosenRows.map(({ key, item: h, motion }) => (
+                <li key={key} {...motion} className={cn("flex items-center gap-3", motion.className)}>
                   <span className={cn("flex-1 truncate font-display text-lg", playsOf(h.id) === "ai" && "text-white/60")}>{h.name}</span>
                   <fieldset className="flex" aria-label={`Who plays ${h.name}`}>
                     <Option active={playsOf(h.id) === "you"} aria-pressed={playsOf(h.id) === "you"} className="rounded-r-none" onClick={() => setPlays((p) => ({ ...p, [h.id]: "you" }))}>
@@ -340,20 +371,20 @@ export function HostedLobby(props: {
               ))
             : left.length > 0 && <li className={cn("font-display text-lg", left.length > 1 && "text-white/60")}>{left.length > 1 ? "You play the hero left" : left[0]}</li>}
           {props.summary.watching && <li className="font-display text-lg text-white/60">You watch</li>}
-          {hostHeroes.map((name) => (
-            <li key={name} className="font-display text-lg">
+          {hostRows.map(({ key, item: name, motion }) => (
+            <li key={key} {...motion} className={cn("font-display text-lg", motion.className)}>
               {name}
             </li>
           ))}
-          {guests.map((guest) => (
-            <Guest key={guest.userId} guest={guest} busy={props.busy} onSheet={props.onSheet} onRemove={(note) => props.onRemove(guest.userId, note)} />
+          {guestRows.map(({ key, item: guest, motion }) => (
+            <Guest key={key} guest={guest} busy={props.busy} motion={motion} onSheet={props.onSheet} onRemove={(note) => props.onRemove(guest.userId, note)} />
           ))}
         </ul>
         {props.chat && <TableChat chat={props.chat} onSend={props.onChat} />}
         <div className="mt-8 flex items-center gap-3">
           <span className="font-mono text-xs text-white/60">{props.gm}</span>
           <div className="flex-1" />
-          <Button variant="plain" type="button" className={cn(siteOutline, "px-4 py-2 text-sm")} onClick={props.onHome}>
+          <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-4 py-2 text-sm")} onClick={props.onHome}>
             Home
           </Button>
           <Button variant="epic" className="text-xl" disabled={props.busy || nobody || (props.summary.watching && guests.length === 0)} onClick={() => props.onStart(ais)}>

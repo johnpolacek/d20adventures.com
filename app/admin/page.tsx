@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@d20/ui/button"
@@ -42,7 +43,7 @@ export default async function AdminPage() {
           Admin Dashboard
         </Heading>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
+          <Card className="enter-rise">
             <CardHeader>
               <CardTitle>Users</CardTitle>
               <CardDescription>Manage user accounts</CardDescription>
@@ -56,7 +57,7 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
-          <Card>
+          <Card className="enter-rise" style={{ "--i": 1 } as CSSProperties}>
             <CardHeader>
               <CardTitle>Mailing List</CardTitle>
               <CardDescription>Manage subscribers</CardDescription>
@@ -70,7 +71,7 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
-          <Card>
+          <Card className="enter-rise" style={{ "--i": 2 } as CSSProperties}>
             <CardHeader>
               <CardTitle>Feedback</CardTitle>
               <CardDescription>Playtest feedback</CardDescription>
@@ -81,7 +82,7 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
-          <Card>
+          <Card className="enter-rise" style={{ "--i": 3 } as CSSProperties}>
             <CardHeader>
               <CardTitle>Adventures</CardTitle>
               <CardDescription>Manage adventures</CardDescription>
@@ -95,7 +96,7 @@ export default async function AdminPage() {
               </Link>
             </CardFooter>
           </Card>
-          <Card>
+          <Card className="enter-rise" style={{ "--i": 4 } as CSSProperties}>
             <CardHeader>
               <CardTitle>Adventure Plans</CardTitle>
               <CardDescription>Author and improve adventure plans</CardDescription>

@@ -32,7 +32,7 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
     <PlainPage card={false} width="max-w-3xl lg:max-w-4xl xl:max-w-5xl">
       <div className="overflow-hidden rounded-lg border border-amber-200/20 bg-black/90 shadow-[0_18px_44px_#000a]">
         <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
-          <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-amber-200/80 hover:text-amber-200">
+          <Link href="/updates" className="font-display text-sm tracking-[0.2em] uppercase text-amber-200/80 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
             Updates
           </Link>
           <h1 className="mt-3 font-display text-4xl leading-tight text-blue-50 sm:text-5xl">{post.title}</h1>
@@ -41,7 +41,7 @@ export default async function UpdatePage({ params }: { params: Promise<{ slug: s
         </header>
         <PostBody className={`update-body px-6 pt-8 pb-10 sm:px-10 lg:px-14 prose-lg prose-img:rounded-lg ${plainProse}`} html={renderPost(post)} />
         <div className="flex justify-end border-t border-amber-200/15 px-6 py-4 sm:px-10 lg:px-14">
-          <a href={`/updates/${post.slug}/markdown`} download className="font-display text-sm text-amber-200/80 hover:text-amber-200">
+          <a href={`/updates/${post.slug}/markdown`} download className="font-display text-sm text-amber-200/80 transition-[color,opacity] duration-150 hover:text-amber-200 active:opacity-70">
             Download as Markdown
           </a>
         </div>

@@ -6,7 +6,8 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { type Box, boxAround, type CityMap, centroid, districtBox, frameBox, type MapShape, type Point, placeAt, placeName } from "@d20/gm-core/citymap"
 import { Button } from "../button"
-import { cn } from "../utils"
+import { Presence, Swap } from "../presence"
+import { cn, entrance, type MotionProps } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 
 // Labels in the body serif. A CSS variable works only through style, not the font-family attribute.
@@ -108,20 +109,20 @@ export function CityMapView({
       )}
       {!below && art?.outer && <image href={art.outer.src} x={art.outer.box[0]} y={art.outer.box[1]} width={art.outer.box[2]} height={art.outer.box[3]} preserveAspectRatio="none" />}
       {/* Up close, each district's own painting, cut to its outline. */}
-      {!below &&
-        art &&
-        u < CLOSE &&
+      {art &&
         map.districts.map((d) => {
           const a = art.districts[d.id]
           return (
-            a && (
-              <g key={d.id}>
-                <clipPath id={`${clip}-${d.id}`}>
-                  <polygon points={points(d.artClip ?? d.polygon)} />
-                </clipPath>
-                <image href={a.src} x={a.box[0]} y={a.box[1]} width={a.box[2]} height={a.box[3]} preserveAspectRatio="none" clipPath={`url(#${clip}-${d.id})`} />
-              </g>
-            )
+            <Presence key={d.id} show={!below && u < CLOSE && Boolean(a)} motion="fade" initial={false} asChild>
+              {a && (
+                <g>
+                  <clipPath id={`${clip}-${d.id}`}>
+                    <polygon points={points(d.artClip ?? d.polygon)} />
+                  </clipPath>
+                  <image href={a.src} x={a.box[0]} y={a.box[1]} width={a.box[2]} height={a.box[3]} preserveAspectRatio="none" clipPath={`url(#${clip}-${d.id})`} />
+                </g>
+              )}
+            </Presence>
           )
         })}
       {!below && !painted && (
@@ -166,7 +167,7 @@ export function CityMapView({
             fill="transparent"
             stroke="#f3e2b8"
             strokeWidth={2 * u}
-            className="cursor-pointer [stroke-opacity:0] hover:[stroke-opacity:.9]"
+            className="cursor-pointer transition-[stroke-opacity] duration-150 [stroke-opacity:0] hover:[stroke-opacity:.9]"
             onClick={() => onDistrict(d.id)}
           />
         ))}
@@ -234,9 +235,9 @@ export function CityMapView({
           "start" | "middle" | "end",
         ]
         return (
-          <g key={l.id}>
+          <g key={l.id} className="enter-fade">
             <circle cx={l.x} cy={l.y} r={4.5 * u} fill={l.below ? "#fff" : color} stroke={color} strokeWidth={2 * u} />
-            {names && (u < CLOSE || l.id === here || !map.districts.length) && (
+            <Presence show={names && (u < CLOSE || l.id === here || !map.districts.length)} motion="fade" initial={false} asChild>
               <text
                 x={l.x + dx * u}
                 y={l.y + dy * u}
@@ -253,7 +254,7 @@ export function CityMapView({
               >
                 {l.name}
               </text>
-            )}
+            </Presence>
           </g>
         )
       })}
@@ -268,7 +269,7 @@ export function CityMapView({
 }
 
 // The small view over the stage: the streets round where the party is. Opens the full map.
-export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; trail: string[]; onOpen: () => void; className?: string }) {
+export function CityMapInset({ map, trail, onOpen, className, style, onAnimationEnd }: MotionProps & { map: CityMap; trail: string[]; onOpen: () => void }) {
   const here = placeAt(map, trail[trail.length - 1])
   // Below ground, the tunnels round the party, kept inside the underground's own box.
   const below = Boolean(map.underground && map.landmarks.find((l) => l.id === trail[trail.length - 1])?.below)
@@ -287,7 +288,9 @@ export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; 
       type="button"
       onClick={onOpen}
       aria-label="Open the map"
-      className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color] hover:border-stage-gold", className)}
+      className={cn(panel, "block h-[180px] w-[252px] overflow-hidden p-0 transition-[border-color,scale] duration-150 ease-snap hover:border-stage-gold active:scale-[0.98]", entrance("enter-fade", className))}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
     >
       <CityMapView map={map} trail={trail} box={box} fill names={false} below={below} />
     </Button>
@@ -296,7 +299,7 @@ export function CityMapInset({ map, trail, onOpen, className }: { map: CityMap; 
 
 // The full map: the city and the land round it, one district up close, or the tunnels below once the party has been
 // down them. It opens on the tunnels when the party is there.
-export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; trail: string[]; compact?: boolean; onClose: () => void }) {
+export function CityMapPanel({ map, trail, compact, onClose, className, style, onAnimationEnd }: MotionProps & { map: CityMap; trail: string[]; compact?: boolean; onClose: () => void }) {
   const here = trail[trail.length - 1]
   const isBelow = (id: string) => Boolean(map.landmarks.find((l) => l.id === id)?.below)
   const underground = map.underground && trail.some(isBelow) ? map.underground : undefined
@@ -307,12 +310,20 @@ export function CityMapPanel({ map, trail, compact, onClose }: { map: CityMap; t
   // A painted map is square: the view is a painting's own box, in a square frame.
   const art = below ? map.art?.underground : district ? map.art?.districts[district.id] : map.art?.outer
   const box = art?.box ?? (below ? underground.box : district ? districtBox(district) : frameBox(map))
+  const title = below ? underground.name : (district?.name ?? map.name)
   return (
-    <section className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6")} aria-label="Map">
+    <section
+      className={cn(panel, "absolute z-40 flex flex-col", compact ? "inset-3" : "inset-x-10 top-24 bottom-6", entrance("enter-pop", className))}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
+      aria-label="Map"
+    >
       <header className="flex flex-wrap items-center gap-2 border-b border-stage-line/20 px-5 py-3">
         <div className="mr-3">
           <div className={eyebrow}>Map</div>
-          <h2 className="font-serif text-xl">{below ? underground.name : (district?.name ?? map.name)}</h2>
+          <Swap id={title} asChild>
+            <h2 className="font-serif text-xl">{title}</h2>
+          </Swap>
           <p className="text-xs text-stage-muted">You are at {placeName(map, here)}</p>
         </div>
         {(map.districts.length > 0 || underground) && (

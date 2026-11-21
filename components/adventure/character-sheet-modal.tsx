@@ -53,17 +53,22 @@ function ExpandableText({ title, text }: ExpandableTextProps) {
   )
 }
 
-export function CharacterSheetModal({ character, open, onOpenChange, onOrders }: CharacterSheetModalProps) {
+export function CharacterSheetModal({ character: current, open, onOpenChange, onOrders }: CharacterSheetModalProps) {
   // The rules sheet, where the hero has one. It loads only while the window is open.
-  const sheet = useSheetView(
-    open ? character?.sheet : undefined,
-    character?.hitPoints,
-    character?.spellSlots,
-    character?.spellEffects,
-    character?.featureUses,
-    character?.shape,
-    character?.heroicInspiration
+  const loaded = useSheetView(
+    open ? current?.sheet : undefined,
+    current?.hitPoints,
+    current?.spellSlots,
+    current?.spellEffects,
+    current?.featureUses,
+    current?.shape,
+    current?.heroicInspiration
   )
+  // While the window closes it keeps the hero and the sheet it showed, so nothing drops out of it on the way.
+  const [shown, setShown] = useState<{ character: CharacterSheetModalCharacter; sheet: typeof loaded }>({ character: current, sheet: loaded })
+  if (open && current && (shown.character !== current || shown.sheet !== loaded)) setShown({ character: current, sheet: loaded })
+  const character = open ? current : (shown.character ?? current)
+  const sheet = open ? loaded : shown.sheet
   if (!character) return null
   // How the hero stands: their hit points from the sheet, or dying, Stable or dead. And their conditions in words.
   const standing = standingOf({ ...character, type: "pc" }, sheet)
@@ -74,7 +79,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fade-inw-full max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
+      <DialogContent className="w-full max-w-4xl sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 border-primary-600">
         <DialogHeader>
           <DialogTitle className="sr-only">{character.name}</DialogTitle>
         </DialogHeader>
@@ -94,7 +99,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                 {character.race} {character.gender} {character.archetype}
               </div>
               {sheet && (
-                <div className="text-xs font-mono text-primary-200 uppercase tracking-wider">
+                <div className="enter-fade text-xs font-mono text-primary-200 uppercase tracking-wider">
                   Level {sheet.level} {sheet.speciesName} {sheet.className}
                   {sheet.subclassName ? ` · ${sheet.subclassName}` : ""} · {sheet.backgroundName}
                 </div>
@@ -112,8 +117,8 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
                       </div>
                       <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-300"
-                          style={{ width: `${(standing.hitPoints / Math.max(1, standing.maximum)) * 100}%` }}
+                          className="h-full w-full origin-left bg-gradient-to-r from-green-500 to-red-500 transition-transform duration-200 ease-snap"
+                          style={{ transform: `scaleX(${Math.max(0, Math.min(1, standing.hitPoints / Math.max(1, standing.maximum)))})` }}
                         />
                       </div>
                     </div>
@@ -149,7 +154,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
             </div>
 
             {sheet && (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="enter-fade grid grid-cols-5 gap-2">
                 {[
                   ["Armor Class", String(sheet.armorClass)],
                   ["Initiative", formatModifier(sheet.initiative)],
@@ -167,7 +172,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
             )}
 
             {sheet?.spellcasting && (
-              <div>
+              <div className="enter-fade">
                 <h3 className="text-lg font-display mb-3">Spellcasting</h3>
                 <div className="grid grid-cols-5 gap-2">
                   {[
@@ -200,14 +205,14 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
               </div>
             )}
 
-            {sheet && <MagicItems items={sheet.items} />}
+            {sheet && <MagicItems items={sheet.items} className="enter-fade" />}
 
             {sheet && onOrders && (
-              <StandingOrders key={character.name} rows={heroReactions(sheet.reactions, character.standingOrders)} onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })} />
+              <StandingOrders key={character.name} className="enter-fade" rows={heroReactions(sheet.reactions, character.standingOrders)} onChange={(changed) => onOrders({ ...character.standingOrders, ...changed })} />
             )}
 
             {sheet && (
-              <div>
+              <div className="enter-fade">
                 <h3 className="text-lg font-display mb-3">Saving Throws</h3>
                 <div className="grid grid-cols-6 gap-2">
                   {sheet.abilities.map((ability) => (
@@ -250,7 +255,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
 
           <div className="col-span-2 space-y-4">
             {sheet && sheet.features.length > 0 && (
-              <div>
+              <div className="enter-fade">
                 <h3 className="text-lg font-display mb-2">Features</h3>
                 <div className="flex flex-wrap gap-1">
                   {sheet.features.map((feature) => (
@@ -269,7 +274,7 @@ export function CharacterSheetModal({ character, open, onOpenChange, onOrders }:
             )}
 
             {sheet && (
-              <div>
+              <div className="enter-fade">
                 <h3 className="text-lg font-display mb-2">Skill Checks</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
                   {sheet.skills.map((skill) => (

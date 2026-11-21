@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import StoryviewRailPanel from "@/components/adventure/storyview/storyview-rail-panel"
 import { FloorPlanButton, FloorPlanRailPanel } from "@/components/floorplan/floor-plan-panel"
+import { Presence } from "@d20/ui/presence"
 import { useLiveFloor } from "@/components/floorplan/use-live-floor"
 import type { FloorView } from "@/components/floorplan/view"
 import { useTurn } from "@/lib/context/TurnContext"
@@ -61,13 +62,13 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
           -mt-18 aligns the rail top with the narrative's "It is your turn!" bar. */}
       <aside className={cn("hidden xl:sticky xl:top-20 xl:-mt-18 xl:flex xl:flex-col xl:gap-4", !chatHeight && !isSolo && "xl:h-[calc(100vh-7rem)]")}>
         {floor && (
-          <div ref={mapCardRef} className="flex-none">
+          <div ref={mapCardRef} className="enter-right flex-none">
             <FloorPlanRailPanel floor={floor} characters={characters} title={mapTitle} />
           </div>
         )}
-        <StoryviewRailPanel className="flex-none" />
+        <StoryviewRailPanel className="enter-right flex-none [--i:1]" />
         {!isSolo && (
-          <div className={cn("min-h-0", chatHeight ? "flex-none" : "flex-1")} style={chatHeight ? { height: chatHeight } : undefined}>
+          <div className={cn("enter-right min-h-0 [--i:2]", chatHeight ? "flex-none" : "flex-1")} style={chatHeight ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />
           </div>
         )}
@@ -75,7 +76,9 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
 
       {/* Below xl: floating buttons (the rail is hidden) */}
       <div className="fixed right-4 top-20 z-50 flex items-center gap-3 xl:hidden">
-        {floor && <FloorPlanButton floor={floor} characters={characters} title={mapTitle} />}
+        <Presence show={Boolean(floor)} motion="pop" as="span" className="inline-flex">
+          {floor && <FloorPlanButton floor={floor} characters={characters} title={mapTitle} />}
+        </Presence>
         {!isSolo && <GameChat />}
       </div>
     </div>

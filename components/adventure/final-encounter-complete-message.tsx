@@ -5,6 +5,7 @@ import React from "react"
 import { getAdventurePlan } from "@/app/_actions/get-adventure-plan"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
+import { Swap } from "@d20/ui/presence"
 import { getImageUrl } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -39,7 +40,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
     <>
       <p className="text-primary-300 text-lg xl:text-xl font-display font-bold mb-4 max-w-md mx-auto">Congratulations, you&apos;ve made it to the end of this adventure!</p>
       {isSignedIn && nextAdventure && (
-        <div className="space-y-4">
+        <Swap id={isLoading ? "loading" : nextAdventurePlan ? "plan" : "link"} className="space-y-4">
           {isLoading ? (
             <div className="text-center">
               <p className="text-primary-200">Loading next adventure...</p>
@@ -68,7 +69,7 @@ const FinalEncounterCompleteMessage = ({ isSignedIn, settingId, adventurePlanId,
           ) : (
             <Button size="sm" variant="epic" render={<Link href={`/settings/${settingId}/${nextAdventure}/character-select`} />}>Play Next Adventure</Button>
           )}
-        </div>
+        </Swap>
       )}
       {isSignedIn && !nextAdventure && (
         <div className="flex flex-col md:flex-row justify-center gap-6">

@@ -5,6 +5,7 @@ import { ClipboardListIcon, ShieldCheckIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Presence } from "@d20/ui/presence"
 import { cn } from "@/lib/utils"
 
 export function AdminNavItem() {
@@ -38,32 +39,33 @@ export function AdminNavItem() {
     checkAdminStatus()
   }, [isLoaded, isSignedIn, user?.id])
 
-  // Only render the admin link if the user is an admin
-  if (!isAdmin) {
-    return null
-  }
-
   const links = [
     { href: "/admin", label: "Admin", icon: ShieldCheckIcon, isActive: pathname === "/admin" },
     { href: "/admin/adventure-plans", label: "Plans", icon: ClipboardListIcon, isActive: pathname.startsWith("/admin/adventure-plans") },
   ]
 
+  // Only an admin sees the admin links
   return (
-    <nav className="flex items-center gap-2 sm:gap-3" aria-label="Admin navigation">
-      {links.map((item) => {
-        const Icon = item.icon
+    <Presence show={isAdmin} asChild motion="drop">
+      <nav className="flex items-center gap-2 sm:gap-3" aria-label="Admin navigation">
+        {links.map((item) => {
+          const Icon = item.icon
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn("text-xs sm:text-sm font-bold font-display transition-colors hover:text-yellow-950 flex items-center gap-1", item.isActive ? "text-yellow-950" : "text-yellow-950/70")}
-          >
-            <Icon className="h-4 w-4" />
-            {item.label}
-          </Link>
-        )
-      })}
-    </nav>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "text-xs sm:text-sm font-bold font-display transition-[color,opacity] duration-150 hover:text-yellow-950 active:opacity-70 flex items-center gap-1",
+                item.isActive ? "text-yellow-950" : "text-yellow-950/70"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+    </Presence>
   )
 }

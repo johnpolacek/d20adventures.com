@@ -6,6 +6,7 @@ import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
 import { FileInput, FileInputTrigger } from "@d20/ui/file-input"
 import Image from "@d20/ui/native-image"
+import { Swap } from "@d20/ui/presence"
 import { IMAGE_HOST } from "@/lib/config"
 import { useFileUpload } from "@/lib/upload-utils"
 import { cn } from "@/lib/utils"
@@ -103,27 +104,34 @@ export function ImageUpload({ id, value, onChange, onRemove, folder = "uploads",
   return (
     <div className="flex flex-col items-center gap-4">
       <div className={cn("relative aspect-video w-full overflow-hidden rounded-lg border border-white/20", className)}>
-        {isUsableUrl ? (
-          <>
-            <Image src={displayUrl} alt="" fill className="object-cover" />
-            <Button variant="ghost" size="icon" className="absolute h-6 w-6 p-0 right-2 top-2 text-red-500 hover:text-red-500 bg-black/50 hover:bg-black/60" onClick={onRemove}>
-              <X className="h-4 w-4" />
-            </Button>
-          </>
-        ) : (
-          <>
-            {value && !isUsableUrl && <p className="text-xs text-red-500 p-2 text-center">Image path appears invalid for display: {value}. Please re-upload or ensure the path is an absolute URL.</p>}
-            {/* The value stays empty, so each pick uploads and picking the same file again still works. */}
-            <FileInput className="contents" accept="image/*" value={NO_FILES} onValueChange={handleUpload} disabled={isUploading}>
-              <FileInputTrigger id={id} className={`flex h-full w-full cursor-pointer items-center justify-center bg-gradient-to-tl from-white/10 to-transparent ${value && !isUsableUrl ? "pt-2" : ""}`}>
-                <span className="flex flex-col items-center gap-2 text-primary-300">
-                  {isUploading ? <Loader className="h-8 w-8 animate-spin" /> : <ImagePlus className="h-8 w-8" />}
-                  <span className="text-sm font-mono">{isUploading ? "Uploading..." : "Upload Image"}</span>
-                </span>
-              </FileInputTrigger>
-            </FileInput>
-          </>
-        )}
+        <Swap id={isUsableUrl ? "image" : "upload"} className="absolute inset-0">
+          {isUsableUrl ? (
+            <>
+              <Image src={displayUrl} alt="" fill className="object-cover" />
+              <Button variant="ghost" size="icon" className="absolute h-6 w-6 p-0 right-2 top-2 text-red-500 hover:text-red-500 bg-black/50 hover:bg-black/60" onClick={onRemove}>
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              {value && !isUsableUrl && <p className="text-xs text-red-500 p-2 text-center">Image path appears invalid for display: {value}. Please re-upload or ensure the path is an absolute URL.</p>}
+              {/* The value stays empty, so each pick uploads and picking the same file again still works. */}
+              <FileInput className="contents" accept="image/*" value={NO_FILES} onValueChange={handleUpload} disabled={isUploading}>
+                <FileInputTrigger
+                  id={id}
+                  className={`flex h-full w-full cursor-pointer items-center justify-center bg-gradient-to-tl from-white/10 to-transparent transition-opacity duration-150 hover:opacity-80 active:opacity-60 ${value && !isUsableUrl ? "pt-2" : ""}`}
+                >
+                  <span className="flex flex-col items-center gap-2 text-primary-300">
+                    <Swap id={isUploading ? "busy" : "idle"} motion="pop" as="span" className="flex">
+                      {isUploading ? <Loader className="h-8 w-8 animate-spin" /> : <ImagePlus className="h-8 w-8" />}
+                    </Swap>
+                    <span className="text-sm font-mono">{isUploading ? "Uploading..." : "Upload Image"}</span>
+                  </span>
+                </FileInputTrigger>
+              </FileInput>
+            </>
+          )}
+        </Swap>
       </div>
     </div>
   )

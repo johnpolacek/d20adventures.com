@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { CSSProperties } from "react"
 import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
 import { requireAdmin } from "@/lib/auth-utils"
 import { clerkClient } from "@/lib/clerk"
@@ -21,8 +22,8 @@ export default async function AdminFeedbackPage() {
       <h1 className="mb-6 text-4xl font-bold">Feedback</h1>
       {rows.length === 0 && <p className="text-white/60">None yet.</p>}
       <ul className="grid gap-4">
-        {rows.map((row) => (
-          <li key={row.id} className="rounded-lg border border-white/15 bg-white/5 p-4 font-sans">
+        {rows.map((row, index) => (
+          <li key={row.id} className={`rounded-lg border border-white/15 bg-white/5 p-4 font-sans ${index < 40 ? "enter-rise" : ""}`} style={{ "--i": Math.min(index, 8) } as CSSProperties}>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/60">
               <span>{new Date(row.createdAt).toLocaleString("en-US", { timeZone: "America/Chicago" })}</span>
               <span>{names.get(row.userId) ?? row.userId}</span>
@@ -46,7 +47,7 @@ export default async function AdminFeedbackPage() {
             {row.screenshotUrls.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {row.screenshotUrls.map((url) => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="transition-[opacity,scale] duration-150 ease-snap hover:opacity-80 active:scale-[0.97]">
                     <img src={url} alt="Screenshot" className="h-28 rounded border border-white/15 object-cover" />
                   </a>
                 ))}

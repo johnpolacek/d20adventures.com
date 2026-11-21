@@ -8,6 +8,7 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/colla
 import { ImageUpload } from "@/components/forms/image-upload"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Presence } from "@d20/ui/presence"
 import { Textarea } from "@d20/ui/textarea"
 import type { Location, Organization } from "@/types/setting"
 
@@ -125,9 +126,9 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
 
       <div className="space-y-4">
         {locations.map((location, locationIndex) => (
-          <Card key={locationIndex} variant="inset">
+          <Card key={locationIndex} variant="inset" className="enter-rise">
             <Collapsible open={openLocations.has(locationIndex)} onOpenChange={() => toggleLocation(locationIndex)}>
-              <CardHeader className="text-white hover:text-amber-300 transition-colors duration-500 ease-in-out">
+              <CardHeader className="text-white hover:text-amber-300 transition-colors duration-150">
                   <CardTitle className="flex items-center justify-between">
                     <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left font-display">
                       {openLocations.has(locationIndex) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -212,9 +213,9 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
 
                     <div className="space-y-2">
                       {location.organizations.map((org, orgIndex) => (
-                        <Card key={orgIndex} variant="inset" className="bg-black/30 border-white/5">
+                        <Card key={orgIndex} variant="inset" className="enter-rise bg-black/30 border-white/5">
                           <Collapsible open={openOrganizations.has(`${locationIndex}-${orgIndex}`)} onOpenChange={() => toggleOrganization(locationIndex, orgIndex)}>
-                            <CardHeader className="hover:text-amber-300 text-white transition-colors py-3">
+                            <CardHeader className="hover:text-amber-300 text-white transition-colors duration-150 py-3">
                                 <CardTitle className="flex items-center justify-between text-base">
                                   <CollapsibleTrigger className="flex flex-1 cursor-pointer items-center gap-2 text-left">
                                     {openOrganizations.has(`${locationIndex}-${orgIndex}`) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -281,7 +282,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
           </Card>
         ))}
 
-        {locations.length === 0 && (
+        <Presence show={locations.length === 0} motion="fade" asChild>
           <Card variant="inset" className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-gray-400 mb-4">No locations added yet.</p>
@@ -291,7 +292,7 @@ export function SettingLocations({ settingId, locations, isSaving, onLocationsCh
               </Button>
             </CardContent>
           </Card>
-        )}
+        </Presence>
       </div>
     </div>
   )

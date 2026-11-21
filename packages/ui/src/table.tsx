@@ -25,7 +25,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
-  return <tr data-slot="table-row" className={cn("hover:bg-zinc-800/50 data-[state=selected]:bg-zinc-800 border-b transition-colors", className)} {...props} />
+  return <tr data-slot="table-row" className={cn("hover:bg-zinc-800/50 data-[state=selected]:bg-zinc-800 border-b transition-colors duration-150", className)} {...props} />
 }
 
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {

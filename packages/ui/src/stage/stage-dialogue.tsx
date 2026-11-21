@@ -4,7 +4,7 @@
 // colours taken from it, and a framed portrait plate that slides in on the speaker's side of the screen for named characters.
 
 import { useEffect, useRef } from "react"
-import { cn } from "../utils"
+import { cn, type MotionProps } from "../utils"
 
 export type Anchor = () => { x: number; y: number; visible: boolean; distance: number; ppm?: number } | null
 // The set behind the bubbles, drawn small (Stage.thumbnail), so a band can take its colours from what it covers.
@@ -21,7 +21,7 @@ const SAFE_TOP = { wide: 150, compact: 96 }
 // been still a moment. A slow drift is under the speed, and the bubble rides it.
 const MOVING_PX_PER_SECOND = 40
 const STILL_MS = 120
-const FADE_IN_MS = 300
+const FADE_IN_MS = 180
 const FADE_OUT_MS = 120
 // A bubble is a band of paint: straight top and bottom with fine rules, ends that wash out into the set. The wash takes
 // `fade` px at each end, and the words keep `room` px of solid paint clear of it.
@@ -250,12 +250,15 @@ export interface PlateLine {
 }
 
 // A plate is placed on its side of the screen, or docked in a column the caller lays out (above the narration).
-export function Plate({ line, compact = false, docked = false }: { line: PlateLine; compact?: boolean; docked?: boolean }) {
+// A Presence around it sets how it leaves. Its own slide in stays.
+export function Plate({ line, compact = false, docked = false, className, style, onAnimationEnd }: MotionProps & { line: PlateLine; compact?: boolean; docked?: boolean }) {
+  const leaving = /(?:^|\s)exit-/.test(className ?? "")
   return (
     <div
       key={line.key}
       className={cn(
-        "plate-in pointer-events-none z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
+        !leaving && "plate-in",
+        "pointer-events-none z-20 flex items-stretch rounded-[5px] stage-grain border border-stage-brass/60 bg-[#27190ff4] shadow-[0_0_0_3px_#1c1410c0,0_0_0_4px_#c79a5a44,0_18px_44px_#0008,inset_0_1px_0_#f0d6b214,inset_0_0_40px_#0000004d]",
         compact ? "p-1.5" : "p-[11px]",
         docked
           ? "w-full"
@@ -263,9 +266,11 @@ export function Plate({ line, compact = false, docked = false }: { line: PlateLi
               "absolute",
               compact ? "bottom-[54px] w-[min(330px,46vw)]" : "bottom-[122px] w-[min(410px,calc(100%-28px))]",
               line.side === "left" ? (compact ? "left-4" : "left-11") : compact ? "right-4" : "right-10"
-            )
+            ),
+        className
       )}
-      style={{ ["--plate-from" as string]: line.side === "left" ? "-70px" : "70px" }}
+      style={{ ...style, ["--plate-from" as string]: line.side === "left" ? "-70px" : "70px" }}
+      onAnimationEnd={onAnimationEnd}
     >
       {line.portrait && (
         <div className={cn("relative flex-none border border-stage-brass bg-stage-ink p-[3px] shadow-[inset_0_0_0_1px_#000a,0_2px_8px_#0006]", compact ? "h-[74px] w-[58px]" : "h-[140px] w-[112px]")}>

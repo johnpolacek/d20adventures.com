@@ -3,6 +3,7 @@
 import { Clapperboard } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import StoryviewOverlay, { type StoryviewSnapshot } from "./storyview-overlay"
 
@@ -26,7 +27,9 @@ export default function StoryviewButton() {
         <Clapperboard className="mr-1 h-3.5 w-3.5" />
         Storyview
       </Button>
-      {snapshot && <StoryviewOverlay snapshot={snapshot} onClose={() => setSnapshot(null)} />}
+      <Presence show={Boolean(snapshot)} motion="fade" asChild>
+        {snapshot && <StoryviewOverlay snapshot={snapshot} onClose={() => setSnapshot(null)} />}
+      </Presence>
     </>
   )
 }

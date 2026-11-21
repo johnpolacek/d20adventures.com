@@ -1,15 +1,17 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { deleteAdventureAdmin } from "@/app/_actions/admin/delete-adventure"
 import { Button } from "@d20/ui/button"
+import { Presence, Swap } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 
 export function DeleteAdventureButton({ adventureId, title }: { adventureId: string; title: string }) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const root = useRef<HTMLDivElement>(null)
 
   async function handleDelete() {
     if (!window.confirm(`Delete "${title}" and all of its turns, chat, and audio? This cannot be undone.`)) return
@@ -17,6 +19,10 @@ export function DeleteAdventureButton({ adventureId, title }: { adventureId: str
     setError(null)
     try {
       await deleteAdventureAdmin(adventureId as Id<"adventures">)
+      // The server draws the table, so the deleted row fades here and the refresh takes it away.
+      const row = root.current?.closest("tr")
+      row?.classList.remove("enter-fade")
+      row?.classList.add("exit-fade")
       router.refresh()
     } catch (err) {
       console.error("Failed to delete adventure:", err)
@@ -26,11 +32,15 @@ export function DeleteAdventureButton({ adventureId, title }: { adventureId: str
   }
 
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div ref={root} className="flex flex-col items-start gap-1">
       <Button className="text-xs text-red-300 border-red-800/60 hover:bg-red-900/40 hover:text-red-200" variant="outline" size="sm" onClick={handleDelete} disabled={isDeleting}>
-        {isDeleting ? "Deleting..." : "Delete"}
+        <Swap id={isDeleting ? "busy" : "idle"} as="span">
+          {isDeleting ? "Deleting..." : "Delete"}
+        </Swap>
       </Button>
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      <Presence show={Boolean(error)} motion="drop" asChild>
+        {error && <span className="text-xs text-red-400">{error}</span>}
+      </Presence>
     </div>
   )
 }

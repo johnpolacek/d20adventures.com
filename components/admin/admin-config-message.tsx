@@ -5,6 +5,7 @@ import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
 import { Card } from "@d20/ui/card"
+import { Swap } from "@d20/ui/presence"
 
 export function AdminConfigMessage() {
   const { user } = useUser()
@@ -32,7 +33,11 @@ export function AdminConfigMessage() {
           <div className="space-y-2">
             <p className="text-sm font-medium">Your Clerk User ID:</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 px-3 py-2 rounded bg-black">{user?.id || "Not signed in"}</code>
+              <code className="flex-1 px-3 py-2 rounded bg-black">
+                <Swap id={user?.id || "none"} as="span">
+                  {user?.id || "Not signed in"}
+                </Swap>
+              </code>
               <Button size="icon" variant="outline" onClick={handleCopyId} disabled={!user?.id}>
                 <Copy className="h-4 w-4" />
               </Button>
@@ -40,7 +45,11 @@ export function AdminConfigMessage() {
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium">Add to your .env file:</p>
-            <code className="block px-3 py-2 rounded bg-black text-sm">ADMIN_USER_IDS={user?.id || "your_user_id"}</code>
+            <code className="block px-3 py-2 rounded bg-black text-sm">
+              <Swap id={user?.id || "none"} as="span">
+                ADMIN_USER_IDS={user?.id || "your_user_id"}
+              </Swap>
+            </code>
           </div>
         </div>
         <p className="text-xs text-white/60 text-center">After updating your .env file, restart your development server for changes to take effect.</p>

@@ -9,6 +9,7 @@ import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@d20/ui/dialog"
 import Image from "@d20/ui/native-image"
+import { Presence } from "@d20/ui/presence"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { PCTemplate } from "@/types/character"
@@ -125,16 +126,17 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
               ChoosE Your characteR
             </p>
             <div className={cn("grid gap-6 mb-8 max-w-4xl mx-auto", adventurePlan.premadePlayerCharacters.length === 1 ? "grid-cols-1 justify-items-center" : "grid-cols-1 md:grid-cols-2")}>
-              {adventurePlan.premadePlayerCharacters.map((character) => (
+              {adventurePlan.premadePlayerCharacters.map((character, index) => (
                 <Card
                   key={character.id}
                   variant="pick"
                   selected={selectedCharacterId === character.id}
                   className={cn(
-                    "w-full ring-4",
+                    "enter-rise w-full ring-4 transition-[scale,box-shadow,background-color,opacity,filter] duration-200",
                     adventurePlan.premadePlayerCharacters.length === 1 && "max-w-md",
-                                        isSelecting && "pointer-events-none opacity-60 grayscale"
+                    isSelecting && "pointer-events-none opacity-60 grayscale"
                   )}
+                  style={{ "--i": Math.min(index, 8) } as React.CSSProperties}
                   onClick={() => !isSelecting && handleCharacterSelect(character.id)}
                   aria-disabled={isSelecting}
                 >
@@ -145,7 +147,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                       Details
                     </Button>
                     {/* Overlay spinner/feedback if selecting this card */}
-                    {isSelecting && selectedCharacterId === character.id && (
+                    <Presence show={isSelecting && selectedCharacterId === character.id} motion="fade" asChild>
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
                         <svg className="animate-spin h-8 w-8 text-amber-300 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -153,7 +155,7 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
                         </svg>
                         <span className="text-amber-300 font-bold text-lg">Selecting...</span>
                       </div>
-                    )}
+                    </Presence>
 
                     <div style={textShadow} className="absolute bottom-2 left-0 right-0 text-white w-full text-center font-display text-2xl z-10">
                       <div className="font-bold text-amber-300 pb-1">{character.name}</div>
@@ -179,13 +181,13 @@ export default function CharacterSelection({ adventurePlan }: CharacterSelection
               ))}
             </div>
 
-            {!selectedCharacterId && (
+            <Presence show={!selectedCharacterId} motion="fade" initial={false} asChild>
               <p className="text-center text-lg text-indigo-200 pb-8">
                 {adventurePlan.premadePlayerCharacters.length === 1
                   ? "This intro adventure uses a premade character. Click to select and continue."
                   : "This intro adventure uses premade characters. Please select your character to continue."}
               </p>
-            )}
+            </Presence>
 
             {selectedCharacterId && characterChoices.length > 0 && (
               <PartyConfiguration

@@ -8,14 +8,14 @@ import { cn } from "./utils"
 export const siteLabel = "font-mono text-xs uppercase tracking-wider text-primary-200"
 /** A small secondary control, the outline button without its hover growth. Add padding and a text size. */
 export const siteOutline =
-  "inline-flex items-center justify-center rounded-md border-2 border-blue-200/20 bg-blue-950/70 text-blue-50 transition-colors select-none hover:bg-blue-950/90 hover:text-white disabled:pointer-events-none disabled:opacity-50"
+  "inline-flex items-center justify-center rounded-md border-2 border-blue-200/20 bg-blue-950/70 text-blue-50 transition-[color,background-color,border-color,scale] duration-150 ease-snap select-none hover:bg-blue-950/90 hover:text-white disabled:pointer-events-none disabled:opacity-50"
 /** A text field. */
 export const siteField =
-  "w-full min-w-0 rounded-md border border-white/20 bg-transparent px-3 py-2 text-base text-white outline-none transition-[color,box-shadow] placeholder:text-white/50 placeholder:italic focus-visible:border-primary-400 focus-visible:ring-[3px] focus-visible:ring-primary-400/50 disabled:opacity-50"
+  "w-full min-w-0 rounded-md border border-white/20 bg-transparent px-3 py-2 text-base text-white outline-none transition-[color,border-color,box-shadow] duration-150 placeholder:text-white/50 placeholder:italic focus-visible:border-primary-400 focus-visible:ring-[3px] focus-visible:ring-primary-400/50 disabled:opacity-50"
 
 /** One choice among several: the outline control, filled with the primary colour when chosen. */
 export function Option({ active, className, ...rest }: Omit<ButtonProps, "variant" | "size"> & { active?: boolean }) {
-  return <Button variant="plain" type="button" {...rest} className={cn(siteOutline, "px-3 py-1.5 text-sm", active && "border-primary-400 bg-primary-600 text-white hover:bg-primary-600", className)} />
+  return <Button variant="plain" type="button" {...rest} className={cn(siteOutline, "px-3 py-1.5 text-sm active:scale-[0.97]", active && "border-primary-400 bg-primary-600 text-white hover:bg-primary-600", className)} />
 }
 
 const chipTones = {

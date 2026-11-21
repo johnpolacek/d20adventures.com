@@ -2,6 +2,7 @@ import { isTauri } from "@tauri-apps/api/core"
 import { Expand, Shrink } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Button } from "@d20/ui/button"
+import { Swap } from "@d20/ui/presence"
 import { Tip } from "@d20/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { isFullscreen, toggleFullscreen } from "./bridge"
@@ -34,9 +35,14 @@ export function FullscreenButton({ className }: { className?: string }) {
         type="button"
         onClick={() => void toggle()}
         aria-label={label}
-        className={cn("grid h-8 w-8 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-opacity hover:opacity-100", className)}
+        className={cn(
+          "grid h-8 w-8 place-items-center text-white opacity-85 drop-shadow-[0_1px_6px_#000] transition-[opacity,scale] duration-150 ease-snap hover:opacity-100 active:scale-90",
+          className
+        )}
       >
-        <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
+        <Swap id={full ? "shrink" : "expand"} motion="pop" as="span" className="grid">
+          <Icon aria-hidden="true" className="h-5 w-5" strokeWidth={1.75} />
+        </Swap>
       </Button>
     </Tip>
   )

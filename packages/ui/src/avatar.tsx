@@ -10,7 +10,7 @@ function Avatar({ className, ...props }: WithNodes<ComponentProps<typeof BaseAva
 
 // UI SDK keeps the image out until it loads and the fallback in until then. The image fades in once it arrives.
 function AvatarImage({ className, ...props }: Omit<ComponentProps<typeof BaseAvatarImage>, "className"> & { className?: string }) {
-  return <BaseAvatarImage className={cn("aspect-square size-full transition-opacity duration-300 data-[loading-status=loading]:opacity-0", className)} {...props} />
+  return <BaseAvatarImage className={cn("aspect-square size-full transition-opacity duration-150 data-[loading-status=loading]:opacity-0", className)} {...props} />
 }
 
 function AvatarFallback({ className, ...props }: WithNodes<ComponentProps<typeof BaseAvatarFallback>>) {

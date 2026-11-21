@@ -1,4 +1,5 @@
 import type { User } from "@clerk/nextjs/server"
+import type { CSSProperties } from "react"
 import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { DeleteAdventureButton } from "@/components/admin/delete-adventure-button"
@@ -43,7 +44,7 @@ export default async function AdminAdventuresPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {adventures.map((adventure) => {
+          {adventures.map((adventure, index) => {
             const user = userMap.get(adventure.ownerId)
             const players = (adventure.players || []).map((p) => {
               const playerUser = userMap.get(p.userId)
@@ -55,7 +56,7 @@ export default async function AdminAdventuresPage() {
               }
             })
             return (
-              <TableRow key={adventure._id}>
+              <TableRow key={adventure._id} className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as CSSProperties}>
                 <TableCell>{adventure._id}</TableCell>
                 <TableCell>{adventure.title}</TableCell>
                 <TableCell>

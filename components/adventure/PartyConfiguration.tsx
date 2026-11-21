@@ -6,7 +6,9 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { scrollToBottom } from "@d20/ui/scroll"
+import { cn } from "@/lib/utils"
 import type { CharacterChoiceMode } from "./character-selection"
 
 interface PartyConfigurationProps {
@@ -25,13 +27,15 @@ function isSoloAdventure(characterChoices: CharacterChoiceMode[]) {
 // (the previous inline message sat at the bottom of the page and was easy to scroll past)
 function StatusOverlay({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-8 text-center text-white shadow-2xl shadow-black/50 ring-4 ring-black/40">
+    <div className="enter-fade fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+      <div className="enter-pop w-full max-w-md rounded-lg border border-primary-600 bg-gradient-to-br from-primary-900/95 via-primary-800/95 to-primary-900/95 p-8 text-center text-white shadow-2xl shadow-black/50 ring-4 ring-black/40">
         {children}
       </div>
     </div>
   )
 }
+
+const modeButton = "px-6 py-1 border rounded font-mono transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-95"
 
 function Spinner() {
   return (
@@ -140,7 +144,7 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
   }
 
   return (
-    <div className="p-4 sm:p-8 space-y-4 divide-y divide-white/20">
+    <div className="enter-rise p-4 sm:p-8 space-y-4 divide-y divide-white/20">
       {characterChoices.length > 1 &&
         characterChoices.map((choice) => (
           <div key={choice.characterId} className="character-choice flex justify-between items-center w-full pb-4">
@@ -154,11 +158,10 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                     variant="plain"
                     type="button"
                     onClick={() => onModeChange(choice.characterId, "invite")}
-                    className={
-                      choice.mode === "invite"
-                        ? "text-green-300 bg-green-200/10 px-6 py-1 border border-green-300 rounded font-mono"
-                        : "text-white/50 px-6 py-1 border border-white/20 rounded font-mono hover:border-green-300/60 hover:text-green-200"
-                    }
+                    className={cn(
+                      modeButton,
+                      choice.mode === "invite" ? "text-green-300 bg-green-200/10 border-green-300" : "text-white/50 border-white/20 hover:border-green-300/60 hover:text-green-200"
+                    )}
                   >
                     Open
                   </Button>
@@ -166,11 +169,10 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                     variant="plain"
                     type="button"
                     onClick={() => onModeChange(choice.characterId, "ai")}
-                    className={
-                      choice.mode === "ai"
-                        ? "text-sky-300 bg-sky-200/10 px-6 py-1 border border-sky-300 rounded font-mono"
-                        : "text-white/50 px-6 py-1 border border-white/20 rounded font-mono hover:border-sky-300/60 hover:text-sky-200"
-                    }
+                    className={cn(
+                      modeButton,
+                      choice.mode === "ai" ? "text-sky-300 bg-sky-200/10 border-sky-300" : "text-white/50 border-white/20 hover:border-sky-300/60 hover:text-sky-200"
+                    )}
                   >
                     AI Companion
                   </Button>
@@ -196,7 +198,9 @@ const PartyConfiguration: React.FC<PartyConfigurationProps> = ({ characterChoice
                 ? `Party of ${partySize}: you${aiCount > 0 ? ` and ${aiCount} AI companion${aiCount === 1 ? "" : "s"}` : ""}. Open slots stay available for friends in the lobby.`
                 : `This adventure needs at least ${minParty} party members. Add ${minParty - partySize} more AI companion${minParty - partySize === 1 ? "" : "s"} to start now, or create a lobby and invite friends.`}
             </p>
-            {startError && <p className="text-red-300">{startError}</p>}
+            <Presence show={Boolean(startError)} motion="drop" asChild>
+              <p className="text-red-300">{startError}</p>
+            </Presence>
           </>
         ) : (
           <SignUpButton mode="modal">

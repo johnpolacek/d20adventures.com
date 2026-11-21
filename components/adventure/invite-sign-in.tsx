@@ -10,7 +10,7 @@ import type { AdventurePlan } from "@/types/adventure-plan"
 gsap.registerPlugin(useGSAP)
 
 // How long the intro waits for the cover painting before it enters without it.
-const ART_WAIT_MS = 700
+const ART_WAIT_MS = 400
 
 // A signed-out guest's invite: the adventure's cover, its first sentence and sign in, with nothing to scroll past.
 export function InviteSignIn(props: { plan: AdventurePlan; redirectUrl: string }) {
@@ -35,14 +35,15 @@ export function LobbyIntro(props: { plan: AdventurePlan; children: ReactNode }) 
       const q = gsap.utils.selector(root)
       // Start values are set before the first paint. The timeline plays once the painting decodes, or after a short wait.
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out", overwrite: "auto" } })
-      tl.from(q("figure"), { autoAlpha: 0, y: 24, scale: 0.97, duration: 0.9 })
-        .from(q('[data-intro="art"]'), { scale: 1.08, duration: 1.6, ease: "power2.out" }, 0)
-        .from(q('[data-intro="shade"]'), { autoAlpha: 0, duration: 0.8 }, 0.2)
-        .from(q('[data-intro="title"]'), { autoAlpha: 0, y: 14, duration: 0.8 }, 0.4)
-        .from(q('[data-intro="players"]'), { autoAlpha: 0, y: 8, duration: 0.6 }, 0.65)
-        .from(q('[data-intro="teaser"]'), { autoAlpha: 0, y: 12, duration: 0.7 }, 0.8)
-        .from(q('[data-intro="rest"] > *'), { autoAlpha: 0, y: 16, duration: 0.7, stagger: 0.12 }, 0.95)
-        .from(q('[data-intro="sign-in"] h2, [data-intro="sign-in"] button'), { autoAlpha: 0, y: 8, duration: 0.5, stagger: 0.1 }, 1.1)
+      // The painting settles slowly behind the rest. What the guest reads and presses is in within half a second.
+      tl.from(q("figure"), { autoAlpha: 0, y: 24, scale: 0.97, duration: 0.45 })
+        .from(q('[data-intro="art"]'), { scale: 1.08, duration: 1.2, ease: "power2.out" }, 0)
+        .from(q('[data-intro="shade"]'), { autoAlpha: 0, duration: 0.4 }, 0.08)
+        .from(q('[data-intro="title"]'), { autoAlpha: 0, y: 14, duration: 0.35 }, 0.12)
+        .from(q('[data-intro="players"]'), { autoAlpha: 0, y: 8, duration: 0.3 }, 0.18)
+        .from(q('[data-intro="teaser"]'), { autoAlpha: 0, y: 12, duration: 0.3 }, 0.22)
+        .from(q('[data-intro="rest"] > *'), { autoAlpha: 0, y: 16, duration: 0.3, stagger: 0.05 }, 0.26)
+        .from(q('[data-intro="sign-in"] h2, [data-intro="sign-in"] button'), { autoAlpha: 0, y: 8, duration: 0.25, stagger: 0.05 }, 0.3)
         .eventCallback("onComplete", () => {
           gsap.set(q('figure, [data-intro], [data-intro="rest"] > *, [data-intro="sign-in"] h2, [data-intro="sign-in"] button'), { clearProps: "transform,opacity,visibility" })
         })

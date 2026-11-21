@@ -20,6 +20,7 @@ import { Textarea } from "@d20/ui/textarea"
 import { IMAGE_HOST } from "@/lib/config"
 import type { RuntimeEncounter, RuntimeManifest, SourceFile } from "@/lib/wiki-adventures"
 import { Label } from "@d20/ui/label"
+import { Presence, Swap } from "@d20/ui/presence"
 
 type EditorState = Awaited<ReturnType<typeof loadAdminWikiAdventureStateAction>>
 
@@ -66,6 +67,9 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   const encounterCount = Object.keys(state.encounters).length
   const npcCount = Object.keys(state.characterSheets.npcs).length
   const hasChatStarted = messages.length > 0
+  // One key per pane: a scene keeps its key while the scroll moves the selection between its encounters.
+  const paneKey =
+    selectedPage?.kind === "encounter" && selectedScene && selectedSceneLocation ? `scene:${selectedSceneLocation.sectionIndex}:${selectedSceneLocation.sceneIndex}` : `page:${selectedFile?.path ?? ""}`
 
   React.useEffect(() => {
     const pendingPath = pendingScrollPathRef.current
@@ -171,14 +175,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <Link
               href="/admin"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-colors hover:border-[#d8bd81] hover:text-[#f0d79c]"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-[color,border-color,scale] duration-150 ease-snap hover:border-[#d8bd81] hover:text-[#f0d79c] active:scale-[0.96]"
             >
               <ShieldCheck className="size-3.5" />
               Admin
             </Link>
             <Link
               href="/admin/adventure-plans"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-colors hover:border-[#d8bd81] hover:text-[#f0d79c]"
+              className="inline-flex h-8 items-center gap-1.5 rounded border border-[#5b5145] bg-[#24211d] px-3 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-[#d9c292] transition-[color,border-color,scale] duration-150 ease-snap hover:border-[#d8bd81] hover:text-[#f0d79c] active:scale-[0.96]"
             >
               <ClipboardList className="size-3.5" />
               Plans
@@ -187,9 +191,10 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
         </div>
       </header>
 
-      <main className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden ${sectionsSidebarOpen ? "xl:grid-cols-[320px_minmax(0,1fr)_400px]" : "xl:grid-cols-[minmax(0,1fr)_400px]"}`}>
-        {sectionsSidebarOpen && (
-          <aside className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
+      {/* The columns follow the sidebar being in the page, so they hold while it leaves. */}
+      <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_400px] xl:has-[>[data-sections-sidebar]]:grid-cols-[320px_minmax(0,1fr)_400px]">
+        <Presence show={sectionsSidebarOpen} motion="left" initial={false} asChild>
+          <aside data-sections-sidebar className="min-h-0 overflow-hidden border-b border-[#3a3630] bg-[#181713] xl:border-r xl:border-b-0">
             <WikiNavigator
               wiki={wiki}
               selectedPath={selectedPath}
@@ -201,17 +206,19 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
               onCollapse={() => setSectionsSidebarOpen(false)}
             />
           </aside>
-        )}
+        </Presence>
 
         <section className="min-h-0 min-w-0 overflow-hidden border-b border-[#3a3630] bg-[#201d18] xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
-            {selectedPage?.kind === "encounter" && selectedScene ? (
-              <ScenePageHeader scene={selectedScene} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
-            ) : (
-              <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
-            )}
+            <div key={paneKey} className="enter-fade">
+              {selectedPage?.kind === "encounter" && selectedScene ? (
+                <ScenePageHeader scene={selectedScene} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
+              ) : (
+                <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
+              )}
+            </div>
             <div className="min-h-0 overflow-y-auto">
-              <div>
+              <div key={paneKey} className="enter-fade">
                 {selectedScene && selectedPage?.kind === "encounter" ? (
                   <SceneEncounterEditor
                     scene={selectedScene}
@@ -241,7 +248,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             {hasChatStarted && (
               <div className="min-h-0 flex-1 space-y-4 overflow-auto px-5 py-5">
                 {messages.map((message, index) => (
-                  <div key={index} className={message.role === "admin" ? "flex justify-end" : "flex justify-start"}>
+                  <div key={index} className={message.role === "admin" ? "enter-rise flex justify-end" : "enter-rise flex justify-start"}>
                     <div
                       className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
                         message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-indigo-950/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-[#f4ead7]"
@@ -251,12 +258,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                     </div>
                   </div>
                 ))}
-                {chatPending && <TypingIndicator />}
+                <Presence show={chatPending} motion="rise">
+                  <TypingIndicator />
+                </Presence>
               </div>
             )}
 
             <div className={hasChatStarted ? "shrink-0 px-5 pb-4" : "flex min-h-0 flex-1 items-center px-5 py-8"}>
-              <div className="w-full">
+              <div className={hasChatStarted ? "enter-drop w-full" : "w-full"}>
                 {!hasChatStarted && (
                   <p className="mb-4 text-center font-serif text-xl leading-7 text-[#f4ead7]" style={{ textWrap: "balance" }}>
                     Begin a chat session to update this adventure plan
@@ -275,21 +284,26 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   size="sm"
                   onClick={sendMessage}
                   disabled={busy || !prompt.trim()}
-                  className="mt-3 h-11 w-full gap-2 rounded-md border border-indigo-300/35 bg-indigo-900/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] hover:scale-[1.01] hover:bg-indigo-800 active:scale-[0.96] disabled:border-indigo-300/20 disabled:bg-indigo-950/65 disabled:text-indigo-100/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-indigo-950/65 disabled:active:scale-100"
+                  className="mt-3 h-11 w-full gap-2 rounded-md border border-indigo-300/35 bg-indigo-900/80 px-4 py-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-indigo-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] duration-150 ease-snap hover:scale-[1.01] hover:bg-indigo-800 active:scale-[0.96] disabled:border-indigo-300/20 disabled:bg-indigo-950/65 disabled:text-indigo-100/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-indigo-950/65 disabled:active:scale-100"
                   style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
                 >
-                  <Wand2 className="size-4" /> {busy ? "Applying..." : "Send"}
+                  <Wand2 className="size-4" />
+                  <Swap id={busy ? "busy" : "idle"} as="span">
+                    {busy ? "Applying..." : "Send"}
+                  </Swap>
                 </Button>
               </div>
             </div>
 
             <Drawer side="bottom">
-              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] hover:bg-[#14110e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45">
+              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-[#0d0c0b]/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] duration-150 ease-snap hover:bg-[#14110e] active:bg-[#1b1712] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45">
                 <span className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">
                   <Clock3 className="size-3.5" />
                   Revision Log
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[.14em] text-stone-500">{state.revisions.length} revisions</span>
+                <Swap id={state.revisions.length} as="span" className="font-mono text-[10px] uppercase tracking-[.14em] text-stone-500">
+                  {state.revisions.length} revisions
+                </Swap>
               </DrawerTrigger>
               {/* The sheet sits over the right column on wide screens, where the trigger lives. */}
               <DrawerContent className="max-h-[62vh] overflow-hidden bg-[#0b0a09]/98 data-[side=bottom]:rounded-none data-[side=bottom]:border-t-0 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] xl:ml-auto xl:w-[400px]">
@@ -298,7 +312,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                     <DrawerTitle className="font-mono text-[10px] font-bold uppercase tracking-[.16em] text-[#d8bd81]">Revision Log</DrawerTitle>
                     <DrawerDescription className="font-mono text-[10px] uppercase tracking-[.12em] text-stone-600">{state.revisions.length} saved revisions</DrawerDescription>
                   </div>
-                  <DrawerClose className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45">
+                  <DrawerClose className="h-10 px-3 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-stone-500 transition-[color,scale] duration-150 ease-snap hover:text-[#f4ead7] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd81]/45">
                     close
                   </DrawerClose>
                 </div>
@@ -391,19 +405,7 @@ function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar 
   return (
     <header className="bg-[#181713] px-6 py-5">
       <div className="flex items-start gap-4">
-        {!sectionsSidebarOpen && (
-          <Tip label="Show sections">
-            <Button
-              variant="plain"
-              type="button"
-              onClick={onRestoreSectionsSidebar}
-              className="hidden size-7 shrink-0 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-              aria-label="Show adventure sections sidebar"
-            >
-              <Menu className="size-4" strokeWidth={1.35} />
-            </Button>
-          </Tip>
-        )}
+        <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
         <div className="min-w-0 flex-1">
           <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">Scene</span>
           <h2 className="mt-2 text-2xl font-semibold leading-tight text-[#e6d6b8]">{scene.title}</h2>
@@ -413,10 +415,31 @@ function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar 
   )
 }
 
+// It waits for the sidebar to leave, then comes in where the wider page puts it.
+function ShowSectionsButton({ show, onClick }: { show: boolean; onClick: () => void }) {
+  return (
+    <Presence show={show} motion="left" index={5} initial={false} className="hidden shrink-0 xl:block">
+      <Tip label="Show sections">
+        <Button
+          variant="plain"
+          type="button"
+          onClick={onClick}
+          className="grid size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-[#b9a77f] hover:bg-[#211f1b] active:scale-[0.96]"
+          aria-label="Show adventure sections sidebar"
+        >
+          <Menu className="size-4" strokeWidth={1.35} />
+        </Button>
+      </Tip>
+    </Presence>
+  )
+}
+
 function HeaderCountBadge({ value, label }: { value: number; label: string }) {
   return (
     <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-[#4a4237] bg-[#24211d] px-2 font-mono text-[10px] font-bold uppercase tracking-[.12em] text-stone-300">
-      <span className="text-xs text-[#d8bd81]">{value}</span>
+      <Swap id={value} as="span" className="text-xs text-[#d8bd81]">
+        {value}
+      </Swap>
       {label}
     </span>
   )
@@ -438,10 +461,10 @@ function RevisionHistory({
   }
   return (
     <div className="space-y-5 pb-3">
-      {revisions.slice(0, 8).map((revision) => {
+      {revisions.slice(0, 8).map((revision, index) => {
         const includesSelectedPath = revision.changedPaths.includes(selectedPath)
         return (
-          <div key={revision.id}>
+          <div key={revision.id} className="enter-rise" style={{ "--i": index } as React.CSSProperties}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="truncate font-serif text-xl font-semibold leading-tight text-[#f4ead7] text-balance">{revision.summary}</div>
@@ -575,7 +598,9 @@ function ModulePageEditor({
               </div>
             )}
 
-            {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-[#4a3822]">{page.summary}</p>}
+            <Presence show={Boolean(page?.summary)} motion="fade" asChild>
+              {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-[#4a3822]">{page.summary}</p>}
+            </Presence>
 
             <div className="mt-8 space-y-8">
               <ModuleBlock title="Summary">
@@ -946,7 +971,7 @@ function WikiNavigator({
             variant="plain"
             type="button"
             onClick={onCollapse}
-            className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
+            className="hidden place-items-center bg-transparent px-2 py-0.5 text-[#d8bd81] transition-[background-color,color,scale] duration-150 ease-snap hover:bg-[#211b13] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8bd81]/45 xl:grid"
             aria-label="Hide adventure sections sidebar"
           >
             <PanelLeftClose className="size-full" strokeWidth={0.75} />
@@ -954,58 +979,60 @@ function WikiNavigator({
         </Tip>
       </div>
       <div className="min-h-0 overflow-y-auto px-3 py-3">
-        {normalizedQuery ? (
-          wiki.groups.map((group) => {
-            const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
-            if (pages.length === 0) return null
-            return <PageGroup key={group.key} title={group.title} pages={pages} selectedPath={selectedPath} onSelect={onSelect} />
-          })
-        ) : (
-          <>
-            {wiki.groups.find((group) => group.key === "adventure") && (
-              <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
-            )}
-            <section className="mb-4">
-              <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Module Outline</h3>
-              <div className="space-y-3">
-                {wiki.moduleSections.map((section, sectionIndex) => (
-                  <div key={section.title}>
-                    <OutlineButton
-                      active={sectionIndex === activeSectionIndex}
-                      label={section.title}
-                      meta={`${section.scenes.length} scenes`}
-                      level="section"
-                      onClick={() => onSectionSelect(sectionIndex)}
-                    />
-                    <div className="mt-1 space-y-2 pl-3">
-                      {section.scenes.map((scene, sceneIndex) => (
-                        <div key={`${section.title}-${scene.title}`}>
-                          <OutlineButton
-                            active={sectionIndex === activeSectionIndex && sceneIndex === activeSceneIndex}
-                            label={scene.title}
-                            meta={`${scene.pages.length} encounters`}
-                            level="scene"
-                            onClick={() => onSceneSelect(sectionIndex, sceneIndex)}
-                          />
-                          <div className="mt-0.5 space-y-0.5 pl-4">
-                            {scene.pages.map((page) => (
-                              <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} level="encounter" />
-                            ))}
+        <Swap id={normalizedQuery ? "results" : "outline"}>
+          {normalizedQuery ? (
+            wiki.groups.map((group) => {
+              const pages = group.pages.filter((page) => `${page.title} ${page.id} ${page.summary}`.toLowerCase().includes(normalizedQuery))
+              if (pages.length === 0) return null
+              return <PageGroup key={group.key} title={group.title} pages={pages} selectedPath={selectedPath} onSelect={onSelect} />
+            })
+          ) : (
+            <>
+              {wiki.groups.find((group) => group.key === "adventure") && (
+                <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
+              )}
+              <section className="mb-4">
+                <h3 className="mb-1.5 px-2 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#bfa46f]">Module Outline</h3>
+                <div className="space-y-3">
+                  {wiki.moduleSections.map((section, sectionIndex) => (
+                    <div key={section.title}>
+                      <OutlineButton
+                        active={sectionIndex === activeSectionIndex}
+                        label={section.title}
+                        meta={`${section.scenes.length} scenes`}
+                        level="section"
+                        onClick={() => onSectionSelect(sectionIndex)}
+                      />
+                      <div className="mt-1 space-y-2 pl-3">
+                        {section.scenes.map((scene, sceneIndex) => (
+                          <div key={`${section.title}-${scene.title}`}>
+                            <OutlineButton
+                              active={sectionIndex === activeSectionIndex && sceneIndex === activeSceneIndex}
+                              label={scene.title}
+                              meta={`${scene.pages.length} encounters`}
+                              level="scene"
+                              onClick={() => onSceneSelect(sectionIndex, sceneIndex)}
+                            />
+                            <div className="mt-0.5 space-y-0.5 pl-4">
+                              {scene.pages.map((page) => (
+                                <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} level="encounter" />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </section>
+              {wiki.groups
+                .filter((group) => !["adventure", "encounter"].includes(group.key))
+                .map((group) => (
+                  <PageGroup key={group.key} title={group.title} pages={group.pages} selectedPath={selectedPath} onSelect={onSelect} />
                 ))}
-              </div>
-            </section>
-            {wiki.groups
-              .filter((group) => !["adventure", "encounter"].includes(group.key))
-              .map((group) => (
-                <PageGroup key={group.key} title={group.title} pages={group.pages} selectedPath={selectedPath} onSelect={onSelect} />
-              ))}
-          </>
-        )}
+            </>
+          )}
+        </Swap>
       </div>
     </div>
   )
@@ -1017,7 +1044,7 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
       variant="plain"
       type="button"
       onClick={onClick}
-      className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+      className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
         active ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
       } ${level === "section" ? "min-h-10" : "min-h-8"}`}
     >
@@ -1048,7 +1075,7 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
       variant="plain"
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,box-shadow,scale] duration-150 active:scale-[0.96] ${
+      className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
         isSelected ? "bg-[#2a251e] text-[#fff5dd] shadow-[inset_1px_0_0_rgba(216,189,129,.72),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-[#211d17] hover:text-[#f2e5c9]"
       } ${level === "encounter" ? "min-h-8" : "min-h-9"}`}
     >
@@ -1069,19 +1096,7 @@ function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }:
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {!sectionsSidebarOpen && (
-              <Tip label="Show sections">
-                <Button
-                  variant="plain"
-                  type="button"
-                  onClick={onRestoreSectionsSidebar}
-                  className="hidden size-7 place-items-center rounded-md border border-[#4a4237] bg-[#11100f] p-px text-[#d8bd81] shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-colors hover:border-[#b9a77f] hover:bg-[#211f1b] xl:grid"
-                  aria-label="Show adventure sections sidebar"
-                >
-                  <Menu className="size-4" strokeWidth={1.35} />
-                </Button>
-              </Tip>
-            )}
+            <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
             <span className="rounded border border-[#3a3630] bg-[#24211d] px-2 py-1 font-mono text-[10px] uppercase text-stone-300">{pageKindLabel(page)}</span>
             {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-mono text-[11px] text-stone-500">{page.id}</span>}
           </div>

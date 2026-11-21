@@ -8,15 +8,12 @@ import { toast } from "@d20/ui/toast"
 import { subscribe } from "@/app/_actions/mailing-list"
 import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@d20/ui/card"
+import { Presence } from "@d20/ui/presence"
 
 export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
   const router = useRouter()
   const { user, isSignedIn, isLoaded } = useUser()
   const [isLoading, setIsLoading] = useState(false)
-
-  if (!isLoaded) {
-    return null
-  }
 
   const handleSubscribe = async () => {
     if (!isSignedIn || !user?.emailAddresses?.[0]?.emailAddress) {
@@ -43,31 +40,33 @@ export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
   }
 
   return (
-    <Card className="w-full max-w-[500px] p-4 md:mt-4">
-      <CardHeader className="md:pt-4">
-        <CardTitle className="text-lg">Join the Waitlist</CardTitle>
-        <CardDescription>Be the first to know when we launch and get exclusive early access.</CardDescription>
-      </CardHeader>
-      <CardContent className="md:pb-4">
-        <div className="space-y-4">
-          {isSignedIn ? (
-            <div className="flex gap-4">
-              <Button onClick={handleSubscribe} disabled={isLoading || !isSignedIn}>
-                Join Waitlist
-              </Button>
-            </div>
-          ) : (
-            <p className="border p-4 rounded-lg mt-6">
-              Please{" "}
-              <Link href="/sign-in/" className="text-primary-300 hover:underline">
-                sign in
-              </Link>{" "}
-              to join the waitlist.
-            </p>
-          )}
-          <p className="text-sm text-white/60 pt-4">We&apos;ll notify you as soon as we&apos;re ready. You can unsubscribe at any time.</p>
-        </div>
-      </CardContent>
-    </Card>
+    <Presence show={isLoaded} asChild>
+      <Card className="w-full max-w-[500px] p-4 md:mt-4">
+        <CardHeader className="md:pt-4">
+          <CardTitle className="text-lg">Join the Waitlist</CardTitle>
+          <CardDescription>Be the first to know when we launch and get exclusive early access.</CardDescription>
+        </CardHeader>
+        <CardContent className="md:pb-4">
+          <div className="space-y-4">
+            {isSignedIn ? (
+              <div className="flex gap-4">
+                <Button onClick={handleSubscribe} disabled={isLoading || !isSignedIn}>
+                  Join Waitlist
+                </Button>
+              </div>
+            ) : (
+              <p className="border p-4 rounded-lg mt-6">
+                Please{" "}
+                <Link href="/sign-in/" className="text-primary-300 hover:underline">
+                  sign in
+                </Link>{" "}
+                to join the waitlist.
+              </p>
+            )}
+            <p className="text-sm text-white/60 pt-4">We&apos;ll notify you as soon as we&apos;re ready. You can unsubscribe at any time.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </Presence>
   )
 }

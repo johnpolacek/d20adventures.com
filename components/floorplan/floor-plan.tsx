@@ -128,7 +128,7 @@ function Token({ token, at, active, feet, unit, clipId }: { token: FloorToken; a
   const image = token.image ? getImageUrl(token.image) : undefined
   const down = isDown(token)
   return (
-    <g style={{ transform: `translate(${at.x}px, ${at.y}px)`, transition: "transform 700ms ease-in-out, opacity 300ms" }} opacity={down ? 0.4 : 1}>
+    <g className="enter-fade" style={{ transform: `translate(${at.x}px, ${at.y}px)`, transition: "transform 700ms ease-in-out, opacity 300ms" }} opacity={down ? 0.4 : 1}>
       <title>{token.name}</title>
       {active && <circle r={r + 4 * unit} fill="none" stroke={COLORS.active} strokeWidth={2.5} vectorEffect="non-scaling-stroke" />}
       <circle r={r} fill={colors.fill} />

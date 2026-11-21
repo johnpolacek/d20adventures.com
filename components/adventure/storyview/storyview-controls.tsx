@@ -31,7 +31,7 @@ export default function StoryviewControls({
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-center gap-2">
         {Array.from({ length: slideCount }, (_, index) => (
-          <span key={index} className={cn("h-1.5 w-1.5 rounded-full transition-colors", index === slideIndex ? "bg-primary-200" : index < slideIndex ? "bg-primary-200/50" : "bg-white/20")} />
+          <span key={index} className={cn("h-1.5 w-1.5 rounded-full transition-colors duration-150", index === slideIndex ? "bg-primary-200" : index < slideIndex ? "bg-primary-200/50" : "bg-white/20")} />
         ))}
       </div>
       <div className="relative flex items-center gap-3">

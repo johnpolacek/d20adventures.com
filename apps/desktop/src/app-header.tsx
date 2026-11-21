@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import Parchment from "@d20/ui/graphics/parchment"
 import { paper } from "@d20/ui/graphics/styles"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { cn } from "@/lib/utils"
 import type { Page } from "./pages"
 
@@ -26,7 +27,7 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
         disabled={!onNavigate}
         onClick={() => onNavigate?.("home")}
         aria-label="D20 Adventures, home"
-        className="flex items-center gap-2 font-display mix-blend-multiply disabled:cursor-default"
+        className="flex items-center gap-2 font-display mix-blend-multiply transition-opacity duration-150 ease-snap enabled:hover:opacity-80 enabled:active:opacity-60 disabled:cursor-default"
       >
         <img className={cn("-mt-1 inline", big ? "h-[72px] w-[72px]" : "h-8 w-8")} alt="" src="/images/d20.jpg" />
         <span aria-hidden="true" className={cn("whitespace-nowrap", !big && "-ml-12 scale-[.6] font-semibold")}>
@@ -35,7 +36,7 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
           <span className="relative -top-[3px] text-2xl text-primary-500">dventures</span>
         </span>
       </Button>
-      {onNavigate && (
+      <Presence show={Boolean(onNavigate)} motion="fade" asChild>
         <nav className={cn("flex items-center gap-6", big ? "ml-6" : "-ml-6")} aria-label="Pages">
           {PAGES.map(([page, label]) => (
             <Button
@@ -43,17 +44,17 @@ export function AppHeader(props: { page: Page | "home" | null; big?: boolean; ac
               key={page}
               type="button"
               aria-current={props.page === page ? "page" : undefined}
-              onClick={() => onNavigate(page)}
+              onClick={() => onNavigate?.(page)}
               className={cn(
-                "font-display text-sm font-bold tracking-wide transition-all duration-500 ease-in-out",
-                props.page === page ? "text-primary-600 underline decoration-2 underline-offset-8" : "text-yellow-950/80 hover:text-yellow-950"
+                "font-display text-sm font-bold tracking-wide underline decoration-2 underline-offset-8 transition-[color,text-decoration-color,opacity] duration-150 ease-snap active:opacity-60",
+                props.page === page ? "text-primary-600" : "text-yellow-950/80 decoration-transparent hover:text-yellow-950"
               )}
             >
               {label}
             </Button>
           ))}
         </nav>
-      )}
+      </Presence>
       <div className="flex flex-1 items-center justify-end gap-4">
         {props.account}
         {props.trailing}

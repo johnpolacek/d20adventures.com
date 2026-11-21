@@ -5,7 +5,7 @@ import { SparklesIcon } from "@heroicons/react/24/solid"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { createAdventureWithFirstTurn, resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { deferOrSkipTurn } from "@/app/_actions/defer-turn"
 import { useGenerateText } from "@/app/_hooks/useGenerateText"
@@ -19,6 +19,7 @@ import { useTurn } from "@/lib/context/TurnContext"
 import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import LoadingAnimation from "@d20/ui/loading-animation"
+import { Presence, Swap } from "@d20/ui/presence"
 
 type TurnNarrativeReplyProps = {
   character: TurnCharacter
@@ -33,6 +34,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
   const [generating, setGenerating] = useState(false)
   const [deferring, setDeferring] = useState(false)
   const [skipOpen, setSkipOpen] = useState(false)
+  // The reply box stays a moment while it fades out. A second send from it is dropped.
+  const sending = useRef(false)
   const router = useRouter()
   const { user, isSignedIn } = useUser()
   const currentTurn = useTurn()
@@ -156,7 +159,8 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
 
   const handleReply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || sending.current) return
+    sending.current = true
     setLoading(true)
     setError(null)
     const isDemoTurn = currentTurn?.id.includes("demo")
@@ -172,6 +176,7 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.")
       }
     } finally {
+      sending.current = false
       setLoading(false)
     }
   }
@@ -273,36 +278,42 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
   const attackTargetId = asked && "attack" in asked ? asked.attack.target : asked && "cast" in asked ? asked.cast.targets[0] : undefined
   const attackTarget = attackTargetId ? currentTurn.characters.find((c: { id: string }) => c.id === attackTargetId)?.name : undefined
 
+  // One part at a time: the reply box, the roll, the wait after sending, or nothing once the reply is in.
+  const view = showDiceRoll ? "roll" : loading ? "sending" : hasSubmitted ? "sent" : "compose"
+
   return (
-    <form onSubmit={handleReply} className="flex flex-col gap-4 min-h-[100px]">
-      {!loading && !hasSubmitted && !showDiceRoll && (
-        <>
-          <Textarea
-            className="md:text-lg border-white/30 whitespace-pre-wrap"
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Write your character's actions and dialogue, in present tense, third person…"
-            onKeyDown={handleInputKeyDown}
-          />
-          <div className="flex justify-start -mt-1">
-            {generating ? (
-              <div className="flex items-center justify-center w-[80px] h-8">
-                <Loader2 className="animate-spin w-4 h-4 text-primary-400" />
-              </div>
-            ) : (
-              <Button variant="outline" size="sm" className="text-xs" type="button" onClick={handleGenerate} disabled={generating}>
-                <SparklesIcon className="w-4 h-4 text-amber-400 mr-0.5" />
-                Generate
-              </Button>
-            )}
-          </div>
-          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-          <div className="flex justify-center md:justify-end mt-2 gap-8">
-            {isSignedIn ? (
-              <>
-                {/* Unified Skip menu */}
-                <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
-                  <AlertDialogTrigger className={buttonClassName("ghost", "sm", "text-sm font-display disable:bg-transparent")} disabled={deferring}>
+    <form onSubmit={handleReply} className="min-h-[100px]">
+      <Swap id={view} motion="rise" exit="fade" className="flex flex-col gap-4">
+        {view === "compose" && (
+          <>
+            <Textarea
+              className="md:text-lg border-white/30 whitespace-pre-wrap"
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Write your character's actions and dialogue, in present tense, third person…"
+              onKeyDown={handleInputKeyDown}
+            />
+            <div className="flex justify-start -mt-1">
+              {generating ? (
+                <div className="enter-fade flex items-center justify-center w-[80px] h-8">
+                  <Loader2 className="animate-spin w-4 h-4 text-primary-400" />
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="enter-fade text-xs" type="button" onClick={handleGenerate} disabled={generating}>
+                  <SparklesIcon className="w-4 h-4 text-amber-400 mr-0.5" />
+                  Generate
+                </Button>
+              )}
+            </div>
+            <Presence show={Boolean(error)} motion="drop" asChild>
+              <p className="text-sm text-red-500 mt-2">{error}</p>
+            </Presence>
+            <div className="flex justify-center md:justify-end mt-2 gap-8">
+              {isSignedIn ? (
+                <>
+                  {/* Unified Skip menu */}
+                  <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
+                    <AlertDialogTrigger className={buttonClassName("ghost", "sm", "text-sm font-display disable:bg-transparent")} disabled={deferring}>
                       {deferring ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin w-3 h-3" />
@@ -311,76 +322,77 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                       ) : (
                         "Skip"
                       )}
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="sm:max-w-sm">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-amber-300 font-bold text-center">Skip turn</AlertDialogTitle>
-                      <AlertDialogDescription>Choose to skip to after another player with lower initiative, or skip your entire turn.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="flex flex-col gap-2">
-                      {lowerCandidates.length > 0 && (
-                        <div className="flex flex-col gap-1">
-                          {lowerCandidates.map((c) => (
-                            <AlertDialogAction
-                              key={c.id}
-                              className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-all"
-                              onClick={() => {
-                                console.log("[TurnNarrativeReply] Skip after selected", c.id)
-                                void handleDefer(c.id, false)
-                                setSkipOpen(false)
-                              }}
-                            >
-                              {`Skip to after ${c.name}`}
-                            </AlertDialogAction>
-                          ))}
-                        </div>
-                      )}
-                      <AlertDialogAction
-                        className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-all"
-                        onClick={() => {
-                          console.log("[TurnNarrativeReply] Skip entire turn selected")
-                          void handleDefer(undefined, true)
-                          setSkipOpen(false)
-                        }}
-                      >
-                        Skip entire turn
-                      </AlertDialogAction>
-                      <AlertDialogCancel className="mt-2">Cancel</AlertDialogCancel>
-                    </div>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button type="submit" disabled={!input.trim() || loading} variant="epic" size="lg">
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="animate-spin w-4 h-4" />
-                      Sending...
-                    </span>
-                  ) : (
-                    "Send Reply"
-                  )}
-                </Button>
-              </>
-            ) : (
-              <SignUpButton mode="modal">
-                <Button className="tracking-normal" variant="epic" size="lg">
-                  Sign Up to Reply
-                </Button>
-              </SignUpButton>
-            )}
-          </div>
-        </>
-      )}
-      {showDiceRoll && characterState?.rollRequired && (
-        <CharacterDiceRoll
-          character={characterState as TurnCharacter}
-          rollRequired={characterState.rollRequired}
-          target={attackTarget}
-          rollResult={rollResult ?? null}
-          onRoll={handleRollResult}
-          inputKey={input}
-        />
-      )}
-      {loading && <LoadingAnimation />}
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="sm:max-w-sm">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-amber-300 font-bold text-center">Skip turn</AlertDialogTitle>
+                        <AlertDialogDescription>Choose to skip to after another player with lower initiative, or skip your entire turn.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="flex flex-col gap-2">
+                        {lowerCandidates.length > 0 && (
+                          <div className="flex flex-col gap-1">
+                            {lowerCandidates.map((c) => (
+                              <AlertDialogAction
+                                key={c.id}
+                                className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-colors duration-150"
+                                onClick={() => {
+                                  console.log("[TurnNarrativeReply] Skip after selected", c.id)
+                                  void handleDefer(c.id, false)
+                                  setSkipOpen(false)
+                                }}
+                              >
+                                {`Skip to after ${c.name}`}
+                              </AlertDialogAction>
+                            ))}
+                          </div>
+                        )}
+                        <AlertDialogAction
+                          className="justify-start bg-black border border-primary-700 hover:bg-primary-800 transition-colors duration-150"
+                          onClick={() => {
+                            console.log("[TurnNarrativeReply] Skip entire turn selected")
+                            void handleDefer(undefined, true)
+                            setSkipOpen(false)
+                          }}
+                        >
+                          Skip entire turn
+                        </AlertDialogAction>
+                        <AlertDialogCancel className="mt-2">Cancel</AlertDialogCancel>
+                      </div>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button type="submit" disabled={!input.trim() || loading} variant="epic" size="lg">
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="animate-spin w-4 h-4" />
+                        Sending...
+                      </span>
+                    ) : (
+                      "Send Reply"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <SignUpButton mode="modal">
+                  <Button className="tracking-normal" variant="epic" size="lg">
+                    Sign Up to Reply
+                  </Button>
+                </SignUpButton>
+              )}
+            </div>
+          </>
+        )}
+        {showDiceRoll && characterState?.rollRequired && (
+          <CharacterDiceRoll
+            character={characterState as TurnCharacter}
+            rollRequired={characterState.rollRequired}
+            target={attackTarget}
+            rollResult={rollResult ?? null}
+            onRoll={handleRollResult}
+            inputKey={input}
+          />
+        )}
+        {loading && <LoadingAnimation />}
+      </Swap>
     </form>
   )
 }

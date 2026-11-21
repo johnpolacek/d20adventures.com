@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { type CSSProperties, useState } from "react"
 import { createPracticeAdventure } from "@/app/_actions/create-adventure"
 import { Button } from "@d20/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@d20/ui/card"
+import { Presence } from "@d20/ui/presence"
 import type { PCTemplate } from "@/types/character"
 
 interface PracticeAdventureSetupProps {
@@ -104,9 +105,11 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error ? <div className="text-sm text-red-300 bg-red-900/30 rounded px-3 py-2">{error}</div> : null}
+          <Presence show={Boolean(error)} motion="drop" asChild>
+            <div className="text-sm text-red-300 bg-red-900/30 rounded px-3 py-2">{error}</div>
+          </Presence>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isSelected = selected.some((item) => item.id === option.id)
               return (
                 <Button
@@ -114,7 +117,8 @@ export function PracticeAdventureSetup({ settingId, adventurePlanId, adventureTi
                   key={option.id}
                   type="button"
                   onClick={() => toggleCharacter(option)}
-                  className={`text-left rounded-lg border p-3 transition-colors ${isSelected ? "border-amber-400 bg-amber-500/10" : "border-white/20 bg-black/40 hover:border-white/40"}`}
+                  className={`enter-rise text-left rounded-lg border p-3 transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.98] ${isSelected ? "border-amber-400 bg-amber-500/10" : "border-white/20 bg-black/40 hover:border-white/40"}`}
+                  style={{ "--i": Math.min(index, 8) } as CSSProperties}
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-display text-lg text-white">{option.name}</div>

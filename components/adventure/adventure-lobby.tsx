@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react"
 import slugify from "slugify"
 import { joinAdventure, requestSeat } from "@/app/_actions/join-adventure"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { siteLabel } from "@d20/ui/site"
 import type { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
@@ -17,7 +18,7 @@ import type { PC, PCTemplate } from "@/types/character"
 import { scrollToTop } from "@d20/ui/scroll"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import GameChat from "./game-chat"
-import { HeroRow, HeroTag } from "./hero-row"
+import { HeroRow, HeroRows, HeroTag } from "./hero-row"
 import { InviteLink } from "./invite-link"
 import { StartAdventureButton } from "./start-adventure-button"
 
@@ -273,6 +274,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   const seats = invite ? (party?.length ?? 0) + (seat.flex ? 0 : unseated.length) + seat.open : maxParty
   const seated = [...(party ?? [])].sort((a, b) => Number(mine(b)) - Number(mine(a)))
   const ownChoices = !invite || bringOwn ? ownHeroes.filter((c) => !availableCharacters.some((a) => a.name === c.name)) : []
+  // The join controls show to a signed-in guest with no hero seated, or with another to seat.
+  const joining = Boolean(isSignedIn && (!userCharacter || another || bringMore))
 
   return (
     <>
@@ -290,34 +293,38 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             Party · {party?.length ?? 0} of {seats}
           </div>
           <ul className="grid gap-2">
-            {seated.map((pc) => (
-              <HeroRow
-                key={pc.id}
-                character={pc}
-                mine={mine(pc)}
-                onOpen={() => handlePartySlotClick(pc)}
-                tag={
-                  mine(pc) ? (
-                    <HeroTag tone="you">{user?.username || "You"}</HeroTag>
-                  ) : pc.controlledBy === "ai" ? (
-                    <HeroTag tone="ai">AI</HeroTag>
-                  ) : (
-                    <HeroTag tone="player">{(pc.userId && playerNames[pc.userId]) || "Player"}</HeroTag>
-                  )
-                }
-                action={pc.controlledBy === "ai" && isOwner ? { label: "Remove", onClick: () => handleRemoveAiCompanion(pc.id), disabled: companionBusyId !== null } : undefined}
-              />
-            ))}
-            {hostSeat?.hero && <HeroRow character={hostSeat.hero} onOpen={() => handlePartySlotClick(hostSeat.hero!)} tag={<HeroTag tone="player">Host</HeroTag>} />}
+            <HeroRows>
+              {seated.map((pc) => (
+                <HeroRow
+                  key={pc.id}
+                  character={pc}
+                  mine={mine(pc)}
+                  onOpen={() => handlePartySlotClick(pc)}
+                  tag={
+                    mine(pc) ? (
+                      <HeroTag tone="you">{user?.username || "You"}</HeroTag>
+                    ) : pc.controlledBy === "ai" ? (
+                      <HeroTag tone="ai">AI</HeroTag>
+                    ) : (
+                      <HeroTag tone="player">{(pc.userId && playerNames[pc.userId]) || "Player"}</HeroTag>
+                    )
+                  }
+                  action={pc.controlledBy === "ai" && isOwner ? { label: "Remove", onClick: () => handleRemoveAiCompanion(pc.id), disabled: companionBusyId !== null } : undefined}
+                />
+              ))}
+              {hostSeat?.hero && <HeroRow key="host" character={hostSeat.hero} onOpen={() => handlePartySlotClick(hostSeat.hero!)} tag={<HeroTag tone="player">Host</HeroTag>} />}
+            </HeroRows>
           </ul>
         </section>
         {/* Start Adventure Button for signed-in users with a character */}
-        {isSignedIn && userCharacter && guestOfHost && <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>}
-        {isSignedIn && userCharacter && !guestOfHost && (
+        <Presence show={Boolean(isSignedIn && userCharacter && guestOfHost)} motion="fade" asChild>
+          <h3 className="font-display mb-6 text-2xl opacity-70 text-center">Waiting for the host to start...</h3>
+        </Presence>
+        <Presence show={Boolean(isSignedIn && userCharacter && !guestOfHost)} motion="fade">
           <StartAdventureButton
             canStartAdventure={canStartAdventure}
             partyIsFull={partyIsFull}
-            isSignedIn={isSignedIn}
+            isSignedIn={Boolean(isSignedIn)}
             adventure={adventure}
             minParty={minParty}
             maxParty={maxParty}
@@ -325,77 +332,91 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             settingId={params.settingId as string}
             adventurePlanId={params.adventurePlanId as string}
           />
-        )}
+        </Presence>
         {/* Only show join controls if signed in and no user character */}
-        {isSignedIn && (!userCharacter || another || bringMore) && (
-          <div className="w-full flex flex-col items-center justify-center mb-8">
-            {isLoadingUserChars ? (
-              <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
-            ) : (
-              <>
-                {joinError && !/redirect/i.test(joinError) && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
-                {invite && availableCharacters.length === 0 && seat.open < 1 && !seat.removed && <p className="text-center text-white/80">Every seat at this table is taken.</p>}
-                {waitingOnHost && seat.open > 0 && (
-                  <div className="mb-8 flex flex-col items-center gap-4 text-center">
-                    <p className="text-white/80">Waiting for the host to approve {seat.pending?.join(" and ")}.</p>
-                    <Button variant="outline" size="sm" onClick={() => setChangingHero(true)}>
-                      Choose another hero
-                    </Button>
-                  </div>
-                )}
-                {seat.request && seat.request.status !== "pending" && (
-                  <p className="mb-8 max-w-xl rounded bg-amber-900/20 px-4 py-2 text-center text-amber-200">
-                    The host {seat.request.status === "removed" ? "removed" : "declined"} {seat.request.name}
-                    {seat.request.note ? `: ${seat.request.note}` : "."}
-                  </p>
-                )}
-                {ownChoices.length + availableCharacters.length > 0 && (
-                  <section className="w-full">
-                    <div className={cn(siteLabel, "mb-2")}>{userCharacter ? "Add Another Hero" : "Choose Your Hero"}</div>
-                    <ul className="grid gap-2">
-                      {ownChoices.map((char) => {
-                        const charJoinId = `characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`
-                        return (
-                          <HeroRow
-                            key={char.id}
-                            character={char}
-                            onOpen={() => handlePartySlotClick(char)}
-                            action={{
-                              label: ownHeroLabel(charJoinId),
-                              disabled: isJoining || askingId !== null,
-                              onClick: () => (invite ? handleAskForSeat(charJoinId, char.name) : handleJoinAdventure(charJoinId)),
-                            }}
-                          />
-                        )
-                      })}
-                      {availableCharacters.map((char) => (
-                        <HeroRow
-                          key={char.id}
-                          character={char}
-                          onOpen={() => handlePartySlotClick(char)}
-                          action={{ label: isJoining && joiningCharacterId === char.id ? "Joining..." : "Join", disabled: isJoining, onClick: () => handleJoinAdventure(char.id) }}
-                        />
-                      ))}
-                    </ul>
-                  </section>
-                )}
-                {(!invite || bringOwn) && (
-                  <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
-                    {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
-                    <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">
-                      Create New Character
-                    </Button>
-                  </Link>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        <Presence show={joining} motion="fade" asChild>
+          {joining && (
+            <div className="w-full flex flex-col items-center justify-center mb-8">
+              {isLoadingUserChars ? (
+                <div className="text-center text-white/80 py-8 opacity-0">Loading your characters...</div>
+              ) : (
+                <div className="enter-fade flex w-full flex-col items-center">
+                  <Presence show={Boolean(joinError && !/redirect/i.test(joinError))} motion="drop" asChild>
+                    <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>
+                  </Presence>
+                  <Presence show={Boolean(invite && availableCharacters.length === 0 && seat.open < 1 && !seat.removed)} motion="fade" asChild>
+                    <p className="text-center text-white/80">Every seat at this table is taken.</p>
+                  </Presence>
+                  <Presence show={waitingOnHost && seat.open > 0} asChild>
+                    <div className="mb-8 flex flex-col items-center gap-4 text-center">
+                      <p className="text-white/80">Waiting for the host to approve {seat.pending?.join(" and ")}.</p>
+                      <Button variant="outline" size="sm" onClick={() => setChangingHero(true)}>
+                        Choose another hero
+                      </Button>
+                    </div>
+                  </Presence>
+                  <Presence show={Boolean(seat.request && seat.request.status !== "pending")} motion="drop" asChild>
+                    {seat.request && seat.request.status !== "pending" && (
+                      <p className="mb-8 max-w-xl rounded bg-amber-900/20 px-4 py-2 text-center text-amber-200">
+                        The host {seat.request.status === "removed" ? "removed" : "declined"} {seat.request.name}
+                        {seat.request.note ? `: ${seat.request.note}` : "."}
+                      </p>
+                    )}
+                  </Presence>
+                  <Presence show={ownChoices.length + availableCharacters.length > 0} motion="fade" asChild>
+                    <section className="w-full">
+                      <div className={cn(siteLabel, "mb-2")}>{userCharacter ? "Add Another Hero" : "Choose Your Hero"}</div>
+                      <ul className="grid gap-2">
+                        <HeroRows>
+                          {ownChoices.map((char) => {
+                            const charJoinId = `characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`
+                            return (
+                              <HeroRow
+                                key={char.id}
+                                character={char}
+                                onOpen={() => handlePartySlotClick(char)}
+                                action={{
+                                  label: ownHeroLabel(charJoinId),
+                                  disabled: isJoining || askingId !== null,
+                                  onClick: () => (invite ? handleAskForSeat(charJoinId, char.name) : handleJoinAdventure(charJoinId)),
+                                }}
+                              />
+                            )
+                          })}
+                          {availableCharacters.map((char) => (
+                            <HeroRow
+                              key={char.id}
+                              character={char}
+                              onOpen={() => handlePartySlotClick(char)}
+                              action={{ label: isJoining && joiningCharacterId === char.id ? "Joining..." : "Join", disabled: isJoining, onClick: () => handleJoinAdventure(char.id) }}
+                            />
+                          ))}
+                        </HeroRows>
+                      </ul>
+                    </section>
+                  </Presence>
+                  <Presence show={!invite || bringOwn} motion="fade" asChild>
+                    {(!invite || bringOwn) && (
+                      <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
+                        {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
+                        <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">
+                          Create New Character
+                        </Button>
+                      </Link>
+                    )}
+                  </Presence>
+                </div>
+              )}
+            </div>
+          )}
+        </Presence>
         {/* Owner can fill open slots with AI companions from the remaining premades.
             Secondary to inviting humans, so the roster stays collapsed until asked for. */}
-        {isSignedIn && isOwner && userCharacter && hasEmptySlots && !invite && availableCharacters.length > 0 && (
+        <Presence show={Boolean(isSignedIn && isOwner && userCharacter && hasEmptySlots && !invite && availableCharacters.length > 0)} motion="fade" asChild>
           <div className="w-full flex flex-col items-center justify-center mb-8">
-            {joinError && <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>}
+            <Presence show={Boolean(joinError)} motion="drop" asChild>
+              <div className="text-center text-red-400 text-sm mb-4 bg-red-900/20 px-4 py-2 rounded">{joinError}</div>
+            </Presence>
             <Button
               variant="ghost"
               size="sm"
@@ -405,12 +426,12 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
             >
               {showAiCompanions ? "Hide AI Companions" : "Add AI Companions"}
             </Button>
-            {showAiCompanions && (
-              <>
-                <p className="mt-4 mb-6 text-sm text-white/70 text-center max-w-2xl">
-                  AI companions fill open slots and take their own turns in character, so you can start without waiting for more players.
-                </p>
-                <ul className="mb-4 grid w-full gap-2">
+            <Presence show={showAiCompanions} motion="drop" className="flex w-full flex-col items-center">
+              <p className="mt-4 mb-6 text-sm text-white/70 text-center max-w-2xl">
+                AI companions fill open slots and take their own turns in character, so you can start without waiting for more players.
+              </p>
+              <ul className="mb-4 grid w-full gap-2">
+                <HeroRows>
                   {availableCharacters.map((char) => (
                     <HeroRow
                       key={char.id}
@@ -419,18 +440,20 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                       action={{ label: companionBusyId === char.id ? "Adding..." : "Add as AI", disabled: companionBusyId !== null, onClick: () => handleAddAiCompanion(char.id) }}
                     />
                   ))}
-                </ul>
-              </>
-            )}
+                </HeroRows>
+              </ul>
+            </Presence>
           </div>
-        )}
-        {isSignedIn && userCharacter && hasEmptySlots && !guestOfHost && <InviteLink inviteLink={inviteLink} />}
+        </Presence>
+        <Presence show={Boolean(isSignedIn && userCharacter && hasEmptySlots && !guestOfHost)} motion="fade">
+          <InviteLink inviteLink={inviteLink} />
+        </Presence>
         {/* A hosted game has its host to talk to, even with one seat. */}
-        {isSignedIn && userCharacter && (maxParty > 1 || hosted) && (
+        <Presence show={Boolean(isSignedIn && userCharacter && (maxParty > 1 || hosted))} motion="fade" asChild>
           <div className="fixed top-20 right-8 z-50">
             <GameChat />
           </div>
-        )}
+        </Presence>
       </div>
     </>
   )

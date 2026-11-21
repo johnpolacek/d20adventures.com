@@ -19,13 +19,13 @@ const cardVariants = cva("flex flex-col rounded-xl border text-white", {
       frame: "gap-0 overflow-hidden bg-black/80 border-white/20 ring-[6px] ring-black",
       quiet: "gap-0 rounded-lg bg-black/50 border-white/10 ring-8 ring-black/30",
       feature: "gap-0 p-8 sm:p-10 text-center rounded-2xl border-none bg-gradient-to-tl from-black/80 to-black/60 ring-8 ring-black/20",
-      pick: "gap-0 p-0 overflow-hidden cursor-pointer bg-black/80 border-white/20 ring-[6px] ring-black scale-95 transition-all duration-500 ease-in-out hover:scale-100 hover:bg-black/90 hover:ring-8 hover:ring-primary-500 data-[selected]:scale-100 data-[selected]:ring-8 data-[selected]:ring-primary-500",
-      portrait: "gap-0 p-0 items-center overflow-hidden rounded-lg font-display bg-black border-white/10 ring-8 ring-black/30 transition-all duration-500 ease-in-out",
+      pick: "gap-0 p-0 overflow-hidden cursor-pointer bg-black/80 border-white/20 ring-[6px] ring-black scale-95 transition-[scale,background-color,box-shadow] duration-150 ease-snap hover:scale-100 hover:bg-black/90 hover:ring-8 hover:ring-primary-500 active:scale-[0.97] data-[selected]:scale-100 data-[selected]:ring-8 data-[selected]:ring-primary-500",
+      portrait: "gap-0 p-0 items-center overflow-hidden rounded-lg font-display bg-black border-white/10 ring-8 ring-black/30 transition-[scale,box-shadow] duration-150 ease-snap",
       inset: "gap-6 py-6 bg-black/20 border-white/10",
       accent: "gap-6 py-8 bg-primary-800 border-2 border-primary-700",
     },
     // A portrait you can click grows and lights up under the pointer.
-    interactive: { true: "cursor-pointer hover:scale-105 hover:ring-primary-400/80", false: "" },
+    interactive: { true: "cursor-pointer hover:scale-105 hover:ring-primary-400/80 active:scale-100", false: "" },
   },
   defaultVariants: { variant: "panel", interactive: false },
 })

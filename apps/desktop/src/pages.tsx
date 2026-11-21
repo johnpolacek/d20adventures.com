@@ -1,10 +1,11 @@
 import { srdAttribution } from "@d20/srd/attribution"
 import { Trash2, X } from "lucide-react"
-import { type ReactNode, useEffect, useState } from "react"
+import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { Button, buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
+import { Presence } from "@d20/ui/presence"
 import { Chip, Rule, SectionPlate, siteLabel, siteOutline } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
@@ -13,6 +14,7 @@ import type { AdventureInfo } from "../runtime/game"
 import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
+import { type RowMotion, useLeaving } from "@d20/ui/leaving"
 import { portraitFor, sceneFor } from "./scenes"
 import { type Locked, LockIcon, price } from "./new-game"
 import type { Realm } from "./realm"
@@ -21,6 +23,9 @@ import type { Realm } from "./realm"
 // plates, and black ringed cards in a grid.
 
 export type Page = "adventures" | "characters" | "settings"
+
+// A card's place in a row that comes in one after another.
+const nth = (i: number) => ({ "--i": Math.min(i, 8) }) as CSSProperties
 
 const played = (ms?: number) =>
   ms ? new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: new Date(ms).getFullYear() === new Date().getFullYear() ? undefined : "numeric" }) : ""
@@ -47,12 +52,14 @@ function RemoveButton(props: { confirming: boolean; label: string; confirmLabel:
       onBlur={props.onBlur}
       onClick={props.onClick}
       className={cn(
-        "grid h-6 place-items-center rounded-md transition-colors disabled:opacity-40",
-        props.confirming ? "bg-red-600/80 px-2 font-mono text-xxs text-white" : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
+        "grid h-6 place-items-center rounded-md transition-[color,background-color,scale] duration-150 ease-snap active:scale-90 disabled:opacity-40",
+        props.confirming ? "bg-red-600/80 px-2 font-mono text-xxs text-white hover:bg-red-600" : "w-6 bg-red-900/30 text-red-500/70 hover:bg-red-600/70 hover:text-white",
         props.className
       )}
     >
-      {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
+      <span key={props.confirming ? "confirm" : "ask"} className="enter-pop grid place-items-center">
+        {props.confirming ? "Confirm" : <Trash2 aria-hidden="true" className="h-4 w-4" />}
+      </span>
     </Button>
   )
 }
@@ -112,64 +119,68 @@ function CardRemove(props: {
     window.addEventListener("keydown", key)
     return () => window.removeEventListener("keydown", key)
   }, [confirming, onCancel])
-  if (!confirming)
-    return (
-      <Button
-        variant="plain"
-        type="button"
-        disabled={props.disabled}
-        aria-label={`Archive or delete ${props.title}`}
-        onClick={props.onAsk}
-        className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70 transition-colors hover:bg-black/80 hover:text-white disabled:opacity-40"
-      >
-        <X aria-hidden="true" className="h-4 w-4" />
-      </Button>
-    )
   return (
-    <div
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="remove-title"
-      onClick={(e) => e.target === e.currentTarget && onCancel()}
-      className="fade-in absolute inset-0 grid scale-[.985] place-items-center rounded-xl bg-black/75 backdrop-blur-sm"
-    >
-      <div className="flex flex-col items-center text-center">
-        <h3 id="remove-title" className="font-display text-3xl text-white">
-          Archive {props.title}?
-        </h3>
-        <div className="mt-6 flex items-center gap-4">
-          <Button variant="plain" type="button" autoFocus onClick={onCancel} className={cn(siteOutline, "px-6 py-2 font-display text-sm")}>
-            Cancel
-          </Button>
-          <Button variant="plain" type="button" disabled={props.disabled} onClick={props.onArchive} className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
-            Archive
-          </Button>
-        </div>
+    <>
+      <Presence show={!confirming} motion="fade" initial={false} asChild>
         <Button
           variant="plain"
           type="button"
           disabled={props.disabled}
-          onClick={props.onDelete}
-          className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70 transition-colors hover:bg-red-900/40 hover:text-red-200 disabled:opacity-40"
+          aria-label={`Archive or delete ${props.title}`}
+          onClick={props.onAsk}
+          className="absolute top-6 right-6 grid size-8 place-items-center rounded-md bg-black/60 text-white/70 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-black/80 hover:text-white active:scale-90 disabled:opacity-40"
         >
-          Delete Permanently
+          <X aria-hidden="true" className="h-4 w-4" />
         </Button>
-      </div>
-    </div>
+      </Presence>
+      {/* The dim fades and the question grows from its centre, so the blur behind is never scaled. */}
+      <Presence show={confirming} motion="fade" asChild>
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="remove-title"
+          onClick={(e) => e.target === e.currentTarget && onCancel()}
+          className="absolute inset-0 grid scale-[.985] place-items-center rounded-xl bg-black/75 backdrop-blur-sm"
+        >
+          <div className="enter-pop flex flex-col items-center text-center">
+            <h3 id="remove-title" className="font-display text-3xl text-white">
+              Archive {props.title}?
+            </h3>
+            <div className="mt-6 flex items-center gap-4">
+              <Button variant="plain" type="button" autoFocus onClick={onCancel} className={cn(siteOutline, "active:scale-[0.97] px-6 py-2 font-display text-sm")}>
+                Cancel
+              </Button>
+              <Button variant="plain" type="button" disabled={props.disabled} onClick={props.onArchive} className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>
+                Archive
+              </Button>
+            </div>
+            <Button
+              variant="plain"
+              type="button"
+              disabled={props.disabled}
+              onClick={props.onDelete}
+              className="mt-5 rounded-md px-3 py-1 font-display text-xs text-red-300/70 transition-colors duration-150 hover:bg-red-900/40 hover:text-red-200 active:bg-red-900/60 disabled:opacity-40"
+            >
+              Delete Permanently
+            </Button>
+          </div>
+        </div>
+      </Presence>
+    </>
   )
 }
 
 // An archived save or hosted game, as a slim row: Restore lists it with the others again, and the small red control
 // deletes it for good.
-function ArchivedRow(props: { planId: string; title: string; kicker: string; busy: boolean; onRestore: () => void; children: ReactNode }) {
+function ArchivedRow(props: { planId: string; title: string; kicker: string; busy: boolean; motion?: RowMotion; onRestore: () => void; children: ReactNode }) {
   return (
-    <li className="flex items-center gap-5 px-5 py-3">
+    <li {...props.motion} className={cn("flex items-center gap-5 px-5 py-3", props.motion?.className)}>
       <img src={`/stage/covers/${props.planId}.jpg`} alt="" className="aspect-[3/4] w-10 rounded-sm object-cover saturate-50" />
       <div className="flex-1">
         <div className="font-display text-lg text-white/80">{props.title}</div>
         {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
       </div>
-      <Button variant="plain" type="button" disabled={props.busy} onClick={props.onRestore} className={cn(siteOutline, "px-4 py-1.5 font-display text-sm")}>
+      <Button variant="plain" type="button" disabled={props.busy} onClick={props.onRestore} className={cn(siteOutline, "active:scale-[0.97] px-4 py-1.5 font-display text-sm")}>
         Restore
       </Button>
       {props.children}
@@ -194,6 +205,7 @@ function SavedCard(props: {
   action: string
   label: string
   busy: boolean
+  motion?: RowMotion
   onOpen: () => void
   children?: ReactNode
 }) {
@@ -201,7 +213,7 @@ function SavedCard(props: {
   const [missing, setMissing] = useState(false)
   const art = props.encounterId && !missing ? `/stage/art/${props.planId}/${props.encounterId}.webp` : cover
   return (
-    <li className="relative">
+    <li {...props.motion} className={cn("relative", props.motion?.className)}>
       <Button
         variant="plain"
         type="button"
@@ -306,93 +318,100 @@ export function AdventuresPage(props: {
   const listed: Listed[] = [...props.adventures.map((info) => ({ ...info, info })), ...props.locked.map((locked) => ({ ...locked, locked }))]
   const featured = listed.find((a) => a.id === FEATURED)
   const intro = listed.filter((a) => a.id !== FEATURED)
+  // Cards and rows come in one after another, and one archived, restored or deleted is seen to go. The current save
+  // gets an id when it is archived: the row with the id takes over from the one without.
+  const sameRun = (a: SaveSummary, b: SaveSummary) => a.planId === b.planId && a.title === b.title && a.round === b.round && a.turnTitle === b.turnTitle
+  const savedRows = useLeaving(saves, saveKey, { like: sameRun })
+  const hostedRows = useLeaving(hosted, hostKey, { from: saves.length })
+  const shelvedRows = useLeaving(shelvedSaves, saveKey, { like: sameRun })
+  const shelvedHostedRows = useLeaving(shelvedHosted, hostKey, { from: shelvedSaves.length })
   return (
     <PageShell title="Adventures">
-      {saves.length + hosted.length > 0 && (
-        <section>
-          <SectionPlate>Your Adventures</SectionPlate>
-          <ul className="flex flex-col gap-8 py-8">
-            {saves.map((s) => {
-              const current = s.archiveId === undefined
-              const key = String(s.archiveId ?? "current")
-              return (
-                <SavedCard
-                  key={key}
-                  planId={s.planId}
-                  title={s.title}
-                  encounterId={s.encounterId}
-                  completed={s.status === "completed"}
-                  kicker={[current ? "" : played(s.playedAt), s.status === "completed" ? "" : `Round ${s.round}`].filter(Boolean).join(" · ")}
-                  status={s.status === "completed" ? "Complete" : s.turnTitle}
-                  heroes={heroesOf(s)}
-                  action={s.status === "completed" ? "Read the Ending" : current ? "Continue" : "Resume"}
-                  label={`${s.status === "completed" ? "Read the ending of" : current ? "Continue" : "Resume"} ${s.title}`}
-                  busy={props.busy}
-                  onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
-                >
-                  <CardRemove
-                    title={s.title}
-                    confirming={removing === key}
-                    disabled={props.busy}
-                    onAsk={() => setRemoving(key)}
-                    onCancel={() => setRemoving(null)}
-                    onArchive={() => {
-                      setRemoving(null)
-                      mark(saveKey(s), "archived")
-                      props.onArchive(s.archiveId)
-                    }}
-                    onDelete={() => {
-                      setRemoving(null)
-                      mark(saveKey(s), "deleted")
-                      props.onRemove(s.archiveId)
-                    }}
-                  />
-                </SavedCard>
-              )
-            })}
-            {hosted.map((h) => (
+      <Presence show={saves.length + hosted.length > 0} as="section" motion="fade" initial={false}>
+        <SectionPlate>Your Adventures</SectionPlate>
+        <ul className="flex flex-col gap-8 py-8">
+          {savedRows.map(({ key: rowKey, item: s, motion }) => {
+            const current = s.archiveId === undefined
+            const key = String(s.archiveId ?? "current")
+            return (
               <SavedCard
-                key={h.adventureId}
-                planId={h.planId}
-                title={h.title}
-                encounterId={h.encounterId}
-                completed={h.status === "completed"}
-                kicker={[props.hostingNow === h.adventureId ? "Hosting Now" : "Hosted", h.status !== "completed" && h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
-                status={h.status === "completed" ? "Complete" : h.round ? h.turnTitle : "Waiting for Players"}
-                heroes={h.party.map((name) => ({ name }))}
-                action="Open"
-                label={`Open hosted game ${h.title}`}
+                key={rowKey}
+                motion={motion}
+                planId={s.planId}
+                title={s.title}
+                encounterId={s.encounterId}
+                completed={s.status === "completed"}
+                kicker={[current ? "" : played(s.playedAt), s.status === "completed" ? "" : `Round ${s.round}`].filter(Boolean).join(" · ")}
+                status={s.status === "completed" ? "Complete" : s.turnTitle}
+                heroes={heroesOf(s)}
+                action={s.status === "completed" ? "Read the Ending" : current ? "Continue" : "Resume"}
+                label={`${s.status === "completed" ? "Read the ending of" : current ? "Continue" : "Resume"} ${s.title}`}
                 busy={props.busy}
-                onOpen={() => props.onOpenHosted(h.adventureId)}
+                onOpen={() => (current ? props.onContinue() : props.onResume(s.archiveId!))}
               >
                 <CardRemove
-                  title={h.title}
-                  confirming={removing === h.adventureId}
+                  title={s.title}
+                  confirming={removing === key}
                   disabled={props.busy}
-                  onAsk={() => setRemoving(h.adventureId)}
+                  onAsk={() => setRemoving(key)}
                   onCancel={() => setRemoving(null)}
                   onArchive={() => {
                     setRemoving(null)
-                    archiveHosted(h.adventureId, true)
+                    mark(saveKey(s), "archived")
+                    props.onArchive(s.archiveId)
                   }}
                   onDelete={() => {
                     setRemoving(null)
-                    mark(hostKey(h), "deleted")
-                    props.onRemoveHosted(h.adventureId)
+                    mark(saveKey(s), "deleted")
+                    props.onRemove(s.archiveId)
                   }}
                 />
               </SavedCard>
-            ))}
-          </ul>
-        </section>
-      )}
+            )
+          })}
+          {hostedRows.map(({ key: rowKey, item: h, motion }) => (
+            <SavedCard
+              key={rowKey}
+              motion={motion}
+              planId={h.planId}
+              title={h.title}
+              encounterId={h.encounterId}
+              completed={h.status === "completed"}
+              kicker={[props.hostingNow === h.adventureId ? "Hosting Now" : "Hosted", h.status !== "completed" && h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
+              status={h.status === "completed" ? "Complete" : h.round ? h.turnTitle : "Waiting for Players"}
+              heroes={h.party.map((name) => ({ name }))}
+              action="Open"
+              label={`Open hosted game ${h.title}`}
+              busy={props.busy}
+              onOpen={() => props.onOpenHosted(h.adventureId)}
+            >
+              <CardRemove
+                title={h.title}
+                confirming={removing === h.adventureId}
+                disabled={props.busy}
+                onAsk={() => setRemoving(h.adventureId)}
+                onCancel={() => setRemoving(null)}
+                onArchive={() => {
+                  setRemoving(null)
+                  archiveHosted(h.adventureId, true)
+                }}
+                onDelete={() => {
+                  setRemoving(null)
+                  mark(hostKey(h), "deleted")
+                  props.onRemoveHosted(h.adventureId)
+                }}
+              />
+            </SavedCard>
+          ))}
+        </ul>
+      </Presence>
       {intro.length > 0 && (
         <section>
           <SectionPlate>Intro Adventures</SectionPlate>
           {/* A card is its 3:4 cover over about 240px of text, so the row narrows until a whole card fits the window's height. */}
           <ul className="mx-auto grid max-w-[max(600px,calc((100vh_-_10.5rem_-_240px)*2.25_+_4rem))] auto-rows-fr grid-cols-3 gap-8 pt-2 pb-8">
-            {intro.map((a) => (
-              <li key={a.id}>
+            {intro.map((a, i) => (
+              <li key={a.id} className="enter-rise" style={nth(i)}>
                 <Button
                   variant="plain"
                   type="button"
@@ -432,8 +451,9 @@ export function AdventuresPage(props: {
             onClick={() => props.onAdventure(featured.id)}
             className={cn(
               cardVariants({ variant: "frame" }),
-              "group relative mt-8 grid w-full grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-center text-left transition-all duration-500 ease-in-out hover:ring-8 hover:ring-primary-500 disabled:cursor-default"
+              "enter-rise group relative mt-8 grid w-full grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-center text-left transition-[box-shadow,scale] duration-150 ease-snap hover:ring-8 hover:ring-primary-500 active:scale-[.995] disabled:cursor-default"
             )}
+            style={nth(intro.length)}
             aria-label={featured.locked ? `${featured.title}, locked` : `New game of ${featured.title}`}
           >
             {/* The cover again, blurred and dimmed, as the panel's backdrop. */}
@@ -444,7 +464,7 @@ export function AdventuresPage(props: {
                 id={featured.id}
                 title={featured.title}
                 players={featured.players}
-                className={cn("transition-transform duration-500 group-hover:-translate-y-1", featured.locked && "[filter:grayscale(.55)_brightness(.7)]")}
+                className={cn("transition-transform duration-150 ease-snap group-hover:-translate-y-1", featured.locked && "[filter:grayscale(.55)_brightness(.7)]")}
               />
             </div>
             <div className="relative flex flex-col justify-center gap-5 py-10 pr-12 pl-4">
@@ -471,68 +491,68 @@ export function AdventuresPage(props: {
           </Button>
         </section>
       )}
-      {shelvedSaves.length + shelvedHosted.length > 0 && (
-        <section>
-          <SectionPlate>Archived</SectionPlate>
-          <ul className="mx-auto mt-4 max-w-4xl divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10 bg-black/60">
-            {shelvedSaves.map((s) => {
-              const key = `archived-${s.archiveId}`
-              return (
-                <ArchivedRow
-                  key={key}
-                  planId={s.planId}
-                  title={s.title}
-                  kicker={[played(s.playedAt), s.status === "completed" ? "Complete" : `Round ${s.round}`].filter(Boolean).join(" · ")}
-                  busy={props.busy}
-                  onRestore={() => {
-                    mark(saveKey(s), "restored")
-                    props.onArchive(s.archiveId, true)
-                  }}
-                >
-                  <RemoveButton
-                    confirming={removing === key}
-                    label={`Delete ${s.title} permanently`}
-                    confirmLabel={`Confirm deleting ${s.title}`}
-                    disabled={props.busy}
-                    onBlur={() => setRemoving(null)}
-                    onClick={() => {
-                      if (removing !== key) return setRemoving(key)
-                      setRemoving(null)
-                      mark(saveKey(s), "deleted")
-                      props.onRemove(s.archiveId)
-                    }}
-                  />
-                </ArchivedRow>
-              )
-            })}
-            {shelvedHosted.map((h) => (
+      <Presence show={shelvedSaves.length + shelvedHosted.length > 0} as="section" motion="fade" initial={false}>
+        <SectionPlate>Archived</SectionPlate>
+        <ul className="mx-auto mt-4 max-w-4xl divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10 bg-black/60">
+          {shelvedRows.map(({ key: rowKey, item: s, motion }) => {
+            const key = `archived-${s.archiveId}`
+            return (
               <ArchivedRow
-                key={h.adventureId}
-                planId={h.planId}
-                title={h.title}
-                kicker={["Hosted", h.status === "completed" ? "Complete" : h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
+                key={rowKey}
+                motion={motion}
+                planId={s.planId}
+                title={s.title}
+                kicker={[played(s.playedAt), s.status === "completed" ? "Complete" : `Round ${s.round}`].filter(Boolean).join(" · ")}
                 busy={props.busy}
-                onRestore={() => archiveHosted(h.adventureId, false)}
+                onRestore={() => {
+                  mark(saveKey(s), "restored")
+                  props.onArchive(s.archiveId, true)
+                }}
               >
                 <RemoveButton
-                  confirming={removing === h.adventureId}
-                  label={`Delete ${h.title} permanently`}
-                  confirmLabel={`Confirm deleting ${h.title}`}
+                  confirming={removing === key}
+                  label={`Delete ${s.title} permanently`}
+                  confirmLabel={`Confirm deleting ${s.title}`}
                   disabled={props.busy}
                   onBlur={() => setRemoving(null)}
                   onClick={() => {
-                    if (removing !== h.adventureId) return setRemoving(h.adventureId)
+                    if (removing !== key) return setRemoving(key)
                     setRemoving(null)
-                    archiveHosted(h.adventureId, false)
-                    mark(hostKey(h), "deleted")
-                    props.onRemoveHosted(h.adventureId)
+                    mark(saveKey(s), "deleted")
+                    props.onRemove(s.archiveId)
                   }}
                 />
               </ArchivedRow>
-            ))}
-          </ul>
-        </section>
-      )}
+            )
+          })}
+          {shelvedHostedRows.map(({ key: rowKey, item: h, motion }) => (
+            <ArchivedRow
+              key={rowKey}
+              motion={motion}
+              planId={h.planId}
+              title={h.title}
+              kicker={["Hosted", h.status === "completed" ? "Complete" : h.round ? `Round ${h.round}` : ""].filter(Boolean).join(" · ")}
+              busy={props.busy}
+              onRestore={() => archiveHosted(h.adventureId, false)}
+            >
+              <RemoveButton
+                confirming={removing === h.adventureId}
+                label={`Delete ${h.title} permanently`}
+                confirmLabel={`Confirm deleting ${h.title}`}
+                disabled={props.busy}
+                onBlur={() => setRemoving(null)}
+                onClick={() => {
+                  if (removing !== h.adventureId) return setRemoving(h.adventureId)
+                  setRemoving(null)
+                  archiveHosted(h.adventureId, false)
+                  mark(hostKey(h), "deleted")
+                  props.onRemoveHosted(h.adventureId)
+                }}
+              />
+            </ArchivedRow>
+          ))}
+        </ul>
+      </Presence>
     </PageShell>
   )
 }
@@ -549,6 +569,7 @@ export function CharactersPage(props: {
   onDelete: (hero: Hero) => void
 }) {
   const [deleting, setDeleting] = useState<string | null>(null)
+  const rows = useLeaving(props.heroes, (h) => h.id)
   return (
     <PageShell title="Characters">
       {props.onCreate && (
@@ -558,12 +579,12 @@ export function CharactersPage(props: {
           </Button>
         </div>
       )}
-      {props.heroes.length > 0 && (
+      {rows.length > 0 && (
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-8">
-          {props.heroes.map((h) => {
+          {rows.map(({ key, item: h, motion }) => {
             const portrait = (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait
             return (
-              <li key={h.id} className="group relative">
+              <li key={key} {...motion} className={cn("group relative", motion.className)}>
                 <Button
                   variant="plain"
                   type="button"
@@ -599,9 +620,11 @@ export function CharactersPage(props: {
                     disabled={props.busy}
                     onClick={() => props.onPaint!(h)}
                     aria-label={`Paint ${h.name}`}
-                    className={cn(siteOutline, "absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100")}
+                    className={cn(siteOutline, "active:scale-[0.97] absolute top-2 right-2 px-2 py-0.5 font-mono text-xxs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
                   >
-                    {props.painting === h.id ? "Painting…" : "Paint"}
+                    <span key={props.painting === h.id ? "busy" : "idle"} className="enter-fade">
+                      {props.painting === h.id ? "Painting…" : "Paint"}
+                    </span>
                   </Button>
                 )}
                 <RemoveButton
@@ -630,27 +653,29 @@ export function CharactersPage(props: {
 export function SettingsPage(props: { realm: Realm | null; onRealm: () => void }) {
   return (
     <PageShell title="Settings">
-      {props.realm && (
-        <ul className="flex justify-center">
-          <li className="w-[min(34rem,100%)]">
-            <Button variant="plain" type="button" onClick={props.onRealm} className={cn(cardVariants({ variant: "pick" }), "group block w-full text-center")}>
-              <div className="relative aspect-video">
-                <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
-                <div className="absolute inset-x-0 bottom-2 text-center font-display text-2xl" style={textShadow}>
-                  {props.realm.name}
+      <Presence show={Boolean(props.realm)} motion="rise" asChild>
+        {props.realm && (
+          <ul className="flex justify-center">
+            <li className="w-[min(34rem,100%)]">
+              <Button variant="plain" type="button" onClick={props.onRealm} className={cn(cardVariants({ variant: "pick" }), "group block w-full text-center")}>
+                <div className="relative aspect-video">
+                  <img src={props.realm.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent" />
+                  <div className="absolute inset-x-0 bottom-2 text-center font-display text-2xl" style={textShadow}>
+                    {props.realm.name}
+                  </div>
                 </div>
-              </div>
-              <div className="px-6 pt-3 pb-6">
-                <p className="line-clamp-4 text-base text-gray-300">{props.realm.description.split(/\n\s*\n/)[0]}</p>
-                <div className="mt-5 flex justify-center">
-                  <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Explore</span>
+                <div className="px-6 pt-3 pb-6">
+                  <p className="line-clamp-4 text-base text-gray-300">{props.realm.description.split(/\n\s*\n/)[0]}</p>
+                  <div className="mt-5 flex justify-center">
+                    <span className={buttonClassName("epic", undefined, "text-sm")} style={buttonStyle("epic")}>Explore</span>
+                  </div>
                 </div>
-              </div>
-            </Button>
-          </li>
-        </ul>
-      )}
+              </Button>
+            </li>
+          </ul>
+        )}
+      </Presence>
       <section>
         <SectionPlate>Licenses</SectionPlate>
         <p className="mx-auto mt-6 max-w-3xl text-sm text-gray-300">{srdAttribution}</p>

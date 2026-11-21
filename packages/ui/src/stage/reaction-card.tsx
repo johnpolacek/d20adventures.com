@@ -6,7 +6,8 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "../button"
-import { cn } from "../utils"
+import { Swap } from "../presence"
+import { cn, type MotionProps } from "../utils"
 import { Chevron, eyebrow, Pill, panel } from "./hud"
 import { ORDERS, type Order, type OrderRow, REACTION_WAIT_MS, type ReactionId, reactionName } from "./reaction-view"
 
@@ -45,7 +46,7 @@ function Countdown({ left, compact }: { left: number; compact: boolean }) {
   const low = left <= 5000
   return (
     <div className={cn("h-[3px] w-full overflow-hidden rounded-full bg-black/40", compact ? "mt-1.5" : "mt-2.5")} aria-hidden="true">
-      <div className="h-full origin-left rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${share * 100}%`, backgroundColor: low ? "#e39a7c" : "var(--color-stage-gold)" }} />
+      <div className="h-full origin-left rounded-full transition-transform duration-100 ease-linear" style={{ transform: `scaleX(${share})`, backgroundColor: low ? "#e39a7c" : "var(--color-stage-gold)" }} />
     </div>
   )
 }
@@ -62,9 +63,11 @@ export function ReactionCard({
   answered = false,
   compact = false,
   className,
+  style,
+  onAnimationEnd,
   onTake,
   onPass,
-}: {
+}: Omit<MotionProps, "className"> & {
   reaction: string
   hero: string
   portrait?: string
@@ -91,43 +94,48 @@ export function ReactionCard({
       {seconds}s
     </span>
   )
-  if (!asking)
-    return (
-      <section aria-live="polite" className={cn(panel, "fade-in border-stage-brass/50", compact ? "px-3 py-2" : "px-4 py-3", className)}>
-        <div className="flex items-center gap-3">
-          <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>{`${hero} Is Deciding`}</span>
-          {clock}
-        </div>
-        <Countdown left={left} compact={compact} />
-      </section>
-    )
+  // The offer gives way to the waiting line once it is answered, and each comes in on its own.
   return (
-    <section
-      role="alertdialog"
-      aria-label={`${reactionName(reaction)} for ${hero}`}
-      className={cn(panel, "fade-in border-stage-brass/50 text-left", compact ? "px-3 py-2" : "px-5 pt-4 pb-4", className)}
-    >
-      <div className="flex items-center gap-2.5">
-        {portrait && (
-          <img src={portrait} alt="" className={cn("shrink-0 rounded-full border border-stage-gold/60 object-cover object-top", compact ? "h-5 w-5" : "h-7 w-7")} />
-        )}
-        <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>
-          {reactionName(reaction)} · {hero.split(" ")[0]}
-        </span>
-        {clock}
-      </div>
-      <p className={cn("font-serif text-stage-cream", compact ? "mt-1 line-clamp-2 text-[12px] leading-snug" : "mt-2 text-[15px] leading-[1.5]")}>{text}</p>
-      <Countdown left={left} compact={compact} />
-      <div className={cn("flex items-center justify-end gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-3")}>
-        <Pill disabled={Boolean(chosen)} active={chosen === "pass"} onClick={() => pick("pass")}>
-          Let It Pass
-        </Pill>
-        <Button variant="epic" size="xs" disabled={Boolean(chosen)} className={cn("shrink-0 gap-1.5", compact ? "px-5" : "px-7 py-1.5 text-sm")} onClick={() => pick("take")}>
-          Take It
-          <Chevron />
-        </Button>
-      </div>
-    </section>
+    <Swap id={asking ? "offer" : "wait"} motion="rise" asChild>
+      {asking ? (
+        <section
+          role="alertdialog"
+          aria-label={`${reactionName(reaction)} for ${hero}`}
+          className={cn(panel, "border-stage-brass/50 text-left", compact ? "px-3 py-2" : "px-5 pt-4 pb-4", className)}
+          style={style}
+          onAnimationEnd={onAnimationEnd}
+        >
+          <div className="flex items-center gap-2.5">
+            {portrait && (
+              <img src={portrait} alt="" className={cn("shrink-0 rounded-full border border-stage-gold/60 object-cover object-top", compact ? "h-5 w-5" : "h-7 w-7")} />
+            )}
+            <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>
+              {reactionName(reaction)} · {hero.split(" ")[0]}
+            </span>
+            {clock}
+          </div>
+          <p className={cn("font-serif text-stage-cream", compact ? "mt-1 line-clamp-2 text-[12px] leading-snug" : "mt-2 text-[15px] leading-[1.5]")}>{text}</p>
+          <Countdown left={left} compact={compact} />
+          <div className={cn("flex items-center justify-end gap-2", compact ? "mt-1.5 [&>button]:py-1" : "mt-3")}>
+            <Pill disabled={Boolean(chosen)} active={chosen === "pass"} onClick={() => pick("pass")}>
+              Let It Pass
+            </Pill>
+            <Button variant="epic" size="xs" disabled={Boolean(chosen)} className={cn("shrink-0 gap-1.5", compact ? "px-5" : "px-7 py-1.5 text-sm")} onClick={() => pick("take")}>
+              Take It
+              <Chevron />
+            </Button>
+          </div>
+        </section>
+      ) : (
+        <section aria-live="polite" className={cn(panel, "border-stage-brass/50", compact ? "px-3 py-2" : "px-4 py-3", className)} style={style} onAnimationEnd={onAnimationEnd}>
+          <div className="flex items-center gap-3">
+            <span className={cn(eyebrow, "min-w-0 flex-1 truncate")}>{`${hero} Is Deciding`}</span>
+            {clock}
+          </div>
+          <Countdown left={left} compact={compact} />
+        </section>
+      )}
+    </Swap>
   )
 }
 

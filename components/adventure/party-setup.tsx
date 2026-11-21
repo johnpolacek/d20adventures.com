@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { type CSSProperties, useState } from "react"
 import { createAdventure } from "@/app/_actions/create-adventure"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
@@ -8,6 +8,7 @@ import { Tip } from "@d20/ui/tooltip"
 import { Card } from "@d20/ui/card"
 import { CharacterSelectCard } from "@/components/adventure/character-select-card"
 import Image from "@d20/ui/native-image"
+import { Presence } from "@d20/ui/presence"
 import { cn, getImageUrl } from "@/lib/utils"
 import type { PCTemplate } from "@/types/character"
 
@@ -22,7 +23,25 @@ interface PartySetupProps {
   onBack?: () => void
 }
 
-function PartySlotAvatar({ image, name, label, labelClass, ringClass, onClick, title }: { image?: string; name?: string; label: string; labelClass: string; ringClass: string; onClick?: () => void; title?: string }) {
+function PartySlotAvatar({
+  image,
+  name,
+  label,
+  labelClass,
+  ringClass,
+  onClick,
+  title,
+  className,
+}: {
+  image?: string
+  name?: string
+  label: string
+  labelClass: string
+  ringClass: string
+  onClick?: () => void
+  title?: string
+  className?: string
+}) {
   const body = (
     <>
       <div className={cn("relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-black/60 ring-2", ringClass)}>
@@ -40,7 +59,7 @@ function PartySlotAvatar({ image, name, label, labelClass, ringClass, onClick, t
   if (onClick) {
     return (
       <Tip label={title}>
-        <Button variant="plain" type="button" onClick={onClick} className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5">
+        <Button variant="plain" type="button" onClick={onClick} className={cn("flex flex-col items-center gap-1 cursor-pointer transition-transform duration-150 ease-snap active:scale-[0.96] hover:-translate-y-0.5", className)}>
           {body}
         </Button>
       </Tip>
@@ -48,7 +67,7 @@ function PartySlotAvatar({ image, name, label, labelClass, ringClass, onClick, t
   }
   return (
     <Tip label={title}>
-      <div className="flex flex-col items-center gap-1">{body}</div>
+      <div className={cn("flex flex-col items-center gap-1", className)}>{body}</div>
     </Tip>
   )
 }
@@ -124,7 +143,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
               type="button"
               onClick={onBack}
               disabled={isCreating}
-              className="mt-1 text-sm underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white transition-colors"
+              className="mt-1 text-sm underline underline-offset-4 decoration-indigo-300/50 text-indigo-200 hover:text-white active:opacity-70 transition-[color,opacity] duration-150"
             >
               change
             </Button>
@@ -144,6 +163,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
               ringClass="ring-sky-400/90"
               title={`${companion.name} — AI companion (click to manage)`}
               onClick={() => setShowCompanions(true)}
+              className="enter-pop"
             />
           ))}
           {Array.from({ length: openSlots }).map((_, index) => (
@@ -152,9 +172,9 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
                 variant="plain"
                 type="button"
                 onClick={() => setShowCompanions(true)}
-                className="flex flex-col items-center gap-1 cursor-pointer transition-transform active:scale-[0.96] hover:-translate-y-0.5"
+                className="enter-pop flex flex-col items-center gap-1 cursor-pointer transition-transform duration-150 ease-snap active:scale-[0.96] hover:-translate-y-0.5"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center text-white/40 text-2xl font-light hover:border-sky-300/60 hover:text-sky-200 transition-colors duration-150">
                   +
                 </div>
                 <span className="text-[10px] font-mono tracking-wider uppercase text-white/40">Open</span>
@@ -193,35 +213,43 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
             : `This adventure needs at least ${minParty} party members. Go to the lobby to invite friends, or add ${minParty - partySize} AI companion${minParty - partySize === 1 ? "" : "s"} to start right away.`}
         </p>
 
-        {!showCompanions && (
+        <Presence show={!showCompanions} motion="fade" initial={false} asChild>
           <Button
             variant="outline"
             size="sm"
-            className="self-center mt-5 text-sm text-sky-200 border-sky-400/30 hover:text-white transition-colors"
+            className="self-center mt-5 text-sm text-sky-200 border-sky-400/30 hover:text-white"
             onClick={() => setShowCompanions(true)}
             disabled={isCreating}
           >
             {addedCompanions.length > 0 ? "Manage AI Companions" : "Add AI Companions"}
           </Button>
-        )}
-        {error && <p className="text-red-300 mt-4">{error}</p>}
+        </Presence>
+        <Presence show={Boolean(error)} motion="drop" asChild>
+          <p className="text-red-300 mt-4">{error}</p>
+        </Presence>
       </Card>
 
-      {showCompanions && (
-        <div className="w-full flex flex-col items-center mt-10 fade-in">
+      <Presence show={showCompanions} motion="fade" asChild>
+        <div className="w-full flex flex-col items-center mt-10">
           <h3 style={textShadow} className="text-2xl font-display font-bold text-sky-200 text-balance mb-1">
             AI Companions
           </h3>
           <p className="text-sm text-white/70 text-pretty text-center max-w-2xl mb-2">Companions are played by the game, taking their own turns in character alongside you.</p>
-          <Button variant="ghost" size="sm" className="mb-6 text-sm text-sky-300/80 hover:text-sky-200 transition-colors" onClick={() => setShowCompanions(false)} disabled={isCreating}>
+          <Button variant="ghost" size="sm" className="mb-6 text-sm text-sky-300/80 hover:text-sky-200" onClick={() => setShowCompanions(false)} disabled={isCreating}>
             Hide
           </Button>
           <div className="flex flex-wrap gap-8 justify-center w-full">
-            {companions.map((companion) => {
+            {companions.map((companion, index) => {
               const added = companionIds.has(companion.id)
               return (
-                <div key={companion.id} className={cn("w-full sm:w-1/2 md:w-1/3 lg:w-1/4 relative transition-transform duration-300", added && "scale-[1.02]")}>
-                  {added && <div className="absolute top-2 left-2 z-20 text-xs font-mono text-sky-300 bg-sky-900/80 border border-sky-300 rounded px-2 py-1">AI COMPANION</div>}
+                <div
+                  key={companion.id}
+                  className={cn("enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4 relative transition-transform duration-150 ease-snap", added && "scale-[1.02]")}
+                  style={{ "--i": Math.min(index, 8) } as CSSProperties}
+                >
+                  <Presence show={added} motion="pop" asChild>
+                    <div className="absolute top-2 left-2 z-20 text-xs font-mono text-sky-300 bg-sky-900/80 border border-sky-300 rounded px-2 py-1">AI COMPANION</div>
+                  </Presence>
                   <CharacterSelectCard
                     character={companion}
                     buttonLabel={added ? "Remove" : "Add to Party"}
@@ -234,7 +262,7 @@ export default function PartySetup({ settingId, adventurePlanId, selectedCharact
             })}
           </div>
         </div>
-      )}
+      </Presence>
     </div>
   )
 }

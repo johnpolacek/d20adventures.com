@@ -5,8 +5,9 @@
 // the map with the name of the place under it. Everything else (the narration, the GM card, plates, bubbles, the journal, character cards) is
 // layered in as children.
 
-import { type ReactNode, type RefObject, useEffect, useState } from "react"
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from "react"
 import { Button, type ButtonProps } from "../button"
+import { Presence } from "../presence"
 import { Tip } from "../tooltip"
 import { cn } from "../utils"
 
@@ -26,13 +27,28 @@ export const useCompact = () => useMedia("(max-height: 520px)")
 // Screens too short for a tall card keep a dice roll's die beside its words.
 export const useShort = () => useMedia("(max-height: 700px)")
 
+/** Says of a keyed part of a list whether it joined after the first render, the same answer every time it is asked. */
+export function useJoined() {
+  const late = useRef(new Map<string | number, boolean>())
+  const settled = useRef(false)
+  useEffect(() => {
+    settled.current = true
+  }, [])
+  return (key: string | number) => {
+    const known = late.current.get(key)
+    if (known !== undefined) return known
+    late.current.set(key, settled.current)
+    return settled.current
+  }
+}
+
 export const eyebrow = "font-sans text-[9px] font-medium uppercase tracking-[0.26em] text-stage-gold"
 export const panel = "stage-grain rounded-md border border-stage-line/25 bg-stage-panel/95 shadow-[0_20px_50px_#0006,inset_0_1px_0_#f0d6b214,inset_0_0_60px_#0000004d] backdrop-blur-xl"
 
 /** A pill's class names, for a control that only looks like one, such as a file picker's trigger. */
 export function pillClass(active?: boolean, className?: string) {
   return cn(
-    "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color] disabled:cursor-default disabled:opacity-40",
+    "rounded-[3px] border px-3 py-2 font-sans text-[11px] tracking-wide transition-[filter,border-color,background-color,scale] duration-150 ease-snap not-disabled:active:scale-[0.97] disabled:cursor-default disabled:opacity-40",
     active ? "stage-brass" : "stage-leather border-stage-line/25 text-stage-cream hover:border-stage-gold/60",
     className
   )
@@ -76,7 +92,7 @@ export function IconButton({ label, active, children, ...rest }: Omit<ButtonProp
         type="button"
         aria-label={label}
         className={cn(
-          "stage-leather grid h-10 w-10 place-items-center rounded-full border transition-[filter,border-color] [&_svg]:h-4 [&_svg]:w-4",
+          "stage-leather grid h-10 w-10 place-items-center rounded-full border transition-[filter,border-color,background-color,scale] duration-150 ease-snap active:scale-95 [&_svg]:h-4 [&_svg]:w-4",
           active ? "border-stage-gold" : "border-stage-line/25 hover:border-stage-gold"
         )}
         {...rest}
@@ -127,10 +143,10 @@ export function StageHud({
       {backdrop}
       <div ref={containerRef} className="absolute inset-0" />
       <div
-        className={cn("pointer-events-none absolute inset-0 transition-opacity duration-500", hidden && "opacity-0")}
+        className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap", hidden && "opacity-0")}
         style={{ background: "linear-gradient(180deg,rgba(28,18,12,.42),transparent 18%,transparent 58%,rgba(22,13,9,.84))" }}
       />
-      <div className={cn("pointer-events-none absolute inset-0 transition-opacity duration-500 [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
+      <div className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
         <header className={cn("absolute flex items-center justify-between", compact ? "top-3 right-4 left-4" : "top-7 right-10 left-10")}>
           <div className="flex min-w-0 items-center gap-3.5">
             <svg viewBox="0 0 50 58" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.2" className={cn("flex-none text-stage-gold", compact ? "h-8 w-7" : "h-12 w-10")}>
@@ -147,9 +163,11 @@ export function StageHud({
         </header>
 
         {/* The rule over the perspective bar runs edge to edge. */}
-        {views.length > 0 && <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />}
+        <Presence show={views.length > 0} motion="fade" asChild>
+          <div aria-hidden="true" className={cn("stage-rule pointer-events-none absolute inset-x-0 h-px opacity-60", compact ? "bottom-11" : "bottom-24")} />
+        </Presence>
         {!compact && (
-          <aside className={cn("absolute right-10 bottom-2.5 flex flex-col items-center gap-1.5 transition-opacity duration-300", location.hidden && "pointer-events-none opacity-0")}>
+          <aside className={cn("absolute right-10 bottom-2.5 flex flex-col items-center gap-1.5 transition-opacity duration-200 ease-snap", location.hidden && "pointer-events-none opacity-0")}>
             {map ?? (
               <svg viewBox="0 0 60 60" aria-hidden="true" className="h-12 w-12 fill-none stroke-stage-gold" strokeWidth=".8">
                 <circle cx="30" cy="30" r="23" opacity=".4" />
@@ -158,11 +176,13 @@ export function StageHud({
               </svg>
             )}
             <div className="max-w-[200px] truncate text-[9px] tracking-[0.25em] text-stage-sage uppercase [text-shadow:0_1px_6px_#000]">{location.name}</div>
-            {location.status && <div className="text-[10px] tracking-wide text-[#e8c898] [text-shadow:0_1px_6px_#000]">{location.status}</div>}
+            <Presence show={Boolean(location.status)} motion="fade" asChild>
+              <div className="text-[10px] tracking-wide text-[#e8c898] [text-shadow:0_1px_6px_#000]">{location.status}</div>
+            </Presence>
           </aside>
         )}
 
-        {views.length > 0 && (
+        <Presence show={views.length > 0} motion="rise" asChild>
           <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
             {!compact && <div className="hidden flex-1 lg:block" />}
             <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
@@ -174,7 +194,7 @@ export function StageHud({
                   aria-pressed={activeView === v.id}
                   onClick={() => onView(v.id)}
                   className={cn(
-                    "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-colors",
+                    "flex shrink-0 items-center gap-2.5 rounded-[3px] border whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-snap active:scale-[0.97]",
                     compact ? "px-2 py-1 text-[10px]" : "px-4 py-3 text-[11px]",
                     activeView === v.id ? "stage-leather border-stage-brass/50 text-[#fbe7c9]" : "border-transparent text-[#bfc5b9] hover:bg-white/5 hover:text-white"
                   )}
@@ -187,7 +207,7 @@ export function StageHud({
             {/* Room for the map and the place's name at the right end. */}
             {!compact && <div className={cn("flex-1", map ? "min-w-[216px] shrink-0" : "hidden lg:block")} />}
           </nav>
-        )}
+        </Presence>
       </div>
       {children}
     </div>

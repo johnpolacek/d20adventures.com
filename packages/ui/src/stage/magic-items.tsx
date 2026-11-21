@@ -2,7 +2,7 @@
 // is attuned. Shared by the stage's character card and the site's character sheet.
 
 import type { ItemView } from "@d20/gm-core/sheet/items"
-import { cn } from "../utils"
+import { cn, staggered } from "../utils"
 import { eyebrow } from "./hud"
 
 export function MagicItems({ items, className }: { items: readonly ItemView[]; className?: string }) {
@@ -12,7 +12,7 @@ export function MagicItems({ items, className }: { items: readonly ItemView[]; c
       <h3 className={cn(eyebrow, "mb-2")}>Magic Items</h3>
       <ul className="space-y-1.5">
         {items.map((item, index) => (
-          <li key={`${index}:${item.name}`} className="flex flex-wrap items-baseline gap-x-2 text-xs leading-relaxed">
+          <li key={`${index}:${item.name}`} className="enter-rise flex flex-wrap items-baseline gap-x-2 text-xs leading-relaxed" style={staggered(index)}>
             <span className="font-serif text-[13px] text-stage-cream">
               {item.name}
               {item.count && <span className="text-stage-muted"> ×{item.count}</span>}

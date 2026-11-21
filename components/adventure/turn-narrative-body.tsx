@@ -22,6 +22,7 @@ import { useAdventure } from "@/lib/context/AdventureContext"
 import { cn } from "@/lib/utils"
 import { Button } from "@d20/ui/button"
 import LoadingAnimation from "@d20/ui/loading-animation"
+import { Presence, Swap } from "@d20/ui/presence"
 import { dropCap } from "@d20/ui/typography/styles"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
 import { TurnLevelUp } from "./turn-level-up"
@@ -59,30 +60,31 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
   const opening = paragraphs.findIndex(({ beats }) => beats[0].kind !== "reply" && beats[0].kind !== "feature" && beats[0].kind !== "roll")
   // Who the turn passed over to reach whose turn it is, because they cannot act, and why.
   const passed = passedWords(passedOver(currentTurn.characters, currentCharacter))
+  // What closes the turn's story: the reply box, the game over notice, or whose turn it is.
+  const ending = shouldShowReply && currentCharacter ? "reply" : allPCsDead ? "over" : !currentTurn.isFinalEncounter ? "waiting" : "none"
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">
-      {tokenError && (
+      <Presence show={Boolean(tokenError)} motion="drop" asChild>
         <Alert variant="destructive" className="mb-8">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Action Failed</AlertTitle>
           <AlertDescription>{tokenError}</AlertDescription>
         </Alert>
-      )}
+      </Presence>
       {paragraphs.map(({ beats, text }, idx) => {
         const part = beats[0]
         if (part.kind === "reply") {
-          if (!showOriginalReplies) return null
           return (
-            <div key={`original-${idx}`} className="text-base italic text-primary-200 mb-6 whitespace-pre-line">
-              Player Reply: {part.text}
-            </div>
+            <Presence key={`original-${idx}`} show={showOriginalReplies} motion="fade" asChild>
+              <div className="text-base italic text-primary-200 mb-6 whitespace-pre-line">Player Reply: {part.text}</div>
+            </Presence>
           )
         }
         if (part.kind === "feature") return <FeatureEntry key={idx} feature={featureView(part, currentTurn.characters)} className="mb-6 max-w-xl" />
         if (part.kind !== "roll") {
           return (
-            <p key={idx} className={cn("text-sm sm:text-base md:text-lg whitespace-pre-line mb-4", idx === opening && dropCap)}>
+            <p key={idx} className={cn("enter-fade text-sm sm:text-base md:text-lg whitespace-pre-line mb-4", idx === opening && dropCap)}>
               {text}
             </p>
           )
@@ -90,60 +92,62 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         return <RollLine key={`${part.character}-${part.check}-${part.total}-${part.dc}-${idx}`} roll={rollView(part, currentTurn.characters)} className="mt-0 mb-6 max-w-xl" />
       })}
 
-      {offer && !currentTurn.isFinalEncounter && <TurnReaction className="mx-auto my-6 w-full max-w-xl" />}
+      <TurnReaction show={!currentTurn.isFinalEncounter} className="mx-auto my-6 w-full max-w-xl" />
 
       {/* Show loading animation if an NPC is processing their turn */}
-      {isNpcProcessing && !offer && !currentTurn?.isFinalEncounter && !disableSSE && (
+      <Presence show={Boolean(isNpcProcessing && !offer && !currentTurn?.isFinalEncounter && !disableSSE)} motion="fade" asChild>
         <div className="flex flex-col items-center gap-4 py-8">
           <LoadingAnimation />
           <p className="text-indigo-300 font-display">{currentCharacter?.name} is rolling…</p>
         </div>
-      )}
+      </Presence>
 
       {/* Show reply form only if current character is a PC and not in historical mode */}
-      {shouldShowReply && currentCharacter ? (
-        <TurnNarrativeReply character={currentCharacter} submitReply={submitReply} />
-      ) : allPCsDead ? (
-        <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
-          <h4 className="text-xl font-display text-red-400">Game Over</h4>
-          <p className="italic text-red-300">All player characters have fallen</p>
-          <Link href={`/settings/${settingId}/play`} className="mt-4">
-            <Button variant="epic" size="sm" className="text-sm">
-              Return to Setting
-            </Button>
-          </Link>
-        </div>
-      ) : !currentTurn?.isFinalEncounter ? (
-        <div
-          id="turn-indicator"
-          className={cn(
-            "flex flex-col gap-2 justify-center border mt-4 border-white/20 items-center p-8 rounded-lg",
-            isPlayerTurnComplete ? "bg-neutral-900" : "bg-primary-800/70 border-dashed",
-            isTurnComplete && "hidden"
-          )}
-        >
-          <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
-          <div className="flex gap-3 mt-3 mb-4 scale-75">
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }} />
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }} />
-            <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
+      <Swap id={ending}>
+        {shouldShowReply && currentCharacter ? (
+          <TurnNarrativeReply character={currentCharacter} submitReply={submitReply} />
+        ) : allPCsDead ? (
+          <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
+            <h4 className="text-xl font-display text-red-400">Game Over</h4>
+            <p className="italic text-red-300">All player characters have fallen</p>
+            <Link href={`/settings/${settingId}/play`} className="mt-4">
+              <Button variant="epic" size="sm" className="text-sm">
+                Return to Setting
+              </Button>
+            </Link>
           </div>
-          <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
-          {passed && <p className="text-sm text-red-300/80">Passed Over · {passed}</p>}
-        </div>
-      ) : null}
+        ) : !currentTurn?.isFinalEncounter ? (
+          <div
+            id="turn-indicator"
+            className={cn(
+              "flex flex-col gap-2 justify-center border mt-4 border-white/20 items-center p-8 rounded-lg transition-colors duration-150",
+              isPlayerTurnComplete ? "bg-neutral-900" : "bg-primary-800/70 border-dashed",
+              isTurnComplete && "hidden"
+            )}
+          >
+            <h4 className={cn("text-xl font-display", isPlayerTurnComplete ? "text-green-300/70" : "text-primary-200")}>{isPlayerTurnComplete ? "Your Turn is Complete" : "Waiting for Your Turn"}</h4>
+            <div className="flex gap-3 mt-3 mb-4 scale-75">
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "0ms", animationDuration: "2s" }} />
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "200ms", animationDuration: "2s" }} />
+              <span className={cn("w-2 h-2 rounded-full animate-pulse", isPlayerTurnComplete ? "bg-neutral-600" : "bg-primary-200")} style={{ animationDelay: "400ms", animationDuration: "2s" }} />
+            </div>
+            <p className="italic text-white/70">It is currently {currentCharacter?.name}&apos;s turn</p>
+            {passed && <p className="text-sm text-red-300/80">Passed Over · {passed}</p>}
+          </div>
+        ) : null}
+      </Swap>
 
       <TurnLevelUp className="mt-8" />
-      {currentTurn?.isFinalEncounter && (
+      <Presence show={Boolean(currentTurn?.isFinalEncounter)} motion="fade" asChild>
         <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
           <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />
         </div>
-      )}
-      {isTurnComplete && !currentTurn?.isFinalEncounter && (
+      </Presence>
+      <Presence show={Boolean(isTurnComplete && !currentTurn?.isFinalEncounter)} asChild>
         <div className="flex justify-center mt-8">
           <TurnAdvanceButton advancing={advancing} navigationMode={disableSSE} navigationLabel={disableSSE ? "Go to Next Turn" : undefined} onAdvance={handleAdvanceOrNavigate} />
         </div>
-      )}
+      </Presence>
       {variant === "drawer" && <div ref={bottomRef} />}
     </div>
   )

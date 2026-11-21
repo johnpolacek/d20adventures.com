@@ -4,6 +4,7 @@ import { Check, Copy, Share2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
+import { Swap } from "@d20/ui/presence"
 
 interface InviteLinkProps {
   inviteLink: string
@@ -32,7 +33,9 @@ export function InviteLink({ inviteLink }: InviteLinkProps) {
         <Share2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
         <code className="flex-1 text-xs text-gray-300 truncate">{inviteLink}</code>
         <Button size="sm" variant="outline" onClick={handleCopyInvite} className="flex-shrink-0 h-7 px-2">
-          {isCopied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+          <Swap id={isCopied ? "copied" : "copy"} motion="pop" as="span" className="inline-flex">
+            {isCopied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+          </Swap>
         </Button>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName } from "@d20/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
 import { Input } from "@d20/ui/input"
+import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { cn } from "@/lib/utils"
@@ -85,20 +86,22 @@ function ChatMessageList({
   return (
     <div ref={viewportRef} className={cn("overflow-y-auto rounded-md p-3 bg-black/30", className)}>
       <div className="space-y-3">
-        {hasOlderMessages && !hideLoadOlder && (
+        <Presence show={hasOlderMessages && !hideLoadOlder} motion="fade" asChild>
           <div className="flex justify-center">
             <Button variant="outline" size="sm" onClick={handleLoadOlder} disabled={isLoadingOlder || isLoadingHistory}>
               {isLoadingOlder ? "Loading..." : "Load older"}
             </Button>
           </div>
-        )}
-        {historyError && <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>}
-        {isLoadingHistory && messages.length === 0 && <div className="text-sm text-white/60 text-center py-8">Loading chat history...</div>}
-        {!isLoadingHistory && messages.length === 0 && <div className="text-sm text-white/60 text-center py-8">No messages yet.</div>}
+        </Presence>
+        <Presence show={Boolean(historyError)} motion="drop" asChild>
+          <div className="text-sm text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2">{historyError}</div>
+        </Presence>
+        {isLoadingHistory && messages.length === 0 && <div className="enter-fade text-sm text-white/60 text-center py-8">Loading chat history...</div>}
+        {!isLoadingHistory && messages.length === 0 && <div className="enter-fade text-sm text-white/60 text-center py-8">No messages yet.</div>}
         {messages.map((m) => {
           const isMine = currentUsername && m.username === currentUsername
           return (
-            <div key={m._id} className={`text-sm flex ${isMine ? "justify-end" : "justify-start"}`}>
+            <div key={m._id} className={`enter-rise text-sm flex ${isMine ? "justify-end" : "justify-start"}`}>
               <div className="w-[90%]">
                 <div className={cn("whitespace-pre-wrap text-white px-3 py-2 rounded-lg", compact ? "text-sm" : "text-sm md:text-lg", isMine ? "bg-primary-700" : "bg-black/70")}>{m.content}</div>
                 <div className={`mt-1 text-xs text-white/60 ${isMine ? "text-right" : "text-left"}`}>
@@ -352,10 +355,10 @@ export default function GameChat({ adventureId, characterName, variant = "floati
           {/* The whole preview (header + messages) opens the large view; the input row
               below stays interactive. Load-older is hidden here so this region has no
               nested controls — expand to page through history. */}
-          <Button variant="plain" type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left" aria-label="Expand chat">
+          <Button variant="plain" type="button" onClick={() => handleOpenChange(true)} className="group flex min-h-0 flex-1 cursor-pointer flex-col text-left transition-opacity duration-100 active:opacity-80" aria-label="Expand chat">
             <div className="flex flex-none items-center justify-between gap-2 px-3 py-2">
               <h3 className="font-display text-sm font-bold text-amber-300">Game Chat</h3>
-              <Maximize2 className="h-4 w-4 text-stone-300 transition-colors group-hover:text-amber-200" aria-hidden />
+              <Maximize2 className="h-4 w-4 text-stone-300 transition-colors duration-150 group-hover:text-amber-200" aria-hidden />
             </div>
             <ChatMessageList
               messages={messages}
@@ -382,15 +385,15 @@ export default function GameChat({ adventureId, characterName, variant = "floati
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <div className="relative">
-        <DialogTrigger className={buttonClassName(undefined, "sm", "bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700 hover:scale-105 transition-all duration-300")}>
+        <DialogTrigger className={buttonClassName(undefined, "sm", "bg-primary-700 ring-4 ring-primary-600 hover:bg-primary-700")}>
             <MessageSquare className="mr-1 h-4 w-4" />
             Chat
           </DialogTrigger>
-          {unseenCount > 0 && (
-            <Badge className="bg-purple-600 ring-2 ring-purple-700 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full animate-in fade-in duration-200">
+          <Presence show={unseenCount > 0} motion="pop" asChild>
+            <Badge className="bg-purple-600 ring-2 ring-purple-700 absolute -top-2.5 -right-2.5 h-5 w-5 p-0 flex items-center justify-center text-xs font-mono font-bold rounded-full">
               {unseenCount > 99 ? "99+" : unseenCount}
             </Badge>
-          )}
+          </Presence>
         </div>
       {expandedDialogContent}
     </Dialog>

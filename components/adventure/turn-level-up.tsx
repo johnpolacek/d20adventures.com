@@ -9,6 +9,7 @@ import { useState } from "react"
 import { levelUpHero } from "@/app/_actions/adventure"
 import { LevelUp } from "@d20/ui/stage/level-up"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { getImageUrl } from "@/lib/utils"
@@ -21,33 +22,39 @@ export function TurnLevelUp({ className }: { className?: string }) {
   if (!currentTurn) return null
   const owed = currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
   const hero = owed.find((character) => character.id === open)
-  if (!owed.length) return null
+  // The screen is beside the buttons, not inside them, so it stays for its exit when the last level is taken.
   return (
-    <div className={className}>
-      <div className="flex flex-wrap justify-center gap-3">
-        {owed.map((character) => (
-          <Button key={character.id} size="sm" variant="epic" onClick={() => setOpen(character.id)}>
-            Level Up {character.name}
-          </Button>
-        ))}
-      </div>
-      {hero?.sheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 text-left">
-          <LevelUp
-            hero={hero.name}
-            portrait={hero.image ? getImageUrl(hero.image) : undefined}
-            sheet={hero.sheet}
-            className="max-h-[92vh] w-[min(600px,100%)]"
-            onClose={() => setOpen(null)}
-            onTake={async (choices) => {
-              const taken = await levelUpHero({ turnId: currentTurn.id as Id<"turns">, characterId: hero.id, choices })
-              if (taken.problems) return `${taken.problems.join(". ")}.`
-              setOpen(null)
-              return undefined
-            }}
-          />
+    <>
+      <Presence show={owed.length > 0} asChild>
+        <div className={className}>
+          <div className="flex flex-wrap justify-center gap-3">
+            {owed.map((character) => (
+              <Button key={character.id} size="sm" variant="epic" onClick={() => setOpen(character.id)}>
+                Level Up {character.name}
+              </Button>
+            ))}
+          </div>
         </div>
-      )}
-    </div>
+      </Presence>
+      <Presence show={Boolean(hero?.sheet)} motion="fade" asChild>
+        {hero?.sheet && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 text-left">
+            <LevelUp
+              hero={hero.name}
+              portrait={hero.image ? getImageUrl(hero.image) : undefined}
+              sheet={hero.sheet}
+              className="enter-pop max-h-[92vh] w-[min(600px,100%)]"
+              onClose={() => setOpen(null)}
+              onTake={async (choices) => {
+                const taken = await levelUpHero({ turnId: currentTurn.id as Id<"turns">, characterId: hero.id, choices })
+                if (taken.problems) return `${taken.problems.join(". ")}.`
+                setOpen(null)
+                return undefined
+              }}
+            />
+          </div>
+        )}
+      </Presence>
+    </>
   )
 }

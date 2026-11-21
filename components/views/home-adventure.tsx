@@ -5,6 +5,7 @@ import Link from "next/link"
 import { type ReactNode, useEffect, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
+import { Swap } from "@d20/ui/presence"
 import type { Adventure } from "@/types/adventure"
 import ActiveAdventureCard from "./active-adventure-card"
 
@@ -35,18 +36,25 @@ export default function HomeAdventure({ children }: { children: ReactNode }) {
   }, [isLoaded, isSignedIn, userId])
 
   // The public hero is prerendered; personalized data belongs only to this session.
-  if (!isLoaded || !isSignedIn || data?.userId !== userId || !data?.activeAdventure) return children
+  const active = isLoaded && isSignedIn && data && data.userId === userId && data.activeAdventure ? data : null
 
+  // Only the welcome rises. The hero holds parts placed against the page, which a moving wrapper would shift.
   return (
-    <div className="fade-in mt-32 sm:mt-48 w-screen relative z-10">
-      <h2 className="text-4xl sm:text-6xl font-display text-center w-full mb-8" style={textShadowSpreadLight}>
-        Welcome Back
-      </h2>
-      <ActiveAdventureCard adventure={data.activeAdventure} userId={data.userId} />
-      <div className="flex justify-center items-center gap-8 py-12">
-        <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800" render={<Link href={user?.username ? `/player/${user.username}` : "/player"} />}>Your Player Page</Button>
-        <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10" render={<Link href="/settings/realm-of-myr/play" />}>Find New Adventure</Button>
-      </div>
-    </div>
+    <Swap id={active ? "welcome" : "hero"} motion={active ? "rise" : "fade"} exit="fade" className="z-10">
+      {active?.activeAdventure ? (
+        <div className="mt-32 sm:mt-48 w-screen relative z-10">
+          <h2 className="text-4xl sm:text-6xl font-display text-center w-full mb-8" style={textShadowSpreadLight}>
+            Welcome Back
+          </h2>
+          <ActiveAdventureCard adventure={active.activeAdventure} userId={active.userId} />
+          <div className="flex justify-center items-center gap-8 py-12">
+            <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10 bg-fuchsia-800" render={<Link href={user?.username ? `/player/${user.username}` : "/player"} />}>Your Player Page</Button>
+            <Button variant="epic" size="sm" className="mt-2 text-xs relative z-10" render={<Link href="/settings/realm-of-myr/play" />}>Find New Adventure</Button>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
+    </Swap>
   )
 }

@@ -123,6 +123,7 @@
 .exit-pop {
   animation-duration: var(--motion-out);
   animation-timing-function: var(--ease-in-snap);
+  animation-delay: 0s;
   animation-fill-mode: both;
   animation-composition: replace, add;
   pointer-events: none;
@@ -189,22 +190,6 @@
 }
 .plate-in {
   animation: plate-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* The feedback button's callout drops in from the button. */
-@keyframes feedback-callout {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-}
-.feedback-callout {
-  animation: feedback-callout 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .feedback-callout {
-    animation: none;
-  }
 }
 
 /* Stageview d20: the die tumbles in place (ending upright), the number flips over in place, and lands with a pop. */

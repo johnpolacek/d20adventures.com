@@ -3,6 +3,7 @@ import { useState, useTransition } from "react"
 import { setUsername } from "@/app/_actions/profile"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
+import { Presence } from "@d20/ui/presence"
 
 export default function PlayerSetUsernameForm({ userId }: { userId: string }) {
   const [username, setUsernameState] = useState("")
@@ -29,7 +30,9 @@ export default function PlayerSetUsernameForm({ userId }: { userId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-8 border border-white/30 ring-4 ring-black/20 rounded-lg bg-gradient-to-tl from-black/70 via-black/90 to-black/50">
       <Input placeholder="Enter a username" value={username} onChange={(e) => setUsernameState(e.target.value)} disabled={pending} autoFocus />
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      <Presence show={Boolean(error)} asChild motion="drop">
+        {error && <div className="text-red-600 text-sm">{error}</div>}
+      </Presence>
       <div className="w-full flex justify-center">
         <Button type="submit" variant="epic" size="sm" className="text-sm" disabled={pending || !username.trim()}>
           {pending ? "Saving..." : "Set Username"}

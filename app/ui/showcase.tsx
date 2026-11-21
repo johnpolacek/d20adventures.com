@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import { useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@d20/ui/alert"
 import {
@@ -622,7 +622,8 @@ export function Showcase() {
           <section
             key={tile.name}
             id={tile.name.toLowerCase().replace(/\s+/g, "-")}
-            className={cn(cardVariants({ variant: "quiet" }), "relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
+            className={cn(cardVariants({ variant: "quiet" }), "enter-rise relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
+            style={{ "--i": Math.min(i, 8) } as CSSProperties}
           >
             <h2 className={siteLabel}>
               {String(i + 1).padStart(2, "0")} {tile.name}

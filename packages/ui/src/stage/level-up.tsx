@@ -6,8 +6,9 @@
 import type { LevelUpChoices, LevelUpOptions, Named, PickOffer, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick, Sheet } from "@d20/gm-core/sheet/sheet"
 import { useEffect, useMemo, useState } from "react"
+import { Presence } from "../presence"
 import { Tip } from "../tooltip"
-import { cn } from "../utils"
+import { cn, entrance, type MotionProps, staggered } from "../utils"
 import { eyebrow, Pill, panel } from "./hud"
 import { ABILITY_NAMES, type AbilityId, emptyPicks, fromChoices, missing, type Picks, preparable, raiseOf, spellsToPick, toChoices, toggled, togglePick, unmet, withBookSpells } from "./level-up-view"
 
@@ -59,9 +60,10 @@ export function useLevelUp(sheet: Sheet | undefined): Rules | null {
 
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
-function Section({ title, count, children }: { title: string; count?: string; children: React.ReactNode }) {
+// `index` is the section's place down the panel: the sections rise in one after another as it opens.
+function Section({ title, count, index, children }: { title: string; count?: string; index: number; children: React.ReactNode }) {
   return (
-    <section className="mt-4">
+    <section className="enter-rise mt-4" style={staggered(index)}>
       <h3 className={cn(eyebrow, "mb-2 flex items-baseline justify-between gap-3")}>
         <span>{title}</span>
         {count && <span className="tabular-nums tracking-[0.12em] text-stage-cream/70">{count}</span>}
@@ -71,9 +73,9 @@ function Section({ title, count, children }: { title: string; count?: string; ch
   )
 }
 
-function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
+function Labeled({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className={className}>
       <div className="mb-1 font-sans text-[10px] uppercase tracking-[0.14em] text-stage-cream/60">{label}</div>
       {children}
     </div>
@@ -211,7 +213,7 @@ function FeaturePicks({ offer, picked, level, known, onPick }: { offer: PicksOff
           const under = (option.cantrips ?? []).filter((cantrip) => known.includes(cantrip.id)).concat(option.feats ?? [])
           const mine = picked.filter((pick) => pick.option === option.id).map((pick) => pick.cantrip ?? pick.feat ?? "")
           return (
-            <Labeled key={option.id} label={option.name}>
+            <Labeled key={option.id} label={option.name} className="enter-rise">
               <Options
                 label={option.name}
                 from={under}
@@ -256,7 +258,7 @@ function BookPicks({
   ]
   const of = (level: number) => book.from.filter((spell) => spell.level === level && !(level === 0 && known.includes(spell.id) && !chosen.includes(spell.id)))
   return (
-    <Labeled label={name}>
+    <Labeled label={name} className="enter-rise">
       <div className="space-y-2">
         {rows.map((row) => {
           const from = of(row.level)
@@ -291,9 +293,11 @@ export function LevelUp({
   sheet,
   compact = false,
   className,
+  style,
+  onAnimationEnd,
   onTake,
   onClose,
-}: {
+}: Omit<MotionProps, "className"> & {
   hero: string
   portrait?: string
   sheet: Sheet
@@ -315,7 +319,7 @@ export function LevelUp({
 
   if (!rules || !options || !picks) {
     return (
-      <section className={cn(panel, "p-6 text-center font-serif text-stage-cream", className)} aria-label={`${hero} Levels Up`}>
+      <section key="loading" className={cn(panel, "p-6 text-center font-serif text-stage-cream", entrance("enter-pop", className))} style={style} onAnimationEnd={onAnimationEnd} aria-label={`${hero} Levels Up`}>
         Loading…
       </section>
     )
@@ -342,6 +346,8 @@ export function LevelUp({
   // The lists the spells to prepare come from: the class's own, and those Magical Secrets adds.
   const lists = [...new Set(toPrepare.map((spell) => spell.list ?? sheet.class))]
   const known = [...(sheet.cantrips ?? []), ...picks.cantrips]
+  // Each section's place down the panel, counted as they are drawn.
+  let place = 0
   const take = async () => {
     const choices = toChoices(options, picks)
     const faults = rules.problems(choices)
@@ -354,7 +360,13 @@ export function LevelUp({
 
   return (
     // A panel the caller places, not a modal: the desktop app dims the stage behind it, and the lab draws it inline.
-    <section className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", className)} aria-label={`${hero} Levels Up`}>
+    <section
+      key="choices"
+      className={cn(panel, "flex max-h-full flex-col text-stage-cream", compact ? "p-4" : "p-6", entrance("enter-pop", className))}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
+      aria-label={`${hero} Levels Up`}
+    >
       <header className="flex items-center gap-3">
         {portrait && (
           <img src={portrait} alt="" className="h-12 w-12 shrink-0 rounded-full border border-stage-gold/60 object-cover object-top" />
@@ -374,13 +386,13 @@ export function LevelUp({
         </p>
 
         {options.subclass && (
-          <Section title="Subclass">
+          <Section index={place++} title="Subclass">
             <Options label="Subclass" from={options.subclass} picked={picks.subclass ? [picks.subclass] : []} most={1} onPick={([id]) => set({ subclass: id ?? picks.subclass })} />
           </Section>
         )}
 
         {options.feat && (
-          <Section title={options.feat.feature.name}>
+          <Section index={place++} title={options.feat.feature.name}>
             <Options
               label="Feat"
               from={options.feat.feats}
@@ -388,85 +400,93 @@ export function LevelUp({
               most={1}
               onPick={([id]) => set({ feat: id, abilities: {}, featList: undefined, featAbility: undefined, featCantrips: [], featSpell: undefined, featSkills: [] })}
             />
-            {raise && feat?.abilityScoreIncrease && (
-              <fieldset className="m-0 mt-2 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
-                <legend className="sr-only">Ability Scores</legend>
-                {feat.abilityScoreIncrease.from.map((ability) => {
-                  const added = picks.abilities[ability as AbilityId] ?? 0
-                  return (
-                    <Pill
-                      key={ability}
-                      active={added > 0}
-                      className="px-2 py-1 text-[11px] tabular-nums"
-                      aria-label={`${ABILITY_NAMES[ability as AbilityId]} ${sheet.abilityScores[ability]} plus ${added}`}
-                      onClick={() => raiseAbility(ability as AbilityId)}
-                    >
-                      {ABILITY_NAMES[ability as AbilityId]} {sheet.abilityScores[ability] + added}
-                      {added > 0 && ` (+${added})`}
-                    </Pill>
-                  )
-                })}
-              </fieldset>
-            )}
-            {feat?.skillPicks && (
-              <div className="mt-3">
-                <Labeled label={`Skills · ${picks.featSkills.length} of ${feat.skillPicks.count}`}>
-                  <Options label="Skills" from={feat.skillPicks.from} picked={picks.featSkills} most={feat.skillPicks.count} onPick={(ids) => set({ featSkills: ids })} />
-                </Labeled>
-              </div>
-            )}
-            {feat?.spellPicks && (
-              <div className="mt-3 space-y-2">
-                <Labeled label="Spell List">
-                  <Options
-                    label="Spell List"
-                    from={feat.spellPicks.spellLists.map((id) => ({ id, name: sentence(id) }))}
-                    picked={picks.featList ? [picks.featList] : []}
-                    most={1}
-                    onPick={([id]) => set({ featList: id, featCantrips: [], featSpell: undefined })}
-                  />
-                </Labeled>
-                <Labeled label="Spellcasting Ability">
-                  <Options
-                    label="Spellcasting Ability"
-                    from={feat.spellPicks.spellAbility.map((id) => ({ id, name: ABILITY_NAMES[id as AbilityId] }))}
-                    picked={picks.featAbility ? [picks.featAbility] : []}
-                    most={1}
-                    onPick={([id]) => set({ featAbility: id as AbilityId | undefined })}
-                  />
-                </Labeled>
-                {picks.featList && (
-                  <>
-                    <Labeled label={`Cantrips · ${picks.featCantrips.length} of ${feat.spellPicks.cantrips}`}>
-                      <Options label="Cantrips" from={rules.listSpells(picks.featList, 0)} picked={picks.featCantrips} most={feat.spellPicks.cantrips} onPick={(ids) => set({ featCantrips: ids })} />
-                    </Labeled>
-                    <Labeled label={`Level ${feat.spellPicks.spellLevel} Spell`}>
-                      <Options
-                        label="Spell"
-                        from={rules.listSpells(picks.featList, feat.spellPicks.spellLevel)}
-                        picked={picks.featSpell ? [picks.featSpell] : []}
-                        most={1}
-                        onPick={([id]) => set({ featSpell: id })}
-                      />
-                    </Labeled>
-                  </>
-                )}
-              </div>
-            )}
+            <Presence show={Boolean(raise && feat?.abilityScoreIncrease)} initial={false} asChild>
+              {raise && feat?.abilityScoreIncrease && (
+                <fieldset className="m-0 mt-2 flex min-w-0 flex-wrap gap-1.5 border-0 p-0">
+                  <legend className="sr-only">Ability Scores</legend>
+                  {feat.abilityScoreIncrease.from.map((ability) => {
+                    const added = picks.abilities[ability as AbilityId] ?? 0
+                    return (
+                      <Pill
+                        key={ability}
+                        active={added > 0}
+                        className="px-2 py-1 text-[11px] tabular-nums"
+                        aria-label={`${ABILITY_NAMES[ability as AbilityId]} ${sheet.abilityScores[ability]} plus ${added}`}
+                        onClick={() => raiseAbility(ability as AbilityId)}
+                      >
+                        {ABILITY_NAMES[ability as AbilityId]} {sheet.abilityScores[ability] + added}
+                        {added > 0 && ` (+${added})`}
+                      </Pill>
+                    )
+                  })}
+                </fieldset>
+              )}
+            </Presence>
+            <Presence show={Boolean(feat?.skillPicks)} initial={false} asChild>
+              {feat?.skillPicks && (
+                <div className="mt-3">
+                  <Labeled label={`Skills · ${picks.featSkills.length} of ${feat.skillPicks.count}`}>
+                    <Options label="Skills" from={feat.skillPicks.from} picked={picks.featSkills} most={feat.skillPicks.count} onPick={(ids) => set({ featSkills: ids })} />
+                  </Labeled>
+                </div>
+              )}
+            </Presence>
+            <Presence show={Boolean(feat?.spellPicks)} initial={false} asChild>
+              {feat?.spellPicks && (
+                <div className="mt-3 space-y-2">
+                  <Labeled label="Spell List">
+                    <Options
+                      label="Spell List"
+                      from={feat.spellPicks.spellLists.map((id) => ({ id, name: sentence(id) }))}
+                      picked={picks.featList ? [picks.featList] : []}
+                      most={1}
+                      onPick={([id]) => set({ featList: id, featCantrips: [], featSpell: undefined })}
+                    />
+                  </Labeled>
+                  <Labeled label="Spellcasting Ability">
+                    <Options
+                      label="Spellcasting Ability"
+                      from={feat.spellPicks.spellAbility.map((id) => ({ id, name: ABILITY_NAMES[id as AbilityId] }))}
+                      picked={picks.featAbility ? [picks.featAbility] : []}
+                      most={1}
+                      onPick={([id]) => set({ featAbility: id as AbilityId | undefined })}
+                    />
+                  </Labeled>
+                  <Presence show={Boolean(picks.featList)} initial={false} className="space-y-2">
+                    {picks.featList && (
+                      <>
+                        <Labeled label={`Cantrips · ${picks.featCantrips.length} of ${feat.spellPicks.cantrips}`}>
+                          <Options label="Cantrips" from={rules.listSpells(picks.featList, 0)} picked={picks.featCantrips} most={feat.spellPicks.cantrips} onPick={(ids) => set({ featCantrips: ids })} />
+                        </Labeled>
+                        <Labeled label={`Level ${feat.spellPicks.spellLevel} Spell`}>
+                          <Options
+                            label="Spell"
+                            from={rules.listSpells(picks.featList, feat.spellPicks.spellLevel)}
+                            picked={picks.featSpell ? [picks.featSpell] : []}
+                            most={1}
+                            onPick={([id]) => set({ featSpell: id })}
+                          />
+                        </Labeled>
+                      </>
+                    )}
+                  </Presence>
+                </div>
+              )}
+            </Presence>
           </Section>
         )}
 
         {options.expertise?.map((entry) => {
           const mine = picks.expertise[entry.feature.id] ?? []
           return (
-            <Section key={entry.feature.id} title={entry.feature.name === "Expertise" ? "Expertise" : `Expertise · ${entry.feature.name}`} count={`${mine.length} of ${entry.count}`}>
+            <Section key={entry.feature.id} index={place++} title={entry.feature.name === "Expertise" ? "Expertise" : `Expertise · ${entry.feature.name}`} count={`${mine.length} of ${entry.count}`}>
               <Options label="Expertise" from={entry.from} picked={mine} most={entry.count} onPick={(ids) => set({ expertise: { ...picks.expertise, [entry.feature.id]: ids } })} />
             </Section>
           )
         })}
 
         {options.skills && (
-          <Section title={`Skills · ${options.skills.feature.name}`} count={`${picks.skills.length} of ${options.skills.count}`}>
+          <Section index={place++} title={`Skills · ${options.skills.feature.name}`} count={`${picks.skills.length} of ${options.skills.count}`}>
             <Options label="Skills" from={options.skills.from} picked={picks.skills} most={options.skills.count} onPick={(ids) => set({ skills: ids })} />
           </Section>
         )}
@@ -475,7 +495,7 @@ export function LevelUp({
           const chosen = entry.options.find((option) => option.id === picks.featureChoices[entry.feature.id])
           const extra = picks.optionCantrips[entry.feature.id] ?? []
           return (
-            <Section key={entry.feature.id} title={entry.feature.name}>
+            <Section key={entry.feature.id} index={place++} title={entry.feature.name}>
               <Options
                 label={entry.feature.name}
                 from={entry.options}
@@ -486,17 +506,19 @@ export function LevelUp({
                   set({ featureChoices: id ? { ...others, [entry.feature.id]: id } : others, optionCantrips: { ...picks.optionCantrips, [entry.feature.id]: [] } })
                 }}
               />
-              {chosen?.cantrips && (
-                <div className="mt-2">
-                  <Options
-                    label={`${chosen.name} Cantrips`}
-                    from={chosen.cantrips.from}
-                    picked={extra}
-                    most={chosen.cantrips.count}
-                    onPick={(ids) => set({ optionCantrips: { ...picks.optionCantrips, [entry.feature.id]: ids } })}
-                  />
-                </div>
-              )}
+              <Presence show={Boolean(chosen?.cantrips)} initial={false} asChild>
+                {chosen?.cantrips && (
+                  <div className="mt-2">
+                    <Options
+                      label={`${chosen.name} Cantrips`}
+                      from={chosen.cantrips.from}
+                      picked={extra}
+                      most={chosen.cantrips.count}
+                      onPick={(ids) => set({ optionCantrips: { ...picks.optionCantrips, [entry.feature.id]: ids } })}
+                    />
+                  </div>
+                )}
+              </Presence>
             </Section>
           )
         })}
@@ -504,20 +526,20 @@ export function LevelUp({
         {options.featurePicks?.map((offer) => {
           const picked = picks.featurePicks[offer.feature.id] ?? []
           return (
-            <Section key={offer.feature.id} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
+            <Section key={offer.feature.id} index={place++} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
               <FeaturePicks offer={offer} picked={picked} level={options.level} known={known} onPick={(ids) => set({ featurePicks: { ...picks.featurePicks, [offer.feature.id]: ids } })} />
             </Section>
           )
         })}
 
         {options.cantrips && (
-          <Section title="Cantrips" count={`${picks.cantrips.length} of ${options.cantrips.count}`}>
+          <Section index={place++} title="Cantrips" count={`${picks.cantrips.length} of ${options.cantrips.count}`}>
             <Options label="Cantrips" from={options.cantrips.from} picked={picks.cantrips} most={options.cantrips.count} onPick={(ids) => set({ cantrips: ids })} />
           </Section>
         )}
 
         {options.spellbook && (
-          <Section title={options.spellbook.evocation ? `Spellbook · ${options.spellbook.evocation} Evocation` : "Spellbook"} count={`${picks.spellbook.length} of ${options.spellbook.count}`}>
+          <Section index={place++} title={options.spellbook.evocation ? `Spellbook · ${options.spellbook.evocation} Evocation` : "Spellbook"} count={`${picks.spellbook.length} of ${options.spellbook.count}`}>
             <SpellOptions
               label="Spellbook"
               from={options.spellbook.from}
@@ -529,7 +551,7 @@ export function LevelUp({
         )}
 
         {options.spells && (
-          <Section title="Prepared Spells" count={`${picks.spells.length} of ${toPick.count}`}>
+          <Section index={place++} title="Prepared Spells" count={`${picks.spells.length} of ${toPick.count}`}>
             {(options.spells.dropped || toPick.kept.size > 0) && (
               <p className="mb-2 font-serif text-[12px] text-stage-cream/70">
                 Now always prepared:{" "}
@@ -562,18 +584,18 @@ export function LevelUp({
         )}
 
         {options.weaponMasteries && (
-          <Section title="Weapon Mastery" count={`${picks.weaponMasteries.length} of ${options.weaponMasteries.count}`}>
+          <Section index={place++} title="Weapon Mastery" count={`${picks.weaponMasteries.length} of ${options.weaponMasteries.count}`}>
             <Options label="Weapon Mastery" from={options.weaponMasteries.from} picked={picks.weaponMasteries} most={options.weaponMasteries.count} onPick={(ids) => set({ weaponMasteries: ids })} />
           </Section>
         )}
       </div>
 
       <footer className="mt-4 border-t border-stage-line/20 pt-3">
-        {(stopped || left.length > 0) && (
+        <Presence show={Boolean(stopped) || left.length > 0} motion="fade" initial={false} asChild>
           <p className={cn("mb-2 font-serif text-[12px]", stopped ? "text-[#e39a7c]" : "text-stage-cream/70")} role={stopped ? "alert" : undefined}>
             {stopped ?? `Still to choose: ${left.join(", ")}.`}
           </p>
-        )}
+        </Presence>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex gap-2">
             <Pill disabled={sending} onClick={onClose}>

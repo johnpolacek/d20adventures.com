@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { textShadow } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { Card, CardContent } from "@d20/ui/card"
@@ -51,13 +52,13 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
 
   return (
     <div className="flex min-h-screen flex-col relative">
-      <div className="fade-in delay-[2s] relative z-10">
+      <div className="fade-in delay-150 relative z-10">
         <ImageHeader variant="semicompact" imageUrl={getImageUrl(setting.image)} title={setting.name} subtitle="Adventures" imageAlt={setting.name} />
         <div className="max-w-4xl xl:max-w-6xl mx-auto -mt-12 relative z-10 whitespace-pre-line">
           <div className="mb-8 text-center">
             {featuredAdventure && (
-              <Link href={`/settings/${settingId}/${featuredAdventure.id}/character-select`} className="block relative z-10 pt-8">
-                <Card variant="pick" className="w-full border-amber-400/50 scale-[0.98] md:flex-row">
+              <Link href={`/settings/${settingId}/${featuredAdventure.id}/character-select`} className="enter-rise block relative z-10 pt-8 [--i:5]">
+                <Card variant="pick" className="w-full border-amber-400/50 scale-[0.98] md:flex-row transition-[scale,box-shadow,background-color] duration-200">
                   <div className="relative aspect-video md:aspect-auto md:w-3/5 md:min-h-[380px]">
                     <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-black to-transparent z-[9] hidden md:block" />
                     <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent z-[9] md:hidden" />
@@ -84,9 +85,15 @@ export default async function SettingAdventures(props: { params: Promise<{ setti
             )}
             {publishedAdventures.length > 0 ? (
               <div className="md:grid md:grid-cols-2 xl:grid-cols-3 gap-8 relative z-10 py-8 auto-rows-fr">
-                {otherAdventures.map((adventure) => (
-                  <Link key={adventure.id} href={`/settings/${settingId}/${adventure.id}/character-select`} className="block h-full">
-                    <Card variant="pick" className="w-full h-full">
+                {otherAdventures.map((adventure, index) => (
+                  <Link
+                    key={adventure.id}
+                    href={`/settings/${settingId}/${adventure.id}/character-select`}
+                    className="enter-rise block h-full"
+                    // The page fades in after a short wait, so the cards start their rise then.
+                    style={{ "--i": 6 + Math.min(index, 6) } as CSSProperties}
+                  >
+                    <Card variant="pick" className="w-full h-full transition-[scale,box-shadow,background-color] duration-200">
                       <div className="pb-2 relative aspect-video w-full">
                         <div className="absolute top-1 right-3 z-10 flex gap-2 flex-col items-end">
                           <span className="bg-black/80 text-white text-xxs font-mono px-2 py-1 rounded">{partyLabel(adventure.party)}</span>

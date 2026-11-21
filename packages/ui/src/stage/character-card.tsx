@@ -9,7 +9,8 @@
 import type { ItemView } from "@d20/gm-core/sheet/items"
 import type { SheetSpellcasting } from "@d20/gm-core/sheet/view"
 import { Button } from "../button"
-import { cn } from "../utils"
+import { Presence, Swap } from "../presence"
+import { cn, entrance, type MotionProps } from "../utils"
 import { eyebrow, panel } from "./hud"
 import { MagicItems } from "./magic-items"
 import { StandingOrders } from "./reaction-card"
@@ -42,7 +43,10 @@ export function CharacterCard({
   compact = false,
   onClose,
   onOrders,
-}: {
+  className,
+  style,
+  onAnimationEnd,
+}: MotionProps & {
   info: CardInfo
   compact?: boolean
   onClose: () => void
@@ -51,44 +55,62 @@ export function CharacterCard({
 }) {
   return (
     <section
-      className={cn(panel, "fade-in absolute z-40 overflow-y-auto px-6 pt-6 pb-5", compact ? "top-12 right-3 bottom-12 w-[min(330px,55vw)]" : "top-24 right-10 max-h-[calc(100%-230px)] w-[330px]")}
+      className={cn(
+        panel,
+        "absolute z-40 overflow-y-auto px-6 pt-6 pb-5",
+        compact ? "top-12 right-3 bottom-12 w-[min(330px,55vw)]" : "top-24 right-10 max-h-[calc(100%-230px)] w-[330px]",
+        entrance("enter-right", className)
+      )}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
     >
-      <Button variant="plain" type="button" onClick={onClose} aria-label="Close card" className="absolute top-2.5 right-3 text-[22px] leading-none text-stage-muted hover:text-stage-cream">
+      <Button
+        variant="plain"
+        type="button"
+        onClick={onClose}
+        aria-label="Close card"
+        className="absolute top-2.5 right-3 z-10 text-[22px] leading-none text-stage-muted transition-[color,scale] duration-150 ease-snap hover:text-stage-cream active:scale-90"
+      >
         ×
       </Button>
-      {info.portrait && (
-        <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
-      )}
-      <div className={eyebrow}>{info.role}</div>
-      <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
-      {info.standing && <StandingRow standing={info.standing} />}
-      {info.conditions && <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>}
-      {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
-      {info.items && <MagicItems items={info.items} className="mt-4 mb-2.5" />}
-      {info.reactions && onOrders && <StandingOrders key={info.id} rows={info.reactions} compact={compact} className="mt-4 mb-2.5" onChange={onOrders} />}
-      {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
-      {info.details?.map((section) => (
-        <div key={section.label}>
-          <h3 className={cn(eyebrow, "mt-4 mb-2")}>{section.label}</h3>
-          <ul className="space-y-2 text-xs leading-relaxed text-stage-cream">
-            {section.items.map((item, index) => (
-              <li key={`${index}:${item}`}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      ))}
-      {info.lines && info.lines.length > 0 && (
-        <>
-          <h3 className={cn(eyebrow, "mt-4 mb-2")}>Says</h3>
-          <ul>
-            {info.lines.map((l) => (
-              <li key={l} className="font-serif text-[13px] leading-[1.75] text-[#eee1ca] italic">
-                “{l}”
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {/* Another character's card takes this one's place. */}
+      <Swap id={info.id}>
+        {info.portrait && (
+          <img src={info.portrait} alt="" className="-mt-1 mb-3 block h-[132px] w-full border border-stage-brass/50 object-cover object-[50%_15%] [filter:sepia(.2)_saturate(.88)]" />
+        )}
+        <div className={eyebrow}>{info.role}</div>
+        <h2 className="mt-1.5 mb-2.5 font-display text-[24px] font-normal leading-tight">{info.name}</h2>
+        {info.standing && <StandingRow standing={info.standing} />}
+        <Presence show={Boolean(info.conditions)} motion="fade" initial={false} asChild>
+          <p className="mb-2.5 font-serif text-[13px] text-stage-cream italic">{info.conditions}</p>
+        </Presence>
+        {info.spellcasting && <Spellcasting casting={info.spellcasting} />}
+        {info.items && <MagicItems items={info.items} className="mt-4 mb-2.5" />}
+        {info.reactions && onOrders && <StandingOrders key={info.id} rows={info.reactions} compact={compact} className="mt-4 mb-2.5" onChange={onOrders} />}
+        {info.about && <p className="mb-2 text-[12px] leading-[1.7] text-[#e6dac6]">{info.about}</p>}
+        {info.details?.map((section) => (
+          <div key={section.label}>
+            <h3 className={cn(eyebrow, "mt-4 mb-2")}>{section.label}</h3>
+            <ul className="space-y-2 text-xs leading-relaxed text-stage-cream">
+              {section.items.map((item, index) => (
+                <li key={`${index}:${item}`}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {info.lines && info.lines.length > 0 && (
+          <>
+            <h3 className={cn(eyebrow, "mt-4 mb-2")}>Says</h3>
+            <ul>
+              {info.lines.map((l) => (
+                <li key={l} className="font-serif text-[13px] leading-[1.75] text-[#eee1ca] italic">
+                  “{l}”
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Swap>
     </section>
   )
 }

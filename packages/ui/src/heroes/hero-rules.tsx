@@ -9,17 +9,20 @@ import type { FeatOffer, Named, PicksOffer } from "@d20/gm-core/sheet/level-up"
 import type { FeaturePick } from "@d20/gm-core/sheet/sheet"
 import { useMemo } from "react"
 import { ABILITY_NAMES, type AbilityId, toggled, togglePick, unmet, withBookSpells } from "../stage/level-up-view"
+import { Presence, Swap } from "../presence"
 import { Option, siteField, siteLabel } from "../site"
-import { cn } from "../utils"
+import { cn, entrance, type MotionProps, staggered } from "../utils"
 import type { HeroRulesKit } from "./use-hero-rules"
 
 const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const
 type FeatPicks = NonNullable<CreationChoices["backgroundFeatPicks"]>
 const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
-function Section({ title, count, children }: { title: string; count?: string; children: React.ReactNode }) {
+// `index` is the section's place down the page: the sections rise in one after another. One that a choice brings in
+// later, inside a Presence, has none and comes in at once.
+function Section({ title, count, index, className, style, onAnimationEnd, children }: MotionProps & { title: string; count?: string; index?: number; children: React.ReactNode }) {
   return (
-    <section>
+    <section className={entrance("enter-rise", className)} style={index === undefined ? style : { ...staggered(index), ...style }} onAnimationEnd={onAnimationEnd}>
       <h3 className={cn(siteLabel, "mb-2 flex items-baseline justify-between gap-3")}>
         <span>{title}</span>
         {count && <span className="tabular-nums text-white/60">{count}</span>}
@@ -77,9 +80,9 @@ function Picks({
   )
 }
 
-function Sub({ label, children }: { label: string; children: React.ReactNode }) {
+function Sub({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
   return (
-    <div className="mt-3">
+    <div className={cn("mt-3", className)}>
       <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-white/50">{label}</div>
       {children}
     </div>
@@ -114,16 +117,18 @@ function FeatChoices({ feat, picks, kit, onChange }: { feat: FeatOffer; picks: F
           />
         </Sub>
       )}
-      {spells && list && (
-        <>
-          <Sub label={`Cantrips · ${picks.cantrips?.length ?? 0} of ${spells.cantrips}`}>
-            <Picks label="Cantrips" from={kit.listSpells(list, 0)} picked={picks.cantrips ?? []} most={spells.cantrips} onPick={(ids) => onChange({ ...picks, cantrips: ids })} />
-          </Sub>
-          <Sub label={`Level ${spells.spellLevel} Spell`}>
-            <Picks label="Spell" from={kit.listSpells(list, spells.spellLevel)} picked={picks.spell ? [picks.spell] : []} most={1} onPick={([id]) => onChange({ ...picks, spell: id })} />
-          </Sub>
-        </>
-      )}
+      <Presence show={Boolean(spells && list)} initial={false}>
+        {spells && list && (
+          <>
+            <Sub label={`Cantrips · ${picks.cantrips?.length ?? 0} of ${spells.cantrips}`}>
+              <Picks label="Cantrips" from={kit.listSpells(list, 0)} picked={picks.cantrips ?? []} most={spells.cantrips} onPick={(ids) => onChange({ ...picks, cantrips: ids })} />
+            </Sub>
+            <Sub label={`Level ${spells.spellLevel} Spell`}>
+              <Picks label="Spell" from={kit.listSpells(list, spells.spellLevel)} picked={picks.spell ? [picks.spell] : []} most={1} onPick={([id]) => onChange({ ...picks, spell: id })} />
+            </Sub>
+          </>
+        )}
+      </Presence>
       {feat.skillPicks && (
         <Sub label={`Skills · ${picks.skills?.length ?? 0} of ${feat.skillPicks.count}`}>
           <Picks label="Skills" from={feat.skillPicks.from} picked={picks.skills ?? []} most={feat.skillPicks.count} onPick={(ids) => onChange({ ...picks, skills: ids as FeatPicks["skills"] })} />
@@ -172,7 +177,7 @@ function FeaturePicks({ offer, picked, known, onPick }: { offer: PicksOffer; pic
           const under = (option.cantrips ?? []).filter((cantrip) => known.includes(cantrip.id)).concat(option.feats ?? [])
           const others = picked.filter((pick) => pick.option !== option.id)
           return (
-            <Sub key={option.id} label={option.name}>
+            <Sub key={option.id} label={option.name} className="enter-rise">
               <Picks
                 label={option.name}
                 from={under}
@@ -197,7 +202,7 @@ function FeaturePicks({ offer, picked, known, onPick }: { offer: PicksOffer; pic
           const from = book.from.filter((spell) => spell.level === row.level && !(row.level === 0 && known.includes(spell.id) && !chosen.includes(spell.id)))
           const mine = chosen.filter((id) => from.some((spell) => spell.id === id))
           return (
-            <Sub key={`${option.id}-${row.level}`} label={`${option.name} ${row.label} · ${mine.length} of ${row.most}`}>
+            <Sub key={`${option.id}-${row.level}`} label={`${option.name} ${row.label} · ${mine.length} of ${row.most}`} className="enter-rise">
               <Picks
                 label={`${option.name} ${row.label}`}
                 from={from}
@@ -245,7 +250,7 @@ function Gear({
         ))}
       </div>
       {chosen?.picks?.map((pick) => (
-        <Sub key={pick.id} label={pick.name}>
+        <Sub key={pick.id} label={pick.name} className="enter-rise">
           <Picks label={pick.name} from={pick.from} picked={picks[pick.id] ? [picks[pick.id]] : []} most={1} onPick={([id]) => onChange(option, { ...picks, [pick.id]: id })} />
         </Sub>
       ))}
@@ -299,199 +304,206 @@ export function HeroRules({ kit, pick, choices, onChange }: { kit: HeroRulesKit;
   const preparable = options.spellbook ? (options.spells?.from ?? []).filter((spell) => choices.spellbook?.includes(spell.id)) : (options.spells?.from ?? [])
   const speciesFeat = options.speciesFeat?.feats.find((feat) => feat.id === choices.speciesFeat)
   const languages = [...options.languages.standardFrom, ...(options.languages.rareFrom ?? [])]
+  // Each section's place down the page, counted as they are drawn.
+  let nth = 0
 
   return (
-    <div className="grid gap-5">
-      <Section title="Ability Scores">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {ABILITIES.map((ability) => {
-            const added = choices.abilityIncrease[ability] ?? 0
-            const raises = scores.increase.from.includes(ability)
-            return (
-              <div key={ability} className="grid gap-1 text-center">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-white/60">{ABILITY_NAMES[ability].slice(0, 3)}</span>
-                <select
-                  aria-label={ABILITY_NAMES[ability]}
-                  className={cn(siteField, "bg-black/30 px-1 text-center")}
-                  value={choices.abilityScores[ability]}
-                  onChange={(event) => place(ability, Number(event.target.value))}
-                >
-                  {scores.standardArray.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-                {raises ? (
-                  <Option active={added > 0} aria-label={`${ABILITY_NAMES[ability]} Increase, ${added}`} className="px-1 tabular-nums" onClick={() => raise(ability)}>
-                    +{added}
-                  </Option>
-                ) : (
-                  <span className="py-1.5 text-sm text-white/30">+0</span>
-                )}
-                <span className="font-display text-lg text-amber-300 tabular-nums">{choices.abilityScores[ability] + added}</span>
-              </div>
-            )
-          })}
-        </div>
-        <p className="mt-2 text-sm text-white/60">
-          {options.background.name} raises {scores.increase.from.map((ability) => ABILITY_NAMES[ability]).join(", ")}: one by 2 and one by 1, or all three by 1.
-        </p>
-      </Section>
+    // Another class, species or background brings a new set of choices in the place of the old.
+    <Swap id={`${pick.class}:${pick.species}:${pick.background}`} asChild>
+      <div className="grid gap-5">
+        <Section index={nth++} title="Ability Scores">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {ABILITIES.map((ability) => {
+              const added = choices.abilityIncrease[ability] ?? 0
+              const raises = scores.increase.from.includes(ability)
+              return (
+                <div key={ability} className="grid gap-1 text-center">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-white/60">{ABILITY_NAMES[ability].slice(0, 3)}</span>
+                  <select
+                    aria-label={ABILITY_NAMES[ability]}
+                    className={cn(siteField, "bg-black/30 px-1 text-center")}
+                    value={choices.abilityScores[ability]}
+                    onChange={(event) => place(ability, Number(event.target.value))}
+                  >
+                    {scores.standardArray.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                  {raises ? (
+                    <Option active={added > 0} aria-label={`${ABILITY_NAMES[ability]} Increase, ${added}`} className="px-1 tabular-nums" onClick={() => raise(ability)}>
+                      +{added}
+                    </Option>
+                  ) : (
+                    <span className="py-1.5 text-sm text-white/30">+0</span>
+                  )}
+                  <span className="font-display text-lg text-amber-300 tabular-nums">{choices.abilityScores[ability] + added}</span>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-sm text-white/60">
+            {options.background.name} raises {scores.increase.from.map((ability) => ABILITY_NAMES[ability]).join(", ")}: one by 2 and one by 1, or all three by 1.
+          </p>
+        </Section>
 
-      {options.size && (
-        <Section title="Size">
-          <Picks
-            label="Size"
-            from={options.size.map((size) => ({ id: size, name: size }))}
-            picked={choices.size ? [choices.size] : []}
-            most={1}
-            onPick={([id]) => set({ size: id as CreationChoices["size"] })}
-          />
-        </Section>
-      )}
-
-      {options.speciesChoices?.map((entry) => (
-        <Section key={entry.choice} title={entry.trait.name}>
-          <Picks
-            label={entry.trait.name}
-            from={entry.options.map((option) => ({ id: option.id, name: option.cantrips?.length ? `${option.name} · ${option.cantrips.map((spell) => spell.name).join(", ")}` : option.name }))}
-            picked={choices.speciesChoices?.[entry.choice] ? [choices.speciesChoices[entry.choice]] : []}
-            most={1}
-            onPick={([id]) => set({ speciesChoices: { ...choices.speciesChoices, [entry.choice]: id } })}
-          />
-        </Section>
-      ))}
-      {options.speciesSpellAbility && (
-        <Section title={`${options.species.name} Spellcasting Ability`}>
-          <Picks
-            label="Species Spellcasting Ability"
-            from={options.speciesSpellAbility.from.map((id) => ({ id, name: ABILITY_NAMES[id] }))}
-            picked={choices.speciesSpellAbility ? [choices.speciesSpellAbility] : []}
-            most={1}
-            onPick={([id]) => set({ speciesSpellAbility: id as AbilityId })}
-          />
-        </Section>
-      )}
-
-      <Section title="Skills" count={`${choices.classSkills.length} of ${options.skills.count}`}>
-        <Picks
-          label="Skills"
-          fixed={options.skills.background}
-          from={options.skills.from}
-          picked={choices.classSkills}
-          most={options.skills.count}
-          onPick={(ids) => set({ classSkills: ids as CreationChoices["classSkills"] })}
-        />
-      </Section>
-      {options.speciesSkills?.map((entry, index) => (
-        <Section key={entry.trait.id} title={`${entry.trait.name} Skill`} count={entry.count > 1 ? `${speciesSkillsOf(index).length} of ${entry.count}` : undefined}>
-          <Picks label={entry.trait.name} from={entry.from} picked={speciesSkillsOf(index)} most={entry.count} onPick={(ids) => setSpeciesSkills(index, ids)} />
-        </Section>
-      ))}
-
-      {options.speciesFeat && (
-        <Section title={`${options.speciesFeat.trait.name} Feat`}>
-          <Picks
-            label="Feat"
-            from={options.speciesFeat.feats}
-            picked={choices.speciesFeat ? [choices.speciesFeat] : []}
-            most={1}
-            onPick={([id]) => set({ speciesFeat: id, speciesFeatPicks: undefined })}
-          />
-          {speciesFeat && <FeatChoices feat={speciesFeat} picks={choices.speciesFeatPicks ?? {}} kit={kit} onChange={(picks) => set({ speciesFeatPicks: picks })} />}
-        </Section>
-      )}
-      {(options.backgroundFeat.spellPicks || options.backgroundFeat.skillPicks) && (
-        <Section title={`${options.background.name} Feat · ${options.backgroundFeat.name}`}>
-          <FeatChoices feat={options.backgroundFeat} picks={choices.backgroundFeatPicks ?? {}} kit={kit} onChange={(picks) => set({ backgroundFeatPicks: picks })} />
-        </Section>
-      )}
-
-      {options.featureChoices?.map((entry) => (
-        <Section key={entry.feature.id} title={entry.feature.name}>
-          <Picks
-            label={entry.feature.name}
-            from={entry.options}
-            picked={choices.featureChoices?.[entry.feature.id] ? [choices.featureChoices[entry.feature.id]] : []}
-            most={1}
-            onPick={([id]) => set({ featureChoices: { ...choices.featureChoices, [entry.feature.id]: id } })}
-          />
-        </Section>
-      ))}
-      {options.featurePicks?.map((offer) => {
-        const picked = choices.featurePicks?.[offer.feature.id] ?? []
-        return (
-          <Section key={offer.feature.id} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
-            <FeaturePicks offer={offer} picked={picked} known={choices.cantrips ?? []} onPick={(ids) => set({ featurePicks: { ...choices.featurePicks, [offer.feature.id]: ids } })} />
+        {options.size && (
+          <Section index={nth++} title="Size">
+            <Picks
+              label="Size"
+              from={options.size.map((size) => ({ id: size, name: size }))}
+              picked={choices.size ? [choices.size] : []}
+              most={1}
+              onPick={([id]) => set({ size: id as CreationChoices["size"] })}
+            />
           </Section>
-        )
-      })}
-      {options.expertise?.map((entry) => (
-        <Section key={entry.feature.id} title="Expertise" count={`${choices.expertise?.length ?? 0} of ${entry.count}`}>
+        )}
+
+        {options.speciesChoices?.map((entry) => (
+          <Section key={entry.choice} index={nth++} title={entry.trait.name}>
+            <Picks
+              label={entry.trait.name}
+              from={entry.options.map((option) => ({ id: option.id, name: option.cantrips?.length ? `${option.name} · ${option.cantrips.map((spell) => spell.name).join(", ")}` : option.name }))}
+              picked={choices.speciesChoices?.[entry.choice] ? [choices.speciesChoices[entry.choice]] : []}
+              most={1}
+              onPick={([id]) => set({ speciesChoices: { ...choices.speciesChoices, [entry.choice]: id } })}
+            />
+          </Section>
+        ))}
+        {options.speciesSpellAbility && (
+          <Section index={nth++} title={`${options.species.name} Spellcasting Ability`}>
+            <Picks
+              label="Species Spellcasting Ability"
+              from={options.speciesSpellAbility.from.map((id) => ({ id, name: ABILITY_NAMES[id] }))}
+              picked={choices.speciesSpellAbility ? [choices.speciesSpellAbility] : []}
+              most={1}
+              onPick={([id]) => set({ speciesSpellAbility: id as AbilityId })}
+            />
+          </Section>
+        )}
+
+        <Section index={nth++} title="Skills" count={`${choices.classSkills.length} of ${options.skills.count}`}>
           <Picks
-            label="Expertise"
-            from={entry.from.filter((skill) => proficient.has(skill.id))}
-            picked={choices.expertise ?? []}
-            most={entry.count}
-            onPick={(ids) => set({ expertise: ids as CreationChoices["expertise"] })}
+            label="Skills"
+            fixed={options.skills.background}
+            from={options.skills.from}
+            picked={choices.classSkills}
+            most={options.skills.count}
+            onPick={(ids) => set({ classSkills: ids as CreationChoices["classSkills"] })}
           />
         </Section>
-      ))}
-      {options.weaponMasteries && (
-        <Section title="Weapon Mastery" count={`${choices.weaponMasteries?.length ?? 0} of ${options.weaponMasteries.count}`}>
-          <Picks
-            label="Weapon Mastery"
-            from={options.weaponMasteries.from}
-            picked={choices.weaponMasteries ?? []}
-            most={options.weaponMasteries.count}
-            onPick={(ids) => set({ weaponMasteries: ids })}
+        {options.speciesSkills?.map((entry, index) => (
+          <Section key={entry.trait.id} index={nth++} title={`${entry.trait.name} Skill`} count={entry.count > 1 ? `${speciesSkillsOf(index).length} of ${entry.count}` : undefined}>
+            <Picks label={entry.trait.name} from={entry.from} picked={speciesSkillsOf(index)} most={entry.count} onPick={(ids) => setSpeciesSkills(index, ids)} />
+          </Section>
+        ))}
+
+        {options.speciesFeat && (
+          <Section index={nth++} title={`${options.speciesFeat.trait.name} Feat`}>
+            <Picks
+              label="Feat"
+              from={options.speciesFeat.feats}
+              picked={choices.speciesFeat ? [choices.speciesFeat] : []}
+              most={1}
+              onPick={([id]) => set({ speciesFeat: id, speciesFeatPicks: undefined })}
+            />
+            <Presence show={Boolean(speciesFeat)} initial={false}>
+              {speciesFeat && <FeatChoices feat={speciesFeat} picks={choices.speciesFeatPicks ?? {}} kit={kit} onChange={(picks) => set({ speciesFeatPicks: picks })} />}
+            </Presence>
+          </Section>
+        )}
+        {(options.backgroundFeat.spellPicks || options.backgroundFeat.skillPicks) && (
+          <Section index={nth++} title={`${options.background.name} Feat · ${options.backgroundFeat.name}`}>
+            <FeatChoices feat={options.backgroundFeat} picks={choices.backgroundFeatPicks ?? {}} kit={kit} onChange={(picks) => set({ backgroundFeatPicks: picks })} />
+          </Section>
+        )}
+
+        {options.featureChoices?.map((entry) => (
+          <Section key={entry.feature.id} index={nth++} title={entry.feature.name}>
+            <Picks
+              label={entry.feature.name}
+              from={entry.options}
+              picked={choices.featureChoices?.[entry.feature.id] ? [choices.featureChoices[entry.feature.id]] : []}
+              most={1}
+              onPick={([id]) => set({ featureChoices: { ...choices.featureChoices, [entry.feature.id]: id } })}
+            />
+          </Section>
+        ))}
+        {options.featurePicks?.map((offer) => {
+          const picked = choices.featurePicks?.[offer.feature.id] ?? []
+          return (
+            <Section key={offer.feature.id} index={nth++} title={offer.feature.name} count={`${picked.length} of ${offer.count}`}>
+              <FeaturePicks offer={offer} picked={picked} known={choices.cantrips ?? []} onPick={(ids) => set({ featurePicks: { ...choices.featurePicks, [offer.feature.id]: ids } })} />
+            </Section>
+          )
+        })}
+        {options.expertise?.map((entry) => (
+          <Section key={entry.feature.id} index={nth++} title="Expertise" count={`${choices.expertise?.length ?? 0} of ${entry.count}`}>
+            <Picks
+              label="Expertise"
+              from={entry.from.filter((skill) => proficient.has(skill.id))}
+              picked={choices.expertise ?? []}
+              most={entry.count}
+              onPick={(ids) => set({ expertise: ids as CreationChoices["expertise"] })}
+            />
+          </Section>
+        ))}
+        {options.weaponMasteries && (
+          <Section index={nth++} title="Weapon Mastery" count={`${choices.weaponMasteries?.length ?? 0} of ${options.weaponMasteries.count}`}>
+            <Picks
+              label="Weapon Mastery"
+              from={options.weaponMasteries.from}
+              picked={choices.weaponMasteries ?? []}
+              most={options.weaponMasteries.count}
+              onPick={(ids) => set({ weaponMasteries: ids })}
+            />
+          </Section>
+        )}
+
+        <Presence show={cantripCount > 0} asChild>
+          <Section title="Cantrips" count={`${choices.cantrips?.length ?? 0} of ${cantripCount}`}>
+            <Picks label="Cantrips" from={cantripFrom} picked={choices.cantrips ?? []} most={cantripCount} onPick={(ids) => set({ cantrips: ids })} />
+          </Section>
+        </Presence>
+        {options.spellbook && (
+          <Section index={nth++} title="Spellbook" count={`${choices.spellbook?.length ?? 0} of ${options.spellbook.count}`}>
+            <Picks
+              label="Spellbook"
+              from={options.spellbook.from}
+              picked={choices.spellbook ?? []}
+              most={options.spellbook.count}
+              onPick={(ids) => set({ spellbook: ids, spells: (choices.spells ?? []).filter((id) => ids.includes(id)) })}
+            />
+          </Section>
+        )}
+        {options.spells && (
+          <Section index={nth++} title="Prepared Spells" count={`${choices.spells?.length ?? 0} of ${options.spells.count}`}>
+            <Picks label="Prepared Spells" from={preparable} picked={choices.spells ?? []} most={options.spells.count} onPick={(ids) => set({ spells: ids })} />
+          </Section>
+        )}
+
+        <Section index={nth++} title="Starting Gear">
+          <Gear
+            label={options.class.name}
+            offers={options.equipment.class}
+            option={choices.equipment.class}
+            picks={choices.equipment.classPicks ?? {}}
+            onChange={(option, picks) => set({ equipment: { ...choices.equipment, class: option, classPicks: picks } })}
+          />
+          <Gear
+            label={options.background.name}
+            offers={options.equipment.background}
+            option={choices.equipment.background}
+            picks={choices.equipment.backgroundPicks ?? {}}
+            onChange={(option, picks) => set({ equipment: { ...choices.equipment, background: option, backgroundPicks: picks } })}
           />
         </Section>
-      )}
 
-      {cantripCount > 0 && (
-        <Section title="Cantrips" count={`${choices.cantrips?.length ?? 0} of ${cantripCount}`}>
-          <Picks label="Cantrips" from={cantripFrom} picked={choices.cantrips ?? []} most={cantripCount} onPick={(ids) => set({ cantrips: ids })} />
+        <Section index={nth++} title="Languages" count={`${choices.languages.length} of ${options.languages.count}`}>
+          <Picks label="Languages" fixed={options.languages.known} from={languages} picked={choices.languages} most={options.languages.count} onPick={(ids) => set({ languages: ids })} />
         </Section>
-      )}
-      {options.spellbook && (
-        <Section title="Spellbook" count={`${choices.spellbook?.length ?? 0} of ${options.spellbook.count}`}>
-          <Picks
-            label="Spellbook"
-            from={options.spellbook.from}
-            picked={choices.spellbook ?? []}
-            most={options.spellbook.count}
-            onPick={(ids) => set({ spellbook: ids, spells: (choices.spells ?? []).filter((id) => ids.includes(id)) })}
-          />
-        </Section>
-      )}
-      {options.spells && (
-        <Section title="Prepared Spells" count={`${choices.spells?.length ?? 0} of ${options.spells.count}`}>
-          <Picks label="Prepared Spells" from={preparable} picked={choices.spells ?? []} most={options.spells.count} onPick={(ids) => set({ spells: ids })} />
-        </Section>
-      )}
-
-      <Section title="Starting Gear">
-        <Gear
-          label={options.class.name}
-          offers={options.equipment.class}
-          option={choices.equipment.class}
-          picks={choices.equipment.classPicks ?? {}}
-          onChange={(option, picks) => set({ equipment: { ...choices.equipment, class: option, classPicks: picks } })}
-        />
-        <Gear
-          label={options.background.name}
-          offers={options.equipment.background}
-          option={choices.equipment.background}
-          picks={choices.equipment.backgroundPicks ?? {}}
-          onChange={(option, picks) => set({ equipment: { ...choices.equipment, background: option, backgroundPicks: picks } })}
-        />
-      </Section>
-
-      <Section title="Languages" count={`${choices.languages.length} of ${options.languages.count}`}>
-        <Picks label="Languages" fixed={options.languages.known} from={languages} picked={choices.languages} most={options.languages.count} onPick={(ids) => set({ languages: ids })} />
-      </Section>
-    </div>
+      </div>
+    </Swap>
   )
 }

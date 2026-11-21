@@ -18,7 +18,7 @@ type WithNodes<T> = Omit<T, "className" | "children"> & { className?: string; ch
 
 /** A page link or step: a small dark mono control. The current page gets a hairline border. */
 export const paginationLinkClass =
-  "inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-md border border-transparent px-1.5 font-mono text-sm font-bold text-white transition-all duration-700 ease-in-out select-none hover:bg-black/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-400 data-current:border-white/30 data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+  "inline-flex h-6 min-w-6 items-center justify-center gap-1 rounded-md border border-transparent px-1.5 font-mono text-sm font-bold text-white transition-[color,background-color,border-color,scale] duration-150 ease-snap select-none hover:bg-black/70 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-400 data-current:border-white/30 data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
 
 function Pagination({ className, ...props }: WithClass<ComponentProps<typeof BasePagination>>) {
   return <BasePagination className={cn("mx-auto flex w-full justify-center", className)} {...props} />

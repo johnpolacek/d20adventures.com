@@ -68,7 +68,12 @@ function part(node: ReactNode, motionClass: string, onEnd: ((e: AnimationEvent<H
  * Shows `children` while `show` is true. They animate in when they appear and stay mounted to animate out. The last
  * children shown are the ones that leave, so `{value && <Card value={value} />}` works as the children.
  */
-function Presence({ show, initial = true, ...shared }: Shared & { show: boolean; /** False skips the entrance of a part that is there from the first render. */ initial?: boolean }) {
+function Presence({
+  show,
+  initial = true,
+  onExited,
+  ...shared
+}: Shared & { show: boolean; /** False skips the entrance of a part that is there from the first render. */ initial?: boolean; /** Runs once the part has left. */ onExited?: () => void }) {
   const { motion = "rise", exit = motion, children } = shared
   const [present, setPresent] = useState(show)
   const [first, setFirst] = useState(true)
@@ -79,11 +84,15 @@ function Presence({ show, initial = true, ...shared }: Shared & { show: boolean;
     if (show) last.current = children
   })
   const leaving = present && !show
-  useExit(leaving, () => setPresent(false))
+  const gone = () => {
+    setPresent(false)
+    onExited?.()
+  }
+  useExit(leaving, gone)
   if (!present) return null
   const motionClass = leaving ? `exit-${exit}` : first && !initial ? "" : `enter-${motion}`
   // An animation that ends inside the part bubbles up. Only the part's own exit unmounts it.
-  const onEnd = leaving ? (e: AnimationEvent<HTMLElement>) => e.target === e.currentTarget && setPresent(false) : undefined
+  const onEnd = leaving ? (e: AnimationEvent<HTMLElement>) => e.target === e.currentTarget && gone() : undefined
   return part(leaving ? last.current : children, motionClass, onEnd, shared)
 }
 
@@ -91,9 +100,12 @@ function Presence({ show, initial = true, ...shared }: Shared & { show: boolean;
  * Shows one thing at a time. When `id` changes, what was there animates out and the new children animate in. For a
  * screen, a tab's content or a step.
  */
-function Swap({ id, ...shared }: Shared & { id: string | number }) {
+function Swap({ id, initial = true, ...shared }: Shared & { id: string | number; /** False skips the entrance of what is there on the first render. */ initial?: boolean }) {
   const { motion = "fade", exit = motion, children } = shared
   const [shown, setShown] = useState(id)
+  const [first] = useState(id)
+  const [swapped, setSwapped] = useState(false)
+  if (shown !== first && !swapped) setSwapped(true)
   const last = useRef<ReactNode>(children)
   const leaving = shown !== id
   useLayoutEffect(() => {
@@ -101,7 +113,7 @@ function Swap({ id, ...shared }: Shared & { id: string | number }) {
   })
   useExit(leaving, () => setShown(id))
   const onEnd = leaving ? (e: AnimationEvent<HTMLElement>) => e.target === e.currentTarget && setShown(id) : undefined
-  return part(leaving ? last.current : children, leaving ? `exit-${exit}` : `enter-${motion}`, onEnd, shared, shown)
+  return part(leaving ? last.current : children, leaving ? `exit-${exit}` : !initial && !swapped ? "" : `enter-${motion}`, onEnd, shared, shown)
 }
 
 export { Presence, Swap }

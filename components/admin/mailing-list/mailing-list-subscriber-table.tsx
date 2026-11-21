@@ -1,5 +1,6 @@
 "use client"
 
+import type { CSSProperties } from "react"
 import { Badge } from "@d20/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -37,9 +38,9 @@ export function MailingListSubscriberTable({ subscribers }: MailingListSubscribe
         </TableRow>
       </TableHeader>
       <TableBody>
-        {subscribers.map((subscriber) => {
+        {subscribers.map((subscriber, index) => {
           return (
-            <TableRow key={subscriber.id}>
+            <TableRow key={subscriber.id} className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as CSSProperties}>
               <TableCell>{subscriber.email}</TableCell>
               <TableCell>{subscriber.name || "-"}</TableCell>
               <TableCell>{formatDate(subscriber.subscribedAt)}</TableCell>

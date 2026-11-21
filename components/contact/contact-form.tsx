@@ -10,6 +10,7 @@ import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Swap } from "@d20/ui/presence"
 import { Textarea } from "@d20/ui/textarea"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 
@@ -59,42 +60,46 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
     })
   }
 
-  if (shownSent) return <ContactSent name={draft.name} />
-
   return (
-    <form onSubmit={onSubmit}>
-      <p className="mb-10 text-center text-lg text-white/80 text-balance">Questions, bugs or ideas? Send a note and we’ll write back.</p>
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor="name" className={labelClass}>
-            Name
-          </Label>
-          <Input id="name" name="name" required defaultValue={draft.name} className={fieldClass} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email" className={labelClass}>
-            Email
-          </Label>
-          <Input id="email" name="email" type="email" required defaultValue={draft.email} className={fieldClass} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="message" className={labelClass}>
-            Message
-          </Label>
-          <Textarea id="message" name="message" required defaultValue={draft.message} className={`${fieldClass} min-h-44`} />
-        </div>
-        {requireCaptcha && (
-          <div className="w-full">
-            <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
+    <Swap id={shownSent ? "sent" : "form"}>
+      {shownSent ? (
+        <ContactSent name={draft.name} />
+      ) : (
+        <form onSubmit={onSubmit}>
+          <p className="mb-10 text-center text-lg text-white/80 text-balance">Questions, bugs or ideas? Send a note and we’ll write back.</p>
+          <div className="grid gap-6">
+            <div className="grid gap-2">
+              <Label htmlFor="name" className={labelClass}>
+                Name
+              </Label>
+              <Input id="name" name="name" required defaultValue={draft.name} className={fieldClass} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email" className={labelClass}>
+                Email
+              </Label>
+              <Input id="email" name="email" type="email" required defaultValue={draft.email} className={fieldClass} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="message" className={labelClass}>
+                Message
+              </Label>
+              <Textarea id="message" name="message" required defaultValue={draft.message} className={`${fieldClass} min-h-44`} />
+            </div>
+            {requireCaptcha && (
+              <div className="w-full">
+                <ReCAPTCHA sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""} theme="dark" onChange={(value) => setCaptchaToken(value)} />
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      <div className="mt-8 flex justify-center">
-        <Button type="submit" variant="epic" size="lg" disabled={requireCaptcha && !captchaToken}>
-          Send Message
-        </Button>
-      </div>
-    </form>
+          <div className="mt-8 flex justify-center">
+            <Button type="submit" variant="epic" size="lg" disabled={requireCaptcha && !captchaToken}>
+              Send Message
+            </Button>
+          </div>
+        </form>
+      )}
+    </Swap>
   )
 }
 
@@ -109,9 +114,9 @@ function ContactSent({ name }: { name: string }) {
       const q = gsap.utils.selector(root)
       gsap
         .timeline({ defaults: { ease: "power3.out" } })
-        .from(q("[data-sent='die']"), { autoAlpha: 0, y: -40, rotation: -200, scale: 0.4, duration: 0.9, ease: "back.out(1.6)" })
-        .from(q("[data-sent='glow']"), { autoAlpha: 0, scale: 0.5, duration: 0.8 }, 0.5)
-        .from(q("[data-sent='text'] > *"), { autoAlpha: 0, y: 14, duration: 0.6, stagger: 0.12 }, 0.6)
+        .from(q("[data-sent='die']"), { autoAlpha: 0, y: -40, rotation: -200, scale: 0.4, duration: 0.55, ease: "back.out(1.6)" })
+        .from(q("[data-sent='glow']"), { autoAlpha: 0, scale: 0.5, duration: 0.45 }, 0.25)
+        .from(q("[data-sent='text'] > *"), { autoAlpha: 0, y: 14, duration: 0.35, stagger: 0.07 }, 0.3)
     },
     { scope: root }
   )

@@ -8,6 +8,7 @@ import Image from "@d20/ui/native-image"
 import { cn } from "@/lib/utils"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
+import { Presence, Swap } from "@d20/ui/presence"
 
 type Pending = { deviceName: string; approved: boolean }
 type Device = { id: string; name: string; createdAt: number; lastSeenAt?: number }
@@ -48,6 +49,8 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [devices, setDevices] = useState<Device[]>([])
+  // An unlinked computer stays in the list while it animates out.
+  const [unlinked, setUnlinked] = useState<string[]>([])
 
   const loadDevices = useCallback(async () => {
     const res = await fetch("/api/desktop/devices")
@@ -86,90 +89,98 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
 
   const revoke = async (id: string) => {
     const res = await fetch(`/api/desktop/devices?id=${encodeURIComponent(id)}`, { method: "DELETE" })
-    if (res.ok) setDevices((d) => d.filter((device) => device.id !== id))
+    if (res.ok) setUnlinked((ids) => [...ids, id])
   }
+
+  const listed = devices.filter((device) => !unlinked.includes(device.id))
 
   return (
     <section className="relative grid min-h-screen place-items-center overflow-hidden px-4 pt-28 pb-16">
       <Image fill src="/stage/covers/welcome-to-kordavos.jpg" alt="" className="scale-105 object-cover blur-[2px]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#0008,#000d_70%)]" />
-      {isLoaded && (
+      <Presence show={isLoaded} asChild>
         <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-stage-cream")}>
           <div className={eyebrow}>D20 Adventures · Desktop</div>
           <h1 className="mt-3 font-display text-3xl leading-tight">{linked ? "Linked" : "Link this computer"}</h1>
           <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-stage-gold/80 to-transparent" />
 
-          {!isSignedIn ? (
-            <div className="space-y-6">
-              <p className="font-serif text-stage-cream/85">Sign in to link the app to your account.</p>
-              <SignInButton mode="modal">
-                <Button variant="epic">Sign in</Button>
-              </SignInButton>
-            </div>
-          ) : linked ? (
-            <div className="space-y-2 font-serif">
-              <p className="text-lg">{linked}</p>
-              <p className="text-stage-cream/75">Return to the app. Your adventures download there.</p>
-            </div>
-          ) : pending ? (
-            <div className="space-y-6">
-              <CodeTiles code={code} />
-              <div>
-                <div className={eyebrow}>Computer</div>
-                <p className="mt-1 font-serif text-lg">{pending.deviceName}</p>
+          <Swap id={!isSignedIn ? "sign-in" : linked ? "linked" : pending ? "pending" : "code"} motion="rise" exit="fade">
+            {!isSignedIn ? (
+              <div className="space-y-6">
+                <p className="font-serif text-stage-cream/85">Sign in to link the app to your account.</p>
+                <SignInButton mode="modal">
+                  <Button variant="epic">Sign in</Button>
+                </SignInButton>
               </div>
-              <Button variant="epic" onClick={approve} disabled={busy}>
-                {busy ? "Linking..." : "Link"}
-              </Button>
-            </div>
-          ) : (
-            <form
-              className="space-y-6"
-              onSubmit={(e) => {
-                e.preventDefault()
-                void lookup(code)
-              }}
-            >
-              <Label plain htmlFor="link-code" className={cn(eyebrow, "block")}>
-                Code shown in the app
-              </Label>
-              <Input
-                plain
-                id="link-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="ABCD-EFGH"
-                autoComplete="off"
-                spellCheck={false}
-                className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-stage-ink uppercase placeholder:text-stage-ink/30 focus:outline-none focus:ring-2 focus:ring-stage-gold"
-              />
-              <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
-                Continue
-              </Button>
-            </form>
-          )}
+            ) : linked ? (
+              <div className="space-y-2 font-serif">
+                <p className="text-lg">{linked}</p>
+                <p className="text-stage-cream/75">Return to the app. Your adventures download there.</p>
+              </div>
+            ) : pending ? (
+              <div className="space-y-6">
+                <CodeTiles code={code} />
+                <div>
+                  <div className={eyebrow}>Computer</div>
+                  <p className="mt-1 font-serif text-lg">{pending.deviceName}</p>
+                </div>
+                <Button variant="epic" onClick={approve} disabled={busy}>
+                  {busy ? "Linking..." : "Link"}
+                </Button>
+              </div>
+            ) : (
+              <form
+                className="space-y-6"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  void lookup(code)
+                }}
+              >
+                <Label plain htmlFor="link-code" className={cn(eyebrow, "block")}>
+                  Code shown in the app
+                </Label>
+                <Input
+                  plain
+                  id="link-code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="ABCD-EFGH"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="stage-parchment w-full rounded-[3px] px-4 py-3 text-center font-display text-2xl tracking-[0.3em] text-stage-ink uppercase placeholder:text-stage-ink/30 focus:outline-none focus:ring-2 focus:ring-stage-gold"
+                />
+                <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
+                  Continue
+                </Button>
+              </form>
+            )}
+          </Swap>
 
-          {error && <p className="mt-5 font-serif text-sm text-red-300">{error}</p>}
+          <Presence show={Boolean(error)} asChild motion="drop">
+            {error && <p className="mt-5 font-serif text-sm text-red-300">{error}</p>}
+          </Presence>
 
-          {isSignedIn && devices.length > 0 && (
+          <Presence show={Boolean(isSignedIn) && listed.length > 0} asChild motion="fade">
             <div className="mt-9 text-left">
               <div className="stage-rule mb-5 h-px w-full opacity-60" />
               <div className={cn(eyebrow, "mb-3")}>Linked computers</div>
               <ul className="space-y-2">
-                {devices.map((device) => (
-                  <li key={device.id} className="stage-leather flex items-center justify-between gap-4 rounded-[3px] border border-stage-line/20 px-3 py-2">
-                    <div className="min-w-0">
-                      <div className="truncate font-serif">{device.name}</div>
-                      <div className="text-[11px] text-stage-muted">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
-                    </div>
-                    <Pill onClick={() => revoke(device.id)}>Unlink</Pill>
-                  </li>
+                {devices.map((device, i) => (
+                  <Presence key={device.id} show={!unlinked.includes(device.id)} asChild motion="rise" exit="left" index={i}>
+                    <li className="stage-leather flex items-center justify-between gap-4 rounded-[3px] border border-stage-line/20 px-3 py-2">
+                      <div className="min-w-0">
+                        <div className="truncate font-serif">{device.name}</div>
+                        <div className="text-[11px] text-stage-muted">Linked {new Date(device.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      <Pill onClick={() => revoke(device.id)}>Unlink</Pill>
+                    </li>
+                  </Presence>
                 ))}
               </ul>
             </div>
-          )}
+          </Presence>
         </div>
-      )}
+      </Presence>
     </section>
   )
 }

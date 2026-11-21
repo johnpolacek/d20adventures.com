@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { siteConfig } from "@/lib/config"
 
+const link = "hover:underline underline-offset-4 transition-opacity duration-150 active:opacity-60"
 const FOOTERLESS_EDITOR_PREFIXES = ["/admin/adventure-plans/", "/admin/wiki-adventures/"]
 
 export default function SiteFooter({ currentYear }: { currentYear: number }) {
@@ -23,19 +24,19 @@ export default function SiteFooter({ currentYear }: { currentYear: number }) {
             © {currentYear} {siteConfig.title}. All rights reserved.
           </p>
           <nav className="flex gap-4">
-            <Link href="/updates" className="hover:underline underline-offset-4">
+            <Link href="/updates" className={link}>
               Updates
             </Link>
-            <Link href="/terms" className="hover:underline underline-offset-4">
+            <Link href="/terms" className={link}>
               Terms
             </Link>
-            <Link href="/privacy" className="hover:underline underline-offset-4">
+            <Link href="/privacy" className={link}>
               Privacy
             </Link>
-            <Link href="/licenses" className="hover:underline underline-offset-4">
+            <Link href="/licenses" className={link}>
               Licenses
             </Link>
-            <Link href="/contact" className="hover:underline underline-offset-4">
+            <Link href="/contact" className={link}>
               Contact
             </Link>
           </nav>

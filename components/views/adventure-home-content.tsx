@@ -11,6 +11,7 @@ import Turn from "@/components/adventure/turn"
 import type { FloorView } from "@/components/floorplan/view"
 import AccountRequired from "@/components/nav/account-required"
 import ImageHeader from "@d20/ui/image-header"
+import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
 import { findEncounterById } from "@/lib/map-utils"
@@ -131,11 +132,11 @@ function AdventureHomeContent({
       ) : (
         <>
           <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
-          {!isSignedIn && isLoaded && (
-            <div className="-mt-12 pb-24">
+          <Presence show={!isSignedIn && isLoaded} asChild>
+            <div className="-mt-12 pb-24 relative z-10">
               <AccountRequired redirectUrl={redirectUrl} />
             </div>
-          )}
+          </Presence>
         </>
       )}
     </div>

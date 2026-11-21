@@ -9,9 +9,10 @@ import { gsap } from "gsap"
 import { ArrowUp } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button } from "../button"
+import { Presence, Swap } from "../presence"
 import { Textarea } from "../textarea"
 import { Tip } from "../tooltip"
-import { cn } from "../utils"
+import { cn, entrance, type MotionProps, staggered } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle } from "../sound/dice"
 import { Chevron, eyebrow, Pill } from "./hud"
@@ -136,7 +137,7 @@ const candlelit =
   "stage-grain rounded-xl border border-stage-gold/20 bg-stage-panel/95 shadow-[0_30px_60px_#000a,inset_0_1px_0_#fcd34d33] backdrop-blur-xl before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[inherit] before:bg-[radial-gradient(ellipse_60%_45%_at_50%_0,#fcd34d26,transparent_70%)]"
 // A hero's choices: ghost pills in the serif.
 const choice =
-  "rounded-full border border-stage-line/20 px-4 py-1.5 font-serif text-[16px] text-stage-cream/85 italic transition-colors hover:border-stage-gold hover:bg-stage-gold/10 hover:text-stage-gold"
+  "rounded-full border border-stage-line/20 px-4 py-1.5 font-serif text-[16px] text-stage-cream/85 italic transition-[color,background-color,border-color,scale] duration-150 ease-snap hover:border-stage-gold hover:bg-stage-gold/10 hover:text-stage-gold"
 
 // The hero whose turn it is, a gold ring breaking the card's top edge, with the rest of the party in smaller rings
 // beside it to switch to.
@@ -150,7 +151,7 @@ function HeroRing({ party, actor, compact, onPick }: { party: CardCharacter[]; a
       aria-label={c.standing ? `${c.name}, ${standingWords(c.standing)}` : c.name}
       aria-current={big || undefined}
       className={cn(
-        "m-0 shrink-0 overflow-hidden rounded-full bg-stage-ink transition-opacity",
+        "m-0 shrink-0 overflow-hidden rounded-full bg-stage-ink transition-[opacity,scale] duration-150 ease-snap active:scale-95",
         big ? "shadow-[0_0_0_2px_#000,0_0_0_3px_var(--color-stage-gold),0_0_36px_#fcd34d44]" : "opacity-60 shadow-[0_0_0_2px_#000,0_0_0_3px_#fcd34d66] hover:opacity-90",
         big ? (compact ? "h-11 w-11" : "h-[88px] w-[88px]") : compact ? "h-7 w-7" : "h-11 w-11"
       )}
@@ -245,14 +246,16 @@ function D20({
       disabled={auto || disabled || rolling || done}
       aria-label={auto ? "The GM's roll" : "Roll the d20"}
       className={cn(
-        "relative grid place-items-center [filter:drop-shadow(0_0_12px_#e3b67c40)_drop-shadow(0_3px_5px_#000b)] transition-[transform,opacity] enabled:hover:scale-105 disabled:cursor-default",
+        "relative grid place-items-center [filter:drop-shadow(0_0_12px_#e3b67c40)_drop-shadow(0_3px_5px_#000b)] transition-[scale,opacity] duration-150 ease-snap enabled:hover:scale-105 enabled:active:scale-100 disabled:cursor-default",
         disabled && !done && "opacity-40",
         done && dropped && "opacity-35 grayscale",
         compact ? "h-16 w-16" : "h-[92px] w-[92px]"
       )}
     >
       <D20Solid size={compact ? 64 : 92} roll={tumble} numbered face={face ?? undefined} idle={face === null && !disabled} className={cn("absolute inset-0", done && "die-land")} />
-      {face === null && !auto && <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : "-bottom-3.5")}>Roll</span>}
+      <Presence show={face === null && !auto} motion="fade" initial={false} asChild>
+        <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : "-bottom-3.5")}>Roll</span>
+      </Presence>
     </Button>
   )
 }
@@ -330,17 +333,20 @@ function SingleRoll({
       </div>
       {dice !== null && (
         <div className={cn("grid place-items-center", compact ? "mt-1.5 h-8" : "mt-3 h-11")}>
-          {verdict &&
-            (resolving ? (
-              <div className={cn(eyebrow, "animate-pulse")}>The GM is resolving the roll…</div>
-            ) : (
-              onContinue && (
-                <Button variant="epic" size="xs" className={cn("fade-in gap-1.5", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={onContinue}>
-                  Continue
-                  <Chevron />
-                </Button>
-              )
-            ))}
+          {verdict && (
+            <Swap id={resolving ? "resolving" : "continue"}>
+              {resolving ? (
+                <div className={cn(eyebrow, "animate-pulse")}>The GM is resolving the roll…</div>
+              ) : (
+                onContinue && (
+                  <Button variant="epic" size="xs" className={cn("gap-1.5", compact ? "px-6" : "px-8 py-1.5 text-sm")} onClick={onContinue}>
+                    Continue
+                    <Chevron />
+                  </Button>
+                )
+              )}
+            </Swap>
+          )}
         </div>
       )}
     </div>
@@ -425,7 +431,7 @@ function ContestRoll({
           <Total natural={natural} modifier={roll.modifier} />
         </div>
       </div>
-      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase", total === null ? "opacity-0" : total >= roll.dc ? "text-[#b7d38a]" : "text-[#e39a7c]")}>
+      <div className={cn("mt-1 h-4 text-[11px] tracking-[0.18em] uppercase transition-opacity duration-150", total === null ? "opacity-0" : total >= roll.dc ? "text-[#b7d38a]" : "text-[#e39a7c]")}>
         {total === null ? "" : `${total} against ${roll.dc} · ${total >= roll.dc ? "success" : "failure"}`}
       </div>
     </div>
@@ -448,7 +454,10 @@ export function PromptCard({
   forcedRoll,
   demo = false,
   unworkable,
-}: {
+  className,
+  style,
+  onAnimationEnd,
+}: MotionProps & {
   mode: CardMode
   actor: CardCharacter | null
   party: CardCharacter[]
@@ -483,15 +492,20 @@ export function PromptCard({
   useEffect(() => {
     const el = ref.current
     if (!el || !onTop) return
+    // The card is reported where it comes to rest: its entrance moves it a little on the way in.
     const report = () => {
       const rect = el.getBoundingClientRect()
-      onTop(innerHeight - rect.top, rect)
+      const moved = new DOMMatrixReadOnly(getComputedStyle(el).transform)
+      onTop(innerHeight - rect.top + moved.m42, new DOMRect(rect.x - moved.m41, rect.y - moved.m42, rect.width, rect.height))
     }
     const ro = new ResizeObserver(report)
     ro.observe(el)
     report()
+    const settled = (e: AnimationEvent) => e.target === el && report()
+    el.addEventListener("animationend", settled)
     return () => {
       ro.disconnect()
+      el.removeEventListener("animationend", settled)
       onTop(0)
     }
   }, [onTop])
@@ -518,6 +532,11 @@ export function PromptCard({
   const rowHeight = useRef<number | null>(null)
   const suggestions = mode.kind === "hold" ? mode.suggestions : undefined
   const rowKey = suggestions === "loading" ? "loading" : (suggestions?.map((s) => s.text).join("\n") ?? "")
+  // Pills that come with the card rise in one after another. Pills that take the place of others are tweened below.
+  const first = useRef<string | null>(rowKey)
+  if (rowHeight.current === null) first.current = rowKey
+  else if (first.current !== rowKey) first.current = null
+  const rising = first.current === rowKey
   useLayoutEffect(() => {
     const el = row.current
     if (!el) {
@@ -529,8 +548,8 @@ export function PromptCard({
     rowHeight.current = to
     if (from === null || matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const tl = gsap.timeline()
-    if (from !== to) tl.fromTo(el, { height: from, overflow: "hidden" }, { height: to, duration: 0.45, ease: "power2.inOut", clearProps: "height,overflow" }, 0)
-    if (rowKey !== "loading") tl.from(el.children, { opacity: 0, y: 6, duration: 0.35, stagger: 0.07, ease: "power1.out", clearProps: "opacity,transform" }, 0.12)
+    if (from !== to) tl.fromTo(el, { height: from, overflow: "hidden" }, { height: to, duration: 0.2, ease: "power2.out", clearProps: "height,overflow" }, 0)
+    if (rowKey !== "loading") tl.from(el.children, { opacity: 0, y: 6, duration: 0.18, stagger: 0.03, ease: "power2.out", clearProps: "opacity,transform" }, 0.05)
     return () => {
       // Cut short by the next change: start that one from wherever this one got to. The new pills are in by now, so a
       // finished tween leaves the height it measured, which an inline height still mid-tween would overrule.
@@ -544,10 +563,13 @@ export function PromptCard({
       ref={ref}
       className={cn(
         candlelit,
-        "fade-in absolute left-1/2 z-30 -translate-x-1/2 text-center",
+        "absolute left-1/2 z-30 -translate-x-1/2 text-center",
         compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))] px-3 py-2" : "bottom-[118px] w-[min(520px,calc(100%-40px))] px-6 pt-4 pb-4",
-        mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-[50px]")
+        mode.kind === "hold" && actor && (compact ? "pt-7" : "pt-[50px]"),
+        entrance("enter-rise", className)
       )}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
     >
       {mode.kind === "hold" && actor && (
         <>
@@ -577,12 +599,19 @@ export function PromptCard({
                       &nbsp;
                     </span>
                   ))
-                : mode.suggestions.map((s) => (
+                : mode.suggestions.map((s, i) => (
                     <Tip key={s.text} label={s.text}>
                       <Button
                         variant="plain"
                         type="button"
-                        className={cn(choice, "max-w-full truncate", compact && "px-3 py-0.5 text-[12px]", draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold")}
+                        className={cn(
+                          choice,
+                          "max-w-full truncate active:scale-[0.97]",
+                          compact && "px-3 py-0.5 text-[12px]",
+                          draft === s.text && "border-stage-gold bg-stage-gold/10 text-stage-gold",
+                          rising && "enter-rise"
+                        )}
+                        style={rising ? staggered(i) : undefined}
                         onClick={() => {
                           setDraft(s.text)
                           box.current?.focus()
@@ -622,38 +651,40 @@ export function PromptCard({
               onClick={() => send()}
               disabled={!draft.trim()}
               className={cn(
-                "grid shrink-0 place-items-center rounded-full bg-stage-gold text-black transition-[opacity,filter] hover:brightness-110 disabled:opacity-35",
+                "grid shrink-0 place-items-center rounded-full bg-stage-gold text-black transition-[opacity,filter,scale] duration-150 ease-snap hover:brightness-110 enabled:active:scale-90 disabled:opacity-35",
                 compact ? "h-7 w-7" : "h-9 w-9"
               )}
             >
               <ArrowUp className={compact ? "h-4 w-4" : "h-5 w-5"} strokeWidth={2.25} />
             </Button>
-            {demo && !draft && (
+            <Presence show={demo && !draft} motion="fade" initial={false} asChild>
               <div className="pointer-events-none absolute inset-0 grid place-items-center">
                 <span className={cn("font-sans font-medium tracking-[0.22em] text-stage-gold/90 uppercase [text-shadow:0_1px_4px_#000]", compact ? "text-[9px]" : "text-[11px]")}>
                   Demo only · Click Suggest for a reply
                 </span>
               </div>
-            )}
+            </Presence>
           </div>
-          {warning && (
-            <div role="alert" className={cn("rounded-lg border border-stage-gold/30 bg-black/50 text-left font-serif text-stage-cream", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
-              <p>
-                {warning}. {actor.name.split(" ")[0]} would spend a spell slot for nothing.
-              </p>
-              <div className="mt-2 flex justify-end gap-2">
-                <Pill
-                  onClick={() => {
-                    setAsking(null)
-                    box.current?.focus()
-                  }}
-                >
-                  Edit Reply
-                </Pill>
-                <Pill onClick={() => send(true)}>Send Anyway</Pill>
+          <Presence show={Boolean(warning)} motion="rise" asChild>
+            {warning && (
+              <div role="alert" className={cn("rounded-lg border border-stage-gold/30 bg-black/50 text-left font-serif text-stage-cream", compact ? "mt-1.5 px-3 py-2 text-[12px]" : "mt-2.5 px-4 py-3 text-[14px]")}>
+                <p>
+                  {warning}. {actor.name.split(" ")[0]} would spend a spell slot for nothing.
+                </p>
+                <div className="mt-2 flex justify-end gap-2">
+                  <Pill
+                    onClick={() => {
+                      setAsking(null)
+                      box.current?.focus()
+                    }}
+                  >
+                    Edit Reply
+                  </Pill>
+                  <Pill onClick={() => send(true)}>Send Anyway</Pill>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </Presence>
           {(mode.suggestion || onSkip) && (
             <div className={cn("flex items-center gap-2", compact ? "mt-1" : "mt-2")}>
               {mode.suggestion && (
@@ -662,7 +693,7 @@ export function PromptCard({
                 </Pill>
               )}
               {onSkip && (
-                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors hover:text-stage-cream">
+                <Button variant="plain" type="button" onClick={onSkip} className="ml-auto px-2 font-sans text-[11px] tracking-wide text-stage-muted transition-colors duration-150 hover:text-stage-cream">
                   Skip
                 </Button>
               )}

@@ -13,7 +13,7 @@ function Textarea({ className, plain, ...props }: TextareaProps) {
   return (
     <BaseTextarea
       className={cn(
-        "border-white/20 placeholder:text-white/70 placeholder:italic focus-visible:border-primary-400 focus-visible:ring-primary-400/50 aria-invalid:ring-red-700/40 aria-invalid:border-red-700 bg-zinc-800/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        "border-white/20 placeholder:text-white/70 placeholder:italic focus-visible:border-primary-400 focus-visible:ring-primary-400/50 aria-invalid:ring-red-700/40 aria-invalid:border-red-700 bg-zinc-800/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,border-color,box-shadow] duration-150 outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}

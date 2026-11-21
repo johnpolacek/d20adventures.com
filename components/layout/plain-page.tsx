@@ -7,7 +7,7 @@ export const plainCard = "rounded-lg border border-amber-200/20 bg-black/70 shad
 
 /** Body text for a PlainPage. */
 export const plainProse =
-  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-blue-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-amber-200 prose-a:decoration-amber-200/40 hover:prose-a:decoration-amber-200 prose-li:marker:text-amber-300/70 prose-strong:text-white"
+  "prose prose-invert max-w-none text-white/80 prose-headings:font-display prose-headings:text-blue-50 prose-h2:mt-10 prose-h2:mb-3 prose-h2:text-2xl prose-a:text-amber-200 prose-a:decoration-amber-200/40 prose-a:transition-colors prose-a:duration-150 hover:prose-a:decoration-amber-200 prose-li:marker:text-amber-300/70 prose-strong:text-white"
 
 /** A plain page over the home page's hero art, its content on a see-through card unless `card` is false. */
 export function PlainPage({ title, subtitle, card = true, width = "max-w-3xl", children }: { title?: string; subtitle?: ReactNode; card?: boolean; width?: string; children: ReactNode }) {

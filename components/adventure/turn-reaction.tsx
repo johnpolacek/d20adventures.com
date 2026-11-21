@@ -6,6 +6,7 @@
 import { useUser } from "@clerk/nextjs"
 import { answerReaction } from "@/app/_actions/adventure"
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
+import { Presence } from "@d20/ui/presence"
 import { ReactionCard, useExpired } from "@d20/ui/stage/reaction-card"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useTurnContext } from "@/lib/context/TurnContext"
@@ -24,31 +25,34 @@ export function useStandingOffer() {
   return !disableSSE && reaction && reaction.answer === undefined && !expired ? reaction : undefined
 }
 
-export function TurnReaction({ className }: { className?: string }) {
+/** The offer's card. It stays for its exit once the offer is answered or runs out. `show` false hides it. */
+export function TurnReaction({ show = true, className }: { show?: boolean; className?: string }) {
   const { currentTurn } = useTurnContext()
   const { user } = useUser()
   const reaction = useStandingOffer()
-  if (!currentTurn || !reaction) return null
-  const hero = currentTurn.characters.find((c) => c.id === reaction.offer.to)
+  const offered = show && currentTurn && reaction ? { turnId: currentTurn.id as Id<"turns">, reaction } : null
+  const hero = currentTurn?.characters.find((c) => c.id === reaction?.offer.to)
   // The answer plays the turn on. Should that fail, the server is asked once more to play on, by the answer kept.
-  const answer = (take: boolean) => {
-    const turnId = currentTurn.id as Id<"turns">
-    void answerReaction({ turnId, characterId: reaction.offer.to, take }).catch((error) => {
+  const answer = (turnId: Id<"turns">, characterId: string, take: boolean) => {
+    void answerReaction({ turnId, characterId, take }).catch((error) => {
       console.error("[TurnReaction] The answer did not play on:", error)
       void ensureNpcProcessed(turnId).catch(() => {})
     })
   }
   return (
-    <ReactionCard
-      key={`${reaction.npc}:${reaction.expiresAt}`}
-      reaction={reaction.offer.id}
-      hero={hero?.name ?? "A hero"}
-      expiresAt={reaction.expiresAt}
-      text={reaction.text}
-      mine={controlsHero(hero, user?.id)}
-      className={className}
-      onTake={() => answer(true)}
-      onPass={() => answer(false)}
-    />
+    <Presence show={Boolean(offered)} motion="fade" className={className}>
+      {offered && (
+        <ReactionCard
+          key={`${offered.reaction.npc}:${offered.reaction.expiresAt}`}
+          reaction={offered.reaction.offer.id}
+          hero={hero?.name ?? "A hero"}
+          expiresAt={offered.reaction.expiresAt}
+          text={offered.reaction.text}
+          mine={controlsHero(hero, user?.id)}
+          onTake={() => answer(offered.turnId, offered.reaction.offer.to, true)}
+          onPass={() => answer(offered.turnId, offered.reaction.offer.to, false)}
+        />
+      )}
+    </Presence>
   )
 }

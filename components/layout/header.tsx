@@ -6,6 +6,7 @@ import Image from "@d20/ui/native-image"
 import { cn, reverseSlugify } from "@/lib/utils"
 import Parchment from "@d20/ui/graphics/parchment"
 import { paper } from "@d20/ui/graphics/styles"
+import { Presence } from "@d20/ui/presence"
 import { AdminNavItem } from "../nav/admin-nav-item"
 import AuthButtons from "../nav/auth-buttons"
 
@@ -28,7 +29,7 @@ export default function Header() {
     >
       <Parchment />
       <div className="flex flex-1 justify-start items-center">
-        <Link className="cursor-pointer flex items-center font-display scale-90 sm:scale-100 gap-2 mix-blend-multiply" href="/">
+        <Link className="cursor-pointer flex items-center font-display scale-90 sm:scale-100 gap-2 mix-blend-multiply transition-opacity duration-150 hover:opacity-85 active:opacity-70" href="/">
           <Image
             className={cn("inline -mt-1 scale-90 sm:scale-100 w-12 h-12", isBig ? "sm:w-[72px] sm:h-[72px]" : "sm:w-8 sm:h-8")}
             width={isBig ? 72 : 36}
@@ -47,14 +48,16 @@ export default function Header() {
             </h1>
           </div>
         </Link>
-        {settingSlug && (
-          <Link
-            href={`/settings/${settingSlug}`}
-            className="text-sm -ml-2 font-display hidden sm:block text-yellow-950/80 hover:text-yellow-950/90 font-bold tracking-wide transition-colors duration-150"
-          >
-            {reverseSlugify(settingSlug)}
-          </Link>
-        )}
+        <Presence show={Boolean(settingSlug)} initial={false} asChild motion="left">
+          {settingSlug && (
+            <Link
+              href={`/settings/${settingSlug}`}
+              className="text-sm -ml-2 font-display hidden sm:block text-yellow-950/80 hover:text-yellow-950/90 active:opacity-70 font-bold tracking-wide transition-[color,opacity] duration-150"
+            >
+              {reverseSlugify(settingSlug)}
+            </Link>
+          )}
+        </Presence>
       </div>
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
         <AdminNavItem />

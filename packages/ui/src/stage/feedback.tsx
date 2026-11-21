@@ -9,22 +9,22 @@ import { Button } from "../button"
 import { type FeedbackDraft, MAX_SCREENSHOTS, SCREENSHOT_TYPES, screenshotProblem } from "../feedback-rules"
 import { FileInput, FileInputTrigger } from "../file-input"
 import { Label } from "../label"
+import { Presence, Swap } from "../presence"
 import { Textarea } from "../textarea"
 import { Tip } from "../tooltip"
-import { cn } from "../utils"
+import { cn, entrance, type MotionProps } from "../utils"
 import { eyebrow, Pill, panel, pillClass } from "./hud"
 
 export type FeedbackStart = { kind: FeedbackDraft["kind"]; rating?: number }
 
 const CALLOUT_SEEN = "d20-feedback-callout"
-// The callout waits for the scene to settle, lingers this long after the player's first click, then takes this long to leave.
+// The callout waits for the scene to settle, and lingers this long after the player's first click.
 const CALLOUT_IN_MS = 1200
 const CALLOUT_LINGER_MS = 2000
-const CALLOUT_OUT_MS = 400
 
 /** The feedback button, and on a session's first view of the game a callout under it. `visible` is whether the top bar shows. */
 export function FeedbackButton({ active, visible, compact, onClick }: { active: boolean; visible: boolean; compact?: boolean; onClick: () => void }) {
-  const [callout, setCallout] = useState<"hidden" | "shown" | "leaving">("hidden")
+  const [callout, setCallout] = useState(false)
 
   useEffect(() => {
     if (!visible) return
@@ -37,28 +37,23 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
       try {
         sessionStorage.setItem(CALLOUT_SEEN, "1")
       } catch {}
-      setCallout("shown")
+      setCallout(true)
     }, CALLOUT_IN_MS)
     return () => clearTimeout(timer)
   }, [visible])
 
   // A click anywhere sends the callout away after a moment. Its own close button and the feedback button do so at once.
   useEffect(() => {
-    if (callout !== "shown") return
+    if (!callout) return
     let timer: ReturnType<typeof setTimeout> | undefined
     const leave = () => {
-      timer ??= setTimeout(() => setCallout("leaving"), CALLOUT_LINGER_MS)
+      timer ??= setTimeout(() => setCallout(false), CALLOUT_LINGER_MS)
     }
     addEventListener("pointerdown", leave)
     return () => {
       removeEventListener("pointerdown", leave)
       clearTimeout(timer)
     }
-  }, [callout])
-  useEffect(() => {
-    if (callout !== "leaving") return
-    const timer = setTimeout(() => setCallout("hidden"), CALLOUT_OUT_MS)
-    return () => clearTimeout(timer)
   }, [callout])
 
   return (
@@ -70,24 +65,16 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
           aria-label="Give Us Feedback"
           aria-pressed={active}
           onClick={() => {
-            if (callout === "shown") setCallout("leaving")
+            setCallout(false)
             onClick()
           }}
-          className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter]"
+          className="stage-brass grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter,scale] duration-150 ease-snap active:scale-95"
         >
           <ThumbsUpDownSolid />
         </Button>
       </Tip>
-      {callout !== "hidden" && (
-        <div
-          className={cn(
-            panel,
-            "feedback-callout absolute right-0 z-50 flex items-center gap-2 border-stage-gold/60 py-2 pr-2 pl-4 transition-[opacity,transform] ease-in",
-            compact ? "top-12" : "top-[52px]",
-            callout === "leaving" && "pointer-events-none -translate-y-2 opacity-0"
-          )}
-          style={{ transitionDuration: `${CALLOUT_OUT_MS}ms` }}
-        >
+      <Presence show={callout} motion="drop" asChild>
+        <div className={cn(panel, "absolute right-0 z-50 flex items-center gap-2 border-stage-gold/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
           {/* The pointer, under the middle of the button. */}
           <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-stage-gold/60 bg-stage-panel" />
           <span className="font-display text-sm tracking-wide whitespace-nowrap text-stage-cream">Give Us Feedback</span>
@@ -96,13 +83,13 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
             type="button"
             aria-label="Dismiss"
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => setCallout("leaving")}
-            className="grid size-6 place-items-center rounded-full text-stage-cream/60 transition-colors hover:bg-white/10 hover:text-stage-cream"
+            onClick={() => setCallout(false)}
+            className="grid size-6 place-items-center rounded-full text-stage-cream/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-stage-cream active:scale-90"
           >
             <X className="size-3.5" />
           </Button>
         </div>
-      )}
+      </Presence>
     </div>
   )
 }
@@ -110,7 +97,7 @@ export function FeedbackButton({ active, visible, compact, onClick }: { active: 
 const NO_FILES: File[] = []
 
 const field =
-  "w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-stage-cream placeholder:text-stage-cream/35 focus:border-stage-gold/70 focus:outline-none"
+  "w-full resize-none rounded-[3px] border border-stage-line/25 bg-black/40 px-3 py-2 font-serif text-[15px] leading-snug text-stage-cream transition-colors duration-150 placeholder:text-stage-cream/35 focus:border-stage-gold/70 focus:outline-none"
 
 function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: (rating: number) => void; size?: string }) {
   const [hover, setHover] = useState(0)
@@ -125,9 +112,9 @@ function Stars({ value, onChange, size = "size-6" }: { value: number; onChange: 
           aria-pressed={value === n}
           onPointerEnter={() => setHover(n)}
           onClick={() => onChange(n)}
-          className="p-0.5 transition-transform hover:scale-110"
+          className="p-0.5 transition-[scale] duration-150 ease-snap hover:scale-110 active:scale-95"
         >
-          <Star className={cn(size, "transition-colors", n <= (hover || value) ? "fill-stage-gold text-stage-gold" : "text-stage-cream/40")} strokeWidth={1.5} />
+          <Star className={cn(size, "transition-colors duration-150", n <= (hover || value) ? "fill-stage-gold text-stage-gold" : "text-stage-cream/40")} strokeWidth={1.5} />
         </Button>
       ))}
     </div>
@@ -139,7 +126,9 @@ export function EndingRating({ sent, onRate }: { sent: boolean; onRate: (rating:
   return (
     <div className="mt-5 border-t border-stage-line/15 pt-4">
       <div className={eyebrow}>{sent ? "Thank You" : "How Was It?"}</div>
-      {sent ? <p className="mt-2 font-serif text-sm text-stage-cream/75">Your feedback was sent.</p> : <div className="mt-2">{<Stars value={0} onChange={onRate} />}</div>}
+      <Swap id={sent ? "sent" : "ask"}>
+        {sent ? <p className="mt-2 font-serif text-sm text-stage-cream/75">Your feedback was sent.</p> : <div className="mt-2">{<Stars value={0} onChange={onRate} />}</div>}
+      </Swap>
     </div>
   )
 }
@@ -156,7 +145,10 @@ export function FeedbackPanel({
   onSend,
   onSent,
   onClose,
-}: {
+  className,
+  style,
+  onAnimationEnd,
+}: MotionProps & {
   start: FeedbackStart
   context: Record<string, string>
   compact?: boolean
@@ -237,8 +229,11 @@ export function FeedbackPanel({
       className={cn(
         panel,
         "absolute z-40 flex max-h-[calc(100%-7rem)] w-[min(24rem,calc(100%-2rem))] flex-col overflow-y-auto p-6",
-        compact ? "top-14 right-4 max-h-[calc(100%-4rem)]" : "top-24 right-10"
+        compact ? "top-14 right-4 max-h-[calc(100%-4rem)]" : "top-24 right-10",
+        entrance("enter-right", className)
       )}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -250,93 +245,96 @@ export function FeedbackPanel({
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="grid size-7 shrink-0 place-items-center rounded-full text-stage-cream/60 transition-colors hover:bg-white/10 hover:text-stage-cream"
+          className="grid size-7 shrink-0 place-items-center rounded-full text-stage-cream/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-stage-cream active:scale-90"
         >
           <X className="size-4" />
         </Button>
       </div>
 
-      {gate ? (
-        <div className="mt-4">{gate}</div>
-      ) : state === "sent" ? (
-        <p className="mt-6 mb-2 text-center font-display text-lg text-stage-gold">Thank You</p>
-      ) : (
-        <>
-          <div className="mt-4 grid gap-3">
-            {ending ? (
-              <>
-                <Stars value={rating} onChange={setRating} size="size-7" />
-                <Label plain className="grid gap-1.5">
-                  <span className={eyebrow}>Best Moment</span>
-                  <Textarea plain rows={2} maxLength={4000} value={bestMoment} onChange={(e) => setBestMoment(e.target.value)} className={field} />
-                </Label>
-                <Label plain className="grid gap-1.5">
-                  <span className={eyebrow}>What Broke</span>
-                  <Textarea plain rows={2} maxLength={4000} value={broke} onChange={(e) => setBroke(e.target.value)} className={field} />
-                </Label>
-              </>
-            ) : (
-              <Textarea
-                plain
-                rows={5}
-                maxLength={4000}
-                ref={noteRef}
-                aria-label="Your feedback"
-                placeholder="What worked? What broke?"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className={field}
-              />
-            )}
+      {/* The gate, the form and the thanks take each other's place. */}
+      <Swap id={gate ? "gate" : state === "sent" ? "sent" : "form"}>
+        {gate ? (
+          <div className="mt-4">{gate}</div>
+        ) : state === "sent" ? (
+          <p className="mt-6 mb-2 text-center font-display text-lg text-stage-gold">Thank You</p>
+        ) : (
+          <>
+            <div className="mt-4 grid gap-3">
+              {ending ? (
+                <>
+                  <Stars value={rating} onChange={setRating} size="size-7" />
+                  <Label plain className="grid gap-1.5">
+                    <span className={eyebrow}>Best Moment</span>
+                    <Textarea plain rows={2} maxLength={4000} value={bestMoment} onChange={(e) => setBestMoment(e.target.value)} className={field} />
+                  </Label>
+                  <Label plain className="grid gap-1.5">
+                    <span className={eyebrow}>What Broke</span>
+                    <Textarea plain rows={2} maxLength={4000} value={broke} onChange={(e) => setBroke(e.target.value)} className={field} />
+                  </Label>
+                </>
+              ) : (
+                <Textarea
+                  plain
+                  rows={5}
+                  maxLength={4000}
+                  ref={noteRef}
+                  aria-label="Your feedback"
+                  placeholder="What worked? What broke?"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className={field}
+                />
+              )}
 
-            {shots.length > 0 && (
-              <ul className="flex flex-wrap gap-2">
-                {shots.map((shot) => (
-                  <li key={shot.url} className="relative">
-                    <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-stage-line/25 object-cover" />
-                    <Button
-                      variant="plain"
-                      type="button"
-                      aria-label={`Remove ${shot.file.name}`}
-                      onClick={() => remove(shot.url)}
-                      className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full border border-stage-line/40 bg-stage-panel text-stage-cream hover:border-stage-gold"
-                    >
-                      <X className="size-3" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              {shots.length > 0 && (
+                <ul className="flex flex-wrap gap-2">
+                  {shots.map((shot) => (
+                    <li key={shot.url} className="enter-pop relative">
+                      <img src={shot.url} alt={shot.file.name} className="h-16 w-24 rounded-[3px] border border-stage-line/25 object-cover" />
+                      <Button
+                        variant="plain"
+                        type="button"
+                        aria-label={`Remove ${shot.file.name}`}
+                        onClick={() => remove(shot.url)}
+                        className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full border border-stage-line/40 bg-stage-panel text-stage-cream transition-[border-color,scale] duration-150 ease-snap hover:border-stage-gold active:scale-90"
+                      >
+                        <X className="size-3" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-          {error && (
-            <p role="alert" className="mt-3 font-serif text-sm text-red-300">
-              {error}
-            </p>
-          )}
+            <Presence show={Boolean(error)} motion="fade" asChild>
+              <p role="alert" className="mt-3 font-serif text-sm text-red-300">
+                {error}
+              </p>
+            </Presence>
 
-          <div className="mt-4 flex items-center justify-between gap-2">
-            {/* The panel keeps the screenshots, so the file input stays empty and hands each pick to add. */}
-            <FileInput
-              multiple
-              accept={SCREENSHOT_TYPES}
-              value={NO_FILES}
-              onValueChange={(files) => add(files)}
-              onReject={(rejected) => {
-                if (rejected[0]) setError(screenshotProblem(rejected[0].file))
-              }}
-              disabled={state === "sending" || shots.length >= MAX_SCREENSHOTS}
-              className="flex"
-            >
-              <FileInputTrigger className={pillClass()}>Add Screenshot</FileInputTrigger>
-            </FileInput>
-            <Pill active disabled={empty || state === "sending"} onClick={() => void send()}>
-              {state === "sending" ? "Sending…" : "Send"}
-            </Pill>
-          </div>
-          <p className="mt-3 text-[10px] leading-relaxed tracking-wide text-stage-muted">Sent with the adventure, encounter and turn you are on.</p>
-        </>
-      )}
+            <div className="mt-4 flex items-center justify-between gap-2">
+              {/* The panel keeps the screenshots, so the file input stays empty and hands each pick to add. */}
+              <FileInput
+                multiple
+                accept={SCREENSHOT_TYPES}
+                value={NO_FILES}
+                onValueChange={(files) => add(files)}
+                onReject={(rejected) => {
+                  if (rejected[0]) setError(screenshotProblem(rejected[0].file))
+                }}
+                disabled={state === "sending" || shots.length >= MAX_SCREENSHOTS}
+                className="flex"
+              >
+                <FileInputTrigger className={pillClass()}>Add Screenshot</FileInputTrigger>
+              </FileInput>
+              <Pill active disabled={empty || state === "sending"} onClick={() => void send()}>
+                {state === "sending" ? "Sending…" : "Send"}
+              </Pill>
+            </div>
+            <p className="mt-3 text-[10px] leading-relaxed tracking-wide text-stage-muted">Sent with the adventure, encounter and turn you are on.</p>
+          </>
+        )}
+      </Swap>
     </section>
   )
 }

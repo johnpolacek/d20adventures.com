@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { CSSProperties } from "react"
 import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
@@ -59,14 +60,18 @@ export default async function AdminAdventurePlansPage() {
           </Heading>
           <p className="mb-8 text-white/60">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
           <div className="grid gap-6 md:grid-cols-2">
-            {adventures.map((adventure) => {
+            {adventures.map((adventure, index) => {
               const source = sourceLabel[adventure.source]
               const href = `/admin/adventure-plans/${adventure.settingId}/${adventure.planId}`
               return (
-                <article key={`${adventure.settingId}/${adventure.planId}`} className="overflow-hidden rounded-md border border-lime-900/50 bg-black text-stone-100">
+                <article
+                  key={`${adventure.settingId}/${adventure.planId}`}
+                  className="enter-rise overflow-hidden rounded-md border border-lime-900/50 bg-black text-stone-100"
+                  style={{ "--i": Math.min(index, 8) } as CSSProperties}
+                >
                   <Link href={href} className="group relative block aspect-[16/7] overflow-hidden bg-black">
                     {adventure.image ? (
-                      <NativeImage src={adventure.image} alt="" fill className="object-cover opacity-90 transition-opacity duration-300 group-hover:opacity-100" loading="eager" />
+                      <NativeImage src={adventure.image} alt="" fill className="object-cover opacity-90 transition-opacity duration-150 ease-snap group-hover:opacity-100" loading="eager" />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-lime-950 to-black" />
                     )}

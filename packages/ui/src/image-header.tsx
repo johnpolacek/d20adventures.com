@@ -31,7 +31,7 @@ export default function ImageHeader({ imageUrl, children, title, subtitle, image
           </>
         )}
         <Image
-          className={cn("object-cover transition-opacity duration-1000 ease-in-out", imageLoaded ? "opacity-100" : "opacity-0")}
+          className={cn("object-cover transition-opacity duration-200 ease-out", imageLoaded ? "opacity-100" : "opacity-0")}
           fill
           src={imageUrl}
           alt={imageAlt || title || ""}

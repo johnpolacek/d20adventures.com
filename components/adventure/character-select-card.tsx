@@ -22,7 +22,7 @@ export function CharacterSelectCard({ character, buttonLabel, onButtonClick, hre
     <Card
       variant="portrait"
       interactive={!!onButtonClick || clickable}
-      className={cn("w-full h-full hover:scale-[1.01]", (onButtonClick || clickable) && "hover:scale-105", className)}
+      className={cn("w-full h-full transition-[scale,box-shadow,border-color] duration-150 hover:scale-[1.01]", (onButtonClick || clickable) && "hover:scale-105 active:scale-100", className)}
       onClick={onButtonClick}
     >
       <div className="w-full aspect-video relative">

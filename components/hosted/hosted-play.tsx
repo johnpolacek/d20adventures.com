@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
 import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
+import { Presence } from "@d20/ui/presence"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
 import type { ChatLine } from "@d20/ui/stage/journal"
 import { RotatePrompt, requestLandscape, usePhonePortrait } from "@d20/ui/stage/rotate-gate"
@@ -100,25 +101,27 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       onFeedback={(draft) => sendFeedback({ ...draft, context: { ...draft.context, hosted: "guest", host: state?.adventure.ownerId ?? "" } })}
       onError={onError}
     >
-      {state && !save && (
-        <div className="absolute inset-0 z-40 grid place-items-center bg-stage-ink/70">
-          <section className={cn(panel, "w-[min(480px,92vw)] p-8 text-center")}>
-            <div className={eyebrow}>{state.hostOnline ? "Waiting for the host to start" : "The host is offline"}</div>
-            <h1 className="mt-3 font-display text-4xl">{state.adventure.title}</h1>
-          </section>
-        </div>
-      )}
-      {state && save && !state.hostOnline && (
+      <Presence show={Boolean(state && !save)} motion="fade" asChild>
+        {state && !save && (
+          <div className="absolute inset-0 z-40 grid place-items-center bg-stage-ink/70">
+            <section className={cn(panel, "enter-pop w-[min(480px,92vw)] p-8 text-center")}>
+              <div className={eyebrow}>{state.hostOnline ? "Waiting for the host to start" : "The host is offline"}</div>
+              <h1 className="mt-3 font-display text-4xl">{state.adventure.title}</h1>
+            </section>
+          </div>
+        )}
+      </Presence>
+      <Presence show={Boolean(state && save && !state.hostOnline)} motion="drop" asChild>
         <div className={cn(panel, "absolute left-1/2 top-28 z-[60] -translate-x-1/2 px-5 py-3 text-sm")}>The host's app is offline. Actions wait until it returns.</div>
-      )}
-      {error && (
+      </Presence>
+      <Presence show={Boolean(error)} motion="drop" asChild>
         <div role="alert" className={cn(panel, "absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm")}>
           <p>{error}</p>
           <Pill className="mt-3" onClick={() => setError(null)}>
             Dismiss
           </Pill>
         </div>
-      )}
+      </Presence>
       {portrait && <RotatePrompt />}
     </StagePlay>
   )

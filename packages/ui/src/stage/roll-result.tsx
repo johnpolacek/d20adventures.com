@@ -13,6 +13,7 @@
 
 import { Fragment, useEffect, useRef, useState } from "react"
 import { Button } from "../button"
+import { Presence } from "../presence"
 import { cn } from "../utils"
 import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "../sound/dice"
@@ -173,7 +174,9 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             </span>
           )
         })}
-        {waiting && <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : row ? "-bottom-3.5" : "bottom-0.5 text-[11px]")}>Roll</span>}
+        <Presence show={waiting} motion="fade" initial={false} asChild>
+          <span className={cn(eyebrow, "pointer-events-none absolute inset-x-0", compact ? "-bottom-2.5 text-[7px]" : row ? "-bottom-3.5" : "bottom-0.5 text-[11px]")}>Roll</span>
+        </Presence>
       </Button>
 
       <div className={cn("min-w-0", row ? "flex-1" : "w-full")} aria-hidden="true">
@@ -231,7 +234,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
               {!row && <span className="h-px w-12 shrink" style={{ background: `linear-gradient(270deg, transparent, ${tone})` }} />}
               {row && margin && <span className={cn("min-w-0 truncate font-serif text-stage-muted italic", compact ? "text-[11px]" : "text-[13px]")}>{margin}</span>}
             </div>
-            {!row && <div className={cn("min-h-[18px] font-serif text-[13px] leading-[18px] text-stage-muted italic", step >= 3 ? "fade-in" : "opacity-0")}>{margin}</div>}
+            {!row && <div className={cn("min-h-[18px] font-serif text-[13px] leading-[18px] text-stage-muted italic", step >= 3 ? "enter-fade" : "opacity-0")}>{margin}</div>}
           </>
         )}
         {saves && (
@@ -239,7 +242,7 @@ export function RollResult({ roll, compact = false, onRoll, onVerdict }: { roll:
             <DeathSaveMarks saves={saves} compact={compact} />
           </div>
         )}
-        {made && step >= 3 && <RollDetails roll={made} compact={compact} className={cn("fade-in", compact ? "mt-1" : row ? "mt-2" : "mt-1.5 items-center")} />}
+        {made && step >= 3 && <RollDetails roll={made} compact={compact} className={cn("enter-fade", compact ? "mt-1" : row ? "mt-2" : "mt-1.5 items-center")} />}
       </div>
     </div>
   )

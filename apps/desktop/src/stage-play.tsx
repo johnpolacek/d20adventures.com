@@ -31,6 +31,7 @@ import { passedOver, passedWords, standingOf } from "@d20/ui/stage/standing"
 import { TurnOrder } from "@d20/ui/stage/turn-order"
 import { useStage } from "@d20/ui/stage/use-stage"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import type { Save } from "../runtime/store"
@@ -1076,6 +1077,10 @@ export function StagePlay(props: {
     title: t.title,
     paragraphs: story(t, true).map((p) => (p.roll ? { roll: rollView(p.roll, t.characters) } : p.feature ? { feature: featureView(p.feature, t.characters) } : p.text)),
   }))
+  // The play interface is up. Each part of it comes and goes on its own, so hiding it lets every part leave.
+  const on = !hidden && !props.overlay
+  // Where the narration sits over a scene, and the button that brings it back.
+  const nook = compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[84px] left-8 w-[min(460px,35vw)]"
   return (
     <StageHud
       containerRef={containerRef}
@@ -1119,9 +1124,9 @@ export function StagePlay(props: {
         </>
       }
     >
-      {save && !hidden && !props.overlay && (
+      {save && (
         <>
-          {stage && speech.length > 0 && (
+          {on && stage && speech.length > 0 && (
             <Bubbles
               compact={compact}
               moving={() => stage.cameraMoving}
@@ -1129,24 +1134,27 @@ export function StagePlay(props: {
               bubbles={speech.map((l, i) => ({ key: paragraph * 100 + i, anchor: () => stage.project(l.cast.id), text: l.text, named: true }))}
             />
           )}
-          {!scene && voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
-          <TurnOrder
-            order={(shown?.characters ?? []).map((c) => {
-              const standing = standingOf(c, sheets[c.id])
-              const conditions = conditionLabel(c)
-              return { id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", ...(standing ? { standing } : {}), ...(conditions ? { conditions } : {}) }
-            })}
-            activeId={ended ? null : (spotlit?.id ?? null)}
-            turnId={ended ? null : (actor?.id ?? null)}
-            label={ended ? undefined : spotlit?.name}
-            passed={ended || spotlit !== actor ? undefined : passed || undefined}
-            compact={compact}
-            onPick={focus}
-          />
-          <div
-            className={`pointer-events-none absolute z-20 ${!scene && reading ? "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2" : compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[84px] left-8 w-[min(460px,35vw)]"}`}
-          >
-            {reading && (
+          <Presence show={on && !scene && Boolean(voice)} motion="fade" asChild>
+            {voice && <Plate compact={compact} line={{ key: paragraph, side: "right", ...voice }} />}
+          </Presence>
+          <Presence show={on} motion="drop" asChild>
+            <TurnOrder
+              order={(shown?.characters ?? []).map((c) => {
+                const standing = standingOf(c, sheets[c.id])
+                const conditions = conditionLabel(c)
+                return { id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", ...(standing ? { standing } : {}), ...(conditions ? { conditions } : {}) }
+              })}
+              activeId={ended ? null : (spotlit?.id ?? null)}
+              turnId={ended ? null : (actor?.id ?? null)}
+              label={ended ? undefined : spotlit?.name}
+              passed={ended || spotlit !== actor ? undefined : passed || undefined}
+              compact={compact}
+              onPick={focus}
+            />
+          </Presence>
+          {/* The narration and the button that brings it back each have the place to themselves, so one leaves as the other comes. */}
+          <div className={`pointer-events-none absolute z-20 ${scene ? nook : "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2"}`}>
+            <Presence show={on && reading} motion="rise" asChild>
               <Narration
                 heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
@@ -1165,8 +1173,10 @@ export function StagePlay(props: {
                 onSkip={() => setReading(false)}
                 onContinue={() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false))}
               />
-            )}
-            {!reading && !held && (
+            </Presence>
+          </div>
+          <div className={`pointer-events-none absolute z-20 ${nook}`}>
+            <Presence show={on && !reading && !held} motion="rise" asChild>
               <Pill
                 className="pointer-events-auto"
                 onClick={() => {
@@ -1176,28 +1186,30 @@ export function StagePlay(props: {
               >
                 Read turn
               </Pill>
-            )}
+            </Presence>
           </div>
-          {mode && (!reading || busy || held) && (
-            <PromptCard
-              key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}
-              mode={mode}
-              actor={held?.actor ?? cardActor}
-              party={party}
-              compact={compact}
-              onReply={reply}
-              onSkip={props.onSkip ? skip : undefined}
-              onRoll={(dice) => void makeRoll(dice)}
-              onPick={focus}
-              onContinue={held && !props.busy ? leaveRoll : undefined}
-              onTop={onTop}
-              draft={draft}
-              onDraft={setDraft}
-              forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
-              unworkable={unworkable?.key === `${turn?._id}:${cardActor?.id}` ? unworkable.list : undefined}
-            />
-          )}
-          {ended && !busy && !reading && (
+          <Presence show={on && Boolean(mode && (!reading || busy || held))} motion="rise" asChild>
+            {mode && (
+              <PromptCard
+                key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}
+                mode={mode}
+                actor={held?.actor ?? cardActor}
+                party={party}
+                compact={compact}
+                onReply={reply}
+                onSkip={props.onSkip ? skip : undefined}
+                onRoll={(dice) => void makeRoll(dice)}
+                onPick={focus}
+                onContinue={held && !props.busy ? leaveRoll : undefined}
+                onTop={onTop}
+                draft={draft}
+                onDraft={setDraft}
+                forcedRoll={turn && actor ? save.rolls?.[`${turn._id}:${actor.id}`] : undefined}
+                unworkable={unworkable?.key === `${turn?._id}:${cardActor?.id}` ? unworkable.list : undefined}
+              />
+            )}
+          </Presence>
+          <Presence show={on && Boolean(ended && !busy && !reading)} motion="rise" asChild>
             <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
               <div className="text-[10px] tracking-[.3em] text-stage-gold">THE END</div>
               <p className="mt-2 mb-4 font-display text-2xl">{save.adventure.title}</p>
@@ -1224,8 +1236,8 @@ export function StagePlay(props: {
                 />
               )}
             </div>
-          )}
-          {!ended && owed.length > 0 && !levelHero && !props.overlay && (
+          </Presence>
+          <Presence show={on && !ended && owed.length > 0 && !levelHero} motion="drop" asChild>
             <div className="absolute top-24 left-1/2 z-30 flex -translate-x-1/2 flex-wrap justify-center gap-2">
               {owed.map((c) => (
                 <Pill key={c.id} active onClick={() => setLevelling(c.id)}>
@@ -1233,55 +1245,61 @@ export function StagePlay(props: {
                 </Pill>
               ))}
             </div>
-          )}
-          {levelHero?.sheet && latest && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-3">
-              <LevelUp
-                hero={levelHero.name}
-                portrait={portrait(levelHero)}
-                sheet={levelHero.sheet}
+          </Presence>
+          <Presence show={on && Boolean(levelHero?.sheet && latest)} motion="fade" asChild>
+            {levelHero?.sheet && latest && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-3">
+                <LevelUp
+                  hero={levelHero.name}
+                  portrait={portrait(levelHero)}
+                  sheet={levelHero.sheet}
+                  compact={compact}
+                  className={compact ? "max-h-full w-[min(480px,100%)]" : "max-h-[88%] w-[min(600px,100%)]"}
+                  onClose={() => setLevelling(null)}
+                  onTake={async (choices) => {
+                    const refused = await props.onLevel?.(latest._id, levelHero.id, choices)
+                    if (!refused) setLevelling(null)
+                    return refused
+                  }}
+                />
+              </div>
+            )}
+          </Presence>
+          <Presence show={on && Boolean(reaction && offerShown)} motion="rise" asChild>
+            {reaction && (
+              <ReactionCard
+                key={`${reaction.npc}:${reaction.expiresAt}`}
+                reaction={reaction.offer.id}
+                hero={offerHero?.name ?? "A hero"}
+                portrait={offerHero ? portrait(offerHero) : undefined}
+                expiresAt={reaction.expiresAt}
+                text={reaction.text}
+                mine={offerMine}
+                answered={reaction.answer !== undefined}
                 compact={compact}
-                className={compact ? "max-h-full w-[min(480px,100%)]" : "max-h-[88%] w-[min(600px,100%)]"}
-                onClose={() => setLevelling(null)}
-                onTake={async (choices) => {
-                  const refused = await props.onLevel?.(latest._id, levelHero.id, choices)
-                  if (!refused) setLevelling(null)
-                  return refused
-                }}
+                className={`absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`}
+                onTake={() => react(true)}
+                onPass={() => react(false)}
               />
-            </div>
-          )}
-          {reaction && offerShown && (
-            <ReactionCard
-              key={`${reaction.npc}:${reaction.expiresAt}`}
-              reaction={reaction.offer.id}
-              hero={offerHero?.name ?? "A hero"}
-              portrait={offerHero ? portrait(offerHero) : undefined}
-              expiresAt={reaction.expiresAt}
-              text={reaction.text}
-              mine={offerMine}
-              answered={reaction.answer !== undefined}
-              compact={compact}
-              className={`absolute left-1/2 z-30 -translate-x-1/2 ${compact ? "bottom-[50px] w-[min(430px,calc(100%-24px))]" : "bottom-[118px] w-[min(520px,calc(100%-40px))]"}`}
-              onTake={() => react(true)}
-              onPass={() => react(false)}
-            />
-          )}
-          {!ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey) && (
-            <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
-              <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
-              {passed && <p className="mb-3 font-serif text-sm text-[#e39a7c]">Passed Over · {passed}</p>}
-              {/* Another player's hero acts from their own screen. */}
-              {actor?.type === "pc" && !aiActor ? (
-                <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
-              ) : (
-                <Button variant="epic" size="xs" className="py-1.5 text-sm" onClick={() => props.onContinue(turn._id)}>
-                  {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}
-                </Button>
-              )}
-            </div>
-          )}
-          {(open === "journal" || open === "chat") && (
+            )}
+          </Presence>
+          <Presence show={on && Boolean(!ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey))} motion="rise" asChild>
+            {turn && (
+              <div className={`${panel} absolute bottom-28 left-1/2 z-30 -translate-x-1/2 p-6 text-center`}>
+                <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
+                {passed && <p className="mb-3 font-serif text-sm text-[#e39a7c]">Passed Over · {passed}</p>}
+                {/* Another player's hero acts from their own screen. */}
+                {actor?.type === "pc" && !aiActor ? (
+                  <p className="text-sm text-stage-muted">Waiting for {actor.name.split(" ")[0]}</p>
+                ) : (
+                  <Button variant="epic" size="xs" className="py-1.5 text-sm" onClick={() => props.onContinue(turn._id)}>
+                    {!actor ? "Continue adventure" : aiActor ? `Continue ${actor.name.split(" ")[0]}'s turn` : "Continue NPC turn"}
+                  </Button>
+                )}
+              </div>
+            )}
+          </Presence>
+          <Presence show={on && (open === "journal" || open === "chat")} motion="right" asChild>
             <Journal
               turns={journal}
               chat={chat}
@@ -1291,40 +1309,46 @@ export function StagePlay(props: {
               onTab={(tab) => setOpen(tab === "chat" ? "chat" : "journal")}
               onChat={props.onChat}
             />
-          )}
-          {open === "map" && city && <CityMapPanel map={city.map} trail={city.trail} compact={compact} onClose={() => setOpen(null)} />}
-          {card && (
-            <CharacterCard
-              info={card}
-              compact={compact}
-              onClose={() => setCardId(null)}
-              onOrders={(changed) => {
-                if (latest && cardCharacter) void props.onOrders?.(latest._id, cardCharacter.id, { ...cardOrders, ...changed })
-              }}
-            />
-          )}
-          {open === "feedback" && props.onFeedback && (
-            <FeedbackPanel
-              // A star on the closing panel reopens it as the ending's form.
-              key={`${feedbackStart.kind}:${feedbackStart.rating ?? 0}`}
-              start={feedbackStart}
-              context={{
-                adventure: save.adventure.title,
-                plan: save.adventure.planId,
-                adventureId: String(save.adventure._id ?? ""),
-                encounter: shown?.encounterId ?? "",
-                turn: shown?._id ?? "",
-                turnOrder: String(shown?.order ?? ""),
-                gm: [save.provider, save.model].filter(Boolean).join(" "),
-              }}
-              compact={compact}
-              gate={props.feedbackGate}
-              onSend={props.onFeedback}
-              onSent={(kind) => kind === "ending" && setEndingSent(true)}
-              onClose={closePanel}
-            />
-          )}
-          {open === "settings" && (
+          </Presence>
+          <Presence show={on && open === "map" && Boolean(city)} motion="pop" asChild>
+            {city && <CityMapPanel map={city.map} trail={city.trail} compact={compact} onClose={() => setOpen(null)} />}
+          </Presence>
+          <Presence show={on && Boolean(card)} motion="right" asChild>
+            {card && (
+              <CharacterCard
+                info={card}
+                compact={compact}
+                onClose={() => setCardId(null)}
+                onOrders={(changed) => {
+                  if (latest && cardCharacter) void props.onOrders?.(latest._id, cardCharacter.id, { ...cardOrders, ...changed })
+                }}
+              />
+            )}
+          </Presence>
+          <Presence show={on && open === "feedback" && Boolean(props.onFeedback)} motion="right" asChild>
+            {props.onFeedback && (
+              <FeedbackPanel
+                // A star on the closing panel reopens it as the ending's form.
+                key={`${feedbackStart.kind}:${feedbackStart.rating ?? 0}`}
+                start={feedbackStart}
+                context={{
+                  adventure: save.adventure.title,
+                  plan: save.adventure.planId,
+                  adventureId: String(save.adventure._id ?? ""),
+                  encounter: shown?.encounterId ?? "",
+                  turn: shown?._id ?? "",
+                  turnOrder: String(shown?.order ?? ""),
+                  gm: [save.provider, save.model].filter(Boolean).join(" "),
+                }}
+                compact={compact}
+                gate={props.feedbackGate}
+                onSend={props.onFeedback}
+                onSent={(kind) => kind === "ending" && setEndingSent(true)}
+                onClose={closePanel}
+              />
+            )}
+          </Presence>
+          <Presence show={on && open === "settings"} motion="drop" asChild>
             <section className={`${panel} absolute right-10 top-24 z-40 w-72 p-6`}>
               <h2 className="mb-4 font-serif text-2xl">Scene Settings</h2>
               <div className="mb-4 flex gap-2">
@@ -1375,14 +1399,14 @@ export function StagePlay(props: {
                 Hide UI
               </Pill>
             </section>
-          )}
+          </Presence>
         </>
       )}
-      {hidden && (
+      <Presence show={hidden} motion="rise" asChild>
         <Pill className="absolute bottom-4 right-4 z-50" onClick={() => setHidden(false)}>
           Show interface · H
         </Pill>
-      )}
+      </Presence>
       {props.children}
     </StageHud>
   )

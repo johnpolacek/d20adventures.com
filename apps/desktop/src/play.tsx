@@ -1,5 +1,6 @@
 import { playableHero } from "@d20/gm-core/character/hero-draft"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { Presence, Swap } from "@d20/ui/presence"
 import { Pill, panel } from "@d20/ui/stage/hud"
 import { cn } from "@/lib/utils"
 import type { HostedSummary } from "../../../lib/host/server"
@@ -77,8 +78,11 @@ export function DesktopGame() {
   const [saves, setSaves] = useState<SaveSummary[]>([])
   const realm = useRealm()
   const [options, setOptions] = useState<{ races: string[]; archetypes: string[] }>({ races: [], archetypes: [] })
-  // The hero creator, over the new game screen. A hero it saves joins the party there.
-  const [creator, setCreator] = useState<{ editing?: Hero } | null>(null)
+  // The hero creator, over the new game screen. A hero it saves joins the party there. It stays mounted, closed, while
+  // it goes, and each opening is a new one.
+  const [creator, setCreator] = useState<{ editing?: Hero; open: boolean; n: number } | null>(null)
+  const openCreator = (editing?: Hero) => setCreator((c) => ({ editing, open: true, n: (c?.n ?? 0) + 1 }))
+  const closeCreator = () => setCreator((c) => c && { ...c, open: false })
   const [created, setCreated] = useState<string | null>(null)
   // Painted hero art, kept as blob URLs, which the stage and the app's content policy accept.
   const [art, setArt] = useState<Record<string, FigureArt>>({})
@@ -223,7 +227,7 @@ export function DesktopGame() {
     const before = new Set(heroes.map((h) => h.id))
     const res = await invoke({ kind: "saveHero", hero, ...(making ? { making } : {}) })
     if (!res || res.error) return false
-    setCreator(null)
+    closeCreator()
     setCreated(res.heroes?.find((h) => !before.has(h.id))?.id ?? null)
     return true
   }
@@ -414,128 +418,134 @@ export function DesktopGame() {
       onError={onError}
       onStage={setStageState}
     >
-      {hosting && hosted && !hosted.turn && screen === null && (
-        <HostedLobby
-          summary={hosted.summary}
-          chat={hosted.chat}
-          onChat={say}
-          gm={gmLabel}
-          busy={sending}
-          onAnswer={(userId, approve, note, characterId) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, characterId, approve, note }))}
-          onSheet={(userId, characterId) => host({ kind: "hostSheet", adventureId: hosting, userId, characterId }).then((r) => r.sheet ?? null)}
-          onRemove={(userId, note) => void act(() => host({ kind: "hostRemove", adventureId: hosting, userId, note }))}
-          onStart={(ais) => void act(() => host({ kind: "hostStart", adventureId: hosting, ais }))}
-          onHome={goHome}
-        />
-      )}
-      {screen !== null && (
-        // Every screen outside play sits under the website's header. Opaque, so the stage loading behind never flashes
-        // through before the title screen. Party setup alone lets the opening scene show.
-        <div className={cn("absolute inset-0 z-40 flex flex-col font-serif text-white", screen !== "new" && "bg-black")}>
-          <AppHeader
-            page={screen === "new" ? "adventures" : screen}
-            big={screen === "home"}
-            account={<AccountBadge account={acct} />}
-            trailing={<FullscreenButton className="text-yellow-950 opacity-70 drop-shadow-none" />}
-            onNavigate={ready ? navigate : undefined}
+      <Presence show={Boolean(hosting && hosted && !hosted.turn && screen === null)} motion="fade" className="absolute inset-0 z-40">
+        {hosting && hosted && !hosted.turn && screen === null && (
+          <HostedLobby
+            summary={hosted.summary}
+            chat={hosted.chat}
+            onChat={say}
+            gm={gmLabel}
+            busy={sending}
+            onAnswer={(userId, approve, note, characterId) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, characterId, approve, note }))}
+            onSheet={(userId, characterId) => host({ kind: "hostSheet", adventureId: hosting, userId, characterId }).then((r) => r.sheet ?? null)}
+            onRemove={(userId, note) => void act(() => host({ kind: "hostRemove", adventureId: hosting, userId, note }))}
+            onStart={(ais) => void act(() => host({ kind: "hostStart", adventureId: hosting, ais }))}
+            onHome={goHome}
           />
-          <div className="relative min-h-0 flex-1">
-            {!ready && (
-              <div className="absolute inset-0 grid place-items-center">
-                {acct.gated && (
-                  <>
+        )}
+      </Presence>
+      {/* Every screen outside play sits under the website's header, which stays put while the screens under it change. */}
+      <Presence show={screen !== null} motion="fade" initial={false} asChild>
+        {screen !== null && (
+          <div className="absolute inset-0 z-40 flex flex-col font-serif text-white">
+            {/* Black behind every screen, so the stage loading behind never flashes through before the title screen or
+                between two screens. Party setup alone lets the opening scene show. */}
+            <div className={cn("absolute inset-0 bg-black transition-opacity duration-150 ease-snap", screen === "new" && "opacity-70")} />
+            <AppHeader
+              page={screen === "new" ? "adventures" : screen}
+              big={screen === "home"}
+              account={<AccountBadge account={acct} />}
+              trailing={<FullscreenButton className="text-yellow-950 opacity-70 drop-shadow-none" />}
+              onNavigate={ready ? navigate : undefined}
+            />
+            <div className="relative min-h-0 flex-1">
+              <Swap id={ready ? screen : "gate"} motion="rise" exit="fade" className="absolute inset-0">
+                {!ready && (
+                  <Presence show={acct.gated} motion="fade" className="absolute inset-0 grid place-items-center">
                     <img src="/images/app/backgrounds/d20-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
-                    <div className="relative">
+                    <div className="enter-pop relative">
                       <LinkGate account={acct} />
                     </div>
-                  </>
+                  </Presence>
                 )}
-              </div>
-            )}
-            {ready && (
-              <>
-                {screen === "home" && (
-                  <Home save={save} art={art} busy={working} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />
-                )}
-                {screen === "adventures" && (
-                  <AdventuresPage
-                    saves={saves}
-                    art={art}
-                    adventures={adventures}
-                    locked={locked}
-                    listPrices={listPrices}
-                    busy={working}
-                    onContinue={() => setScreen(null)}
-                    onResume={(id) => void resume(id)}
-                    onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
-                    onArchive={(archiveId, restore) => void invoke({ kind: "archive", archiveId, restore })}
-                    onAdventure={(id) => {
-                      pickAdventure(id)
-                      setScreen("new")
-                    }}
-                    hosted={hostedList}
-                    hostingNow={worker?.adventureId ?? null}
-                    onOpenHosted={(id) => void openHosted(id)}
-                    onRemoveHosted={(id) => void removeHosted(id)}
-                  />
-                )}
-                {screen === "characters" && (
-                  <CharactersPage
-                    heroes={heroes}
-                    art={art}
-                    busy={working}
-                    painting={painting}
-                    canCreate={providers.length > 0}
-                    onCreate={() => setCreator({})}
-                    onEdit={(hero) => setCreator({ editing: hero })}
-                    onPaint={painter ? (hero) => void paintHero(hero) : undefined}
-                    onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                  />
-                )}
-                {screen === "settings" && <SettingsPage realm={realm} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />}
-                {screen === "new" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/70 text-center">
-                    {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Antigravity.</p>}
-                    {adventures.length > 0 && (
-                      <NewGame
-                        key={carried ? `${adventure}:continued` : adventure}
-                        adventures={adventures}
-                        adventure={adventure}
-                        heroes={heroes}
-                        providers={providers}
-                        models={models}
-                        provider={provider}
-                        claudeModel={claudeModel}
-                        onProvider={pickGm}
-                        busy={working || sending}
-                        waiting={stageState.waiting}
-                        created={created}
-                        carried={carried ?? undefined}
-                        onStart={(chosenParty) => void start(chosenParty)}
-                        onCreate={() => setCreator({})}
-                        onEdit={(hero) => setCreator({ editing: hero })}
+                {ready && (
+                  <>
+                    {screen === "home" && (
+                      <Home save={save} art={art} busy={working} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />
+                    )}
+                    {screen === "adventures" && (
+                      <AdventuresPage
+                        saves={saves}
                         art={art}
-                        painting={painting}
-                        onPaint={painter ? (hero) => void paintHero(hero) : undefined}
-                        onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                        onCancel={() => setScreen("adventures")}
+                        adventures={adventures}
                         locked={locked}
                         listPrices={listPrices}
-                        linked={acct.state?.linked ?? false}
-                        onLink={() => void acct.start()}
-                        onHost={(you, invites, ais, open, approve, watch, each, bring, flex) => void hostGame(you, invites, ais, open, approve, watch, each, bring, flex)}
+                        busy={working}
+                        onContinue={() => setScreen(null)}
+                        onResume={(id) => void resume(id)}
+                        onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
+                        onArchive={(archiveId, restore) => void invoke({ kind: "archive", archiveId, restore })}
+                        onAdventure={(id) => {
+                          pickAdventure(id)
+                          setScreen("new")
+                        }}
+                        hosted={hostedList}
+                        hostingNow={worker?.adventureId ?? null}
+                        onOpenHosted={(id) => void openHosted(id)}
+                        onRemoveHosted={(id) => void removeHosted(id)}
                       />
                     )}
-                  </div>
+                    {screen === "characters" && (
+                      <CharactersPage
+                        heroes={heroes}
+                        art={art}
+                        busy={working}
+                        painting={painting}
+                        canCreate={providers.length > 0}
+                        onCreate={() => openCreator()}
+                        onEdit={openCreator}
+                        onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+                        onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+                      />
+                    )}
+                    {screen === "settings" && <SettingsPage realm={realm} onRealm={() => void openSite(`/settings/${realm?.id ?? "realm-of-myr"}`)} />}
+                    {screen === "new" && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 text-center">
+                        {!providers.length && <p>Install and sign in to Claude Code, Codex, Grok, or Antigravity.</p>}
+                        {adventures.length > 0 && (
+                          <NewGame
+                            key={carried ? `${adventure}:continued` : adventure}
+                            adventures={adventures}
+                            adventure={adventure}
+                            heroes={heroes}
+                            providers={providers}
+                            models={models}
+                            provider={provider}
+                            claudeModel={claudeModel}
+                            onProvider={pickGm}
+                            busy={working || sending}
+                            waiting={stageState.waiting}
+                            created={created}
+                            carried={carried ?? undefined}
+                            onStart={(chosenParty) => void start(chosenParty)}
+                            onCreate={() => openCreator()}
+                            onEdit={openCreator}
+                            art={art}
+                            painting={painting}
+                            onPaint={painter ? (hero) => void paintHero(hero) : undefined}
+                            onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
+                            onCancel={() => setScreen("adventures")}
+                            locked={locked}
+                            listPrices={listPrices}
+                            linked={acct.state?.linked ?? false}
+                            onLink={() => void acct.start()}
+                            onHost={(you, invites, ais, open, approve, watch, each, bring, flex) => void hostGame(you, invites, ais, open, approve, watch, each, bring, flex)}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-            <AccountNotice account={acct} />
+              </Swap>
+              <AccountNotice account={acct} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Presence>
       {creator && (
         <HeroCreator
+          key={creator.n}
+          open={creator.open}
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
           adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks } : undefined}
           editing={creator.editing}
@@ -543,10 +553,11 @@ export function DesktopGame() {
           busy={working}
           onDraft={draftHero}
           onSave={saveHero}
-          onClose={() => setCreator(null)}
+          onClose={closeCreator}
+          onClosed={() => setCreator((c) => (c && !c.open ? null : c))}
         />
       )}
-      {(error || stageError) && (
+      <Presence show={Boolean(error || stageError)} motion="drop" asChild>
         <div role="alert" className={`${panel} absolute left-1/2 top-28 z-[60] w-[min(600px,90vw)] -translate-x-1/2 p-4 text-sm`}>
           <p>{error ?? stageError}</p>
           <Pill className="mt-3" disabled={working} onClick={() => void invoke({ kind: "load" })}>
@@ -556,7 +567,7 @@ export function DesktopGame() {
             Dismiss
           </Pill>
         </div>
-      )}
+      </Presence>
     </StagePlay>
   )
 }

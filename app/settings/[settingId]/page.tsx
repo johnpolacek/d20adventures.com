@@ -23,7 +23,7 @@ export default async function SettingHome(props: { params: Promise<{ settingId: 
 
   return (
     <div className="flex min-h-screen flex-col relative">
-      <div className="fade-in delay-[2s] relative z-10">
+      <div className="fade-in delay-150 relative z-10">
         <ImageHeader imageUrl={getImageUrl(setting.image)} title={setting.name} imageAlt={setting.name} />
         {canEdit && (
           <div className="fixed bottom-[4vh] right-[4vh] z-20 space-y-4 flex flex-col items-end">

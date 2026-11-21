@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import type { CSSProperties } from "react"
 import { getAdventuresForUser } from "@/app/_actions/adventure"
 import { getPracticeReportsForUser } from "@/app/_actions/adventure-reports"
 import { getUserCharacters } from "@/app/_actions/character"
@@ -95,8 +96,8 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
               {adventures.length > 0 ? (
                 <div className="flex flex-wrap gap-6 justify-center">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {adventures.map((adv: any) => (
-                    <div key={adv._id} className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+                  {adventures.map((adv: any, i: number) => (
+                    <div key={adv._id} className="enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
                       <div className="bg-black rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 pb-6 font-display">
                         {/* Adventure Image */}
                         {(() => {
@@ -138,8 +139,8 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
               </h2>
               {practiceReports.length > 0 ? (
                 <div className="max-w-4xl mx-auto space-y-3">
-                  {practiceReports.map((report) => (
-                    <div key={report.id} className="rounded-lg border border-white/20 bg-black/50 p-4">
+                  {practiceReports.map((report, i) => (
+                    <div key={report.id} className="enter-rise rounded-lg border border-white/20 bg-black/50 p-4" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="font-display text-lg text-amber-200">{report.adventureTitle}</div>
                         <div className="text-xs font-mono text-white/70">{new Date(report.createdAt).toLocaleString()}</div>

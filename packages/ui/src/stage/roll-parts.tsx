@@ -77,7 +77,7 @@ export function DeathSaveMarks({ saves, compact = false, label = true }: { saves
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className={cn("inline-block rotate-45 border", compact ? "h-1.5 w-1.5" : "h-2 w-2")}
+          className={cn("inline-block rotate-45 border transition-[background-color,box-shadow] duration-150", compact ? "h-1.5 w-1.5" : "h-2 w-2")}
           style={{ borderColor: tone, backgroundColor: i < count ? tone : "transparent", boxShadow: i < count ? `0 0 6px ${tone}66` : undefined }}
         />
       ))}

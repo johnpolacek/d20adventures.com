@@ -3,13 +3,14 @@
 // The journal: every word of the story so far, the replies and the rolls, and the table chat. Opened from the top bar,
 // so the stage carries the scene and the text is always one tap away.
 
-import { Fragment, useEffect, useRef, useState } from "react"
+import { Fragment, type RefObject, useEffect, useRef, useState } from "react"
 import { Button } from "../button"
 import { Input } from "../input"
+import { Presence, Swap } from "../presence"
 import { Ornament } from "../typography/ornament"
 import { dropCapSmall } from "../typography/styles"
-import { cn } from "../utils"
-import { eyebrow, Pill, panel } from "./hud"
+import { cn, entrance, type MotionProps, staggered } from "../utils"
+import { eyebrow, Pill, panel, useJoined } from "./hud"
 import { DeathSaveMarks, FeatureEntry, RollDetails } from "./roll-parts"
 import { againstLabel, type FeatureView, isCritical, marginText, modeName, type RollView, rollHeading, rollSpeech, verdictOf } from "./roll-view"
 
@@ -163,13 +164,69 @@ function ChatBox({ onSend }: { onSend: (text: string) => Promise<boolean> }) {
         onChange={(e) => setDraft(e.target.value)}
         placeholder="Say something"
         aria-label="Table chat message"
-        className="min-w-0 flex-1 rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-stage-cream placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none"
+        className="min-w-0 flex-1 rounded-[3px] border border-stage-line/25 bg-black/35 px-3 py-2 font-serif text-[13px] text-stage-cream transition-colors duration-150 placeholder:text-stage-muted/60 focus:border-stage-gold/70 focus:outline-none"
       />
       <Pill type="submit" disabled={sending || !draft.trim()}>
         Send
       </Pill>
     </form>
   )
+}
+
+// The story so far. Its first scenes rise in one after another as it opens, and a scene told while it is open rises in.
+function Story({ turns }: { turns: JournalTurn[] }) {
+  const joined = useJoined()
+  // Turns in a row under one title are one scene: the title once, then the turns numbered.
+  const scenes = turns.reduce<JournalTurn[][]>((all, t) => {
+    const last = all.at(-1)
+    if (last && last[0].title === t.title) last.push(t)
+    else all.push([t])
+    return all
+  }, [])
+  return scenes.map((scene, at) => {
+    const late = joined(scene[0].number)
+    return (
+      <section key={scene[0].number} className={cn("mb-6", (late || at < 8) && "enter-rise")} style={late ? undefined : staggered(at)}>
+        <h3 className="text-center font-display text-[17px] text-[#f3d6a6]">{scene[0].title}</h3>
+        <Ornament className="mt-1 mb-3 scale-75" />
+        {scene.map((t, n) => (
+          <article key={t.number}>
+            {scene.length > 1 && <Divider n={n + 1} of={scene.length} />}
+            {t.reply && (
+              <div className="mb-2 border-l border-stage-brass/50 pl-3 font-serif text-[13px] text-stage-muted italic">
+                <span className="not-italic text-[9px] tracking-[0.2em] text-stage-gold uppercase">{t.reply.name}</span>
+                <div>{t.reply.text}</div>
+              </div>
+            )}
+            {t.paragraphs.map((p, i) =>
+              typeof p === "string" ? (
+                <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
+                  {p}
+                </p>
+              ) : "roll" in p ? (
+                <RollLine key={i} roll={p.roll} />
+              ) : (
+                <FeatureEntry key={i} feature={p.feature} compact className="my-3" />
+              )
+            )}
+          </article>
+        ))}
+      </section>
+    )
+  })
+}
+
+// The table chat, kept on its newest line. A line said while it is open rises in.
+function Chat({ chat, scroller }: { chat: ChatLine[]; scroller: RefObject<HTMLDivElement | null> }) {
+  const joined = useJoined()
+  useEffect(() => {
+    if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight
+  }, [chat.length, scroller])
+  return chat.map((m, i) => (
+    <p key={i} className={cn("mb-2 text-[12px] leading-relaxed", joined(i) && "enter-rise")}>
+      <span className="font-serif text-[#f3d6a6]">{m.from}</span> <span className="text-stage-sage">{m.text}</span>
+    </p>
+  ))
 }
 
 // The caller may own which tab shows, to open on the chat and to know when it is read. With onChat, the chat takes
@@ -182,7 +239,10 @@ export function Journal({
   tab: shown,
   onTab,
   onChat,
-}: {
+  className,
+  style,
+  onAnimationEnd,
+}: MotionProps & {
   turns: JournalTurn[]
   chat: ChatLine[]
   compact?: boolean
@@ -194,20 +254,13 @@ export function Journal({
   const [own, setOwn] = useState<JournalTab>("story")
   const tab = shown ?? own
   const setTab = onTab ?? setOwn
-  // The chat stays on its newest line.
   const scroller = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (tab === "chat" && scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight
-  }, [tab, chat.length])
-  // Turns in a row under one title are one scene: the title once, then the turns numbered.
-  const scenes = turns.reduce<JournalTurn[][]>((all, t) => {
-    const last = all.at(-1)
-    if (last && last[0].title === t.title) last.push(t)
-    else all.push([t])
-    return all
-  }, [])
   return (
-    <section className={cn(panel, "fade-in absolute z-40 flex flex-col", compact ? "top-12 right-3 bottom-12 w-[min(380px,60vw)]" : "top-[86px] right-10 bottom-[118px] w-[380px]")}>
+    <section
+      className={cn(panel, "absolute z-40 flex flex-col", compact ? "top-12 right-3 bottom-12 w-[min(380px,60vw)]" : "top-[86px] right-10 bottom-[118px] w-[380px]", entrance("enter-right", className))}
+      style={style}
+      onAnimationEnd={onAnimationEnd}
+    >
       <div className="flex items-center justify-between border-b border-stage-line/20 px-5 pt-4 pb-2">
         <div className="flex gap-4">
           {(["story", "chat"] as const).map((t) => (
@@ -216,54 +269,22 @@ export function Journal({
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={cn(eyebrow, "pb-1 transition-colors", tab === t ? "border-b border-stage-gold" : "text-stage-muted hover:text-stage-gold")}
+              className={cn(eyebrow, "pb-1 transition-colors duration-150", tab === t ? "border-b border-stage-gold" : "text-stage-muted hover:text-stage-gold")}
             >
               {t === "story" ? "The story so far" : "Table chat"}
             </Button>
           ))}
         </div>
-        <Button variant="plain" type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-stage-muted hover:text-stage-cream">
+        <Button variant="plain" type="button" onClick={onClose} aria-label="Close the journal" className="text-xl leading-none text-stage-muted transition-[color,scale] duration-150 ease-snap hover:text-stage-cream active:scale-90">
           ×
         </Button>
       </div>
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto px-5 py-4 [scrollbar-width:thin]">
-        {tab === "story" &&
-          scenes.map((scene) => (
-            <section key={scene[0].number} className="mb-6">
-              <h3 className="text-center font-display text-[17px] text-[#f3d6a6]">{scene[0].title}</h3>
-              <Ornament className="mt-1 mb-3 scale-75" />
-              {scene.map((t, n) => (
-                <article key={t.number}>
-                  {scene.length > 1 && <Divider n={n + 1} of={scene.length} />}
-                  {t.reply && (
-                    <div className="mb-2 border-l border-stage-brass/50 pl-3 font-serif text-[13px] text-stage-muted italic">
-                      <span className="not-italic text-[9px] tracking-[0.2em] text-stage-gold uppercase">{t.reply.name}</span>
-                      <div>{t.reply.text}</div>
-                    </div>
-                  )}
-                  {t.paragraphs.map((p, i) =>
-                    typeof p === "string" ? (
-                      <p key={i} className={cn("mb-2.5 font-serif text-[13.5px] leading-[1.65] text-stage-sage", n === 0 && i === firstLine(t.paragraphs) && dropCapSmall)}>
-                        {p}
-                      </p>
-                    ) : "roll" in p ? (
-                      <RollLine key={i} roll={p.roll} />
-                    ) : (
-                      <FeatureEntry key={i} feature={p.feature} compact className="my-3" />
-                    )
-                  )}
-                </article>
-              ))}
-            </section>
-          ))}
-        {tab === "chat" &&
-          chat.map((m, i) => (
-            <p key={i} className="mb-2 text-[12px] leading-relaxed">
-              <span className="font-serif text-[#f3d6a6]">{m.from}</span> <span className="text-stage-sage">{m.text}</span>
-            </p>
-          ))}
+        <Swap id={tab}>{tab === "story" ? <Story turns={turns} /> : <Chat chat={chat} scroller={scroller} />}</Swap>
       </div>
-      {tab === "chat" && onChat && <ChatBox onSend={onChat} />}
+      <Presence show={tab === "chat" && Boolean(onChat)} motion="rise">
+        {onChat && <ChatBox onSend={onChat} />}
+      </Presence>
     </section>
   )
 }

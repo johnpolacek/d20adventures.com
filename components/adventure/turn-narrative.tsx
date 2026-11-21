@@ -14,6 +14,7 @@ import { generatePracticeReport, getPracticeReportsForAdventure } from "@/app/_a
 import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import StoryviewButton from "@/components/adventure/storyview/storyview-button"
 import { Button } from "@d20/ui/button"
+import { Presence } from "@d20/ui/presence"
 import { Switch } from "@d20/ui/switch"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAdventure } from "@/lib/context/AdventureContext"
@@ -232,14 +233,14 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">
-      {shouldShowReply && (
-        <div className="hidden md:flex fade-in justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
+      <Presence show={Boolean(shouldShowReply)} motion="drop" asChild>
+        <div className="hidden md:flex justify-between items-center gap-4 px-4 h-14 -mt-18 mb-4 bg-black/70 rounded-lg border border-white/20">
           <p className="italic text-sm pl-2 font-bold text-amber-300">It is your turn!</p>
           <Button variant="outline" size="sm" className="text-xs" onClick={() => scrollToBottom()}>
             Go To Reply
           </Button>
         </div>
-      )}
+      </Presence>
       <TurnNarrativeBody variant="page" showOriginalReplies={showOriginalReplies} nextAdventure={nextAdventure} />
       <div className="absolute bottom-8 left-8 w-auto pr-16 z-50">
         <div className="flex justify-center md:justify-start items-center gap-3 md:bg-black/70 px-4 py-2 rounded-lg md:border border-white/20">
@@ -264,11 +265,13 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
               {isGeneratingPracticeReport ? "Generating Report..." : "Generate Practice Report"}
             </Button>
           </div>
-          {practiceReportError ? <p className="text-red-300 text-sm mt-3">{practiceReportError}</p> : null}
+          <Presence show={Boolean(practiceReportError)} motion="drop" asChild>
+            <p className="text-red-300 text-sm mt-3">{practiceReportError}</p>
+          </Presence>
           {practiceReports.length > 0 ? (
             <div className="mt-4 space-y-3">
               {practiceReports.slice(0, 5).map((report) => (
-                <div key={report.id} className="rounded border border-white/15 bg-black/30 p-3">
+                <div key={report.id} className="enter-rise rounded border border-white/15 bg-black/30 p-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
                     <span className="font-mono">{new Date(report.createdAt).toLocaleString()}</span>
                     <span className={`px-2 py-0.5 rounded ${report.status === "ready" ? "bg-green-700/50 text-green-200" : "bg-red-700/50 text-red-200"}`}>{report.status}</span>
@@ -288,7 +291,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
                           {finding.recommendation ? <p className="text-sm text-white/80 mt-1">{finding.recommendation}</p> : null}
                           {finding.target?.planPath ? (
                             <div className="mt-2">
-                              <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`} className="text-xs text-primary-200 hover:text-primary-100 underline">
+                              <Link href={`/admin/adventure-plans/${settingId}/${adventurePlanId}`} className="text-xs text-primary-200 hover:text-primary-100 underline transition-colors duration-150">
                                 Open plan editor: {finding.target.planPath}
                               </Link>
                             </div>
@@ -301,7 +304,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
               ))}
             </div>
           ) : (
-            <p className="text-sm text-white/60 mt-3">No reports generated yet.</p>
+            <p className="enter-fade text-sm text-white/60 mt-3">No reports generated yet.</p>
           )}
         </div>
       )}

@@ -25,6 +25,7 @@ import StoryviewOverlay, { type StoryviewSnapshot } from "./storyview-overlay"
 import StoryviewPausedNotice from "./storyview-paused-notice"
 import { Button } from "@d20/ui/button"
 import { Label } from "@d20/ui/label"
+import { Presence } from "@d20/ui/presence"
 import { Tip } from "@d20/ui/tooltip"
 
 const STATUS_REFRESH_DEBOUNCE_MS = 2000
@@ -122,7 +123,7 @@ export default function StoryviewRailPanel({ className }: { className?: string }
                 </Label>
               </Tip>
             )}
-            <Button variant="plain" type="button" onClick={open} className="rounded p-1 text-stone-300 transition-colors hover:bg-white/10 hover:text-violet-200" aria-label="Play this turn in Storyview">
+            <Button variant="plain" type="button" onClick={open} className="rounded p-1 text-stone-300 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-violet-200 active:scale-90" aria-label="Play this turn in Storyview">
               <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
@@ -131,11 +132,11 @@ export default function StoryviewRailPanel({ className }: { className?: string }
           variant="plain"
           type="button"
           onClick={open}
-          className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left"
+          className="group relative block w-full cursor-pointer bg-gradient-to-b from-[#14101f] via-[#0e0b16] to-[#08060d] text-left transition-opacity duration-100 active:opacity-80"
           aria-label="Play this turn in Storyview"
         >
           <div className="relative max-h-28 overflow-hidden px-4 pt-3">
-            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors group-hover:text-violet-100/30">{previewText(currentTurn.story)}</p>
+            <p className="font-display text-lg leading-snug text-stone-200/30 transition-colors duration-150 group-hover:text-violet-100/30">{previewText(currentTurn.story)}</p>
             {/* crop fade into the caption row */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0a0810] to-transparent" />
           </div>
@@ -144,25 +145,27 @@ export default function StoryviewRailPanel({ className }: { className?: string }
             <p className="text-[11px] text-stone-400">Play this turn cinematically</p>
           </div>
         </Button>
-        {(paused || showReady || showPreparing) && (
+        <Presence show={Boolean(paused || showReady || showPreparing)} motion="fade" asChild>
           <div className="border-t border-white/5 px-4 py-2">
-            {paused && <StoryviewPausedNotice paused={paused} />}
+            {paused && <StoryviewPausedNotice paused={paused} className="enter-fade" />}
             {showReady && (
-              <p className="text-xs text-emerald-300/80">
+              <p className="enter-fade text-xs text-emerald-300/80">
                 <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 align-middle" />
                 Narration ready
               </p>
             )}
             {showPreparing && (
-              <p className="flex items-center gap-1.5 text-xs text-indigo-300/80">
+              <p className="enter-fade flex items-center gap-1.5 text-xs text-indigo-300/80">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Preparing narration…
               </p>
             )}
           </div>
-        )}
+        </Presence>
       </div>
-      {snapshot && <StoryviewOverlay snapshot={snapshot} onClose={() => setSnapshot(null)} />}
+      <Presence show={Boolean(snapshot)} motion="fade" asChild>
+        {snapshot && <StoryviewOverlay snapshot={snapshot} onClose={() => setSnapshot(null)} />}
+      </Presence>
     </>
   )
 }

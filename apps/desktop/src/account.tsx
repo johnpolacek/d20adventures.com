@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import { Button } from "@d20/ui/button"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@d20/ui/menu"
+import { Presence, Swap } from "@d20/ui/presence"
 import { Rule, siteOutline } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
 import { cn } from "@/lib/utils"
@@ -116,21 +117,22 @@ export function useAccount(opts: { onPacks: () => void }) {
 
 export type Account = ReturnType<typeof useAccount>
 
-// The code from the app, as paper tiles.
+// The code from the app, as paper tiles, set down one after another.
 function CodeTiles({ code }: { code: string }) {
   const c = code.replace(/[^A-Z0-9]/g, "")
   const tile =
-    "grid h-12 w-9 place-items-center rounded-sm bg-amber-50 bg-[url('/images/app/backgrounds/paper-texture.png')] bg-[length:120px] font-display text-2xl font-bold text-primary-700 ring-2 ring-black"
+    "enter-pop grid h-12 w-9 place-items-center rounded-sm bg-amber-50 bg-[url('/images/app/backgrounds/paper-texture.png')] bg-[length:120px] font-display text-2xl font-bold text-primary-700 ring-2 ring-black"
+  const at = (i: number) => ({ "--i": Math.min(i, 8) }) as CSSProperties
   return (
     <div className="flex items-center justify-center gap-2" role="img" aria-label={`Code ${code}`}>
       {[...c.slice(0, 4)].map((ch, i) => (
-        <span key={`a${i}`} className={tile}>
+        <span key={`a${i}`} className={tile} style={at(i)}>
           {ch}
         </span>
       ))}
       <span className="mx-1 h-[2px] w-3 bg-amber-400/70" />
       {[...c.slice(4)].map((ch, i) => (
-        <span key={`b${i}`} className={tile}>
+        <span key={`b${i}`} className={tile} style={at(i + 4)}>
           {ch}
         </span>
       ))}
@@ -145,10 +147,10 @@ function Waiting({ account: a }: { account: Account }) {
       <CodeTiles code={a.link.userCode} />
       <p className="text-sm text-gray-300">Approve this code on the website.</p>
       <div className="flex justify-center gap-2">
-        <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} onClick={() => void openSite(a.link!.verifyPath)}>
+        <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} onClick={() => void openSite(a.link!.verifyPath)}>
           Open website
         </Button>
-        <Button variant="plain" type="button" className={cn(siteOutline, "px-3 py-1 text-sm")} onClick={a.stop}>
+        <Button variant="plain" type="button" className={cn(siteOutline, "active:scale-[0.97] px-3 py-1 text-sm")} onClick={a.stop}>
           Cancel
         </Button>
       </div>
@@ -159,64 +161,74 @@ function Waiting({ account: a }: { account: Account }) {
 // In the header: the linked account's picture, as the website's user button, which opens the account menu with who
 // is linked and Unlink. Otherwise Link account, when play does not need one or the link is unconfirmed.
 export function AccountBadge({ account: a }: { account: Account }) {
-  if (!a.ready || !a.state || a.gated) return null
-  if (a.state.linked === true)
-    return (
-      <Menu>
-        <MenuTrigger
-          aria-label={`Account, ${a.state.account}`}
-          // Undoes the header's paper filter, which doubles saturation and turns hues 30 degrees.
-          className="my-2 grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-600 font-display text-sm text-white hue-rotate-30 saturate-50"
-        >
-          {a.state.avatar ? <img src={a.state.avatar} alt="" className="h-full w-full object-cover" /> : a.state.account.slice(0, 1).toUpperCase()}
-        </MenuTrigger>
-        <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
-          <p className="truncate px-1 text-sm text-gray-300">{a.state.account}</p>
-          <MenuItem className={cn(siteOutline, "mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-blue-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
-            Unlink
-          </MenuItem>
-        </MenuContent>
-      </Menu>
-    )
-  // Offline too: a stored token the website could not confirm. Linking again replaces it.
+  const state = a.ready && !a.gated ? a.state : null
   return (
-    <Button variant="emboss" className="my-2 px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
-      Link account
-    </Button>
+    <Presence show={Boolean(state)} motion="fade" className="flex items-center">
+      {state && (
+        <Swap id={state.linked === true ? "linked" : "unlinked"} className="flex items-center">
+          {state.linked === true ? (
+            <Menu>
+              <MenuTrigger
+                aria-label={`Account, ${state.account}`}
+                // Undoes the header's paper filter, which doubles saturation and turns hues 30 degrees.
+                className="my-2 grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-600 font-display text-sm text-white hue-rotate-30 saturate-50 transition-[scale,filter] duration-150 ease-snap hover:brightness-110 active:scale-90"
+              >
+                {state.avatar ? <img src={state.avatar} alt="" className="h-full w-full object-cover" /> : state.account.slice(0, 1).toUpperCase()}
+              </MenuTrigger>
+              <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
+                <p className="truncate px-1 text-sm text-gray-300">{state.account}</p>
+                <MenuItem className={cn(siteOutline, "active:scale-[0.97] mt-3 w-full justify-center px-3 py-1 text-sm data-highlighted:bg-blue-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
+                  Unlink
+                </MenuItem>
+              </MenuContent>
+            </Menu>
+          ) : (
+            // Offline too: a stored token the website could not confirm. Linking again replaces it.
+            <Button variant="emboss" className="my-2 px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
+              Link account
+            </Button>
+          )}
+        </Swap>
+      )}
+    </Presence>
   )
 }
 
 // Below the header, at the right: the code to approve while linking, and any account error.
 export function AccountNotice({ account: a }: { account: Account }) {
-  if (!a.ready || a.gated || !(a.link || a.error)) return null
+  const on = a.ready && !a.gated
   return (
     <div className="absolute top-4 right-8 z-30 flex flex-col items-end gap-2">
-      {a.link && (
+      <Presence show={on && Boolean(a.link)} motion="drop" asChild>
         <div className={cn(cardVariants({ variant: "frame" }), "w-80 p-5 text-center")}>
           <Waiting account={a} />
         </div>
-      )}
-      {a.error && <div className="rounded bg-black/80 px-3 py-1 text-sm text-red-300">{a.error}</div>}
+      </Presence>
+      <Presence show={on && Boolean(a.error)} motion="drop" asChild>
+        <div className="rounded bg-black/80 px-3 py-1 text-sm text-red-300">{a.error}</div>
+      </Presence>
     </div>
   )
 }
 
 // In the feedback panel, in place of the form, until this computer is linked. Feedback is sent under the account.
 export function FeedbackLink({ account: a }: { account: Account }) {
-  if (a.link)
-    return (
-      <div className="text-center">
-        <Waiting account={a} />
-      </div>
-    )
   return (
-    <div className="space-y-4 text-center">
-      <p className="font-serif text-stage-cream/80">Link this computer to your account to send feedback.</p>
-      <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy} onClick={() => void a.start()}>
-        {a.busy ? "Opening…" : "Link Account"}
-      </Button>
-      {a.error && <p className="text-sm text-red-300">{a.error}</p>}
-    </div>
+    <Swap id={a.link ? "code" : "start"} className="text-center">
+      {a.link ? (
+        <Waiting account={a} />
+      ) : (
+        <div className="space-y-4">
+          <p className="font-serif text-stage-cream/80">Link this computer to your account to send feedback.</p>
+          <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy} onClick={() => void a.start()}>
+            {a.busy ? "Opening…" : "Link Account"}
+          </Button>
+          <Presence show={Boolean(a.error)} motion="fade" asChild>
+            <p className="text-sm text-red-300">{a.error}</p>
+          </Presence>
+        </div>
+      )}
+    </Swap>
   )
 }
 
@@ -228,17 +240,21 @@ export function LinkGate({ account: a }: { account: Account }) {
         Link your account
       </h1>
       <Rule className="mx-auto mt-5 mb-6 w-48" />
-      {a.link ? (
-        <Waiting account={a} />
-      ) : (
-        <div className="space-y-6">
-          <p className="text-balance text-lg">Link this computer to your D20 Adventures account to play.</p>
-          <Button variant="epic" disabled={a.busy} onClick={() => void a.start()}>
-            {a.busy ? "Opening…" : "Link account"}
-          </Button>
-        </div>
-      )}
-      {a.error && <p className="mt-5 text-sm text-red-300">{a.error}</p>}
+      <Swap id={a.link ? "code" : "start"}>
+        {a.link ? (
+          <Waiting account={a} />
+        ) : (
+          <div className="space-y-6">
+            <p className="text-balance text-lg">Link this computer to your D20 Adventures account to play.</p>
+            <Button variant="epic" disabled={a.busy} onClick={() => void a.start()}>
+              {a.busy ? "Opening…" : "Link account"}
+            </Button>
+          </div>
+        )}
+      </Swap>
+      <Presence show={Boolean(a.error)} motion="fade" asChild>
+        <p className="mt-5 text-sm text-red-300">{a.error}</p>
+      </Presence>
     </div>
   )
 }
