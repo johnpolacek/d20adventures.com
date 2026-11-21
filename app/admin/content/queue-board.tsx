@@ -94,7 +94,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <ol className="grid content-start gap-1.5">
+        <ol className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
           {shown.map((item) => (
             <li
               key={item.slug}
@@ -104,7 +104,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
               onDrop={() => drop(item.slug)}
               onDragEnd={() => setDragging(null)}
               className={cn(
-                "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2 transition-[background-color,border-color,opacity] duration-150",
+                "flex min-w-0 cursor-pointer items-start gap-3 rounded-md border px-3 py-2 transition-[background-color,border-color,opacity] duration-150",
                 item.slug === selected ? "border-primary-400/70 bg-primary-950/40" : "border-white/10 bg-white/5 hover:border-white/25",
                 dragging === item.slug && "opacity-40",
                 canDrag && "cursor-grab active:cursor-grabbing"

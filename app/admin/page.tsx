@@ -55,7 +55,7 @@ export default async function AdminPage() {
   const sections = process.env.NODE_ENV === "development" ? [...SECTIONS, ...LOCAL_SECTIONS] : SECTIONS
 
   return (
-    <div className="container py-10 md:py-16">
+    <div className="container py-8 md:py-12">
       <div className="mx-auto max-w-5xl">
         <Heading variant="h3" className="mb-8">
           Admin
