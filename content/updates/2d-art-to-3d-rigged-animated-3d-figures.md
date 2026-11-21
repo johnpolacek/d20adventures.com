@@ -7,7 +7,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figure
 
 Until this week, characters in [The Midnight Summons](https://d20adventures.com) and other adventures were flat painted standee art. 
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/real-figures-on-the-stage/owlbear-fight-3d.webp" alt="Thalbern's 3D figure facing the owlbear in the moonlit Valkarr woods, as the game shows it" width="1600" height="900" />
+<iframe src="https://www.youtube-nocookie.com/embed/kOnKwsX0O0U" title="D20 Adventures gameplay with the new 3D figures" style="width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 0.5rem;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 I researched what other people were doing, experimented myself and now I'm writing up the whole pipeline that I landed on. Everything here is in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), and the full notes are in [asset-library/README.md](https://github.com/johnpolacek/d20adventures.com/blob/main/asset-library/README.md). Steal whatever is useful. Or by all means, tell me how I can do it better.
 
