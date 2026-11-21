@@ -24,6 +24,7 @@ import { frameShot, type ResolvedShot, resolveCast, resolveShots } from "./spec/
 import { type SetSpec, setSpecSchema } from "./spec/set"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "./spec/staging"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
+import { Floor } from "./surface"
 import { driftIn, fitView, minFov, type Spot, type TripodPoint, tripodView, type View } from "./tripod"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
@@ -233,6 +234,8 @@ export class Stage {
   private trod = new Map<string, number>()
   private cameOn = new Set<string>()
   private sinking = new Set<string>()
+  // What is underfoot anywhere in the set, for the sound of a step there.
+  private floor: Floor
 
   constructor(
     private o: StageOptions,
@@ -335,6 +338,7 @@ export class Stage {
     this.solids = built.footprints.filter((f) => (f.kind === "circle" ? f.r >= 1.2 : f.top === undefined && f.hw * f.hd >= 1.5))
     this.doors = doorways(built.anchors)
     this.statics = built.batch.flush(this.world)
+    this.floor = new Floor(this.statics, set.materials)
     const water = this.statics.filter((m) => (m.material as THREE.Material).userData.mirror)
     if (water.length) {
       const level = Math.max(
@@ -1189,7 +1193,8 @@ export class Stage {
     if (!this.effectListeners.size) return
     const c = this.member(id)
     const near = this.camera.position.distanceTo(V(c.x, (c.y ?? 0) + c.height / 2, c.z))
-    for (const l of this.effectListeners) l({ type: "body", act, id, height: c.height, pace, near, voice: c.voice })
+    const surface = this.floor.at(c.x, c.z, c.y ?? 0)
+    for (const l of this.effectListeners) l({ type: "body", act, id, height: c.height, pace, near, voice: c.voice, surface })
   }
 
   // UI laid over part of the canvas (a docked panel): shots compose in the uncovered area, and the scene continues

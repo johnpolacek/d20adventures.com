@@ -8,6 +8,8 @@ the packs below, unpacked into one folder, and sets their levels.
 - `blade`, `fire`, `spell`, `growl`, `hurt`: "80 CC0 RPG SFX", https://opengameart.org/content/80-cc0-rpg-sfx
 - `hit`, `thunk`: "100 CC0 SFX", https://opengameart.org/content/100-cc0-sfx
 - `cloth`, `coins`, `key`, `book`, `draw`, `step`: Kenney, "50 RPG sound effects", https://opengameart.org/content/50-rpg-sound-effects
+- `step-leaves`, `step-wood`, `step-stone`, `step-gravel`: "Different steps on wood, stone, leaves, gravel and mud",
+  https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud
 
 ## Ambience (`ambience`)
 

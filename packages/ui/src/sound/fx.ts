@@ -1,7 +1,7 @@
 "use client"
 
-import type { BodyEvent, EffectEvent, Element, PropKind } from "@d20/stage"
-import { audio, play, preload, whoosh } from "./engine"
+import type { BodyEvent, EffectEvent, Element, PropKind, Surface } from "@d20/stage"
+import { audio, type PlayOptions, play, preload, thump, whoosh } from "./engine"
 
 // The stage's effects as sound: recorded takes for blades, blows, fire and spells (CC0, see public/stage/sounds/SOURCES.md),
 // and made air for what has no recording, a flight or a swing that misses. All soft and short. Nothing pitched, so no
@@ -20,6 +20,10 @@ const FX = {
   book: takes("book", 1),
   draw: takes("draw", 1),
   step: takes("step", 5),
+  stepLeaves: takes("step-leaves", 2),
+  stepWood: takes("step-wood", 3),
+  stepStone: takes("step-stone", 1),
+  stepGravel: takes("step-gravel", 1),
   growl: takes("growl", 3),
   hurt: takes("hurt", 2),
 }
@@ -61,21 +65,46 @@ const PROPS: Partial<Record<PropKind, string[]>> = {
   map: FX.cloth,
 }
 
-// What a character's body does, as sound. Each is sized to the one who makes it: someone big is lower, slower and a
-// little louder, and anyone far from the camera is fainter. A person makes no sound of their own beyond their steps,
-// their fall and their clothes. A beast growls as it comes on and as it strikes, and cries out when struck.
+// A footstep on each kind of floor: its takes, how loud against the others, how far it is softened, and how much its
+// pitch wanders, more where there is one take. Leaves rustle, boards knock, stone taps, and something soft over the
+// floor all but swallows the step.
+const TREAD: Record<Surface, { takes: string[]; gain: number; muffle: number; vary: number }> = {
+  leaves: { takes: FX.stepLeaves, gain: 1, muffle: 4200, vary: 0.1 },
+  earth: { takes: FX.step, gain: 0.9, muffle: 2400, vary: 0.08 },
+  gravel: { takes: FX.stepGravel, gain: 0.85, muffle: 4800, vary: 0.14 },
+  wood: { takes: FX.stepWood, gain: 1, muffle: 2600, vary: 0.08 },
+  stone: { takes: FX.stepStone, gain: 0.9, muffle: 3600, vary: 0.14 },
+  soft: { takes: FX.step, gain: 0.5, muffle: 800, vary: 0.08 },
+}
+// What a character's body does, as sound. Each is sized to the one who makes it, and anyone far from the camera is
+// fainter. A person makes no sound of their own beyond their steps, their fall and their clothes. A beast growls as it
+// comes on and as it strikes, and cries out when struck.
 function bodySound(e: BodyEvent) {
   // 1 for someone of a person's height. The Owlbear is near 1.8.
   const size = Math.min(2.2, Math.max(0.6, e.height / 1.8))
+  // How much of a great weight they are: nothing up to the tallest of people, all of it from half as tall again.
+  const heavy = Math.min(1, Math.max(0, (size - 1.15) / 0.45))
   // Full within a few metres, half by nine, and never gone: the camera is often far from the one who acts.
   const far = 1 / (1 + (e.near / 9) ** 2)
   const level = LEVEL * (0.35 + 0.65 * far)
   const beast = e.voice === "beast"
   switch (e.act) {
     case "step": {
+      const floor = TREAD[e.surface]
       // A creeping step is barely there, and a run lands harder.
       const tread = e.pace < 0.8 ? 0.4 : e.pace > 2 ? 1.2 : 0.8
-      return void play(FX.step, "fx", { gain: 0.5 * tread * size * level, rate: 1 / Math.sqrt(size), vary: 0.08, muffle: 2400 / size })
+      const step: PlayOptions = { gain: 0.5 * tread * floor.gain * level, vary: floor.vary, muffle: floor.muffle }
+      if (!heavy) return void play(floor.takes, "fx", { ...step, rate: 1 / Math.sqrt(size) })
+      // Something huge does not step as a person does, lower. Its weight comes down first, a thud felt more than
+      // heard, and the floor answers under it: the same leaves or boards, slowed to half and pressed for longer.
+      const c = audio()
+      if (c) {
+        const t = c.currentTime + 0.01
+        const weight = heavy * tread * (0.35 + 0.65 * far)
+        thump(c, "fx", t, { peak: 0.5 * weight, from: 95, to: 42, length: 0.24 })
+        whoosh(c, "fx", t, { peak: 0.22 * weight, from: 260, to: 90, length: 0.2, attack: 0.012, q: 0.7 })
+      }
+      return void play(floor.takes, "fx", { ...step, gain: (step.gain ?? 0) * (1 + 0.9 * heavy), rate: 1 - 0.45 * heavy, muffle: floor.muffle * (1 - 0.45 * heavy), delay: 0.03 })
     }
     case "fall":
       // The body lands a moment after it starts to go, with their clothes.

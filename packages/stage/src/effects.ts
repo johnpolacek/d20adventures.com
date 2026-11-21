@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import type { Surface } from "./surface"
 
 // What a story's actions look like on stage, built at runtime from a small fixed library: missiles and blasts for
 // attacks and spells, and objects shown in a hand or passed between two people. Each one plays once and is gone. One
@@ -37,8 +38,8 @@ export type EffectEvent =
   | BodyEvent
 // What a cast member's own body does, for the same host: a footfall as they are seen to walk, a fall, sinking into
 // cover, walking on, the move of an attack, getting out of one's way, and being struck. `height` in metres says how big
-// they are, `pace` how fast they walk in metres a second, `near` how far they are from the camera, and `voice` what
-// they are when no person.
+// they are, `pace` how fast they walk in metres a second, `near` how far they are from the camera, `voice` what they
+// are when no person, and `surface` what they stand on (surface.ts).
 export type BodyAct = "step" | "fall" | "crouch" | "enter" | "strike" | "dodge" | "struck"
 export type Voice = "beast"
 export interface BodyEvent {
@@ -49,6 +50,7 @@ export interface BodyEvent {
   pace: number
   near: number
   voice?: Voice
+  surface: Surface
 }
 export interface EffectHost {
   // A cast member struck: a flash of colour on their card and a shake.

@@ -15,7 +15,8 @@ import { join, resolve } from "node:path"
 const from = resolve(process.argv[2] ?? join(homedir(), "Desktop/d20-sound-sources"))
 const out = resolve("public/stage/sounds")
 
-// Effects: cue name, source takes. Level is the RMS in dBFS each take is brought to, peaks held under -3.
+// Effects: cue name, source takes. Level is the RMS in dBFS each take is brought to, peaks held under -3. A take
+// written `file#seconds` is cut to that length, where a file holds more than one sound.
 const FX: Record<string, string[]> = {
   blade: ["oga-80-rpg/blade_01.ogg", "oga-80-rpg/blade_02.ogg", "oga-80-rpg/blade_03.ogg"],
   hit: ["oga-100-cc0/hit_01.ogg", "oga-100-cc0/hit_02.ogg", "oga-100-cc0/hit_03.ogg"],
@@ -27,6 +28,11 @@ const FX: Record<string, string[]> = {
   key: ["kenney-rpg/OGG/metalClick.ogg"],
   book: ["kenney-rpg/OGG/bookOpen.ogg"],
   draw: ["kenney-rpg/OGG/drawKnife3.ogg"],
+  // A footstep on each kind of floor. `step` is bare earth, and what the others fall back to.
+  "step-leaves": ["oga-steps/leaves01.ogg", "oga-steps/leaves02.ogg"],
+  "step-wood": ["oga-steps/wood01.ogg", "oga-steps/wood02.ogg", "oga-steps/wood03.ogg"],
+  "step-stone": ["oga-steps/stone01.ogg"],
+  "step-gravel": ["oga-steps/gravel.ogg#0.42"],
   // The lowest of the pack's footsteps and creature takes: the game plays them slower still for something big.
   step: ["kenney-rpg/OGG/footstep00.ogg", "kenney-rpg/OGG/footstep01.ogg", "kenney-rpg/OGG/footstep02.ogg", "kenney-rpg/OGG/footstep08.ogg", "kenney-rpg/OGG/footstep09.ogg"],
   growl: ["oga-80-rpg/creature_monster_03.ogg", "oga-80-rpg/creature_monster_04.ogg", "oga-80-rpg/creature_roar_02.ogg"],
@@ -74,7 +80,12 @@ mkdirSync(join(out, "ambience"), { recursive: true })
 // Leading silence off, and a few ms of fade so a cut start does not click.
 const TRIM = "silenceremove=start_periods=1:start_threshold=-50dB,afade=t=in:d=0.004"
 for (const [cue, takes] of Object.entries(FX)) {
-  takes.forEach((t, i) => encode(join(from, t), join(out, "fx", `${cue}-${i + 1}.mp3`), TRIM, FX_LEVEL, 1))
+  takes.forEach((t, i) => {
+    const [file, length] = t.split("#")
+    // A cut take fades out over its last 40 ms, so the cut does not click.
+    const cut = length ? `atrim=duration=${length},afade=t=out:st=${(Number(length) - 0.04).toFixed(3)}:d=0.04,` : ""
+    encode(join(from, file), join(out, "fx", `${cue}-${i + 1}.mp3`), `${cut}${TRIM}`, FX_LEVEL, 1)
+  })
 }
 for (const [bed, b] of Object.entries(BEDS)) {
   const cut = `atrim=start=${b.start ?? 0}:duration=${b.length},asetpts=PTS-STARTPTS${b.filter ? `,${b.filter}` : ""}`

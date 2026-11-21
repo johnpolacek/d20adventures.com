@@ -163,6 +163,17 @@ export function envelope(c: AudioContext, to: Bus, t: number, peak: number, deca
   g.connect(bus(to))
   return g
 }
+// A low thump: a tone that drops from `from` to `to` Hz as it dies away, as a weight coming down does. Far below any
+// note and gone in a fifth of a second, so it is felt as weight and never heard as a chime.
+export function thump(c: AudioContext, to: Bus, t: number, o: { peak: number; from: number; to: number; length: number }) {
+  const osc = c.createOscillator()
+  osc.type = "sine"
+  osc.frequency.setValueAtTime(o.from, t)
+  osc.frequency.exponentialRampToValueAtTime(o.to, t + o.length)
+  osc.connect(envelope(c, to, t, o.peak, o.length, 0.006))
+  osc.start(t)
+  osc.stop(t + o.length + 0.05)
+}
 // Noise through a band that slides from `from` to `to` Hz: air moving. No pitch, so never a chime.
 export function whoosh(c: AudioContext, to: Bus, t: number, o: { peak: number; from: number; to: number; length: number; attack?: number; q?: number }) {
   const src = c.createBufferSource()
