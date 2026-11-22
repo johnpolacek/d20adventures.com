@@ -58,7 +58,7 @@ The sheets come from the image tool built into the Codex CLI. It runs on my Chat
 
 The build flattens both cards onto the same mid-grey, shrinks them to 1536 pixels, and attaches them to a headless Codex run with every tool but image generation switched off:
 
-```sh
+```sh Codex Command
 codex --ask-for-approval never --sandbox read-only \
   -c features.image_generation=true -c features.shell_tool=false -c 'web_search="disabled"' \
   exec --image front.jpg --image back.jpg --ephemeral --skip-git-repo-check --json - < prompt.txt

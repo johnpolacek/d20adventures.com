@@ -79,8 +79,10 @@ let run: { top: number; sections: PostSection[] } = { top: 2, sections: [] }
 const LONG_PROMPT = 600
 
 // A post's top headings are its sections: each is numbered, and has an id for the contents list.
-// A fenced block marked `prompt` is drawn as a prompt card with a Copy button (components/updates/post-body.tsx).
-// Words after `prompt` name the card, and a part in [CAPITALS] is a slot for the reader to fill.
+// Every fenced block is drawn as a card with a Copy button (components/updates/post-body.tsx).
+// Words after the language name the card. In a block marked `prompt`, a part in [CAPITALS] is a slot for the reader to fill.
+// Other code keeps its lines and scrolls sideways.
+const CODE_NAMES: Record<string, string> = { sh: "Terminal", bash: "Terminal", zsh: "Terminal", shell: "Terminal", json: "JSON", ts: "TypeScript", tsx: "TypeScript", js: "JavaScript", mjs: "JavaScript", py: "Python", python: "Python", md: "Markdown", css: "CSS", html: "HTML" }
 const markdown = new Marked({
   renderer: {
     heading({ tokens, depth, text }) {
@@ -94,12 +96,13 @@ const markdown = new Marked({
     },
     code({ text, lang }) {
       const [kind, ...name] = (lang ?? "").split(/\s+/)
-      if (kind !== "prompt") return false
-      const title = escapeHtml(name.join(" ") || "Prompt")
-      const body = escapeHtml(text).replace(/\[[A-Z][^\]a-z]*\]/g, '<span class="up-slot">$&</span>')
+      const prompt = kind === "prompt"
+      const title = escapeHtml(name.join(" ") || (prompt ? "Prompt" : CODE_NAMES[kind] ?? (kind ? kind.toUpperCase() : "Code")))
+      const escaped = escapeHtml(text)
+      const body = prompt ? escaped.replace(/\[[A-Z][^\]a-z]*\]/g, '<span class="up-slot">$&</span>') : escaped
       const long = text.length > LONG_PROMPT
       const more = long ? '<button type="button" class="up-btn is-ghost up-prompt-more" data-expand aria-expanded="false">Expand</button>' : ""
-      return `<figure class="up-prompt${long ? " is-long" : ""}"><div class="up-prompt-head"><strong>${title}</strong><button type="button" class="up-btn is-xs" data-copy>Copy</button></div><div class="up-prompt-body"><pre><code>${body}</code></pre></div>${more}</figure>\n`
+      return `<figure class="up-prompt${prompt ? "" : " is-code"}${long ? " is-long" : ""}"><div class="up-prompt-head"><strong>${title}</strong><button type="button" class="up-btn is-xs" data-copy>Copy</button></div><div class="up-prompt-body"><pre><code>${body}</code></pre></div>${more}</figure>\n`
     },
   },
 })

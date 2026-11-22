@@ -758,6 +758,11 @@ body:has(.updates-page) main + footer {
 .up-prompt pre code {
   font: inherit;
 }
+.up-prompt.is-code pre {
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
 .up-prompt.is-long:not(.is-open) pre {
   max-height: 10.6em;
   overflow: hidden;
