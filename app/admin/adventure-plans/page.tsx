@@ -31,7 +31,7 @@ export default async function AdminAdventurePlansPage() {
 
   if (requiresSetup) {
     return (
-      <div className="container max-w-2xl pt-24 pb-12 md:pt-32 md:pb-16">
+      <div className="container max-w-2xl py-8 md:py-12">
         <AdminConfigMessage />
       </div>
     )
@@ -39,7 +39,7 @@ export default async function AdminAdventurePlansPage() {
 
   if (!isAdmin) {
     return (
-      <div className="container pt-24 pb-12 md:pt-32 md:pb-16">
+      <div className="container py-8 md:py-12">
         <div className="mx-auto max-w-2xl text-center">
           <Heading variant="h1" className="mb-4">
             Access Denied
@@ -53,7 +53,7 @@ export default async function AdminAdventurePlansPage() {
   const adventures = await listAdminWikiAdventures()
   return (
     <div className="min-h-screen bg-[#08071a]">
-      <div className="container pt-24 pb-12 md:pt-32 md:pb-16">
+      <div className="container py-8 md:py-12">
         <div className="mx-auto max-w-6xl">
           <Heading variant="h3" as="h1" className="mb-2">
             Adventure Plans
