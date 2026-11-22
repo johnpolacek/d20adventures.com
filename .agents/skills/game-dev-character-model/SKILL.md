@@ -1,9 +1,11 @@
 ---
 name: game-dev-character-model
-description: Create a realistic, AAA-looking 3D character model for a game or web scene, from a description or a reference video/image, as a textured, rigged GLB standing in a relaxed pose in a lit three.js viewer. Covers designing an original character, the photoreal A-pose concept image, image-to-3D with Meshy or Tripo through Fil, rigging, posing in code, hangar-style lighting, headless capture, and the checks before showing it. Use when the user asks for a character model, a hero/heroine/NPC, "a model as good as X", a realistic human for a game, or to rig or pose a generated character.
+description: In this repo, a D20 Adventures figure is made the way asset-library/README.md says, not this way. Read that first. This skill is background from another project. Create a realistic, AAA-looking 3D character model for a game or web scene, from a description or a reference video/image, as a textured, rigged GLB standing in a relaxed pose in a lit three.js viewer. Covers designing an original character, the photoreal A-pose concept image, image-to-3D with Meshy or Tripo through Fil, rigging, posing in code, hangar-style lighting, headless capture, and the checks before showing it. Use when the user asks for a character model, a hero/heroine/NPC, "a model as good as X", a realistic human for a game, or to rig or pose a generated character.
 ---
 
 # game-dev-character-model
+
+> **In D20 Adventures, follow `asset-library/README.md` instead.** This skill was copied from MengTo/Skills (`lab/stage-art/README.md`) and describes that project: Fil credits, Meshy or Tripo, `HTML Pages/`. The game's figures are made by `pnpm assets` and `pnpm assets:pilot`, with Hi3D on fal and Hyper3D's rig, and judged by the scorecards in `asset-library/scorecards/`. Read this one only for its ideas.
 
 Makes a character that holds up at game distance (full body to half body) in about an hour for roughly 85–100 Fil credits. Proven on two builds: a slim heroine in a fitted suit (`HTML Pages/heroine/`) and a broad engineer in a bulky work suit with belt gear (`HTML Pages/engineer/`).
 
