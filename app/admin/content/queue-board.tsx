@@ -296,27 +296,27 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
 
       <div className="grid gap-4 border-t border-white/10 pt-4">
         {PLATFORMS.map(({ name, limit }) => {
-          // A thread's posts are split by a line of ---, and only each post's own words count: [image] and [alt] lines don't.
-          const posts = (bodies[name] ?? "").split(/\n---\n/).map((p) => p.split("\n").filter((l) => !l.startsWith("[")).join("\n").trim())
-          const length = Math.max(0, ...posts.map((p) => [...p.replace(/https?:\/\/\S+/g, "x".repeat(23))].length))
           return (
             <Field
               key={name}
               label={name}
               extra={
-                <>
-                  {limit && <span className={cn("font-mono", length > limit ? "text-red-300" : "text-white/40")}>{posts.length > 1 ? `${posts.length} posts, longest ` : ""}{length}/{limit}</span>}
+                !limit && (
                   <Button variant="ghost" size="xs" disabled={!bodies[name]} onClick={() => copy(name)}>
                     {copied === name ? "Copied" : "Copy"}
                   </Button>
-                </>
+                )
               }
             >
-              <textarea
-                className={cn(fieldClass, "field-sizing-content py-2 text-sm", name === "Reddit" ? "min-h-40" : "min-h-20")}
-                value={bodies[name] ?? ""}
-                onChange={(e) => edit(name, e.target.value)}
-              />
+              {limit ? (
+                <Thread value={bodies[name] ?? ""} limit={limit} onChange={(value) => edit(name, value)} />
+              ) : (
+                <textarea
+                  className={cn(fieldClass, "field-sizing-content min-h-40 py-2 text-sm")}
+                  value={bodies[name] ?? ""}
+                  onChange={(e) => edit(name, e.target.value)}
+                />
+              )}
               <input
                 className={cn(fieldClass, "mt-1.5 h-8 text-xs")}
                 placeholder="Posted URL"
@@ -354,6 +354,86 @@ function Field({ label, extra, children }: { label: string; extra?: ReactNode; c
         <span className="ml-auto flex items-center gap-2">{extra}</span>
       </div>
       {children}
+    </div>
+  )
+}
+
+// A thread, one card a post. Stored as posts split by a line of ---, each with optional [image: url] and [alt: text]
+// lines, which is what the miner and the drafts write. Only a post's own words count toward the limit, links as 23.
+type Post = { text: string; image: string; alt: string }
+
+function parseThread(value: string): Post[] {
+  if (!value.trim()) return [{ text: "", image: "", alt: "" }]
+  return value.split(/\n---\n/).map((part) => {
+    const lines = part.split("\n")
+    const tag = (name: string) => lines.find((l) => l.startsWith(`[${name}: `))?.slice(name.length + 3, -1) ?? ""
+    const text = lines.filter((l) => !/^\[(image|alt): /.test(l)).join("\n").trim()
+    return { text, image: tag("image"), alt: tag("alt") }
+  })
+}
+
+function serializeThread(posts: Post[]): string {
+  return posts
+    .map((p) => {
+      const picture = p.image.trim() ? `[image: ${p.image.trim()}]${p.alt.trim() ? `\n[alt: ${p.alt.trim()}]` : ""}` : ""
+      return [p.text.trim(), picture].filter(Boolean).join("\n\n")
+    })
+    .join("\n\n---\n\n")
+}
+
+const postLength = (text: string) => [...text.replace(/https?:\/\/\S+/g, "x".repeat(23))].length
+
+function Thread({ value, limit, onChange }: { value: string; limit: number; onChange: (value: string) => void }) {
+  // Posts are held here as typed, so a trailing line break survives. The file gets them tidied on each change.
+  const [posts, setPosts] = useState(() => parseThread(value))
+  const [copied, setCopied] = useState(-1)
+  const update = (next: Post[]) => {
+    setPosts(next)
+    onChange(serializeThread(next))
+  }
+  const set = (i: number, patch: Partial<Post>) => update(posts.map((p, n) => (n === i ? { ...p, ...patch } : p)))
+  const remove = (i: number) => update(posts.filter((_, n) => n !== i))
+  const add = (i: number) => update([...posts.slice(0, i + 1), { text: "", image: "", alt: "" }, ...posts.slice(i + 1)])
+
+  return (
+    <div className="grid gap-3">
+      {posts.map((post, i) => {
+        const length = postLength(post.text)
+        return (
+          <div key={i} className="grid gap-2 rounded-md border border-white/10 bg-black/20 p-3">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-mono text-white/40">{i + 1}</span>
+              <span className={cn("ml-auto font-mono", length > limit ? "text-red-300" : "text-white/40")}>
+                {length}/{limit}
+              </span>
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={!post.text}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(post.text)
+                  setCopied(i)
+                  setTimeout(() => setCopied(-1), 1200)
+                }}
+              >
+                {copied === i ? "Copied" : "Copy"}
+              </Button>
+              {posts.length > 1 && (
+                <Button variant="ghost" size="xs" onClick={() => remove(i)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <textarea className={cn(fieldClass, "field-sizing-content min-h-16 py-2 text-sm")} value={post.text} onChange={(e) => set(i, { text: e.target.value })} />
+            {post.image && <img src={post.image} alt={post.alt} className="max-h-72 w-auto self-start rounded border border-white/10 object-contain" />}
+            <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Image URL" value={post.image} onChange={(e) => set(i, { image: e.target.value })} />
+            {post.image && <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Alt Text" value={post.alt} onChange={(e) => set(i, { alt: e.target.value })} />}
+            <Button variant="ghost" size="xs" className="justify-self-start" onClick={() => add(i)}>
+              Add Post Below
+            </Button>
+          </div>
+        )
+      })}
     </div>
   )
 }
