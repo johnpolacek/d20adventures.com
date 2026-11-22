@@ -33,13 +33,14 @@ export default async function PlaytestPage() {
           <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
             <Heading variant="h1" className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text text-transparent drop-shadow-[0_2px_6px_#f59e0b55]">{joined ? "You’re a Playtester" : "Become a Playtester"}</Heading>
             <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
-              Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so expect rough edges.
+              Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so your feedback is appreciated while we are in development.
             </p>
           </header>
 
           <div className="space-y-8 px-6 pt-8 pb-10 sm:px-10 lg:px-14">
             <section>
               <Heading variant="h3" as="h2">Host a Game</Heading>
+              <p className="mt-3 font-serif text-base leading-relaxed text-white/75">Paste this prompt into your agent (Claude Opus 5.5 on medium recommended).</p>
               <CopyBlock label="Prompt" text={setupPrompt} className="mt-4" />
             </section>
 
