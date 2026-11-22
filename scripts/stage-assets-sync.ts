@@ -25,7 +25,7 @@ const TYPES: Record<string, string> = {
   ".mp3": "audio/mpeg",
   ".mp4": "video/mp4",
   ".glb": "model/gltf-binary",
-  // The first 3D gates, each a page of its own (/about/gates).
+  // The first 3D gates, each a page of its own, linked from /about.
   ".html": "text/html; charset=utf-8",
   // A licence notice and a note of sources, kept beside the files they cover.
   ".txt": "text/plain; charset=utf-8",
