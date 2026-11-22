@@ -9,9 +9,8 @@ import { briefFor } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "drafted", "approved", "scheduled", "posted", "folded", "cut"]
-const EDITABLE = ["Hook", "Payoff", "Why it spreads", "Point"]
 const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X/Bluesky", limit: 280 }, { name: "Reddit" }]
-const READ_ONLY = ["Facts", "John said"]
+const NOTES = ["Point", "Hook", "Payoff", "Why it spreads", "Stories", "Facts", "John said", "Changes", "Clips"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
 type Filter = "live" | "parked" | "all"
@@ -166,7 +165,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
 
   function save() {
     // Known sections keep their order; platform drafts join once they have text; anything else stays.
-    const known = [...EDITABLE, ...READ_ONLY]
+    const known = NOTES
     const names = [
       ...item.sections.map((s) => s.name).filter((n) => !PLATFORMS.some((p) => p.name === n)),
       ...known.filter((n) => !item.sections.some((s) => s.name === n) && bodies[n]?.trim()),
@@ -288,12 +287,6 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         <dd className="font-mono text-white/60">{item.sessions.join(", ")}</dd>
       </dl>
 
-      {EDITABLE.map((name) => (
-        <Field key={name} label={name}>
-          <textarea className={cn(fieldClass, "field-sizing-content min-h-12 py-2 text-sm")} value={bodies[name] ?? ""} onChange={(e) => edit(name, e.target.value)} />
-        </Field>
-      ))}
-
       <div className="grid gap-4 border-t border-white/10 pt-4">
         {PLATFORMS.map(({ name, limit }) => {
           // A thread's posts are split by a line of ---, and only each post's own words count: [image] and [alt] lines don't.
@@ -331,13 +324,17 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         })}
       </div>
 
-      <div className="grid gap-4 border-t border-white/10 pt-4">
-        {READ_ONLY.filter((name) => section(item, name)).map((name) => (
-          <Field key={name} label={name}>
-            <div className="whitespace-pre-wrap text-sm text-white/70">{section(item, name)}</div>
-          </Field>
-        ))}
-      </div>
+      {/* What the miner reasoned and gathered: for drafting, not for editing. */}
+      <details className="border-t border-white/10 pt-3">
+        <summary className="cursor-pointer text-xs font-medium text-white/50 hover:text-white/80">Notes</summary>
+        <div className="mt-3 grid gap-4">
+          {NOTES.filter((name) => section(item, name)).map((name) => (
+            <Field key={name} label={name}>
+              <div className="whitespace-pre-wrap text-sm text-white/70">{section(item, name)}</div>
+            </Field>
+          ))}
+        </div>
+      </details>
     </div>
   )
 }
