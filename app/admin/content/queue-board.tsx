@@ -4,6 +4,7 @@ import { Button, Option } from "@d20/ui/button"
 import { fieldClass } from "@d20/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { cn } from "@d20/ui/utils"
+import { createPortal } from "react-dom"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
 import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
 import { briefFor, socialBriefFor } from "@/lib/content-queue/brief"
@@ -399,6 +400,14 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
   // Posts are held here as typed, so a trailing line break survives. The file gets them tidied on each change.
   const [posts, setPosts] = useState(() => parseThread(value))
   const [copied, setCopied] = useState(-1)
+  // The picture shown full size over the page, or null.
+  const [zoom, setZoom] = useState<Post | null>(null)
+  useEffect(() => {
+    if (!zoom) return
+    const close = (e: KeyboardEvent) => e.key === "Escape" && setZoom(null)
+    window.addEventListener("keydown", close)
+    return () => window.removeEventListener("keydown", close)
+  }, [zoom])
   const update = (next: Post[]) => {
     setPosts(next)
     onChange(serializeThread(next))
@@ -409,6 +418,14 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
 
   return (
     <div className="grid gap-3">
+      {zoom &&
+        // The whole picture, fitted to the screen, on the body so the site header can't sit over it. A click or Escape closes.
+        createPortal(
+        <div role="dialog" aria-label={zoom.alt || "Picture"} className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-6" onClick={() => setZoom(null)}>
+          <img src={zoom.image} alt={zoom.alt} className="max-h-full max-w-full object-contain" />
+        </div>,
+        document.body
+        )}
       {posts.map((post, i) => {
         const length = postLength(post.text)
         return (
@@ -450,7 +467,11 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
               )}
             </div>
             <textarea className={cn(fieldClass, "field-sizing-content min-h-16 py-2 text-sm")} value={post.text} onChange={(e) => set(i, { text: e.target.value })} />
-            {post.image && <img src={post.image} alt={post.alt} className="max-h-72 w-auto self-start rounded border border-white/10 object-contain" />}
+            {post.image && (
+              <button type="button" aria-label="View Full Size" className="cursor-zoom-in self-start" onClick={() => setZoom(post)}>
+                <img src={post.image} alt={post.alt} className="max-h-72 w-auto rounded border border-white/10 object-contain transition-opacity duration-150 hover:opacity-85" />
+              </button>
+            )}
             <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Image URL" value={post.image} onChange={(e) => set(i, { image: e.target.value })} />
             {post.image && <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Alt Text" value={post.alt} onChange={(e) => set(i, { alt: e.target.value })} />}
             <Button variant="ghost" size="xs" className="justify-self-start" onClick={() => add(i)}>
