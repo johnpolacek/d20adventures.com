@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 Tabs and Attention</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .top { border-bottom: 1px solid var(--line); }
+  .top .inner { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+  .row1 { display: flex; align-items: center; height: 54px; }
+  .row1 .btn { margin-left: auto; }
+  .tabs { display: flex; gap: 4px; }
+  .tabs a { display: flex; align-items: center; gap: 8px; padding: 10px 12px; color: var(--mute); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs a:hover { color: var(--ink); }
+  .tabs a.on { color: var(--ink); border-color: var(--acc); }
+  .tabs a span { font: 11.5px "JetBrains Mono"; color: var(--faint); }
+  .tabs a .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 28px 48px; }
+  .attn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .attn a { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+  .attn a:hover { border-color: #4a4558; }
+  .attn a.red svg { color: var(--red); } .attn a.gold svg { color: var(--acc); }
+  .attn b { display: block; font-weight: 500; }
+  .attn svg.chev { margin-left: auto; color: var(--faint) !important; align-self: center; }
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); margin-bottom: 20px; }
+  .stats .stat { border-right: 1px solid var(--line); padding: 4px 18px; }
+  .stats .stat:first-child { padding-left: 0; }
+  .stats .stat:last-child { border-right: 0; }
+  .stats .value { font-size: 24px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="inner">
+    <div class="row1"><span class="mark">D20 Admin</span><a class="btn" href="#">Open Site <svg class="i"><use href="#ext"/></svg></a></div>
+    <nav class="tabs">
+      <a class="on" href="#">Overview</a>
+      <a href="#">Games <span>412</span></a>
+      <a href="#">Players <span>148</span></a>
+      <a href="#">Feedback <span>62</span></a>
+      <a href="#">Adventure Plans <i class="dot"></i></a>
+      <a href="#">Content Queue <span>9</span></a>
+      <a href="#">AI Budget</a>
+    </nav>
+  </div>
+</div>
+<main>
+  <div class="attn">
+    <a class="red" href="#"><svg class="i"><use href="#alert"/></svg><div><b>Covert Cargo Has 2 Plan Errors</b><span class="meta">Dockside Ambush names a missing staging</span></div><svg class="i chev"><use href="#chev"/></svg></a>
+    <a class="gold" href="#"><svg class="i"><use href="#alert"/></svg><div><b>X Thread Tomorrow Has No Draft</b><span class="meta">3D figures from 2D art · Mon 23</span></div><svg class="i chev"><use href="#chev"/></svg></a>
+    <a class="gold" href="#"><svg class="i"><use href="#feedback"/></svg><div><b>3 New Feedback Notes</b><span class="meta">One rated 2 stars</span></div><svg class="i chev"><use href="#chev"/></svg></a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Games This Week</div><div class="value">31</div><div class="sub up">+9</div></div>
+    <div class="stat"><div class="label">Active Now</div><div class="value">3</div><div class="sub">2 hosted</div></div>
+    <div class="stat"><div class="label">Finished</div><div class="value">39%</div><div class="sub up">+5 pts</div></div>
+    <div class="stat"><div class="label">Players</div><div class="value">148</div><div class="sub up">+6</div></div>
+    <div class="stat"><div class="label">Avg Rating</div><div class="value">4.3</div><div class="sub down">−0.2</div></div>
+    <div class="stat"><div class="label">AI Today</div><div class="value">$0.38</div><div class="bar" style="margin-top:6px"><i style="width:38%"></i></div></div>
+  </div>
+
+  <div class="cols">
+    <section class="panel">
+      <div class="panel-head"><h2>Recent Games</h2><a href="#">View All</a></div>
+      <ul class="list">
+        <li><div style="display:flex;justify-content:space-between"><span>Welcome to Kordavos</span><span class="pill blue">Active</span></div><span class="meta">Aelar, Lyra · Owlbear Den · 12m</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>Covert Cargo</span><span class="pill blue">Active</span></div><span class="meta">Thalbern +2 · Dockside Ambush · 1h</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>The Midnight Summons</span><span class="pill">Idle</span></div><span class="meta">Wollandora · Crypt Door · 3h</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>The Road to Kordavos</span><span class="pill green">Completed</span></div><span class="meta">Silas, Reinhard · 5h</span></li>
+      </ul>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Latest Feedback</h2><a href="#">View All</a></div>
+      <ul class="list">
+        <li><span class="stars">★★★★★</span> <span class="meta">Welcome to Kordavos · 3h</span><p class="quote">The owlbear fight felt like a real table.</p></li>
+        <li><span class="stars">★★☆☆☆</span> <span class="meta">The Midnight Summons · 9h</span><p class="quote">Got stuck in the crypt. The door check kept failing.</p></li>
+        <li><span class="stars">★★★★☆</span> <span class="meta">The Road to Kordavos · 1d</span><p class="quote">Loved the toll keeper.</p></li>
+      </ul>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>New Players</h2><a href="#">View All</a></div>
+      <ul class="list">
+        <li><div style="display:flex;justify-content:space-between"><span>mira.k</span><span class="meta">2h</span></div><span class="meta">1 game · via Bluesky</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>tobias_d</span><span class="meta">9h</span></div><span class="meta">2 games · 1 finished</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>ashgrove</span><span class="meta">1d</span></div><span class="meta">Hosting from desktop</span></li>
+        <li><div style="display:flex;justify-content:space-between"><span>quillfeather</span><span class="meta">2d</span></div><span class="meta">No games yet</span></li>
+      </ul>
+    </section>
+  </div>
+</main>
+<script src="shared/icons.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 Sidebar</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  body { display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
+  aside { border-right: 1px solid var(--line); padding: 20px 12px; position: sticky; top: 0; height: 100vh; }
+  aside .mark { display: block; padding: 0 10px 22px; }
+  aside nav { display: grid; gap: 2px; }
+  aside nav a { white-space: nowrap; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--mute); }
+  aside nav a:hover { background: var(--panel); color: var(--ink); }
+  aside nav a.on { background: var(--panel2); color: var(--ink); }
+  aside nav a span { margin-left: auto; font: 12px "JetBrains Mono"; color: var(--faint); }
+  aside nav a .pill { margin-left: auto; font-family: "Rethink Sans"; }
+  aside .group { margin: 18px 10px 6px; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+  main { padding: 28px 32px 48px; max-width: 1240px; }
+  header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+  h1 { margin: 0; font-size: 24px; font-weight: 600; }
+  header p { margin: 2px 0 0; color: var(--faint); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+  .stats a.panel:hover { border-color: #4a4558; }
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; }
+  .grid > .wide { grid-column: 1 / -1; }
+  .col { display: grid; gap: 14px; align-content: start; }
+</style>
+</head>
+<body>
+<aside>
+  <span class="mark">D20 Admin</span>
+  <nav>
+    <a class="on" href="#"><svg class="i"><use href="#home"/></svg>Overview</a>
+    <div class="group">Play</div>
+    <a href="#"><svg class="i"><use href="#games"/></svg>Games<span>412</span></a>
+    <a href="#"><svg class="i"><use href="#users"/></svg>Players<span>148</span></a>
+    <a href="#"><svg class="i"><use href="#feedback"/></svg>Feedback<b class="pill gold">3 New</b></a>
+    <div class="group">Build</div>
+    <a href="#"><svg class="i"><use href="#plans"/></svg>Adventure Plans<b class="pill red">2 Errors</b></a>
+    <a href="#"><svg class="i"><use href="#content"/></svg>Content Queue<span>9</span></a>
+    <div class="group">Run</div>
+    <a href="#"><svg class="i"><use href="#budget"/></svg>AI Budget<span>38%</span></a>
+    <a href="#"><svg class="i"><use href="#hosting"/></svg>Hosting<span>2</span></a>
+  </nav>
+</aside>
+<main>
+  <header>
+    <div><h1>Overview</h1><p>Sunday, November 22</p></div>
+    <a class="btn" href="#">Open Site <svg class="i"><use href="#ext"/></svg></a>
+  </header>
+
+  <div class="stats">
+    <a class="panel stat" href="#"><div class="label">Games This Week</div><div class="value">31</div><div class="sub"><span class="up">+9</span> vs last week</div></a>
+    <a class="panel stat" href="#"><div class="label">Players</div><div class="value">148</div><div class="sub"><span class="up">+6</span> this week</div></a>
+    <a class="panel stat" href="#"><div class="label">Avg Rating</div><div class="value">4.3</div><div class="sub">from 62 notes</div></a>
+    <a class="panel stat" href="#"><div class="label">AI Spend Today</div><div class="value">$0.38</div><div class="bar" style="margin-top:8px"><i style="width:38%"></i></div></a>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><h2>Recent Games</h2><a href="#">View All</a></div>
+      <table>
+        <tr><th>Adventure</th><th>Party</th><th>Status</th><th class="n">Started</th></tr>
+        <tr class="link"><td>Welcome to Kordavos<span class="sub">Owlbear Den</span></td><td>Aelar, Lyra</td><td><span class="pill blue">Active</span></td><td class="n">12m</td></tr>
+        <tr class="link"><td>Covert Cargo<span class="sub">Dockside Ambush</span></td><td>Thalbern +2</td><td><span class="pill blue">Active</span></td><td class="n">1h</td></tr>
+        <tr class="link"><td>The Midnight Summons<span class="sub">Crypt Door</span></td><td>Wollandora</td><td><span class="pill">Idle</span></td><td class="n">3h</td></tr>
+        <tr class="link"><td>The Road to Kordavos<span class="sub">Ending</span></td><td>Silas, Reinhard</td><td><span class="pill green">Completed</span></td><td class="n">5h</td></tr>
+        <tr class="link"><td>Welcome to Kordavos<span class="sub">Ending</span></td><td>Poppen</td><td><span class="pill green">Completed</span></td><td class="n">8h</td></tr>
+      </table>
+    </section>
+
+    <div class="col">
+      <section class="panel">
+        <div class="panel-head"><h2>Latest Feedback</h2><a href="#">View All</a></div>
+        <ul class="list">
+          <li><span class="stars">★★★★★</span> <span class="meta">Welcome to Kordavos · 3h</span><p class="quote">The owlbear fight felt like a real table.</p></li>
+          <li><span class="stars">★★☆☆☆</span> <span class="meta">The Midnight Summons · 9h</span><p class="quote">Got stuck in the crypt. The door check kept failing.</p></li>
+          <li><span class="stars">★★★★☆</span> <span class="meta">The Road to Kordavos · 1d</span><p class="quote">Loved the toll keeper. Combat ran a bit long.</p></li>
+        </ul>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>AI Budget</h2><a href="#">Set Limit</a></div>
+        <div style="padding:14px 18px 16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="mono">$0.38 <span style="color:var(--faint)">/ $1.00</span></span><span class="meta">214 calls</span></div>
+          <div class="bar"><i style="width:38%"></i></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Adventure Plans</h2><a href="#">View All</a></div>
+      <table>
+        <tr><th>Adventure</th><th class="n">Encounters</th><th class="n">Plays</th><th>Health</th></tr>
+        <tr class="link"><td>Welcome to Kordavos</td><td class="n">6</td><td class="n">96</td><td><span class="pill green">Clean</span></td></tr>
+        <tr class="link"><td>The Road to Kordavos</td><td class="n">8</td><td class="n">21</td><td><span class="pill gold">3 Warnings</span></td></tr>
+        <tr class="link"><td>The Midnight Summons</td><td class="n">5</td><td class="n">14</td><td><span class="pill green">Clean</span></td></tr>
+        <tr class="link"><td>Covert Cargo</td><td class="n">7</td><td class="n">6</td><td><span class="pill red">2 Errors</span></td></tr>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Content Queue</h2><a href="#">Open Queue</a></div>
+      <table>
+        <tr class="link"><td class="mono" style="color:var(--mute)">Mon 23</td><td>X Thread<span class="sub">3D figures from 2D art</span></td><td><span class="pill red">No Draft</span></td></tr>
+        <tr class="link"><td class="mono" style="color:var(--mute)">Tue 24</td><td>Bluesky<span class="sub">3D figures from 2D art</span></td><td><span class="pill green">Ready</span></td></tr>
+        <tr class="link"><td class="mono" style="color:var(--mute)">Wed 25</td><td>Update<span class="sub">Hosting from the desktop app</span></td><td><span class="pill gold">Draft</span></td></tr>
+      </table>
+    </section>
+  </div>
+</main>
+<script src="shared/icons.js"></script>
+</body>
+</html>

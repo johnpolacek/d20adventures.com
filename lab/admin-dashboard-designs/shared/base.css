@@ -1,0 +1,64 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Rethink+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --bg: #1d1b25;
+  --panel: #25222f;
+  --panel2: #2b2836;
+  --line: #34303f;
+  --ink: #eeebf3;
+  --mute: #a19bb0;
+  --faint: #6c6779;
+  --acc: #f2c46d;
+  --acc-soft: rgb(242 196 109 / 0.12);
+  --red: #f0806f;
+  --red-soft: rgb(240 128 111 / 0.12);
+  --green: #7ccf97;
+  --green-soft: rgb(124 207 151 / 0.12);
+  --blue: #8fa8ff;
+  --blue-soft: rgb(143 168 255 / 0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 "Rethink Sans", system-ui, sans-serif; }
+a { color: inherit; text-decoration: none; }
+.mono { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+.mark { font: 700 15px "Cinzel Decorative", serif; letter-spacing: 0.02em; color: var(--acc); }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.panel-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.panel-head a { color: var(--acc); font-size: 13px; }
+.panel-head a:hover { text-decoration: underline; }
+
+.stat { padding: 16px 18px; }
+.stat .label { color: var(--mute); font-size: 13px; }
+.stat .value { font: 500 28px/1.1 "JetBrains Mono", monospace; margin: 6px 0 4px; }
+.stat .sub { color: var(--faint); font-size: 12.5px; }
+.up, .stat .sub.up { color: var(--green); }
+.down, .stat .sub.down { color: var(--red); }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 500; font-size: 12px; color: var(--faint); padding: 10px 18px 8px; }
+td { padding: 10px 18px; border-top: 1px solid var(--line); }
+tr.link:hover td { background: var(--panel2); cursor: pointer; }
+td.n, th.n { text-align: right; font-family: "JetBrains Mono", monospace; }
+td .sub { display: block; color: var(--faint); font-size: 12.5px; }
+
+.pill { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--mute); white-space: nowrap; }
+.pill.green { background: var(--green-soft); color: var(--green); }
+.pill.red { background: var(--red-soft); color: var(--red); }
+.pill.gold { background: var(--acc-soft); color: var(--acc); }
+.pill.blue { background: var(--blue-soft); color: var(--blue); }
+
+.bar { height: 6px; border-radius: 3px; background: var(--panel2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--acc); border-radius: 3px; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: 12px 18px; border-top: 1px solid var(--line); }
+.list li:first-child { border-top: 0; }
+.stars { color: var(--acc); letter-spacing: 1px; font-size: 12px; }
+.quote { margin: 4px 0 0; color: var(--ink); }
+.meta { color: var(--faint); font-size: 12.5px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 500 13px "Rethink Sans"; }
+.btn:hover { background: var(--panel2); }
+svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }

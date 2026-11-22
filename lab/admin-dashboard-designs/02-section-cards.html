@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 Section Cards</title>
+<link rel="stylesheet" href="shared/base.css">
+<style>
+  .top { display: flex; align-items: center; gap: 24px; height: 56px; padding: 0 28px; border-bottom: 1px solid var(--line); }
+  .top .right { margin-left: auto; display: flex; gap: 18px; align-items: center; color: var(--mute); font-size: 13px; }
+  .top .right b { color: var(--ink); font-weight: 500; }
+  main { max-width: 1240px; margin: 0 auto; padding: 28px 28px 48px; }
+  h1 { margin: 0 0 20px; font-size: 24px; font-weight: 600; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { display: flex; flex-direction: column; }
+  .card .head { display: flex; align-items: center; gap: 12px; padding: 16px 18px 0; }
+  .card .ico { width: 34px; height: 34px; border-radius: 9px; background: var(--panel2); display: grid; place-items: center; color: var(--acc); }
+  .card h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card .head .pill { margin-left: auto; }
+  .nums { display: grid; grid-template-columns: repeat(3, 1fr); padding: 14px 18px; gap: 8px; }
+  .nums b { display: block; font: 500 20px "JetBrains Mono"; }
+  .nums span { color: var(--faint); font-size: 12px; }
+  .card .list { border-top: 1px solid var(--line); flex: 1; }
+  .card .list li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 18px; font-size: 13px; }
+  .card .list li .meta { white-space: nowrap; }
+  .card .list li > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .open { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-top: 1px solid var(--line); color: var(--acc); font-size: 13px; font-weight: 500; border-radius: 0 0 12px 12px; }
+  .open:hover { background: var(--panel2); }
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="mark">D20 Admin</span>
+  <div class="right"><span>AI Today <b class="mono">$0.38 / $1</b></span><span>Hosts Online <b class="mono">2</b></span><a class="btn" href="#">Open Site <svg class="i"><use href="#ext"/></svg></a></div>
+</div>
+<main>
+  <h1>Admin</h1>
+  <div class="cards">
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#games"/></svg></span><h2>Games</h2><span class="pill blue">3 Active</span></div>
+      <div class="nums"><div><b>412</b><span>All Time</span></div><div><b>31</b><span>This Week</span></div><div><b>39%</b><span>Finished</span></div></div>
+      <ul class="list">
+        <li><span>Welcome to Kordavos · Aelar, Lyra</span><span class="meta">12m</span></li>
+        <li><span>Covert Cargo · Thalbern +2</span><span class="meta">1h</span></li>
+        <li><span>The Midnight Summons · Wollandora</span><span class="meta">3h</span></li>
+      </ul>
+      <a class="open" href="#">Open Games <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#users"/></svg></span><h2>Players</h2><span class="pill green">+2 Today</span></div>
+      <div class="nums"><div><b>148</b><span>Accounts</span></div><div><b>6</b><span>This Week</span></div><div><b>9</b><span>Hosts</span></div></div>
+      <ul class="list">
+        <li><span>mira.k</span><span class="meta">2h</span></li>
+        <li><span>tobias_d</span><span class="meta">9h</span></li>
+        <li><span>ashgrove</span><span class="meta">1d</span></li>
+      </ul>
+      <a class="open" href="#">Open Players <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#feedback"/></svg></span><h2>Feedback</h2><span class="pill gold">3 New</span></div>
+      <div class="nums"><div><b>62</b><span>Notes</span></div><div><b>4.3</b><span>Avg Rating</span></div><div><b>28</b><span>Endings</span></div></div>
+      <ul class="list">
+        <li><span><span class="stars">★★★★★</span> The owlbear fight felt like a real table.</span><span class="meta">3h</span></li>
+        <li><span><span class="stars">★★☆☆☆</span> Got stuck in the crypt.</span><span class="meta">9h</span></li>
+        <li><span><span class="stars">★★★★☆</span> Loved the toll keeper.</span><span class="meta">1d</span></li>
+      </ul>
+      <a class="open" href="#">Open Feedback <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#plans"/></svg></span><h2>Adventure Plans</h2><span class="pill red">2 Errors</span></div>
+      <div class="nums"><div><b>4</b><span>Adventures</span></div><div><b>26</b><span>Encounters</span></div><div><b>3</b><span>Warnings</span></div></div>
+      <ul class="list">
+        <li><span>Covert Cargo</span><span class="pill red">2 Errors</span></li>
+        <li><span>The Road to Kordavos</span><span class="pill gold">3 Warnings</span></li>
+        <li><span>Welcome to Kordavos</span><span class="pill green">Clean</span></li>
+      </ul>
+      <a class="open" href="#">Open Plans <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#content"/></svg></span><h2>Content Queue</h2><span class="pill">Next Mon 23</span></div>
+      <div class="nums"><div><b>9</b><span>Open</span></div><div><b>4</b><span>Scheduled</span></div><div><b>17</b><span>Posted</span></div></div>
+      <ul class="list">
+        <li><span>Mon 23 · X Thread</span><span class="pill red">No Draft</span></li>
+        <li><span>Tue 24 · Bluesky</span><span class="pill green">Ready</span></li>
+        <li><span>Wed 25 · Update</span><span class="pill gold">Draft</span></li>
+      </ul>
+      <a class="open" href="#">Open Queue <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+
+    <section class="panel card">
+      <div class="head"><span class="ico"><svg class="i"><use href="#budget"/></svg></span><h2>AI Budget</h2><span class="pill">Today</span></div>
+      <div class="nums"><div><b>$0.38</b><span>Spent</span></div><div><b>$1.00</b><span>Limit</span></div><div><b>214</b><span>Calls</span></div></div>
+      <div style="padding:4px 18px 18px;flex:1"><div class="bar"><i style="width:38%"></i></div>
+        <div style="display:flex;justify-content:space-between;margin-top:14px" class="meta"><span>GM $0.30</span><span>Voice $0.08</span><span>Images $0.00</span></div></div>
+      <a class="open" href="#">Set Limit <svg class="i"><use href="#chev"/></svg></a>
+    </section>
+  </div>
+</main>
+<script src="shared/icons.js"></script>
+</body>
+</html>
