@@ -5,6 +5,7 @@
 import { createHash } from "node:crypto"
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { creatorRoot } from "./creator"
 import { stageRoot } from "./scenes-node"
 
 const HOST = (process.env.D20_ASSET_HOST ?? "https://d1dkwd3w4hheqw.cloudfront.net").replace(/\/$/, "")
@@ -15,9 +16,10 @@ interface Manifest {
   needs?: Record<string, string[]>
 }
 
-const manifestOf = (adventureId: string): Manifest | null => {
-  const file = join(stageRoot(), adventureId, "package.json")
-  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as Manifest) : null
+// A creator's package (creator.ts) before the bundled one with its id.
+const manifestOf = (data: string, adventureId: string): Manifest | null => {
+  const file = [join(creatorRoot(data), adventureId, "package.json"), join(stageRoot(), adventureId, "package.json")].find((f) => existsSync(f))
+  return file ? (JSON.parse(readFileSync(file, "utf8")) as Manifest) : null
 }
 
 // The files the app carries with its window, which need no download (scripts/build-runtime.ts).
@@ -28,8 +30,10 @@ const bundled = () => {
   return carried
 }
 
-function have(data: string, path: string, bytes: number, exact: boolean) {
+function have(data: string, adventureId: string, path: string, bytes: number, exact: boolean) {
   if (bundled().has(path)) return true
+  // A creator's package carries its own files.
+  if (existsSync(join(creatorRoot(data), adventureId, "files", path))) return true
   const file = join(data, "files", path)
   if (!existsSync(file)) return false
   return !exact || statSync(file).size === bytes
@@ -39,14 +43,14 @@ export type FilePlan = { need: { path: string; bytes: number }[]; rest: { path: 
 
 /** What is still to download: the encounter's own files, then the rest of the adventure's. */
 export function filesPlan(data: string, adventureId: string, encounterId?: string): FilePlan {
-  const m = manifestOf(adventureId)
+  const m = manifestOf(data, adventureId)
   if (!m) return { need: [], rest: [] }
   const all = new Map<string, { bytes: number; exact: boolean }>()
   for (const [path, f] of Object.entries(m.files)) all.set(path, { bytes: f.bytes, exact: true })
   for (const [path, f] of Object.entries(m.figureFiles ?? {})) all.set(path, { bytes: f.bytes, exact: false })
   const missing = (path: string) => {
     const f = all.get(path)
-    return f && !have(data, path, f.bytes, f.exact) ? { path, bytes: f.bytes } : null
+    return f && !have(data, adventureId, path, f.bytes, f.exact) ? { path, bytes: f.bytes } : null
   }
   const first = new Set(encounterId ? (m.needs?.[encounterId] ?? []) : [])
   const need = [...first].map(missing).filter((f) => f !== null)
@@ -56,7 +60,7 @@ export function filesPlan(data: string, adventureId: string, encounterId?: strin
 
 /** Downloads these files of the adventure, four at a time. Each is checked against its hash where the package has one. */
 export async function filesFetch(data: string, adventureId: string, paths: string[], get: typeof fetch = fetch) {
-  const m = manifestOf(adventureId)
+  const m = manifestOf(data, adventureId)
   const done: string[] = []
   const failed: string[] = []
   const queue = [...paths]

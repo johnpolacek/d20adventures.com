@@ -49,12 +49,37 @@ fn roots(data: &Option<PathBuf>) -> Vec<PathBuf> {
     if cfg!(debug_assertions) {
         let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
         out.push(repo.join("public"));
-        out.push(repo);
+        out.push(repo.clone());
+        // What the build bundles with the window (scripts/build-runtime.ts), which the dev window does not embed.
+        out.push(repo.join("apps/desktop/public"));
     }
     if let Some(data) = data {
+        // A creator's packages carry their own files (runtime/creator.ts), ahead of the downloads.
+        if let Ok(dirs) = std::fs::read_dir(data.join("creator")) {
+            let mut dirs: Vec<PathBuf> = dirs.flatten().map(|d| d.path().join("files")).filter(|p| p.is_dir()).collect();
+            dirs.sort();
+            out.extend(dirs);
+        }
         out.push(data.join("files"));
     }
     out
+}
+
+// The creator packages in the data folder, as JSON: their ids, which the window loads (src/stage-data.ts).
+fn creator_index(data: &Option<PathBuf>) -> Vec<u8> {
+    let mut ids: Vec<String> = data
+        .as_ref()
+        .and_then(|d| std::fs::read_dir(d.join("creator")).ok())
+        .map(|dirs| {
+            dirs.flatten()
+                .filter(|d| d.path().join("package.json").is_file())
+                .filter_map(|d| d.file_name().into_string().ok())
+                .filter(|id| id.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'))
+                .collect()
+        })
+        .unwrap_or_default();
+    ids.sort();
+    serde_json::to_vec(&ids).unwrap_or_default()
 }
 
 fn respond<R: Runtime>(app: &AppHandle<R>, data: &Option<PathBuf>, stream: TcpStream) -> std::io::Result<()> {
@@ -75,7 +100,18 @@ fn respond<R: Runtime>(app: &AppHandle<R>, data: &Option<PathBuf>, stream: TcpSt
         && (rel.starts_with("stage") || rel.starts_with("asset-library") || rel.starts_with("images"))
         && rel.components().all(|c| matches!(c, Component::Normal(_)));
     let mut found: Option<(String, Vec<u8>)> = None;
-    if allowed {
+    let get = method == "GET" || method == "HEAD";
+    let safe = rel.components().all(|c| matches!(c, Component::Normal(_)));
+    // A creator's packages: their list, and each one's stage (creator/<id>/stage/...json).
+    if get && safe && rel == Path::new("creator/index.json") {
+        found = Some(("application/json".into(), creator_index(data)));
+    } else if get && safe && rel.starts_with("creator") && rel.components().nth(2).map(|c| c.as_os_str() == "stage").unwrap_or(false) {
+        found = data
+            .as_ref()
+            .map(|d| d.join(&rel))
+            .filter(|f| f.is_file())
+            .and_then(|f| std::fs::read(&f).ok().map(|body| (content_type(&f).to_string(), body)));
+    } else if allowed {
         found = roots(data)
             .into_iter()
             .map(|root| root.join(&rel))

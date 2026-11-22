@@ -1,6 +1,7 @@
 import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { packVersion, readPack, sha256Hex } from "@d20/gm-core/packs"
+import { creatorPacks } from "./creator"
 import type { Pack, Packs } from "./game"
 
 // Story packs downloaded for owned adventures sit in the app data folder beside the save, one file per adventure.
@@ -30,6 +31,8 @@ async function downloaded(data: string): Promise<Record<string, { version: strin
 export async function loadPacks(bundled: Packs, data: string): Promise<Packs> {
   const packs = { ...bundled }
   for (const [id, pack] of Object.entries(await downloaded(data))) packs[id] = pack.runtime
+  // A creator's own adventures (creator.ts), last, so one takes the place of an adventure with its id.
+  Object.assign(packs, creatorPacks(data))
   return packs
 }
 

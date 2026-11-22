@@ -6,6 +6,7 @@
 //   scripts such as stage-plans.ts. The stage plays the repo's own looks and figures.
 import { useEffect, useState } from "react"
 import type { Look } from "@/asset-library/looks"
+import { appFilesHost } from "./files"
 import { type AdventureStage, addScenes, type SceneEntry, sceneFiles } from "./scenes"
 
 type Source = "packages" | "repo"
@@ -18,8 +19,7 @@ const get = async (url: string) => {
   return res.json() as Promise<unknown>
 }
 
-async function fromPackage(id: string): Promise<AdventureStage> {
-  const base = `/adventures/${id}/stage`
+async function fromPackage(id: string, base = `/adventures/${id}/stage`): Promise<AdventureStage> {
   const scenes = (await get(`${base}/scenes.json`)) as Record<string, SceneEntry>
   const need = sceneFiles(scenes)
   const load = (dir: string, names: string[]) => Promise.all(names.map(async (n) => [n, await get(`${base}/${dir}/${n}.json`)] as const)).then(Object.fromEntries)
@@ -43,6 +43,21 @@ async function fromRepo(): Promise<AdventureStage[]> {
   )
 }
 
+// A creator's own packages in the app's data folder, through the app's file server (src-tauri/src/files.rs). They are
+// added last, so one with a bundled adventure's id takes its place.
+let creators: Promise<{ address: string | null; ids: string[] }> | null = null
+const creatorIds = () =>
+  (creators ??= (async () => {
+    const address = await appFilesHost()
+    if (!address) return { address, ids: [] as string[] }
+    return { address, ids: (await get(`${address}/creator/index.json`).catch(() => [])) as string[] }
+  })())
+async function fromCreator(): Promise<AdventureStage[]> {
+  const { address, ids } = await creatorIds()
+  const stages = await Promise.all(ids.map((id) => fromPackage(id, `${address}/creator/${id}/stage`).catch(() => null)))
+  return stages.filter((s): s is AdventureStage => s !== null)
+}
+
 /** Loads the scenes once, from the packages (the desktop app) or the repo (the website, scripts). */
 export function loadStages(from: Source = "packages") {
   source = from
@@ -50,7 +65,7 @@ export function loadStages(from: Source = "packages") {
     loaded.set(
       from,
       (async () => {
-        const stages = from === "repo" ? await fromRepo() : await Promise.all(((await get("/adventures/index.json")) as string[]).map(fromPackage))
+        const stages = from === "repo" ? await fromRepo() : [...(await Promise.all(((await get("/adventures/index.json")) as string[]).map((id) => fromPackage(id)))), ...(await fromCreator())]
         // Added in the catalog's order, which decides where a portrait is found first.
         for (const stage of stages) addScenes(stage)
       })()
@@ -63,9 +78,14 @@ const looks: Record<string, Look> = {}
 const casts: Record<string, Promise<Record<string, string>>> = {}
 let packageLooks: Promise<void> | null = null
 const loadLooks = () =>
-  (packageLooks ??= get("/adventures/index.json").then((ids) =>
-    Promise.all((ids as string[]).map((id) => get(`/adventures/${id}/stage/looks.json`).then((l) => void Object.assign(looks, l as Record<string, Look>)).catch(() => undefined))).then(() => undefined)
-  ))
+  (packageLooks ??= (async () => {
+    const bundled = (await get("/adventures/index.json")) as string[]
+    const { address, ids } = await creatorIds()
+    // A creator's looks after the bundled ones, so theirs win.
+    const files = [...bundled.map((id) => `/adventures/${id}/stage/looks.json`), ...ids.map((id) => `${address}/creator/${id}/stage/looks.json`)]
+    const all = await Promise.all(files.map((f) => get(f).catch(() => ({}))))
+    for (const l of all) Object.assign(looks, l as Record<string, Look>)
+  })())
 
 /** asset-library/play.ts, playing the packages' looks and figures in the app and the repo's elsewhere. */
 export async function loadPlay() {
@@ -73,7 +93,10 @@ export async function loadPlay() {
   const [play] = await Promise.all([import("@/asset-library/play"), loadLooks()])
   play.playFrom({
     looks,
-    figures: (adventure) => (casts[adventure] ??= get(`/adventures/${adventure}/stage/figures.json`).catch(() => ({})) as Promise<Record<string, string>>),
+    figures: (adventure) =>
+      (casts[adventure] ??= creatorIds().then(({ address, ids }) =>
+        (ids.includes(adventure) ? get(`${address}/creator/${adventure}/stage/figures.json`) : get(`/adventures/${adventure}/stage/figures.json`)).catch(() => ({}))
+      ) as Promise<Record<string, string>>),
   })
   return play
 }

@@ -12,6 +12,7 @@ import { filesFetch, filesPlan } from "./files"
 import { hostCommand, hostCommandSchema } from "./host-commands"
 import { localLlm } from "./llm"
 import { loadPacks } from "./packs"
+import { useCreator } from "./scenes-node"
 import { LocalStore } from "./store"
 
 // stdout is only the IPC reply. Existing core debugging must not expose game prompts.
@@ -26,6 +27,8 @@ const catalog: CatalogInfo[] = (() => {
 })()
 const savePath = process.argv[2]
 const scratch = mkdtempSync(join(dirname(savePath), "session-"))
+// A creator's own adventures in the data folder play beside the bundled ones (creator.ts).
+useCreator(dirname(savePath))
 let store: LocalStore | undefined
 let model: ReturnType<typeof localLlm> | undefined
 let finished = false

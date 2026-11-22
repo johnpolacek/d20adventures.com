@@ -6,6 +6,7 @@ import type { Packs } from "./game"
 import { type HostPost, hostLoop, remoteStore } from "./host"
 import { localLlm } from "./llm"
 import { loadPacks } from "./packs"
+import { useCreator } from "./scenes-node"
 import { PAINTERS, type Painter, paint, storeArt } from "./paint"
 
 // The host worker: a long-lived process while the host's app hosts a game. Rust starts it with one line of JSON
@@ -59,6 +60,7 @@ async function main() {
       if (!res.ok) throw new Error(json.error ?? `The website answered ${res.status}.`)
       return json
     }
+    useCreator(start.data)
     const packs = await loadPacks(bundled, start.data)
     await hostLoop({
       adventureId: start.adventureId,

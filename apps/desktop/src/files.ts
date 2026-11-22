@@ -15,11 +15,14 @@ const SHOW_BAR = 3000
 
 const command = <T>(command: Record<string, unknown>) => invoke<T>("files_command", { command })
 
-/** Points the stage's files at the app's own file server on 127.0.0.1 (src-tauri/src/files.rs), in the built app
- * alone: in development the dev server serves the same files from the window's own origin (vite.config.mjs). */
+let host: Promise<string | null> | null = null
+/** The app's own file server on 127.0.0.1 (src-tauri/src/files.rs), or null outside the app. */
+export const appFilesHost = () => (host ??= isTauri() ? invoke<string>("files_host").catch(() => null) : Promise.resolve(null))
+
+/** Points the stage's files at the app's own file server. The window calls it once, before it shows anything. */
 export async function serveAppFiles() {
-  if (!isTauri() || import.meta.env.DEV) return
-  serveFrom(await invoke<string>("files_host"))
+  const address = await appFilesHost()
+  if (address) serveFrom(address)
 }
 
 function batches(files: File[]) {

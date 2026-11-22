@@ -59,7 +59,12 @@ One folder, or one archive of it, named by the adventure's id:
    - The title screen's scene fetches its own files alone. The rest of an adventure follows in the background only once it is played.
    - The app bundles what shows before any download: the kit, covers, maps, premade heroes' art and the title screen's scene (`bundled.json`). Its stage files and figures fell from about 313 MB to 117 MB.
    - Tried in a release build, 2026-11-22: the title screen's stage up with no errors at 30 to 51 fps, downloads served, a missing file 404.
-5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.
+5. Done 2026-11-22. A creator's packages in the app's data folder, `creator/<id>/`, play beside the bundled ones, unsigned. One with a bundled adventure's id takes its place.
+   - `pnpm packages:creator <id> [--as <new-id>] [--to <data folder>]` builds an adventure's package with its files and puts it there. `--as` copies it under a new id, as a start on another adventure.
+   - The runtime reads their stories, scenes and floor plans (`apps/desktop/runtime/creator.ts`, `scenes-node.ts` `useCreator`). The window reads their stages and looks through the app's file server, which serves their files ahead of the downloads and lists them at `/creator/index.json`. A package's figures still download from the shelf.
+   - Tried in a release build: `my-road`, a copy of The Road to Kordavos, listed and its stage loaded with no errors.
+   - Encounter ids must be unique across every adventure played: scenes and floor plans are found by encounter id. A copy under a new id shares its original's.
+   - There is no switch for a creator mode yet: the folder alone turns it on.
 6. Later: publish a creator's package to the site, and the pipeline running on the player's machine with their own keys.
 
 ## Open questions
