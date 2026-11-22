@@ -16,7 +16,11 @@ const PLATFORM_ENV = {
 export function minimalEnv(inherited = process.env) {
   // FilmBrain's credential-free allowlist. Do not copy the parent's API/auth/session env.
   const keys = ["HOME", "PATH", "USER", "LOGNAME", "LANG", "TMPDIR", ...(PLATFORM_ENV[process.platform] ?? [])]
-  return Object.fromEntries(keys.filter((key) => inherited[key]).map((key) => [key, inherited[key]]))
+  const env = Object.fromEntries(keys.filter((key) => inherited[key]).map((key) => [key, inherited[key]]))
+  // A CLI installed with npm starts with `#!/usr/bin/env node`. A Mac app's PATH holds no Node, so the folder of the
+  // Node running this is put first.
+  env.PATH = [dirname(process.execPath), env.PATH].filter(Boolean).join(delimiter)
+  return env
 }
 export function locate(name) {
   if (![...providers, "node"].includes(name)) throw new Error("Unsupported executable")
@@ -25,7 +29,7 @@ export function locate(name) {
   const names = windows ? [`${binary}.exe`, `${binary}.cmd`] : [binary]
   const dirs = [
     // Native GUI PATH can contain terminal-injected wrappers. Prefer FilmBrain's
-    // known installation locations so the spike launches the player's binary itself.
+    // known installation locations so the app launches the player's binary itself.
     ...[".local/bin", ".local/share/fnm/aliases/default/bin", ".volta/bin", ".bun/bin", ".grok/bin"].map((dir) => join(homedir(), dir)),
     ...(windows && process.env.APPDATA ? [join(process.env.APPDATA, "npm")] : []),
     ...(process.env.PATH ?? "").split(delimiter).filter(isAbsolute),

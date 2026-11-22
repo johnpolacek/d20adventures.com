@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { createInterface } from "node:readline"
-import { locate } from "../../desktop-spike/harness/cli.mjs"
+import { locate } from "./cli.mjs"
 import type { Packs } from "./game"
 import { type HostPost, hostLoop, remoteStore } from "./host"
 import { localLlm } from "./llm"

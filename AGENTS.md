@@ -42,7 +42,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Game logic goes in `packages/gm-core`. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
 - `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there.
 - `packages/ui` (`@d20/ui`) is shared by the site and the desktop app. It imports nothing from Next, Clerk, Convex or the site. It is built on UI SDK (`@ui-sdk/react`, docs in its `docs` folder).
-- `apps/desktop` is the Tauri app, with its Node game runtime in `apps/desktop/runtime`. `apps/desktop-spike` is a throwaway spike, not the app.
+- `apps/desktop` is the Tauri app, with its Node game runtime in `apps/desktop/runtime`. The `.mjs` files there find and launch the player's AI CLI (`cli.mjs`, `sessions.mjs`).
 - Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`, compiled by `lib/wiki-adventures`. `data/adventure-plans/*.json` is the old format, used only by `scripts/migrate-*`.
 - Ledger is the look of pages that are read, not played. Those pages wear it through `components/layout/ledger-page.tsx`, with styles in `app/updates/updates.css` (classes begin `up-`). `/ui` shows it.
 - `app/dev` and `lab/stage-art` are dev pages and experiments, not shipped features.

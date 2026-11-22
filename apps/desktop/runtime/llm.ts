@@ -1,6 +1,6 @@
 import type { Llm } from "@d20/gm-core"
 import { z } from "zod"
-import { createSession } from "../../desktop-spike/harness/sessions.mjs"
+import { createSession } from "./sessions.mjs"
 import { desktopPatchSchema } from "./characters"
 
 // `strict` holds advancement to the local game's world-state contract. Hosted games keep the website's contract.
@@ -40,7 +40,7 @@ export function schemaLlm(ask: (prompt: string) => Promise<string>, validatePatc
       return { text: await ask(`${system ?? ""}\n${prompt}\nReturn only the requested prose.`) }
     },
     async generateObject({ schema, prompt, system }) {
-      // Require the spike's strict world-state contract before core validation.
+      // Require the strict world-state contract before core validation.
       const advancement = strict && schema instanceof z.ZodObject && "adventurePatch" in schema.shape
       const effective = advancement ? schema.extend({ adventurePatch: desktopPatchSchema.required({ characterUpdates: true }) }) : schema
       const jsonSchema = z.toJSONSchema(effective, { unrepresentable: "any" })

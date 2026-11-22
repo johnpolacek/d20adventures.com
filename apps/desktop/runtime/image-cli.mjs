@@ -5,7 +5,7 @@ import { extname, join, sep } from "node:path"
 import { locate, minimalEnv } from "./cli.mjs"
 
 // Running Codex's and Grok's own image tools under the player's sign-in, with every other tool off. No image
-// processing here, so the desktop runtime can import it without the spike's dependencies.
+// processing here, so the desktop runtime can import it without an image library.
 const forbidden = [
   "read_file",
   "write",

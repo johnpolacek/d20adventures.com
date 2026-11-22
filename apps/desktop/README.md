@@ -26,7 +26,7 @@ Character patches apply atomically on turn advancement. Equipment supports addin
 
 The model must return explicit character operations or an empty update list. Invalid references receive one correction attempt, then fail without advancing. Item/effect/spell matching is exact after trimming and ignoring case. Existing version 1 saves bootstrap remembered state from stored character snapshots. Historical prose-only change notes remain readable and are not guessed at or replayed.
 
-Current limits: one active adventure with an archive you cannot browse yet, four premade player-controlled characters, two authored 3D sets, no multiplayer or narration audio, and no signing/notarization/updater. Equipment is a list of items, without a separate quantity or currency ledger. Combat and other providers were not covered by the native playthrough. The spike's five-call optimization remains separate.
+Current limits: one active adventure with an archive you cannot browse yet, four premade player-controlled characters, two authored 3D sets, no multiplayer or narration audio, and no signing/notarization/updater. Equipment is a list of items, without a separate quantity or currency ledger. Combat and other providers were not covered by the native playthrough.
 
 Validation:
 

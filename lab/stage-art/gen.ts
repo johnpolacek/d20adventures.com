@@ -144,11 +144,11 @@ export const smooth = (a: number, b: number, x: number) => {
 // The command is the desktop app's locked-down one (every other tool off), with `images` attached for it to work from.
 // The tool picks its own size, about 1536 px on the long side.
 export async function codexPaint(label: string, text: string, images: Buffer[], shape = "landscape 3:2") {
-  const { imageCommand, imageOutput } = (await import("../../apps/desktop-spike/harness/image-cli.mjs")) as {
+  const { imageCommand, imageOutput } = (await import("../../apps/desktop/runtime/image-cli.mjs")) as {
     imageCommand: (provider: string, cwd: string, instructions: string) => { executable: string; args: string[]; env: Record<string, string>; input: string }
     imageOutput: (provider: string, events: unknown[]) => string
   }
-  const { runBounded } = (await import("../../apps/desktop-spike/harness/cli.mjs")) as {
+  const { runBounded } = (await import("../../apps/desktop/runtime/cli.mjs")) as {
     runBounded: (binary: string, args: string[], options: Record<string, unknown>) => Promise<{ code: number | null; stdout: string; timedOut: boolean; oversized: boolean }>
   }
   const cwd = await mkdtemp(join(tmpdir(), "stage-art-"))

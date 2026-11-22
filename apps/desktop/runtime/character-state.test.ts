@@ -9,7 +9,7 @@ import { killed, withDamage, withHealing, withHitPointsBy } from "@d20/gm-core/s
 import { longRest } from "@d20/gm-core/sheet/rest"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { z } from "zod"
-import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
+import { strictModelSchema } from "./strict-state.mjs"
 import { characterInfo } from "../src/character-info"
 import { applyCharacterUpdates, desktopPatchSchema, nextCharacterState } from "./characters"
 import { game, type Packs } from "./game"

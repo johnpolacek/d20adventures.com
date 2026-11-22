@@ -9,7 +9,7 @@ import { isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-patch"
 import { type CharacterUpdate, characterUpdateSchema } from "@d20/gm-core/wiki-adventures/character-updates"
 import { z } from "zod"
-import { strictModelSchema } from "../../desktop-spike/harness/strict-state.mjs"
+import { strictModelSchema } from "./strict-state.mjs"
 
 export const desktopPatchSchema = strictModelSchema(adventurePatchSchema.omit({ characterUpdates: true })).extend({
   characterUpdates: z.array(characterUpdateSchema).max(100).optional(),

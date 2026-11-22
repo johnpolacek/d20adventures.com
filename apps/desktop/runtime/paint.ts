@@ -2,11 +2,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import jpeg from "jpeg-js"
 import { PNG } from "pngjs"
-import { runBounded } from "../../desktop-spike/harness/cli.mjs"
-import { imageCommand, imageOutput } from "../../desktop-spike/harness/image-cli.mjs"
+import { runBounded } from "./cli.mjs"
+import { imageCommand, imageOutput } from "./image-cli.mjs"
 import type { Hero } from "./heroes"
 
-// The spike's JavaScript process runner, typed for the options used here.
+// The JavaScript process runner in cli.mjs, typed for the options used here.
 const run = runBounded as (
   binary: string,
   args: string[],
