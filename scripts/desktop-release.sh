@@ -25,4 +25,7 @@ Windows: irm https://d20adventures.com/install.ps1 | iex" --latest
 
 # The Intel Mac, Windows and Linux builds run on GitHub and join this release when done.
 gh workflow run desktop-builds.yml -f tag="$TAG" || echo "Could not start the other builds. Run: gh workflow run desktop-builds.yml -f tag=$TAG" >&2
+# The release is on GitHub now, so nothing of it is kept here: the app, its zip, the Rust release cache and the
+# web build, about 3.5 GB. The next release compiles from scratch. Development builds in target/debug stay.
+rm -rf apps/desktop/src-tauri/target/release apps/desktop/dist
 echo "Released $TAG for Apple Silicon. The other builds join it in about 20 minutes: gh run list -w desktop-builds.yml"
