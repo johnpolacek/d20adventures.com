@@ -23,8 +23,8 @@ export async function saveQueueItem(input: {
   await guard()
   const item = readItem(input.slug)
   const status = (STATUSES as readonly string[]).includes(input.status) ? (input.status as (typeof STATUSES)[number]) : item.status
-  // Folded and cut ideas drop out of the running order, at 90 and up. One brought back joins the end.
-  const parked = status === "folded" || status === "cut"
+  // Shelved ideas drop out of the running order, at 90 and up. One brought back joins the end.
+  const parked = status === "shelved"
   const lastLive = listQueue().filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0)
   const rank = parked && item.rank < 90 ? 90 : !parked && item.rank >= 90 ? lastLive + 1 : item.rank
   writeItem({ ...item, title: input.title.trim() || item.title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted })

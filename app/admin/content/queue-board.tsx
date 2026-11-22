@@ -2,13 +2,14 @@
 
 import { Button, Option } from "@d20/ui/button"
 import { fieldClass } from "@d20/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { cn } from "@d20/ui/utils"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
 import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
 import { briefFor } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
-const STATUSES = ["idea", "drafted", "approved", "scheduled", "posted", "folded", "cut"]
+const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"]
 const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X/Bluesky", limit: 280 }, { name: "Reddit" }]
 const NOTES = ["Point", "Hook", "Payoff", "Why it spreads", "Stories", "Facts", "John said", "Changes", "Clips"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
@@ -16,16 +17,14 @@ const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 type Filter = "live" | "parked" | "all"
 type Sort = "rank" | "score"
 
-const parked = (item: QueueItem) => item.status === "folded" || item.status === "cut"
+const parked = (item: QueueItem) => item.status === "shelved"
 
 const statusTone: Record<string, string> = {
   idea: "bg-white/10 text-white/70",
-  drafted: "bg-sky-900/60 text-sky-200",
-  approved: "bg-emerald-900/60 text-emerald-200",
+  draft: "bg-sky-900/60 text-sky-200",
   scheduled: "bg-violet-900/60 text-violet-200",
   posted: "bg-emerald-700/60 text-white",
-  folded: "bg-amber-900/50 text-amber-200",
-  cut: "bg-red-950/60 text-red-300",
+  shelved: "bg-white/5 text-white/40",
 }
 
 function section(item: QueueItem, name: string): string {
@@ -82,7 +81,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
         <h1 className="mr-auto font-display text-2xl text-white">Content Queue</h1>
         {(["live", "parked", "all"] as Filter[]).map((f) => (
           <Option key={f} size="xs" active={filter === f} onClick={() => setFilter(f)}>
-            {f === "live" ? "Live" : f === "parked" ? "Folded and Cut" : "All"}
+            {f === "live" ? "Live" : f === "parked" ? "Shelved" : "All"}
           </Option>
         ))}
         <span className="mx-1 h-5 w-px bg-white/15" />
@@ -213,20 +212,24 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             setDirty(true)
           }}
         />
-        <select
-          className={cn(fieldClass, "h-9 w-auto text-sm")}
+        <Select
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as QueueItem["status"])
+          onValueChange={(value) => {
+            setStatus(value as QueueItem["status"])
             setDirty(true)
           }}
         >
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s[0].toUpperCase() + s.slice(1)}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-32 text-sm">
+            <SelectValue>{status[0].toUpperCase() + status.slice(1)}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {s[0].toUpperCase() + s.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button
           variant="outline"
           size="sm"

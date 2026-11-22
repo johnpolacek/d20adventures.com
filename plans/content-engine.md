@@ -51,7 +51,7 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
    - Writes candidates with their evidence: commit hashes, session ids, short quotes.
    - Keeps a marker of what it has read, so nothing is mined twice.
 2. **Drafts.** `content/queue/<slug>.md`, one per idea.
-   - Frontmatter: `rank`, `tier`, `scores`, `status` (idea, drafted, approved, scheduled, posted, folded, cut), `into` for folded ideas, `asset`, `evidence`, `posted` URLs.
+   - Frontmatter: `rank`, `tier`, `scores`, `status` (idea, draft, scheduled, posted, shelved), `into` for folded ideas, `asset`, `evidence`, `posted` URLs.
    - Body: point, hook, payoff, why it spreads, facts, John’s words.
    - Body sections per platform: X, Bluesky, Reddit, update post.
    - Written in the voice of `docs/writing-voice.md`.

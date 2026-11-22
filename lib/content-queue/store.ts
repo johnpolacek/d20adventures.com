@@ -8,7 +8,9 @@ import { parse, stringify } from "yaml"
 
 const QUEUE = path.join(process.cwd(), "content/queue")
 
-export const STATUSES = ["idea", "drafted", "approved", "scheduled", "posted", "folded", "cut"] as const
+export const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"] as const
+// Older names, read as the status that replaced them.
+const RENAMED: Record<string, QueueStatus> = { drafted: "draft", approved: "draft", folded: "shelved", cut: "shelved" }
 export type QueueStatus = (typeof STATUSES)[number]
 
 /** Platform drafts every idea can carry, in the order they show. */
@@ -60,7 +62,7 @@ function parseItem(slug: string, text: string): QueueItem {
     slug,
     title: String(meta.title ?? slug),
     longTitle: String(meta.longTitle ?? ""),
-    status: STATUSES.includes(meta.status) ? meta.status : "idea",
+    status: STATUSES.includes(meta.status) ? meta.status : (RENAMED[meta.status] ?? "idea"),
     rank: Number(meta.rank ?? 999),
     tier: Number(meta.tier ?? 3),
     score: Number(meta.score ?? scores.hook + scores.payoff + scores.spread),
