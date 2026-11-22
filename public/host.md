@@ -20,7 +20,7 @@ Check these before installing. Say what is missing, help fix it, and install not
 - **System.** There are builds for macOS on Apple Silicon and Intel, Linux on x86_64, and Windows on x64.
 - **Node.js 24 or newer, where the app looks.** On a Mac the app does not read the shell's PATH. It runs the first `node` found in these folders, in order: `~/.local/share/fnm/aliases/default/bin`, `~/.volta/bin`, `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`. On Windows: `%ProgramFiles%\nodejs`, then PATH. Run that first `node` with `--version`. A Node from nvm, asdf or mise is not found, so link it and check again: `mkdir -p ~/.local/bin && ln -sf "$(node -p process.execPath)" ~/.local/bin/node`.
 - **An AI CLI, signed in.** It runs the Game Master: Claude Code (`claude`), Codex (`codex`), Grok (`grok`) or Antigravity (`agy`). The app looks in `~/.local/bin`, the fnm and Volta folders above, `~/.bun/bin`, `~/.grok/bin`, `/opt/homebrew/bin` and `/usr/local/bin`, and on Windows `%APPDATA%\npm`. It offers every CLI found, and uses the first copy of each in that order. Run the copy it will use with one real request, such as `claude -p hi` or `codex exec hi`. The app lists a signed-out CLI as ready, then fails on the first turn.
-- **Not an npm build, on a Mac.** If that file starts with `#!/usr/bin/env node`, the app cannot start it. This holds up to version 0.1.2, the current one. Install the CLI's standalone build instead, so a binary sits in one of those folders.
+- **A CLI kept somewhere else.** One installed under nvm, asdf or mise is not in those folders, so link it: `ln -sf "$(command -v codex)" ~/.local/bin/codex`.
 - **Linux only.** The AppImage needs FUSE 2 (`libfuse2` on Ubuntu) and a desktop session.
 
 ## 3. Install the app
@@ -60,7 +60,7 @@ If the host closes the app, friends see “The host’s app is offline” and th
 
 - “Install Node.js 24 or newer to run the local GM” or “The local GM stopped”: the app found no Node, or an old one. Redo the Node check.
 - “Install and sign in to Claude Code, Codex, Grok, or Antigravity”: no CLI is in the folders the app searches, so Play and Invite stay disabled. Redo the CLI check, then quit and reopen the app.
-- “could not finish this request. Check its sign-in or usage limit”: the CLI is signed out, out of usage, or an npm build. Redo the CLI check, or pick another under Game Master.
+- “could not finish this request. Check its sign-in or usage limit”: the CLI is signed out or out of usage. Redo the CLI check, or pick another under Game Master. On a Mac, an app older than 0.1.3 cannot start a CLI installed with npm, so update the app.
 - Linking fails on Linux: the app saves the link in the system keyring, so one must be running.
 - To see what is running: `pgrep -fl "D20 Adventures"` for the app, and `pgrep -fl host.cjs` for a hosted game.
 - To report a problem, use **Give Us Feedback** in the top bar during play, or https://d20adventures.com/contact.
