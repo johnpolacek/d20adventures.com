@@ -92,7 +92,8 @@
     "desktop:wipe": "NODE_NO_WARNINGS=1 tsx scripts/desktop-wipe.ts",
     "content:mine": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-mine.ts",
     "content:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-sync.ts",
-    "content:video": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-video.ts"
+    "content:video": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/content-video.ts",
+    "content:brief": "tsx scripts/content-brief.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.43",

@@ -345,15 +345,37 @@ ${CANDIDATE_SHAPE}
 ${digest}`
 }
 
+// The site's published posts, title, summary and section headings, so the miner doesn't suggest what already shipped.
+function publishedPosts(): string {
+  const dir = path.join(REPO, "content/updates")
+  if (!fs.existsSync(dir)) return ""
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .map((f) => {
+      const text = fs.readFileSync(path.join(dir, f), "utf8")
+      if (/^draft:\s*true/m.test(text)) return ""
+      const title = text.match(/^title:\s*"?(.*?)"?\s*$/m)?.[1] ?? f
+      const description = text.match(/^description:\s*"?(.*?)"?\s*$/m)?.[1] ?? ""
+      const headings = [...text.matchAll(/^#{2,3} (.+)$/gm)].map((m) => m[1]).join("; ")
+      return `- ${title}: ${description}${headings ? ` Sections: ${headings}.` : ""}`
+    })
+    .filter(Boolean)
+    .join("\n")
+}
+
 function reducePrompt(cands: Candidate[], existing: string[]): string {
   return `${CONTEXT}
 
-These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Ideas that are each one incident of a bigger subject (several AI game master mistakes, several 3D figure fixes) become one idea about that subject, with the incidents as its examples. Drop any idea that repeats one already in the queue. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
+These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Ideas that are each one incident of a bigger subject (several AI game master mistakes, several 3D figure fixes) become one idea about that subject, with the incidents as its examples. Drop any idea that repeats one already in the queue, or that a published post already covers. An idea that only adds a little to a published post is dropped too. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
 
 ${SHAREABLE}
 
 Already in the queue:
 ${existing.length ? existing.map((t) => `- ${t}`).join("\n") : "(empty)"}
+
+Already published on the site, with each post's sections:
+${publishedPosts() || "(none)"}
 
 Return only a JSON array, best first, each item shaped:
 ${CANDIDATE_SHAPE.replace(/^\{/, '{"slug": short-kebab-case, ')}
