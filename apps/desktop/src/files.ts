@@ -1,5 +1,5 @@
-// An adventure's art and figures, downloaded as it is played (runtime/files.ts), and served to the stage at d20://
-// (src-tauri/src/files.rs). A scene waits for its own files. The rest of the adventure's follow in the background, so
+// An adventure's art and figures, downloaded as it is played (runtime/files.ts), and served to the stage by the app's
+// own file server (src-tauri/src/files.rs). A scene waits for its own files. The rest of the adventure's follow in the background, so
 // later scenes are ready when play reaches them.
 import { invoke, isTauri } from "@tauri-apps/api/core"
 import { serveFrom } from "@d20/stage/served"
@@ -15,12 +15,11 @@ const SHOW_BAR = 3000
 
 const command = <T>(command: Record<string, unknown>) => invoke<T>("files_command", { command })
 
-/** Points the stage's files at the app's d20:// files. The window calls it once, in the built app alone: in
- * development the dev server serves the same files from the window's own origin (vite.config.mjs), and WebGL refuses
- * images from another origin that WebKit gives no CORS answer for ("The operation is insecure"). */
-export function serveAppFiles() {
+/** Points the stage's files at the app's own file server on 127.0.0.1 (src-tauri/src/files.rs), in the built app
+ * alone: in development the dev server serves the same files from the window's own origin (vite.config.mjs). */
+export async function serveAppFiles() {
   if (!isTauri() || import.meta.env.DEV) return
-  serveFrom(navigator.userAgent.includes("Windows") ? "http://d20.localhost" : "d20://localhost")
+  serveFrom(await invoke<string>("files_host"))
 }
 
 function batches(files: File[]) {
@@ -77,8 +76,10 @@ async function fillIn(adventureId: string) {
 
 export type SceneFiles = { ready: boolean; progress: number | null }
 
-/** Whether the scene's files are in. `progress` is 0 to 1 once the wait looks longer than a few seconds, else null. */
-export function useSceneFiles(adventureId: string | undefined, encounterId: string | undefined): SceneFiles {
+/** Whether the scene's files are in. `progress` is 0 to 1 once the wait looks longer than a few seconds, else null.
+ * `playing`: an adventure is under way, so the rest of its files follow in the background. The title screen's scene
+ * fetches its own alone. */
+export function useSceneFiles(adventureId: string | undefined, encounterId: string | undefined, playing: boolean): SceneFiles {
   const [state, setState] = useState<SceneFiles>({ ready: !isTauri() || !adventureId, progress: null })
   useEffect(() => {
     if (!isTauri() || !adventureId) return setState({ ready: true, progress: null })
@@ -106,11 +107,11 @@ export function useSceneFiles(adventureId: string | undefined, encounterId: stri
         clearTimeout(mark)
       }
       if (live) setState({ ready: true, progress: null })
-      void fillIn(adventureId)
+      if (playing) void fillIn(adventureId)
     })()
     return () => {
       live = false
     }
-  }, [adventureId, encounterId])
+  }, [adventureId, encounterId, playing])
   return state
 }

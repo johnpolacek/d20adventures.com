@@ -346,7 +346,7 @@ export function StagePlay(props: {
   const sceneId = shown?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos"
   const authored = sceneFor(sceneId)
   // The scene's art and figures, downloaded before it shows (files.ts).
-  const files = useSceneFiles(authored ? adventureOf(sceneId) : undefined, sceneId)
+  const files = useSceneFiles(authored ? adventureOf(sceneId) : undefined, sceneId, Boolean(save))
   const painted = Object.fromEntries((save?.painted ?? []).flatMap((id) => (art[id] ? [[id, art[id]]] : [])))
   const partyKey = turn
     ? JSON.stringify([

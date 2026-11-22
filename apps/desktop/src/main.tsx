@@ -18,10 +18,9 @@ import "./style.css"
 // The app's narrator runs in Node. A browser tab in development keeps the browser's.
 if (isTauri()) setNarratorEngine(narratorEngine)
 if (import.meta.env.DEV) installDevLog()
-// The stage's files come from the app's d20:// files (files.ts).
-serveAppFiles()
 // The scenes come from the app's adventure packages, so they are loaded before anything shows.
-const start = () => loadStages().then(() => createRoot(document.getElementById("root")!).render(<DesktopGame />))
+// The stage's files come from the app's own file server (files.ts).
+const start = () => Promise.all([loadStages(), serveAppFiles()]).then(() => createRoot(document.getElementById("root")!).render(<DesktopGame />))
 // In a browser tab during development there is no Tauri, so the bridge goes to the dev server instead.
 if (import.meta.env.DEV && !isTauri()) void import("./preview").then((m) => m.installPreview()).then(start)
 else start()
@@ -40,6 +39,12 @@ if (isTauri()) {
   const errors: string[] = []
   addEventListener("error", (e) => errors.push(e.message))
   addEventListener("unhandledrejection", (e) => errors.push(String(e.reason)))
+  // Errors the app catches and logs, such as a stage that failed to build.
+  const logged = console.error.bind(console)
+  console.error = (...parts: unknown[]) => {
+    errors.push(parts.map((p) => (p instanceof Error ? `${p.name}: ${p.message}` : String(p))).join(" "))
+    logged(...parts)
+  }
   const stage = () => (window as unknown as { __stage?: { stats: () => Record<string, unknown> } }).__stage
   const samples: Record<string, unknown>[] = []
   const sampler = setInterval(() => {

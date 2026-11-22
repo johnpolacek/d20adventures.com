@@ -118,6 +118,12 @@ async fn suggest_command(app: tauri::AppHandle, command: Value) -> Result<Value,
     }
     run_runtime(&app, &command).await
 }
+// Where the window fetches the stage's files (files.rs).
+struct FilesHost(String);
+#[tauri::command]
+fn files_host(host: tauri::State<'_, FilesHost>) -> String {
+    host.0.clone()
+}
 // An adventure's art and figures: planning and downloading never touch the save, so they skip the game lock and run
 // behind play (runtime/files.ts).
 #[tauri::command]
@@ -425,10 +431,12 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 }
 fn main() {
     tauri::Builder::default()
-        // The stage's files: downloaded adventures, then the app's own (files.rs).
-        .register_asynchronous_uri_scheme_protocol(files::SCHEME, |ctx, request, responder| {
-            let data = data_dir(ctx.app_handle()).ok();
-            files::handle(ctx, data, request, responder)
+        // The stage's files, served on 127.0.0.1: downloaded adventures, then the app's own (files.rs).
+        .setup(|app| {
+            let handle = app.handle().clone();
+            let data = data_dir(&handle).ok();
+            app.manage(FilesHost(files::serve(handle, data)?));
+            Ok(())
         })
         .manage(GameLock(Mutex::new(())))
         .manage(Narrator(Mutex::new(None)))
@@ -440,6 +448,7 @@ fn main() {
             game_command,
             suggest_command,
             files_command,
+            files_host,
             model_command,
             account_command,
             host_command,

@@ -55,9 +55,10 @@ One folder, or one archive of it, named by the adventure's id:
    - Owner, 2026-11-22: download the whole adventure when it starts, but let play begin once the opening scene's files are in, with the rest behind it. A loading pulse, and a progress bar only when the wait looks longer than a few seconds.
    - Each package lists what every scene needs (`needs` in `package.json`): its set, staging and look files, its art, its cast's portraits, and its figures at the detail the scene stands them in. Opening scenes need 3 to 37 MB.
    - The window waits on the scene's own files (`src/files.ts`, `useSceneFiles`), then fetches the rest a few MB at a time, behind play. Downloads skip the game lock (`files_command`).
-   - The window reads every stage file at `d20://localhost` (`http://d20.localhost` on Windows) through `src-tauri/src/files.rs`: the repo's own first in development, then the downloads, then the app's bundled copy.
+   - The built app's window reads every stage file from its own file server on 127.0.0.1 (`src-tauri/src/files.rs`): the downloads, then the copy bundled with the window. Not a custom scheme: WebKit gives a custom scheme's images no CORS answer, and WebGL refused them as "The operation is insecure". Development reads the repo's files from the dev server's own origin (`vite.config.mjs`).
+   - The title screen's scene fetches its own files alone. The rest of an adventure follows in the background only once it is played.
    - The app bundles what shows before any download: the kit, covers, maps, premade heroes' art and the title screen's scene (`bundled.json`). Its stage files and figures fell from about 313 MB to 117 MB.
-   - Not yet tried in a built app, only in development and by its parts.
+   - Tried in a release build, 2026-11-22: the title screen's stage up with no errors at 30 to 51 fps, downloads served, a missing file 404.
 5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.
 6. Later: publish a creator's package to the site, and the pipeline running on the player's machine with their own keys.
 
