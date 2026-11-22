@@ -2,7 +2,7 @@
 // public/stage, so story view finds them there, as hosted games on the website do.
 // - Each encounter's painting, from the `image` in its frontmatter: public/stage/art/<adventure>/<encounter>.webp.
 // - Each NPC's portrait, from the `image` on its sheet, cropped to the turn order's tall frame:
-//   public/stage/portraits/<npc>.webp, listed in apps/desktop/src/npc-portraits.ts. Sheets with the stock avatar have none.
+//   public/stage/portraits/<npc>.webp, listed in packages/stage/src/portraits.json. Sheets with the stock avatar have none.
 //
 //   pnpm exec tsx scripts/stage-encounter-art.ts [adventure...] [--force]
 //
@@ -16,7 +16,8 @@ const ROOT = "content/settings/realm-of-myr/adventures"
 const NPCS = "content/settings/realm-of-myr/npcs"
 const OUT = "public/stage/art"
 const PORTRAITS = "public/stage/portraits"
-const MANIFEST = "apps/desktop/src/npc-portraits.ts"
+// The characters with one, which the site's scenes read (@d20/stage/sets NPC_PORTRAITS). A package finds its own.
+const PORTRAIT_LIST = "packages/stage/src/portraits.json"
 const args = process.argv.slice(2)
 const force = args.includes("--force")
 const chosen = args.filter((a) => !a.startsWith("--"))
@@ -86,10 +87,7 @@ async function main() {
     have.push(sheet.id)
     console.log(`saved    portrait ${sheet.id}`)
   }
-  await writeFile(
-    MANIFEST,
-    `// NPCs with a portrait at /stage/portraits/<id>.webp. Written by scripts/stage-encounter-art.ts.\nexport const NPC_PORTRAITS: ReadonlySet<string> = new Set(${JSON.stringify(have.sort())})\n`
-  )
+  await writeFile(PORTRAIT_LIST, `${JSON.stringify(have.sort(), null, 2)}\n`)
   console.log(`${have.length} portraits`)
 }
 void main()

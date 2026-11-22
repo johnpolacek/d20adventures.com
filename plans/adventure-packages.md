@@ -43,10 +43,14 @@ One folder, or one archive of it, named by the adventure's id:
    - Sizes: Welcome to Kordavos 106 MB, The Road to Kordavos 32 MB, The Midnight Summons 17 MB, Covert Cargo 7 MB.
    - Files come from every `/stage/…` path its story, sets, stagings and looks name, plus by where they are kept: `stage/fixtures/<id>`, `stage/art/<id>`, `stage/covers/<id>`, and each NPC's `stage/portraits/<cast id>.webp`.
    - The kit stays the app's: `stage/textures`, `sounds`, `crowd`, `trees`, `realm`, `heroes`, `photoreal.json`.
-   - Still code, for phase 3: `apps/desktop/src/scenes.ts` (`PORTRAITS`, `PREMADE_FIGURES`), `npc-portraits.ts`, and the set and staging loaders in `@d20/stage/sets`.
-3. Teach the app to load stage data from a package, not from compiled source. Bundled adventures become bundled packages.
-   - Done 2026-11-22: the desktop app's scenes. The table in `apps/desktop/src/scenes.ts` is now each adventure's `scenes.json`, carried in its package. The desktop build copies each bundled package's `stage/` to `/adventures/<id>/stage` for the window (`src/stage-data.ts`) and to resources for the runtime (`runtime/scenes-node.ts`). All 69 scenes built from data match the old table.
-   - Left: the runtime's floor plans (`runtime/floor.ts` still reads `@d20/stage/plans`), a played look's figures (`asset-library/play.ts` reads `FIGURES`), and the portrait lists in `scenes.ts` and `npc-portraits.ts`. The website keeps the compiled stage: it plays the demo alone.
+3. Done 2026-11-22. The desktop app plays its stage from its packages.
+   - Scenes: the table in `apps/desktop/src/scenes.ts` is each adventure's `scenes.json`. All 69 scenes built from data match the old table, in the same order.
+   - The desktop build copies each bundled package's `stage/` to `/adventures/<id>/stage` for the window and to resources for the runtime. The window loads it before it renders (`src/stage-data.ts`), and the runtime when it starts (`runtime/scenes-node.ts`).
+   - Floor plans: the runtime reads them from the packages (`runtime/floor.ts`). All 69 match the compiled ones.
+   - Looks and figures: `asset-library/play.ts` plays the packages' `looks.json` and `figures.json` in the app (`playFrom`), and the repo's own elsewhere.
+   - Portraits: `stage/portraits.json` in each package, cards from `stagings/<adventure>/portraits.json` and each character's painted one. `npc-portraits.ts` is gone. The site reads `packages/stage/src/portraits.json`, which `scripts/stage-encounter-art.ts` writes.
+   - The website and its dev pages load the same scenes from the repo's stage (`useScenes("repo")`), and scripts through `scripts/repo-scenes.ts`.
+   - Still code: `PREMADE_FIGURES` and hero art (`apps/desktop/src/figures.ts`), and the setting's city maps (`lib/citymap`), which the story pack carries.
 4. Fetch figures and files per package on first play into the app data folder, keyed by hash. Stop copying `public/stage` and figures into the build. This settles the app's size at any number of figures.
 5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.
 6. Later: publish a creator's package to the site, and the pipeline running on the player's machine with their own keys.

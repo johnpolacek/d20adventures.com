@@ -1,6 +1,5 @@
 import { served } from "@d20/stage/served"
 import { type FigureArt, type FigureOwner, heroFigure, PREMADE_FIGURES } from "./figures"
-import { NPC_PORTRAITS } from "./npc-portraits"
 import photoreal from "./photoreal.json"
 
 type Who = { id: string; name: string; type?: string; race?: string; archetype?: string; gender?: string }
@@ -37,6 +36,7 @@ export interface AdventureStage {
   scenes: Record<string, SceneEntry>
   sets: Record<string, unknown>
   stagings: Record<string, unknown>
+  portraits?: { cards?: Record<string, string>; npcs?: Record<string, string> }
 }
 
 function merge(target: unknown, patch: unknown): unknown {
@@ -53,6 +53,8 @@ export const SCENES: Record<string, Scene> = {}
 
 /** Adds an adventure's scenes. A scene whose set or staging the package lacks is left out. */
 export function addScenes(stage: AdventureStage) {
+  Object.assign(PORTRAITS, stage.portraits?.cards)
+  Object.assign(NPC_PORTRAITS, stage.portraits?.npcs)
   for (const [id, e] of Object.entries(stage.scenes)) {
     const set = stage.sets[e.set]
     let staging = stage.stagings[e.staging] as Scene["staging"] | undefined
@@ -130,12 +132,10 @@ function heroCast(pc: Who, chosen: Record<string, string>, painted: Record<strin
   return { id: pc.id, name: pc.name, role: [pc.race, pc.archetype?.toLowerCase()].filter(Boolean).join(" "), height: figure.height, art: figure.art }
 }
 
-// Portraits for scenes where a character has no figure, cropped from their standee art. The app shows only bundled images.
-const PORTRAITS: Record<string, string> = {
-  thalbern: "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg",
-  wollandora: "/stage/fixtures/the-midnight-summons/wollandora-portrait.jpg",
-  owlbear: "/stage/fixtures/the-midnight-summons/owlbear-portrait.jpg",
-}
+// Portraits from the packages (stage/portraits.json). `cards`: for a cast member whose card has none, cropped from their
+// standee art. `npcs`: each character's painted portrait (scripts/stage-encounter-art.ts).
+const PORTRAITS: Record<string, string> = {}
+const NPC_PORTRAITS: Record<string, string> = {}
 
 // On a painted set the cast's cards are photographs (the stage's `photographs`), and their portraits go with them:
 // the same head and shoulders cut from the photograph, in the `photoreal` folder beside the painted portrait
@@ -161,7 +161,7 @@ function portraitPath(scene: Scene | undefined, c: Who, chosen: Record<string, s
     if (portrait) return photograph(portrait, scene ?? s)
   }
   return photograph(
-    PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS.has(c.id) ? `/stage/portraits/${c.id}.webp` : undefined),
+    PORTRAITS[c.id] ?? PREMADE_FIGURES[c.id]?.art.portrait ?? (c.type === "pc" ? heroFigure(c as FigureOwner).art.portrait : NPC_PORTRAITS[c.id]),
     scene
   )
 }

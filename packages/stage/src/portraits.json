@@ -1,5 +1,4 @@
-// NPCs with a portrait at /stage/portraits/<id>.webp. Written by scripts/stage-encounter-art.ts.
-export const NPC_PORTRAITS: ReadonlySet<string> = new Set([
+[
   "aelindor",
   "aldith",
   "ancient-undead",
@@ -60,5 +59,5 @@ export const NPC_PORTRAITS: ReadonlySet<string> = new Set([
   "vera-azimov",
   "vesk-the-fence",
   "warehouse-thug",
-  "wollandora",
-])
+  "wollandora"
+]

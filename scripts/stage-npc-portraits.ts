@@ -1,6 +1,6 @@
 // Paints portraits for NPCs whose sheets have only the stock avatar, in the style of the painted NPC portraits, and
 // publishes them where story view and the turn order look for them (public/stage/portraits, see
-// scripts/stage-encounter-art.ts, which lists them in apps/desktop/src/npc-portraits.ts).
+// scripts/stage-encounter-art.ts; each adventure's package lists them).
 //
 //   node --env-file=.env.local --import tsx scripts/stage-npc-portraits.ts paint [id,id...]     # new raw portraits
 //   node --env-file=.env.local --import tsx scripts/stage-npc-portraits.ts publish [id,id...]   # crop the latest raw

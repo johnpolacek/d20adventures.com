@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@d20/ui/button"
 import type { Save } from "@/apps/desktop/runtime/store"
+import { useScenes } from "@/apps/desktop/src/stage-data"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import saved from "./midnight-save.json"
 
@@ -81,6 +82,8 @@ export function StagePlayMock({ start: first }: { start: number }) {
   }, [])
   const current = STEPS[step].save
   const art = useMemo(() => ({}), [])
+  const scenes = useScenes("repo")
+  if (!scenes) return null
   return (
     <div className="fixed inset-0">
       <StagePlay

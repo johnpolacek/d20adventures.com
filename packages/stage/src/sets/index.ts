@@ -118,3 +118,15 @@ export const FIGURES: Record<string, () => Promise<Record<string, string>>> = {
   "covert-cargo": () => import("../stagings/covert-cargo/figures.json").then((m) => m.default),
   "the-midnight-summons": () => import("../stagings/the-midnight-summons/figures.json").then((m) => m.default),
 }
+// Each adventure's scenes (the desktop app's scenes.ts) and the card portraits of cast whose cards have none.
+export const SCENE_FILES: Record<string, () => Promise<Record<string, unknown>>> = {
+  "welcome-to-kordavos": () => import("../stagings/welcome-to-kordavos/scenes.json").then((m) => m.default),
+  "the-midnight-summons": () => import("../stagings/the-midnight-summons/scenes.json").then((m) => m.default),
+  "covert-cargo": () => import("../stagings/covert-cargo/scenes.json").then((m) => m.default),
+  "the-road-to-kordavos": () => import("../stagings/the-road-to-kordavos/scenes.json").then((m) => m.default),
+}
+export const CARD_PORTRAITS: Record<string, () => Promise<Record<string, string>>> = {
+  "the-midnight-summons": () => import("../stagings/the-midnight-summons/portraits.json").then((m) => m.default),
+}
+// The characters with a painted portrait at /stage/portraits/<id>.webp (scripts/stage-encounter-art.ts).
+export const NPC_PORTRAITS = () => import("../portraits.json").then((m) => m.default as string[])

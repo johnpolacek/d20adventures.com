@@ -42,13 +42,14 @@ import { Presence } from "@d20/ui/presence"
 import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import type { Save } from "../runtime/store"
+import { useAutopilot } from "./autopilot"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { storyMoments } from "./moments"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
+import { loadPlay } from "./stage-data"
 
 // The built looks the game plays its sets in, loaded with the stage.
-const loadPlay = () => import("@/asset-library/play")
 
 type Paragraph = { text: string; roll?: RollBeat; feature?: FeatureBeat; beats: StoryBeat[] }
 // A turn's story as paragraphs to read. A dice roll keeps its sentence, which the camera and screen readers read, and
@@ -1155,6 +1156,19 @@ export function StagePlay(props: {
   }, [held, save])
   const leaveRef = useRef(leaveRoll)
   leaveRef.current = leaveRoll
+  useAutopilot({
+    mode,
+    reading,
+    working: Boolean(props.busy || props.writing),
+    held: held?.at ?? null,
+    ended: Boolean(ended && !props.busy),
+    turn: turn?._id,
+    encounter: turn?.encounterId,
+    setAuto,
+    setDraft,
+    reply,
+    roll: makeRoll,
+  })
   // Played on its own, the card moves on once the verdict has had a moment and the GM has answered.
   useEffect(() => {
     if (!auto || !held || props.busy) return

@@ -93,8 +93,17 @@ export function lightLook(stage: Stage, q: Record<string, string>, keepCamera = 
   })
 }
 
+// Where the looks and each adventure's figures come from: the repo's own by default, as the site and the lab play
+// them. The desktop app plays its packages' (apps/desktop/src/stage-data.ts).
+let looks: Record<string, Look> = LOOKS
+let castOf = async (adventure: string) => (await FIGURES[adventure]?.()) ?? {}
+export function playFrom(from: { looks: Record<string, Look>; figures: (adventure: string) => Promise<Record<string, string>> }) {
+  looks = from.looks
+  castOf = from.figures
+}
+
 // The look the game plays a set in, if it has one.
-export const playedLook = (set: string | undefined) => (set && LOOKS[set]?.play ? LOOKS[set] : null)
+export const playedLook = (set: string | undefined) => (set && looks[set]?.play ? looks[set] : null)
 
 interface CastLike {
   id: string
@@ -134,7 +143,7 @@ export async function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Lo
   if (look.trees) markBuiltTrees(set)
   const cast = staging.cast ?? []
   const adventure = staging.id?.split("/")[0]
-  const shipped = (adventure && (await FIGURES[adventure]?.())) || {}
+  const shipped = adventure ? await castOf(adventure) : {}
   const figureOf = (id: string) => look.figures?.[id] ?? shipped[id]
   // A few figures stand at their full detail, since the camera goes right up to a face. A crowd of them stands at the
   // middle level: fourteen at full detail cost a third of the frame rate.

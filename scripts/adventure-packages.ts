@@ -13,6 +13,7 @@
  *   story/city-map.json     the city its encounters stand on, if it has one
  *   stage/sets/<setting>/<set>.json, stage/stagings/<encounter>.json, stage/plans/{sets,encounters}/…
  *   stage/scenes.json       each encounter's scene: its set and staging, place name and party spots (the app's scenes.ts)
+ *   stage/portraits.json    card portraits for cast whose cards have none, and each character's painted portrait
  *   stage/looks.json        the played looks of its sets, by set id
  *   stage/figures.json      who stands as which figure (packages/stage/src/stagings/<adventure>/figures.json)
  *   files/stage/…           every file its story and stage name, at the path the stage asks for it by
@@ -89,7 +90,7 @@ async function gather(id: string, settingId: string) {
     const file = join(STAGE, "plans/sets", `${set.replace("/", "-")}.json`)
     if (existsSync(file)) plans[`sets/${set.replace("/", "-")}.json`] = JSON.parse(readFileSync(file, "utf8"))
   }
-  for (const encounter of Object.keys(stagings)) {
+  for (const encounter of new Set([...Object.keys(stagings), ...Object.keys(scenes)])) {
     const file = join(STAGE, "plans/encounters", `${encounter}.json`)
     if (existsSync(file)) plans[`encounters/${encounter}.json`] = JSON.parse(readFileSync(file, "utf8"))
   }
@@ -118,9 +119,25 @@ async function gather(id: string, settingId: string) {
   }
   for (const p of paths) take(p.slice(1))
   for (const own of [`stage/fixtures/${id}`, `stage/art/${id}`]) if (existsSync(join(PUBLIC, own))) take(own)
-  // Each NPC's portrait, by cast id (scripts/stage-encounter-art.ts).
-  for (const staging of Object.values(stagings))
-    for (const c of (staging as { cast?: { id: string }[] }).cast ?? []) if (existsSync(join(PUBLIC, `stage/portraits/${c.id}.webp`))) take(`stage/portraits/${c.id}.webp`)
+  // Portraits. A cast member's card portrait, for one whose card has none (stagings/<adventure>/portraits.json), and
+  // each character's painted one, at stage/portraits/<id>.webp (scripts/stage-encounter-art.ts).
+  const cardsFile = join(STAGE, "stagings", id, "portraits.json")
+  const cards = existsSync(cardsFile) ? (JSON.parse(readFileSync(cardsFile, "utf8")) as Record<string, string>) : {}
+  const characters = new Set<string>()
+  const ids = (v: unknown): void => {
+    if (Array.isArray(v)) v.forEach(ids)
+    else if (v && typeof v === "object") {
+      if (typeof (v as { id?: unknown }).id === "string") characters.add((v as { id: string }).id)
+      Object.values(v).forEach(ids)
+    }
+  }
+  const artifacts = (runtime as { artifacts?: { characterSheets?: unknown; entities?: unknown } }).artifacts
+  ids([artifacts?.characterSheets, artifacts?.entities])
+  for (const staging of Object.values(stagings)) for (const c of (staging as { cast?: { id: string }[] }).cast ?? []) characters.add(c.id)
+  const npcs = Object.fromEntries([...characters].sort().filter((c) => existsSync(join(PUBLIC, `stage/portraits/${c}.webp`))).map((c) => [c, `/stage/portraits/${c}.webp`]))
+  const portraits = { cards, npcs }
+  for (const p of Object.values(npcs)) take(p.slice(1))
+  for (const p of Object.values(cards)) take(p.slice(1))
   for (const ext of ["jpg", "webp", "png"]) if (existsSync(join(PUBLIC, `stage/covers/${id}.${ext}`))) take(`stage/covers/${id}.${ext}`)
 
   const hashed = Object.fromEntries(
@@ -131,7 +148,7 @@ async function gather(id: string, settingId: string) {
   )
   const source = readFileSync(join(ROOT, "content/settings", settingId, "adventures", id, "adventure.md"), "utf8")
   const title = /^title:\s*"?([^"\n]+)"?\s*$/m.exec(source)?.[1] ?? id
-  const contents = { story: story.version, scenes, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
+  const contents = { story: story.version, scenes, portraits, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
   const manifest = {
     format: "d20.adventure",
     formatVersion: 1,
@@ -145,7 +162,7 @@ async function gather(id: string, settingId: string) {
     figures,
     files: hashed,
   }
-  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, missing }
+  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, portraits, missing }
 }
 
 function write(dir: string, rel: string, value: unknown) {
@@ -179,6 +196,7 @@ async function main() {
     for (const [set, spec] of Object.entries(p.sets)) write(dir, `stage/sets/${set}.json`, spec)
     for (const [rel, plan] of Object.entries(p.plans)) write(dir, `stage/plans/${rel}`, plan)
     write(dir, "stage/scenes.json", p.scenes)
+    write(dir, "stage/portraits.json", p.portraits)
     write(dir, "stage/looks.json", p.looks)
     write(dir, "stage/figures.json", p.cast)
     for (const rel of stageOnly ? [] : Object.keys(p.manifest.files)) {

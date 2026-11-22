@@ -4,6 +4,7 @@ import { Heading } from "@d20/ui/typography/heading"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
 import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
+import { useScenes } from "@/apps/desktop/src/stage-data"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { Presence } from "@d20/ui/presence"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
@@ -22,6 +23,8 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   const [error, setError] = useState<string | null>(null)
   const shownFailure = useRef<string | null>(null)
   const portrait = usePhonePortrait()
+  // The scenes come from the repo's stage, loaded before the stage shows.
+  const scenes = useScenes("repo")
   // Phones play in landscape. Android locks it from the player's first tap, iOS keeps the rotate prompt.
   useEffect(() => {
     const lock = () => void requestLandscape()
@@ -78,6 +81,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   const suggest = useHostedSuggest(state, (turnId, characterId) => queueHostedAction({ turnId, kind: "suggest", characterId }))
   const onError = useCallback((message: string) => setError(message), [])
   const save = state ? hostedSave(state) : null
+  if (!scenes) return null
   return (
     <StagePlay
       save={save}

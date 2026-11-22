@@ -1,7 +1,7 @@
 // Builds every authored encounter's floor plan from its 3D set and staging, headless, and writes it as plain JSON into
 // packages/stage/src/plans: one file per set (what is solid, the doorways, the labelled marks) and one per encounter
 // (where the cast starts, where the party stands, spare spots), with a generated index that reads them. The encounters
-// are the desktop's SCENES, after its in-code tweaks to the gate stagings.
+// are the desktop's scenes (each adventure's scenes.json), after their changes to the gate stagings.
 //
 //   pnpm stage:plans          # write the plans, and remove plan files that no longer belong
 //   pnpm stage:plans:check    # fail, naming the files, when anything on disk is missing, stale or extra
@@ -14,7 +14,7 @@ import { type EncounterPlan, encounterPlanSchema, type Point, type SetPlan, type
 import { resolveCast } from "@d20/stage/spec/resolve"
 import { stagingSpecSchema } from "@d20/stage/spec/staging"
 import { doorways, onFootprint } from "@d20/stage/spec/walk"
-import { SCENES } from "../apps/desktop/src/scenes"
+import { SCENES } from "./repo-scenes"
 
 const ROOT = "packages/stage/src/plans"
 const check = process.argv.includes("--check")
