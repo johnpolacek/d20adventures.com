@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process"
-import { createReadStream, mkdirSync, statSync } from "node:fs"
+import { appendFileSync, createReadStream, mkdirSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { extname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -100,8 +100,29 @@ function figures() {
   }
 }
 
+// Development only: the window's errors and warnings (src/dev-log.ts), appended to .logs/window.log.
+function windowLog() {
+  const dir = fileURLToPath(new URL(".logs", import.meta.url))
+  return {
+    name: "d20-desktop-window-log",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use("/__d20-log", (req, res) => {
+        let body = ""
+        req.on("data", (chunk) => (body += chunk))
+        req.on("end", () => {
+          mkdirSync(dir, { recursive: true })
+          appendFileSync(join(dir, "window.log"), body.slice(0, 20000))
+          res.statusCode = 204
+          res.end()
+        })
+      })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [preview(), figures()],
+  plugins: [preview(), figures(), windowLog()],
   resolve: {
     // One React for the app and @d20/ui. Two copies break every hook.
     dedupe: ["react", "react-dom"],

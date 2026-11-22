@@ -3,7 +3,7 @@
 // files.rs) and asks for them in batches (src/files.ts), the scene about to show first, so play starts once its own
 // files are in and the rest arrive behind it.
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { stageRoot } from "./scenes-node"
 
@@ -76,8 +76,12 @@ export async function filesFetch(data: string, adventureId: string, paths: strin
       writeFileSync(tmp, body)
       renameSync(tmp, file)
       done.push(path)
-    } catch {
+    } catch (error) {
       failed.push(path)
+      // Each failure, with why, in the data folder's files.log.
+      try {
+        appendFileSync(join(data, "files.log"), `${new Date().toISOString()} ${adventureId} ${path}: ${error instanceof Error ? error.message : String(error)}\n`)
+      } catch {}
     }
   }
   await Promise.all(

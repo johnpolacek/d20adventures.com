@@ -13,9 +13,11 @@ import { narratorEngine } from "./bridge"
 import { DesktopGame } from "./play"
 import { loadStages } from "./stage-data"
 import { serveAppFiles } from "./files"
+import { installDevLog } from "./dev-log"
 import "./style.css"
 // The app's narrator runs in Node. A browser tab in development keeps the browser's.
 if (isTauri()) setNarratorEngine(narratorEngine)
+if (import.meta.env.DEV) installDevLog()
 // The stage's files come from the app's d20:// files (files.ts).
 serveAppFiles()
 // The scenes come from the app's adventure packages, so they are loaded before anything shows.
