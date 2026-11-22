@@ -13,7 +13,9 @@ export function briefFor(item: QueueItem): string {
 Title: ${item.title}
 Long title: ${item.longTitle || "(none yet)"}
 
-${lines("What it is about", part("Point"))}${lines("Why a reader wants it", part("Payoff"))}${lines("Stories to use", part("Stories"))}${lines("Facts gathered so far, check each before using it", part("Facts"))}${lines("Commits", item.commits.join(" "))}Read docs/writing-voice.md first and write in John’s voice. Read the code and docs behind these commits for the real detail, and link the thing itself where it can be linked. Never invent a fact, number or reason.
+${lines("What it is about", part("Point"))}${lines("Why a reader wants it", part("Payoff"))}${lines("Stories to use", part("Stories"))}${lines("Facts gathered so far, check each before using it", part("Facts"))}${lines("Commits", item.commits.join(" "))}${lines("Agent sessions", sessionPaths(item.sessions))}Read docs/writing-voice.md first and write in John’s voice. Read the code and docs behind these commits for the real detail, and link the thing itself where it can be linked. Never invent a fact, number or reason.
+
+Make it useful to someone doing the same thing. Mine the commits and sessions for tips they can use: the setting, prompt or step that worked, what failed first and the fix, the number that decided it. John’s prompts and the final replies hold the decisions, so skip tool output. Every tip needs a source in a commit or session. Keep secrets, keys and private paths out.
 
 Write it to content/updates/ with draft: true. List the pictures and clips it needs, and make the ones the repo’s tools can make. Don’t publish or post anything.`
 }
@@ -31,9 +33,18 @@ X, under “## X”: a thread that follows the post section by section, in order
 
 Reddit, under “## Reddit”: name the subreddit that fits, then a title and a native retelling for that sub, with the link once at the end.
 
-Use only facts in the post. Then run pnpm content:sync. Don’t post or schedule anything.`
+Make each post worth reading on its own. Lead with the most useful tip in its section, the specific setting, step or fix, not a summary of the section. Use only facts in the post. If a section has no tip worth posting, say so to John rather than padding it. Then run pnpm content:sync. Don’t post or schedule anything.`
 }
 
+// Where the miner's session ids live: claude:<first 8 of the id>, codex:<first 8>.
+function sessionPaths(ids: string[]): string {
+  return ids
+    .map((id) => {
+      const [kind, short] = id.split(":")
+      return kind === "codex" ? `~/.codex/sessions/**/*${short}*.jsonl` : `~/.claude/projects/-Users-johnpolacek-Projects-d20adventures-com/${short}*.jsonl`
+    })
+    .join("\n")
+}
 
 export type Handle = { name: string; as: string; source: string; checked: string }
 export const HANDLES = handles as Handle[]
