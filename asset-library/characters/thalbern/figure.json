@@ -24,6 +24,13 @@
     "Walk",
     "Hit"
   ],
+  "motion": {
+    "moves": {
+      "melee": "Swing",
+      "ranged": "Shoot",
+      "dodge": "Dodge"
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",

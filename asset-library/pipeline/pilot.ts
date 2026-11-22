@@ -2015,6 +2015,7 @@ async function main() {
   // The day its model was made is kept through every time it is put together again: a trial's is its rig's.
   const before = existsSync(`${dir}/${brief.body ? "pilot-rig.json" : "pilot-model.json"}`) ? await kept<{ source?: { made?: string } }>(`${dir}/figure.json`) : null
   const today = new Date().toISOString().slice(0, 10)
+  const motion = (await kept<{ motion?: unknown }>(`${dir}/figure.json`))?.motion
   const made = brief.maker === "rodin" || brief.maker === "hi3d" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
@@ -2038,6 +2039,8 @@ async function main() {
     source: { generator: made.generator, triangles: lods[0].triangles, cost: Math.round(made.cost * 100) / 100, made: before?.source?.made ?? today, built: today },
     rig: { bones: 0, weights: made.weights },
     clips: made.clips,
+    // How it moves in the game, set by hand: kept through a rebuild.
+    ...(motion ? { motion } : {}),
     lods,
   }
   await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)

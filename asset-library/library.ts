@@ -15,7 +15,7 @@ import path from "node:path"
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { LOOKS } from "./looks"
-import { SHIPPED } from "./shipped"
+import { castFigures } from "./cast"
 import type { Character, Environment, Figure, Library, Picture, Place } from "./types"
 
 interface SetSpec {
@@ -109,19 +109,20 @@ export async function buildLibrary(root = process.cwd(), leave: string[] = []): 
     if (!body) versions.set(figure.id, all)
   }
   // Where the game stands each: a played look's own choice for a cast member, or else the one shipped (play.ts).
+  const casts = castFigures(root)
   for (const [key, load] of Object.entries(STAGINGS)) {
     const staging = (await load()) as StagingSpec
     const look = staging.set ? LOOKS[staging.set] : undefined
     if (!look?.play) continue
+    const adventure = key.split("/")[0]
     for (const c of staging.cast ?? []) {
-      const figure = shelved.find((f) => f.id === (look.figures?.[c.id] ?? SHIPPED[c.id]))
-      const adventure = key.split("/")[0]
+      const figure = shelved.find((f) => f.id === (look.figures?.[c.id] ?? casts[adventure]?.[c.id]))
       if (figure && !figure.plays?.includes(adventure)) figure.plays = [...(figure.plays ?? []), adventure]
     }
   }
   // The one that stands for a character now is the one shipped, or else the newest that is no trial. It is first, then
   // the others from the newest, then the trials.
-  const shipped = new Set(Object.values(SHIPPED))
+  const shipped = new Set(Object.values(casts).flatMap((cast) => Object.values(cast)))
   const rank = (f: Figure) => (shipped.has(f.id) ? 0 : f.trial ? 2 : 1)
   for (const all of new Set(versions.values())) all.sort((a, b) => rank(a) - rank(b) || b.source.made.localeCompare(a.source.made) || Number(!!b.thumb) - Number(!!a.thumb) || a.id.localeCompare(b.id))
   const figures = new Map([...versions].map(([cast, all]) => [cast, all[0]]))

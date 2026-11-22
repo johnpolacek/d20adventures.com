@@ -23,6 +23,12 @@
     "Walk",
     "Hit"
   ],
+  "thumb": "thumb.webp",
+  "motion": {
+    "moves": {
+      "dodge": "Dodge"
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",
@@ -42,6 +48,5 @@
       "megabytes": 0.54,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

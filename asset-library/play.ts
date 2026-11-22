@@ -7,12 +7,15 @@
 // the skeleton says and falls. What the library adds for a visitor stays there: its free camera, the rings, its views.
 //
 // Figures are served at /asset-library/characters/<id>/: the site from the public bucket, the desktop app from its own
-// bundle (apps/desktop/scripts/build-runtime.ts fetches SHIPPED, shipped.ts, into it).
+// bundle (apps/desktop/scripts/build-runtime.ts). Who stands as which is the adventure's figures.json (FIGURES in
+// @d20/stage/sets), and how each moves is its own figure.json, fetched here.
 
 import type { Flags, Stage } from "@d20/stage"
+import { served } from "@d20/stage/served"
+import { FIGURES } from "@d20/stage/sets"
 import { iso, isoLamps } from "./iso"
 import { LOOKS, type Look } from "./looks"
-import { FIGURE_FILES, PLAYS, SHIPPED } from "./shipped"
+import { FIGURE_FILES, type Plays } from "./shipped"
 import { markBuiltTrees, standTrees } from "./trees"
 
 const nums = (s: string | undefined) => s?.split(",").map(Number)
@@ -98,6 +101,7 @@ interface CastLike {
   figure?: unknown
 }
 interface StagingLike {
+  id?: string
   set?: string
   cast?: CastLike[]
   painted?: boolean
@@ -105,7 +109,21 @@ interface StagingLike {
 
 // The set, the staging and the flags for the game's stage in a played look, and what to do once it is built. Who has
 // no figure is named in `cards`: the game plays on with their card.
-export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
+// How a figure moves, from its figure.json. One that cannot be read plays the written clips.
+const motions = new Map<string, Promise<Plays>>()
+const motionOf = (character: string) => {
+  if (!motions.has(character))
+    motions.set(
+      character,
+      fetch(served(`${FIGURE_FILES}/${character}/figure.json`))
+        .then((r) => (r.ok ? (r.json() as Promise<{ motion?: Plays }>) : {}))
+        .then((f) => ("motion" in f && f.motion) || {})
+        .catch(() => ({}))
+    )
+  return motions.get(character)!
+}
+
+export async function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   const set = structuredClone(setSpec) as LookSet
   const staging = structuredClone(stagingSpec) as StagingLike
   delete set.painted
@@ -115,7 +133,9 @@ export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   editLook(set, look)
   if (look.trees) markBuiltTrees(set)
   const cast = staging.cast ?? []
-  const figureOf = (id: string) => look.figures?.[id] ?? SHIPPED[id]
+  const adventure = staging.id?.split("/")[0]
+  const shipped = (adventure && (await FIGURES[adventure]?.())) || {}
+  const figureOf = (id: string) => look.figures?.[id] ?? shipped[id]
   // A few figures stand at their full detail, since the camera goes right up to a face. A crowd of them stands at the
   // middle level: fourteen at full detail cost a third of the frame rate.
   const detail = cast.filter((c) => figureOf(c.id)).length <= 3 ? "lod0" : "lod1"
@@ -123,10 +143,12 @@ export function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Look) {
   // &figrim=8fa8c8,0.5: a light of that colour and strength along the figures' edges.
   const [edge, strength] = q.figrim?.split(",") ?? []
   const rim = edge ? { color: `#${edge.replace("#", "")}`, strength: Number(strength) || 0.5 } : null
-  for (const c of cast) {
-    const character = figureOf(c.id)
-    if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(rim ? { rim } : {}), ...PLAYS[character] }
-  }
+  await Promise.all(
+    cast.map(async (c) => {
+      const character = figureOf(c.id)
+      if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(rim ? { rim } : {}), ...(await motionOf(character)) }
+    })
+  )
   const flags: Partial<Flags> = { figures: true, ...(q.paint === "0" ? { brush: 0 } : {}), ...(q.bloom ? { bloom: q.bloom === "on" } : {}) }
   return {
     set,

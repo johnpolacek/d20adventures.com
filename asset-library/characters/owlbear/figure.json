@@ -24,6 +24,11 @@
     "Walk",
     "Hit"
   ],
+  "motion": {
+    "moves": {
+      "melee": "Claw"
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",

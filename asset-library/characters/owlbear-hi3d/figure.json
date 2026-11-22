@@ -30,6 +30,19 @@
     "Walk Heavy",
     "Claw Hook"
   ],
+  "thumb": "thumb.webp",
+  "motion": {
+    "idle": "Idle Heavy",
+    "walk": "Walk Heavy",
+    "hit": "Hit",
+    "fall": "Fall",
+    "moves": {
+      "melee": "Claw"
+    },
+    "lands": {
+      "Claw": 0.6
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",
@@ -49,6 +62,5 @@
       "megabytes": 0.89,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

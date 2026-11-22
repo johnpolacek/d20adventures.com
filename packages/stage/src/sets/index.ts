@@ -112,3 +112,9 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
   "welcome-to-kordavos/beset-by-street-urchins": () => import("../stagings/welcome-to-kordavos/beset-by-street-urchins.json").then((m) => m.default),
   "welcome-to-kordavos/finding-the-black-market": () => import("../stagings/welcome-to-kordavos/finding-the-black-market.json").then((m) => m.default),
 }
+// Who stands as which figure in each adventure: a cast id, and the figure (asset-library/characters) for them. An
+// adventure without a file plays its cast as cards. How a figure moves is in its own figure.json.
+export const FIGURES: Record<string, () => Promise<Record<string, string>>> = {
+  "covert-cargo": () => import("../stagings/covert-cargo/figures.json").then((m) => m.default),
+  "the-midnight-summons": () => import("../stagings/the-midnight-summons/figures.json").then((m) => m.default),
+}

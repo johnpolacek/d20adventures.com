@@ -34,6 +34,21 @@
     "Combo",
     "Strafe"
   ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "moves": {
+      "melee": "Swing",
+      "ranged": "Shoot",
+      "dodge": "Sidestep"
+    },
+    "lands": {
+      "Swing": 0.4,
+      "Shoot": 1.5
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",

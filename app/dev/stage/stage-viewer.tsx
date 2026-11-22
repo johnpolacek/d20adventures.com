@@ -130,7 +130,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
       // &look=play: the game's own stage in the set's played look, as components/stage/use-stage.ts builds it.
       const { builtPlay, playedLook } = await import("@/asset-library/play")
       const look = params.look === "play" && stagedSet === key ? playedLook(key) : null
-      const built = look ? builtPlay(set, staging, look) : null
+      const built = look ? await builtPlay(set, staging, look) : null
       stage = await createStage({
         container,
         set: built?.set ?? set,

@@ -28,6 +28,16 @@
     "Cast",
     "Staff Idle"
   ],
+  "thumb": "thumb.webp",
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "moves": {
+      "dodge": "Sidestep"
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",
@@ -47,6 +57,5 @@
       "megabytes": 0.95,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

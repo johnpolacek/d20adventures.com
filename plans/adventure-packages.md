@@ -13,7 +13,7 @@ Goal: an adventure is one package, its story and everything its stage needs, tha
 - The story already travels as a pack: `packs.json` is bundled, and owned adventures download a versioned, hashed pack (`apps/desktop/runtime/packs.ts`, `@d20/gm-core/packs`).
 - The stage does not. Sets, stagings and plans are source in `packages/stage/src`, compiled into the app.
 - Set textures and art are `public/stage`, 186 MB, copied whole into every build.
-- Who plays whom is code: `SHIPPED`, `PLAYS` (`asset-library/shipped.ts`) and a look's `figures` (`looks.ts`, `play.ts`).
+- Who plays whom was code until phase 1. A look's `figures` still is (`looks.ts`).
 - Figures are copied into the build, lod0 and lod1 of every shipped one (`build-runtime.ts`), about 14 MB each.
 
 ## The package
@@ -33,12 +33,12 @@ One folder, or one archive of it, named by the adventure's id:
 ```
 
 - Figures are not copied into each package. A package names them by id and hash, and they are fetched from one shelf, shared across adventures.
-- A figure is its folder as the library already publishes it: `lod0/1/2.glb`, `thumb.webp`, `figure.json`. How it moves (`PLAYS`) moves into `figure.json`.
+- A figure is its folder as the library already publishes it: `lod0/1/2.glb`, `thumb.webp`, `figure.json`. How it moves is `motion` in its `figure.json`.
 - Addresses inside a package are relative. The app resolves them against the package's folder or its download address, through `served()`.
 
 ## Phases
 
-1. Move who-plays-whom from code to data: `PLAYS` into each `figure.json`, `SHIPPED` and look `figures` into each adventure's `looks.json`. Nothing else changes.
+1. Done 2026-11-22. Who plays whom is data: each adventure's `figures.json` beside its stagings, and `motion` in each `figure.json`, fetched at play. A look's own `figures` stays in `looks.ts` and moves with the looks in phase 2.
 2. Write `pnpm packages:build <adventure>`: gathers the story pack, the sets, stagings, plans and files it uses into the folder above, with hashes. A check fails on a file a set names that the package lacks.
 3. Teach the app to load stage data from a package, not from compiled source. Bundled adventures become bundled packages.
 4. Fetch figures and files per package on first play into the app data folder, keyed by hash. Stop copying `public/stage` and figures into the build. This settles the app's size at any number of figures.

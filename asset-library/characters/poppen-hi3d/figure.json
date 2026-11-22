@@ -28,6 +28,20 @@
     "Hit",
     "Fall"
   ],
+  "thumb": "thumb.webp",
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "moves": {
+      "melee": "Swing",
+      "dodge": "Sidestep"
+    },
+    "lands": {
+      "Swing": 0.4
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",
@@ -47,6 +61,5 @@
       "megabytes": 0.76,
       "texture": 512
     }
-  ],
-  "thumb": "thumb.webp"
+  ]
 }

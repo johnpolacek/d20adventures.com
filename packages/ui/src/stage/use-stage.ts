@@ -10,7 +10,7 @@ export interface PlayLooks<L> {
     set: unknown,
     staging: unknown,
     look: L
-  ) => { set: unknown; staging: unknown; flags: Partial<Flags>; cards: string[]; dress: (stage: Stage) => Promise<() => void> } | null
+  ) => Promise<{ set: unknown; staging: unknown; flags: Partial<Flags>; cards: string[]; dress: (stage: Stage) => Promise<() => void> } | null>
 }
 
 export interface StageOptions<L> {
@@ -56,7 +56,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
     ;(async () => {
       const [{ createStage }, play] = await Promise.all([import("@d20/stage"), opts.play?.()])
       const look = play?.playedLook((opts.staging as { set?: string } | undefined)?.set) ?? null
-      const built = play && look ? play.builtPlay(opts.set, opts.staging, look) : null
+      const built = play && look ? await play.builtPlay(opts.set, opts.staging, look) : null
       if (built?.cards.length) console.warn(`[stage] no figure for ${built.cards.join(", ")}: shown as a card`)
       created = await createStage({
         container: el,

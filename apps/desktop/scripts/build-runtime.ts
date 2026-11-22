@@ -9,7 +9,7 @@ import { adventureList } from "../runtime/game"
 
 const require = createRequire(import.meta.url)
 const { loadLocalWikiAdventureRuntime } = require("../../../lib/wiki-adventures/local-runtime.ts")
-const { SHIPPED } = require("../../../asset-library/shipped.ts") as typeof import("../../../asset-library/shipped")
+const { castFigures } = require("../../../asset-library/cast.ts") as typeof import("../../../asset-library/cast")
 const { CATALOG } = require("../../../lib/store/catalog.ts") as typeof import("../../../lib/store/catalog")
 const app = fileURLToPath(new URL("../", import.meta.url))
 const root = resolve(app, "../..")
@@ -47,14 +47,17 @@ await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursiv
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
 // The header's logo.
 await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20.jpg"))
-// The figures the played looks stand (asset-library/play.ts), at the path the site serves them from. They are not in
-// git: the asset library's own copy is taken when it is here, else the published one, kept between builds.
+// The figures the bundled adventures stand (their figures.json, asset-library/cast.ts), at the path the site serves
+// them from, each with the figure.json that says how it moves. The models are not in git: the asset library's own copy
+// is taken when it is here, else the published one, kept between builds.
 const FIGURE_SITE = process.env.D20_FIGURES_FROM ?? "https://d20adventures.com"
 const cache = resolve(root, "node_modules/.cache/d20-figures")
 const missing: string[] = []
-for (const id of new Set(Object.values(SHIPPED)))
-  for (const lod of ["lod0", "lod1"]) {
-    const name = `${id}/${lod}.glb`
+const casts = castFigures(root)
+const SHIPPED = [...new Set(ADVENTURES.flatMap((id) => Object.values(casts[id] ?? {})))]
+for (const id of SHIPPED)
+  for (const file of ["lod0.glb", "lod1.glb", "figure.json"]) {
+    const name = `${id}/${file}`
     const to = resolve(app, `public/asset-library/characters/${name}`)
     await mkdir(resolve(to, ".."), { recursive: true })
     const own = resolve(root, `asset-library/characters/${name}`)
@@ -116,4 +119,4 @@ for (const part of ["package.json", "dist"]) await cp(resolve(ort, part), resolv
 const binding = `bin/napi-v3/${process.platform}/${process.arch}`
 await cp(resolve(ort, binding), resolve(modules, "onnxruntime-node", binding), { recursive: true })
 for (const voice of NARRATOR_VOICES) await cp(resolve(kokoro, `voices/${voice.id}.bin`), resolve(narrator, `voices/${voice.id}.bin`))
-console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, the narrator, Stageview assets, and the figures of ${Object.values(SHIPPED).join(", ")}.`)
+console.log(`Bundled ${ADVENTURES.join(", ")}, the local GM runtime, the narrator, Stageview assets, and the figures of ${SHIPPED.join(", ")}.`)

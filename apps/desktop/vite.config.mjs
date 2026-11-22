@@ -80,11 +80,11 @@ function figures() {
     apply: "serve",
     configureServer(server) {
       server.middlewares.use("/asset-library/characters", (req, res, next) => {
-        const name = /^\/([a-z0-9-]+\/lod\d\.glb)(\?.*)?$/.exec(req.url ?? "")?.[1]
+        const name = /^\/([a-z0-9-]+\/(?:lod\d\.glb|figure\.json))(\?.*)?$/.exec(req.url ?? "")?.[1]
         const file = name && join(shelf, name)
         const size = file && statSync(file, { throwIfNoEntry: false })?.size
         if (!file || !size) return next()
-        res.setHeader("Content-Type", "model/gltf-binary")
+        res.setHeader("Content-Type", name.endsWith(".json") ? "application/json" : "model/gltf-binary")
         res.setHeader("Content-Length", size)
         res.setHeader("Cache-Control", "no-store")
         createReadStream(file).pipe(res)

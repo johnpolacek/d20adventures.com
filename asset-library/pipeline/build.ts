@@ -175,7 +175,7 @@ async function shelve(dir: string, b: Brief) {
     lods: { file: string; megabytes: number; triangles: number; texture: number }[]
   }
   await sharp(`${dir}/apose-front.png`).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
-  const before = existsSync(`${dir}/figure.json`) ? (JSON.parse(await readFile(`${dir}/figure.json`, "utf8")) as { source?: { made?: string } }) : null
+  const before = existsSync(`${dir}/figure.json`) ? (JSON.parse(await readFile(`${dir}/figure.json`, "utf8")) as { source?: { made?: string }; motion?: unknown }) : null
   const figure = {
     id: b.id,
     name: b.name,
@@ -189,6 +189,8 @@ async function shelve(dir: string, b: Brief) {
     source: { generator: MODEL.name, triangles: rig.sourceTriangles, cost: MODEL.cost, made: (!redo.includes("model") && before?.source?.made) || new Date().toISOString().slice(0, 10) },
     rig: { bones: rig.bones.length, weights: rig.weights.solve },
     clips: CLIPS,
+    // How it moves in the game, set by hand: kept through a rebuild.
+    ...(before?.motion ? { motion: before.motion } : {}),
     lods: rig.lods.map((l, i) => ({ file: `lod${i}.glb`, triangles: l.triangles, megabytes: l.megabytes, texture: l.texture })),
   }
   await writeFile(`${dir}/figure.json`, `${JSON.stringify(figure, null, 2)}\n`)
