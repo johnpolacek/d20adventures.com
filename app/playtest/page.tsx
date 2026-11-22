@@ -40,7 +40,13 @@ export default async function PlaytestPage() {
           <div className="space-y-8 px-6 pt-8 pb-10 sm:px-10 lg:px-14">
             <section>
               <Heading variant="h3" as="h2">Host a Game</Heading>
-              <p className="mt-3 font-serif text-base leading-relaxed text-white/75">Paste this prompt into your agent (Claude Opus 5.5 on medium recommended).</p>
+              <p className="mt-3 font-serif text-base leading-relaxed text-white/75">
+                Paste this prompt into a coding agent on your computer, like{" "}
+                <a href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer" className="text-white underline decoration-accent-200/40 underline-offset-4 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
+                  Claude Code
+                </a>{" "}
+                (Opus 5.5 on medium recommended).
+              </p>
               <CopyBlock label="Prompt" text={setupPrompt} className="mt-4" />
             </section>
 
