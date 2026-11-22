@@ -9,7 +9,12 @@ type Group = { label?: string; items: Item[] }
 
 // The content queue is files on this machine, so its link shows only in development.
 const groups = (local: boolean): Group[] => [
-  { items: [{ href: "/admin", label: "Overview", icon: HomeIcon }] },
+  {
+    items: [
+      { href: "/admin", label: "Overview", icon: HomeIcon },
+      ...(local ? [{ href: "/admin/content", label: "Content Queue", icon: InboxIcon }] : []),
+    ],
+  },
   {
     label: "Play",
     items: [
@@ -20,10 +25,7 @@ const groups = (local: boolean): Group[] => [
   },
   {
     label: "Build",
-    items: [
-      { href: "/admin/adventure-plans", label: "Adventure Plans", icon: ClipboardListIcon },
-      ...(local ? [{ href: "/admin/content", label: "Content Queue", icon: InboxIcon }] : []),
-    ],
+    items: [{ href: "/admin/adventure-plans", label: "Adventure Plans", icon: ClipboardListIcon }],
   },
 ]
 

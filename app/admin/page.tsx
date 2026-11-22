@@ -5,7 +5,6 @@ import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { listQueue } from "@/lib/content-queue/store"
 import { listFeedback } from "@/lib/feedback/store"
-import { listAdminWikiAdventures } from "@/lib/wiki-adventures/admin-authoring"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
 import { Heading } from "@d20/ui/typography/heading"
 import { requireAdmin } from "@/lib/auth-utils"
@@ -28,6 +27,14 @@ const ago = (ms: number) => {
   if (hours < 48) return `${hours}h`
   return `${Math.round(hours / 24)}d`
 }
+
+// An adventure's name from its id, as the-road-to-kordavos reads The Road to Kordavos.
+const SMALL = new Set(["a", "an", "and", "of", "the", "to", "in", "on"])
+const titleOf = (planId: string) =>
+  planId
+    .split("-")
+    .map((word, i) => (i > 0 && SMALL.has(word) ? word : word[0].toUpperCase() + word.slice(1)))
+    .join(" ")
 
 const safe = <T,>(work: () => Promise<T>) =>
   work().catch((error) => {
@@ -113,32 +120,32 @@ export default async function AdminPage() {
   }
 
   const local = process.env.NODE_ENV === "development"
-  const [budget, plans, games, feedback, users] = await Promise.all([
+  const [budget, games, feedback, users] = await Promise.all([
     budgetToday().catch(() => null),
-    safe(listAdminWikiAdventures),
     safe(getAllAdventuresAdmin),
     safe(() => listFeedback()),
     safe(userStats),
   ])
 
   const now = Date.now()
-  const titles = new Map(plans?.map((plan) => [plan.planId, plan.title]))
-  const titleOf = (planId: string) => titles.get(planId) ?? planId
   const thisWeek = games?.filter((game) => game.startedAt > now - 7 * DAY).length ?? 0
   const lastWeek = games?.filter((game) => game.startedAt > now - 14 * DAY && game.startedAt <= now - 7 * DAY).length ?? 0
   const notes = [...(feedback ?? [])].sort((a, b) => b.createdAt - a.createdAt)
   const rated = notes.filter((row) => row.rating !== undefined)
   const average = rated.length ? (rated.reduce((sum, row) => sum + (row.rating ?? 0), 0) / rated.length).toFixed(1) : "–"
-  const plays = new Map<string, number>()
-  for (const game of games ?? []) plays.set(game.planId, (plays.get(game.planId) ?? 0) + 1)
-
+  // Open items first by how far along they are, then by their rank in the queue, each with its next unposted day.
   const today = new Date().toISOString().slice(0, 10)
+  const stage = { scheduled: 0, draft: 1, idea: 2 } as const
   const queue = local
     ? listQueue()
-        .flatMap((item) => Object.entries(item.schedule).map(([platform, day]) => ({ item, platform, day })))
-        .filter(({ day, item, platform }) => day >= today && !item.posted[platform])
-        .sort((a, b) => a.day.localeCompare(b.day))
-        .slice(0, 4)
+        .filter((item) => item.status in stage)
+        .map((item) => ({
+          item,
+          next: Object.entries(item.schedule)
+            .filter(([platform, day]) => day >= today && !item.posted[platform])
+            .sort((a, b) => a[1].localeCompare(b[1]))[0],
+        }))
+        .sort((a, b) => stage[a.item.status as keyof typeof stage] - stage[b.item.status as keyof typeof stage] || a.item.rank - b.item.rank)
     : []
   const weekday = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", day: "numeric" })
 
@@ -170,7 +177,56 @@ export default async function AdminPage() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <Panel i={4} title="Recent Games" href="/admin/adventures">
+          {local && (
+            <Panel i={4} title="Content Queue" href="/admin/content" action="Open Queue" className="lg:order-1">
+              {queue.length === 0 ? (
+                <Empty>Nothing in the queue</Empty>
+              ) : (
+                <ul>
+                  {queue.slice(0, 8).map(({ item, next }) => (
+                    <li key={item.slug} className="border-t border-white/10 first:border-t-0">
+                      <Link href="/admin/content" className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-5 py-2.5 text-sm transition-colors hover:bg-white/5">
+                        <span className="min-w-0 truncate">{item.title}</span>
+                        <span className="font-mono text-xs text-white/50">{next ? `${next[0]} ${weekday(next[1])}` : ""}</span>
+                        <Pill tone={item.status === "scheduled" ? "green" : item.status === "draft" ? "gold" : "plain"}>{item.status[0].toUpperCase() + item.status.slice(1)}</Pill>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+          )}
+          <div className="grid content-start gap-4 lg:order-2">
+            <Panel i={5} title="Latest Feedback" href="/admin/feedback">
+              {!feedback ? (
+                <Unavailable />
+              ) : notes.length === 0 ? (
+                <Empty>No feedback yet</Empty>
+              ) : (
+                <ul>
+                  {notes.slice(0, 3).map((note) => (
+                    <li key={note.id} className="border-t border-white/10 px-5 py-3 first:border-t-0">
+                      <p className="text-xs text-white/45">
+                        {note.rating !== undefined && <span className="mr-1.5 tracking-wider text-amber-300">{"★".repeat(note.rating) + "☆".repeat(Math.max(0, 5 - note.rating))}</span>}
+                        {note.context.plan ? titleOf(note.context.plan) : note.kind === "ending" ? "Ending" : "General"} · {ago(note.createdAt)}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-sm text-white/85">{note.message}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
+            <section id="budget" className="enter-rise scroll-mt-20 rounded-xl border border-white/10 bg-black/40" style={{ "--i": 6 } as CSSProperties}>
+              <div className="flex items-baseline justify-between border-b border-white/10 px-5 py-3.5">
+                <h2 className="text-sm font-semibold">AI Budget</h2>
+                <span className="text-xs uppercase tracking-wider text-white/40">Today</span>
+              </div>
+              <div className="px-5 py-4">{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/45">Unavailable</p>}</div>
+            </section>
+          </div>
+
+          <Panel i={local ? 7 : 4} title="Recent Games" href="/admin/adventures" className={local ? "lg:order-3 lg:col-span-2" : "lg:order-1"}>
             {!games ? (
               <Unavailable />
             ) : games.length === 0 ? (
@@ -212,95 +268,6 @@ export default async function AdminPage() {
             )}
           </Panel>
 
-          <div className="grid content-start gap-4">
-            <Panel i={5} title="Latest Feedback" href="/admin/feedback">
-              {!feedback ? (
-                <Unavailable />
-              ) : notes.length === 0 ? (
-                <Empty>No feedback yet</Empty>
-              ) : (
-                <ul>
-                  {notes.slice(0, 3).map((note) => (
-                    <li key={note.id} className="border-t border-white/10 px-5 py-3 first:border-t-0">
-                      <p className="text-xs text-white/45">
-                        {note.rating !== undefined && <span className="mr-1.5 tracking-wider text-amber-300">{"★".repeat(note.rating) + "☆".repeat(Math.max(0, 5 - note.rating))}</span>}
-                        {note.context.plan ? titleOf(note.context.plan) : note.kind === "ending" ? "Ending" : "General"} · {ago(note.createdAt)}
-                      </p>
-                      <p className="mt-1 line-clamp-2 text-sm text-white/85">{note.message}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
-
-            <section id="budget" className="enter-rise scroll-mt-20 rounded-xl border border-white/10 bg-black/40" style={{ "--i": 6 } as CSSProperties}>
-              <div className="flex items-baseline justify-between border-b border-white/10 px-5 py-3.5">
-                <h2 className="text-sm font-semibold">AI Budget</h2>
-                <span className="text-xs uppercase tracking-wider text-white/40">Today</span>
-              </div>
-              <div className="px-5 py-4">{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/45">Unavailable</p>}</div>
-            </section>
-          </div>
-
-          <Panel i={7} title="Adventure Plans" href="/admin/adventure-plans" className={local ? undefined : "lg:col-span-2"}>
-            {!plans ? (
-              <Unavailable />
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className={th}>Adventure</th>
-                    <th className={cn(th, "text-right")}>Encounters</th>
-                    <th className={cn(th, "text-right")}>Plays</th>
-                    <th className={th}>Health</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {plans.map((plan) => (
-                    <tr key={plan.planId}>
-                      <td className={td}>
-                        <Link href={`/admin/adventure-plans/${plan.settingId}/${plan.planId}`} className="hover:text-primary-200">
-                          {plan.title}
-                        </Link>
-                      </td>
-                      <td className={cn(td, "text-right font-mono text-white/70")}>{plan.encounterCount}</td>
-                      <td className={cn(td, "text-right font-mono text-white/70")}>{games ? (plays.get(plan.planId) ?? 0) : "–"}</td>
-                      <td className={td}>
-                        {plan.errorCount > 0 ? (
-                          <Pill tone="red">{plan.errorCount === 1 ? "1 Error" : `${plan.errorCount} Errors`}</Pill>
-                        ) : plan.warningCount > 0 ? (
-                          <Pill tone="gold">{plan.warningCount === 1 ? "1 Warning" : `${plan.warningCount} Warnings`}</Pill>
-                        ) : (
-                          <Pill tone="green">Clean</Pill>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </Panel>
-
-          {local && (
-            <Panel i={8} title="Content Queue" href="/admin/content" action="Open Queue">
-              {queue.length === 0 ? (
-                <Empty>Nothing scheduled</Empty>
-              ) : (
-                <ul>
-                  {queue.map(({ item, platform, day }) => (
-                    <li key={`${item.slug}-${platform}`} className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-t border-white/10 px-5 py-2.5 text-sm first:border-t-0">
-                      <span className="font-mono text-white/60">{weekday(day)}</span>
-                      <span className="min-w-0">
-                        <span className="block">{platform}</span>
-                        <span className="block truncate text-xs text-white/45">{item.title}</span>
-                      </span>
-                      <Pill tone={item.status === "scheduled" ? "green" : item.status === "draft" ? "gold" : "plain"}>{item.status[0].toUpperCase() + item.status.slice(1)}</Pill>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
-          )}
         </div>
       </div>
     </div>
