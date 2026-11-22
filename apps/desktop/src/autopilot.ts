@@ -42,9 +42,20 @@ const PLAYS: Record<string, Play> = {
 
 export const autopilot = PLAYS[import.meta.env.VITE_D20_AUTOPILOT ?? ""] ?? null
 
+// Nothing on screen answers to the pointer in a recording: a tooltip under the resting cursor, such as Feedback's,
+// stays hidden, and so does the cursor.
+if (autopilot && typeof document !== "undefined") {
+  const style = document.createElement("style")
+  style.textContent = `[role="tooltip"] { display: none !important } * { cursor: none !important }`
+  document.head.append(style)
+}
+
 // Tells the recorder how far the playthrough has come: "ready" when the game is about to start, and "done" with the
 // spans spent waiting on the GM, which the recorder cuts.
 export const mark = (name: "ready" | "done", data: unknown) => invoke<void>("autopilot_mark", { name, data }).catch(() => {})
+
+// Development only, so it reaches apps/desktop/.logs/window.log (src/dev-log.ts).
+const log = (...parts: unknown[]) => console.warn("[autopilot]", ...parts)
 
 const TYPE_MS = 28
 const THINK_MS = 1400
@@ -54,6 +65,10 @@ const ROLL_MS = 1600
 const END_MS = 7000
 // A roll's die and verdict are worth watching for this long, though the GM is still at work.
 const ROLL_SHOWN_MS = 3500
+// A paragraph read for this long is taken to be stuck. The longest take about half a minute aloud.
+const STUCK_MS = 45_000
+// Of a stuck paragraph, how much stays in the video.
+const STUCK_KEEP_MS = 12_000
 
 type Seat = {
   mode: { kind: string; roll?: { mode?: string } } | null
@@ -62,7 +77,13 @@ type Seat = {
   held: number | null
   ended: boolean
   turn?: string
+  // How many beats the turn's story has, which every action adds to.
+  step?: number
   encounter?: string
+  // The paragraph being read, with whether the narrator is speaking it, or null when nothing is read.
+  paragraph: string | null
+  // Moves the reading on, as the next-paragraph button does.
+  advance: () => void
   setAuto: (on: boolean) => void
   setDraft: (text: string) => void
   reply: (text: string) => Promise<void>
@@ -73,6 +94,7 @@ type Seat = {
 export function useAutopilot(seat: Seat) {
   const said = useRef<Record<string, number>>({})
   const replies = useRef(0)
+  // The last turn the autopilot played, as the key below.
   const acted = useRef<string | null>(null)
   const idleSince = useRef<number | null>(null)
   const spans = useRef<[number, number][]>([])
@@ -103,42 +125,79 @@ export function useAutopilot(seat: Seat) {
     return () => clearTimeout(timer)
   }, [seat.held, seat.working])
 
+  // One action at a time, for the hero's turn as it stands: the turn, how far its story has come and what the card asks.
+  // The story grows with every action, so a reply or roll the player makes by hand never leaves the autopilot waiting
+  // on a turn it thinks it has played. An action whose card changes before it is sent is dropped, and tried again
+  // once the card is back.
   const kind = seat.mode?.kind
-  const key = `${seat.turn}:${kind}:${seat.encounter}:${replies.current}`
+  const key = `${seat.turn}:${seat.step}:${kind}`
   const free = !seat.reading && !seat.working && seat.held === null
+  const now_ = useRef({ key, free })
+  now_.current = { key, free }
+  const pending = useRef(false)
   useEffect(() => {
-    if (!autopilot || !free || acted.current === key) return
+    if (!autopilot || !free || pending.current || acted.current === key) return
     if (kind !== "hold" && kind !== "roll") return
-    acted.current = key
-    let live = true
+    pending.current = true
+    const play = autopilot
+    const still = () => now_.current.key === key && now_.current.free
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
     void (async () => {
-      if (kind === "roll") {
-        await wait(ROLL_MS)
-        if (!live) return
-        const two = s.current.mode?.roll?.mode === "advantage" || s.current.mode?.roll?.mode === "disadvantage"
-        await s.current.roll(two ? [autopilot.roll, autopilot.second] : [autopilot.roll])
-        return
+      try {
+        if (kind === "roll") {
+          await wait(ROLL_MS)
+          if (!still()) return log("roll dropped", key)
+          acted.current = key
+          const two = s.current.mode?.roll?.mode === "advantage" || s.current.mode?.roll?.mode === "disadvantage"
+          log("roll", key)
+          await s.current.roll(two ? [play.roll, play.second] : [play.roll])
+          return
+        }
+        if (replies.current >= play.maxReplies) return void end(["The autopilot ran out of replies."])
+        const encounter = s.current.encounter ?? ""
+        const lines = play.lines[encounter] ?? []
+        const n = said.current[encounter] ?? 0
+        const line = lines.length ? lines[Math.min(n, lines.length - 1)] : play.fallback
+        await wait(THINK_MS)
+        for (let i = 1; i <= line.length; i++) {
+          if (!still()) {
+            s.current.setDraft("")
+            return log("reply dropped", key)
+          }
+          s.current.setDraft(line.slice(0, i))
+          await wait(TYPE_MS)
+        }
+        await wait(SEND_MS)
+        if (!still()) return log("reply dropped", key)
+        acted.current = key
+        said.current[encounter] = n + 1
+        replies.current++
+        log("reply", key, line)
+        await s.current.reply(line)
+      } finally {
+        pending.current = false
+        redraw((n) => n + 1)
       }
-      if (replies.current >= autopilot.maxReplies) return void end(["The autopilot ran out of replies."])
-      const lines = autopilot.lines[s.current.encounter ?? ""] ?? []
-      const n = said.current[s.current.encounter ?? ""] ?? 0
-      const line = lines.length ? lines[Math.min(n, lines.length - 1)] : autopilot.fallback
-      await wait(THINK_MS)
-      for (let i = 1; i <= line.length && live; i++) {
-        s.current.setDraft(line.slice(0, i))
-        await wait(TYPE_MS)
-      }
-      await wait(SEND_MS)
-      if (!live) return
-      said.current[s.current.encounter ?? ""] = n + 1
-      replies.current++
-      await s.current.reply(line)
     })()
-    return () => {
-      live = false
-    }
   }, [free, key, kind])
+  // A paragraph that never finishes reading, as when the narrator's sound is held while the window is hidden, is moved
+  // on, and the time it held is cut from the video.
+  useEffect(() => {
+    if (!autopilot || !seat.paragraph) return
+    const since = Date.now()
+    const timer = setTimeout(() => {
+      log("stuck", seat.paragraph, document.visibilityState)
+      spans.current.push([since + STUCK_KEEP_MS, Date.now()])
+      s.current.advance()
+    }, STUCK_MS)
+    return () => clearTimeout(timer)
+  }, [seat.paragraph])
+  // What the autopilot waits on, now and then, in the window log, for a run that stalls.
+  useEffect(() => {
+    if (!autopilot) return
+    const timer = setInterval(() => log("waiting", now_.current.key, now_.current.free ? "free" : "busy", s.current.reading ? "reading" : "", s.current.working ? "working" : ""), 20_000)
+    return () => clearInterval(timer)
+  }, [])
 
   const end = (problems: string[] = []) => {
     if (finished.current) return

@@ -116,9 +116,11 @@ async function main() {
   if (audioName && !sound)
     throw new Error(`No sound input named “${audioName}”. Install BlackHole (brew install --cask blackhole-2ch), or pass --no-audio. Inputs: ${list.join(", ")}`)
 
-  // A fresh game each time. The narrator's voice model stays, or comes from the installed app, so it is not fetched again.
+  // A fresh game each time. The narrator's voice model and the downloaded art and figures stay, so a run never waits on
+  // a download: a figure still downloading when its scene opens shows as a standee. The voice model can come from the
+  // installed app.
   mkdirSync(data, { recursive: true })
-  for (const f of readdirSync(data)) if (f !== "models") rmSync(join(data, f), { recursive: true, force: true })
+  for (const f of readdirSync(data)) if (f !== "models" && f !== "files") rmSync(join(data, f), { recursive: true, force: true })
   const installed = join(homedir(), "Library/Application Support/com.d20adventures.desktop/models")
   if (!existsSync(join(data, "models")) && existsSync(installed)) cpSync(installed, join(data, "models"), { recursive: true })
   rmSync(marks, { recursive: true, force: true })
