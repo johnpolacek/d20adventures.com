@@ -10,7 +10,7 @@ import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "drafted", "approved", "scheduled", "posted", "folded", "cut"]
 const EDITABLE = ["Hook", "Payoff", "Why it spreads", "Point"]
-const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X", limit: 280 }, { name: "Bluesky", limit: 300 }, { name: "Reddit" }]
+const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X/Bluesky", limit: 280 }, { name: "Reddit" }]
 const READ_ONLY = ["Facts", "John said"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
@@ -296,14 +296,16 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
 
       <div className="grid gap-4 border-t border-white/10 pt-4">
         {PLATFORMS.map(({ name, limit }) => {
-          const length = [...(bodies[name] ?? "")].length
+          // A thread's posts are split by a line of ---, and only each post's own words count: [image] and [alt] lines don't.
+          const posts = (bodies[name] ?? "").split(/\n---\n/).map((p) => p.split("\n").filter((l) => !l.startsWith("[")).join("\n").trim())
+          const length = Math.max(0, ...posts.map((p) => [...p.replace(/https?:\/\/\S+/g, "x".repeat(23))].length))
           return (
             <Field
               key={name}
               label={name}
               extra={
                 <>
-                  {limit && <span className={cn("font-mono", length > limit ? "text-red-300" : "text-white/40")}>{length}/{limit}</span>}
+                  {limit && <span className={cn("font-mono", length > limit ? "text-red-300" : "text-white/40")}>{posts.length > 1 ? `${posts.length} posts, longest ` : ""}{length}/{limit}</span>}
                   <Button variant="ghost" size="xs" disabled={!bodies[name]} onClick={() => copy(name)}>
                     {copied === name ? "Copied" : "Copy"}
                   </Button>

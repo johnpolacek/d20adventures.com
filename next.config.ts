@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
     "/*": ["./content/settings/realm-of-myr/**/*"],
   },
   async redirects() {
-    return [{ source: "/playtesters", destination: "/playtest", permanent: true }]
+    return [
+      { source: "/playtesters", destination: "/playtest", permanent: true },
+      { source: "/updates/2d-art-to-3d-rigged-animated-3d-figures", destination: "/updates/turn-your-character-art-into-animated-3d-figures-with-hi3d-and-blender", permanent: true },
+    ]
   },
   // Deploys leave out stage art (.vercelignore), so it is served from the bucket. `pnpm stage:sync` uploads it.
   // Local files win when present, so dev serves public/ as before.

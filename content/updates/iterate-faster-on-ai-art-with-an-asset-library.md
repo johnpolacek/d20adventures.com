@@ -50,6 +50,6 @@ Every [painting](https://d20adventures.com/settings/realm-of-myr/assets?tab=imag
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/paintings.webp" alt="The asset library’s images: paintings of the Realm of Myr, Kordavos, the Valkarr Forest and Hammerdeep, and the four adventure covers" width="1120" height="690" />
 
-A sync shows up in the library within a minute, with no deploy, so a link to it always shows the latest. How the figures get made is in [From 2D Art to Rigged Animated 3D Figures](https://d20adventures.com/updates/2d-art-to-3d-rigged-animated-3d-figures).
+A sync shows up in the library within a minute, with no deploy, so a link to it always shows the latest. How the figures get made is in [Turn Your Character Art into Animated 3D Figures with Hi3D and Blender](https://d20adventures.com/updates/turn-your-character-art-into-animated-3d-figures-with-hi3d-and-blender).
 
 Go fly around [the asset library](https://d20adventures.com/settings/realm-of-myr/assets).

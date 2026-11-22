@@ -1,5 +1,5 @@
 ---
-title: "From 2D Art to Rigged Animated 3D Figures"
+title: "Turn Your Character Art into Animated 3D Figures with Hi3D and Blender"
 date: 2026-11-21
 description: "How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/gameplay-11-21.webp"
