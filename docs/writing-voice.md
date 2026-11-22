@@ -202,7 +202,7 @@ Learned from John’s rewrite of the Fantasy Survivor thread (2026-11-01). The i
 - **Features become one running sentence**, not a fragment list.
 - **Keep the funniest beat as the punch.**
 - **The link sits with the description of the thing.** The last post is only the link to the writeup.
-- **A thread for an /updates post follows the post, with its pictures.** One post per section, in order, each carrying that section’s image, and the last post links the writeup. John, 2026-11-21: “i was expecting the x post to match the content of the update and use the same images.” X and Bluesky get one draft, since they mostly match.
+- **A thread for an /updates post follows the post, with its pictures.** One post per section, in order, each carrying that section’s image, and the last post links the writeup. John, 2026-11-21: “i was expecting the x post to match the content of the update and use the same images.” Social posts go to X only. @mention the X accounts of the tools, products and people a post names, after checking each handle (John, 2026-11-21).
 
 ## Never do
 

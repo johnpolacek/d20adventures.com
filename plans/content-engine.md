@@ -25,7 +25,7 @@ The engine plans, drafts, listens and organizes. John approves and posts every w
 
 From the 2026 schedule John pasted, starting at the low end:
 
-- X 1 to 2 a day, Bluesky 1, Reddit 1 a week, Wednesday.
+- X 1 to 2 a day and Reddit 1 a week, Wednesday. Bluesky dropped 2026-11-21: X only, with @mentions of the tools and people a post names.
 - An `/updates` post every 7 to 10 days, written first, feeding the short posts.
 - Saturday gets the week’s best visual for #ScreenshotSaturday.
 - Raise X once two weeks of approved drafts are banked.
@@ -53,7 +53,7 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
 2. **Drafts.** `content/queue/<slug>.md`, one per idea.
    - Frontmatter: `rank`, `tier`, `scores`, `status` (idea, draft, scheduled, posted, shelved), `into` for folded ideas, `asset`, `evidence`, `posted` URLs.
    - Body: point, hook, payoff, why it spreads, facts, John’s words.
-   - Body sections per platform: X, Bluesky, Reddit, update post.
+   - Body sections per platform: X and Reddit.
    - Written in the voice of `docs/writing-voice.md`.
 3. **Queue page.** `/admin/content`. It writes files, so it edits on localhost only.
    - Ranked list, drag to reorder, status changes, copy edits.

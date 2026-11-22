@@ -14,7 +14,7 @@ const RENAMED: Record<string, QueueStatus> = { drafted: "draft", approved: "draf
 export type QueueStatus = (typeof STATUSES)[number]
 
 /** Platform drafts every idea can carry, in the order they show. */
-export const PLATFORMS = ["X/Bluesky", "Reddit"] as const
+export const PLATFORMS = ["X", "Reddit"] as const
 
 export type QueueSection = { name: string; body: string }
 

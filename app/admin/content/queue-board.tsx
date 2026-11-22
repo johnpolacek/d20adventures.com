@@ -11,7 +11,7 @@ import { briefFor, socialBriefFor } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"]
-const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X/Bluesky", limit: 280 }, { name: "Reddit" }]
+const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X", limit: 280 }, { name: "Reddit" }]
 const NOTES = ["Point", "Hook", "Payoff", "Why it spreads", "Stories", "Facts", "John said", "Changes", "Clips"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
@@ -232,7 +232,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           </SelectContent>
         </Select>
         {/* The next prompt to paste into Claude: the /updates post first, then its thread and Reddit post. */}
-        {(!item.post || !bodies["X/Bluesky"]?.trim()) && (
+        {(!item.post || !bodies["X"]?.trim()) && (
           <Button
             variant="outline"
             size="sm"
@@ -382,7 +382,7 @@ function serializeThread(posts: Post[]): string {
     .join("\n\n---\n\n")
 }
 
-// Copies a picture as PNG, the one image type the clipboard takes everywhere, ready to paste into X or Bluesky.
+// Copies a picture as PNG, the one image type the clipboard takes everywhere, ready to paste into X.
 async function copyImage(url: string) {
   const res = await fetch(`/admin/content/image?url=${encodeURIComponent(url)}`)
   const bitmap = await createImageBitmap(await res.blob())

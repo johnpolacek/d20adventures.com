@@ -18,7 +18,7 @@ Write it to content/updates/ with draft: true. List the pictures and clips it ne
 }
 
 /**
- * Once an idea has its /updates post: a prompt for a Claude Code session to write the X/Bluesky thread and the Reddit
+ * Once an idea has its /updates post: a prompt for a Claude Code session to write the X thread and the Reddit
  * post from it, into the idea's file.
  */
 export function socialBriefFor(item: QueueItem): string {
@@ -26,7 +26,7 @@ export function socialBriefFor(item: QueueItem): string {
 
 Read docs/writing-voice.md first, especially Social threads.
 
-X/Bluesky, under “## X/Bluesky”: a thread that follows the post section by section, in order, with each section’s own picture. One post per section, each under 280 characters, the first carrying the whole idea, the last only the link to the post at https://d20adventures.com/updates/${item.post}. Separate posts with a line of ---. Put each picture as [image: url] and its alt text as [alt: text] on the lines after the post’s words, using the post’s own image URLs and alt text.
+X, under “## X”: a thread that follows the post section by section, in order, with each section’s own picture. One post per section, each under 280 characters, the first carrying the whole idea, the last only the link to the post at https://d20adventures.com/updates/${item.post}. Separate posts with a line of ---. Put each picture as [image: url] and its alt text as [alt: text] on the lines after the post’s words, using the post’s own image URLs and alt text. @mention the X accounts of the tools, products and people the post names, only handles you have checked.
 
 Reddit, under “## Reddit”: name the subreddit that fits, then a title and a native retelling for that sub, with the link once at the end.
 
