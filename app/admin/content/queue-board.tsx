@@ -256,6 +256,16 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
       {error && <p className="text-sm text-red-300">{error}</p>}
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+        {item.post && (
+          <>
+            <dt className="text-white/40">Post</dt>
+            <dd>
+              <a href={`/updates/${item.post}`} target="_blank" rel="noopener noreferrer" className="text-action-300 hover:text-action-200">
+                {item.post}
+              </a>
+            </dd>
+          </>
+        )}
         {item.into && (
           <>
             <dt className="text-white/40">Into</dt>

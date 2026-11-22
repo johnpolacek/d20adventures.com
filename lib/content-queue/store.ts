@@ -32,6 +32,8 @@ export type QueueItem = {
   commits: string[]
   sessions: string[]
   into?: string
+  // The /updates post this idea became, by its slug.
+  post?: string
   posted: Record<string, string>
   sections: QueueSection[]
 }
@@ -70,6 +72,7 @@ function parseItem(slug: string, text: string): QueueItem {
     commits: Array.isArray(meta.commits) ? meta.commits.map(String) : [],
     sessions: Array.isArray(meta.sessions) ? meta.sessions.map(String) : [],
     ...(meta.into ? { into: String(meta.into) } : {}),
+    ...(meta.post ? { post: String(meta.post) } : {}),
     posted: meta.posted && typeof meta.posted === "object" ? meta.posted : {},
     sections,
   }
