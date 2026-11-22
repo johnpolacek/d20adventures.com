@@ -18,10 +18,24 @@ case "$OS-$ARCH" in
     ;;
 esac
 
-# The app runs its Game Master on Node.js 24 or newer.
-NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+# The app runs its Game Master on Node.js 24 or newer. It takes the first node in these folders, and reads PATH
+# only after them. A Mac app does not get the shell's PATH, so a Node from nvm, asdf or mise is not found there.
+NODE=""
+for DIR in "$HOME/.local/share/fnm/aliases/default/bin" "$HOME/.volta/bin" "$HOME/.local/bin" /opt/homebrew/bin /usr/local/bin /usr/bin; do
+  if [ -f "$DIR/node" ]; then
+    NODE="$DIR/node"
+    break
+  fi
+done
+if [ -z "$NODE" ] && [ "$OS" = "Linux" ]; then
+  NODE=$(command -v node || true)
+fi
+NODE_MAJOR=0
+if [ -n "$NODE" ]; then
+  NODE_MAJOR=$("$NODE" -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+fi
 if [ "$NODE_MAJOR" -lt 24 ]; then
-  echo "Warning: the app needs Node.js 24 or newer. Get it at https://nodejs.org" >&2
+  echo "Warning: the app needs Node.js 24 or newer, and found ${NODE:-none}. See https://d20adventures.com/host.md" >&2
 fi
 
 TMP=$(mktemp -d)
@@ -57,4 +71,5 @@ ditto "$TMP/$APP" "$DEST/$APP"
 xattr -dr com.apple.quarantine "$DEST/$APP" 2>/dev/null || true
 
 echo "Installed to $DEST/$APP"
-open "$DEST/$APP"
+# An agent's sandbox may not be allowed to open apps. The install still succeeded.
+open "$DEST/$APP" || echo "Open D20 Adventures from $DEST to start."
