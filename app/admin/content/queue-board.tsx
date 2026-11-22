@@ -256,21 +256,6 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             ))}
           </SelectContent>
         </Select>
-        {/* The next prompt to paste into Claude: the /updates post first, then its thread and Reddit post. */}
-        {(!item.post || !bodies["X"]?.trim()) && (
-          <Button
-            variant="outline"
-            size="sm"
-            title={item.post ? "Copies a prompt for Claude to write the thread and Reddit post from this idea’s post" : "Copies a prompt for Claude to write this idea’s /updates post"}
-            onClick={async () => {
-              await navigator.clipboard.writeText(item.post ? socialBriefFor(item) : briefFor({ ...item, title, longTitle }))
-              setCopied("brief")
-              setTimeout(() => setCopied(""), 1200)
-            }}
-          >
-            {copied === "brief" ? "Copied" : item.post ? "Copy Thread Prompt" : "Copy Post Prompt"}
-          </Button>
-        )}
         <Button size="sm" disabled={!dirty || pending} onClick={save}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
         </Button>
@@ -286,6 +271,10 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         />
       </Field>
       {error && <p className="text-sm text-red-300">{error}</p>}
+      {/* The next prompt to paste into Claude: the /updates post first, then its thread and Reddit post. Gone once both exist. */}
+      {(!item.post || !bodies["X"]?.trim()) && (
+        <Prompt key={item.post ? "thread" : "post"} label={item.post ? "Thread Prompt" : "Post Prompt"} text={item.post ? socialBriefFor(item) : briefFor({ ...item, title, longTitle })} />
+      )}
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
         {item.post && (
@@ -444,6 +433,33 @@ function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; po
         )
       })}
     </div>
+  )
+}
+
+function Prompt({ label, text }: { label: string; text: string }) {
+  // Edits here are for this copy only and are not saved.
+  const [value, setValue] = useState(text)
+  const [copied, setCopied] = useState(false)
+  useEffect(() => setValue(text), [text])
+  return (
+    <Field
+      label={label}
+      extra={
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={async () => {
+            await navigator.clipboard.writeText(value)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1200)
+          }}
+        >
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      }
+    >
+      <textarea className={cn(fieldClass, "h-48 resize-y py-2 font-mono text-xs")} value={value} onChange={(e) => setValue(e.target.value)} />
+    </Field>
   )
 }
 
