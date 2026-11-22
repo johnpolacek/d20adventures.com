@@ -429,6 +429,20 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
     }
     Ok(())
 }
+// The development autopilot's progress, for the recorder (apps/desktop/scripts/record-playthrough.ts), written to
+// D20_AUTOPILOT_DIR as <name>.json. Shipped builds write nothing.
+#[tauri::command]
+fn autopilot_mark(name: String, data: Value) -> Result<(), String> {
+    if !cfg!(debug_assertions) || !(name == "ready" || name == "done") {
+        return Ok(());
+    }
+    if let Some(dir) = std::env::var_os("D20_AUTOPILOT_DIR") {
+        let dir = PathBuf::from(dir);
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        std::fs::write(dir.join(format!("{name}.json")), data.to_string()).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
 fn main() {
     tauri::Builder::default()
         // The stage's files, served on 127.0.0.1: downloaded adventures, then the app's own (files.rs).
@@ -460,7 +474,8 @@ fn main() {
             open_site,
             toggle_fullscreen,
             is_fullscreen,
-            render_report
+            render_report,
+            autopilot_mark
         ])
         .run(tauri::generate_context!())
         .expect("D20 Adventures failed to start");

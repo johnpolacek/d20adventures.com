@@ -10,7 +10,8 @@ import type { HostedState } from "../runtime/host-commands"
 import type { Save, SaveSummary } from "../runtime/store"
 import { AccountBadge, AccountNotice, FeedbackLink, LinkGate, useAccount } from "./account"
 import { AppHeader } from "./app-header"
-import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, hostStop, openSite, send, suggest } from "./bridge"
+import { autopilot, mark } from "./autopilot"
+import { type GmModel, gmModel, type HostWorkerState, host, hostRunning, hostStart, hostStop, isFullscreen, openSite, send, suggest, toggleFullscreen } from "./bridge"
 import { partyOf } from "./carry"
 import { sendFeedback } from "./feedback"
 import type { FigureArt } from "./figures"
@@ -196,6 +197,21 @@ export function DesktopGame() {
     setCarried(null)
     setScreen(null)
   }
+  // The development autopilot starts its play full screen, once the recorder has had a moment to start.
+  const piloted = useRef(false)
+  useEffect(() => {
+    if (!autopilot || !ready || !providers.includes(provider) || piloted.current) return
+    piloted.current = true
+    const play = autopilot
+    void (async () => {
+      if (!(await isFullscreen())) await toggleFullscreen()
+      await mark("ready", { at: Date.now() })
+      await new Promise((r) => setTimeout(r, 4000))
+      const res = await invoke({ kind: "start", provider: provider as "claude", model: pickedModel, adventure: play.adventure, party: play.party.map((id) => ({ id, ai: false })), replace: true })
+      if (res?.state) setScreen(null)
+      else await mark("done", { spans: [], problems: [res?.error ?? "The game did not start."], at: Date.now() })
+    })()
+  }, [ready, providers, provider, pickedModel, invoke])
   const resume = async (archiveId: number) => {
     const res = await invoke({ kind: "resume", archiveId })
     if (!res || res.error) return
