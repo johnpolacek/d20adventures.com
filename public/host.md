@@ -4,7 +4,7 @@ This guide is for an AI coding agent helping someone host a game. The host runs 
 
 ## 1. Agree on the game
 
-Ask how many friends will play and which adventure, unless they said. Seats count every hero: the host's, each friend's, and any the AI plays.
+Ask how many friends will play and which adventure, unless they said. Seats count every hero: each friend's, the host's if the host plays, and any the AI plays. The host can also just watch.
 
 - The Midnight Summons: 1 hero. One friend plays and the host watches.
 - The Road to Kordavos: 1 to 3 heroes.
@@ -19,8 +19,8 @@ Check these before installing. Say what is missing, help fix it, and install not
 
 - **System.** There are builds for macOS on Apple Silicon and Intel, Linux on x86_64, and Windows on x64.
 - **Node.js 24 or newer, where the app looks.** On a Mac the app does not read the shell's PATH. It runs the first `node` found in these folders, in order: `~/.local/share/fnm/aliases/default/bin`, `~/.volta/bin`, `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`. On Windows: `%ProgramFiles%\nodejs`, then PATH. Run that first `node` with `--version`. A Node from nvm, asdf or mise is not found, so link it and check again: `mkdir -p ~/.local/bin && ln -sf "$(node -p process.execPath)" ~/.local/bin/node`.
-- **An AI CLI, signed in.** It runs the Game Master: Claude Code (`claude`), Codex (`codex`), Grok (`grok`) or Antigravity (`agy`). The app takes the first one found in `~/.local/bin`, the fnm and Volta folders above, `~/.bun/bin`, `~/.grok/bin`, `/opt/homebrew/bin` and `/usr/local/bin`, and on Windows `%APPDATA%\npm`. Run the copy at that path with one real request, such as `claude -p hi` or `codex exec hi`. The app lists a signed-out CLI as ready, then fails on the first turn.
-- **Not an npm build, on a Mac.** If that file starts with `#!/usr/bin/env node`, app version 0.1.2 cannot start it. Install the CLI's standalone build instead, so a binary sits in one of those folders.
+- **An AI CLI, signed in.** It runs the Game Master: Claude Code (`claude`), Codex (`codex`), Grok (`grok`) or Antigravity (`agy`). The app looks in `~/.local/bin`, the fnm and Volta folders above, `~/.bun/bin`, `~/.grok/bin`, `/opt/homebrew/bin` and `/usr/local/bin`, and on Windows `%APPDATA%\npm`. It offers every CLI found, and uses the first copy of each in that order. Run the copy it will use with one real request, such as `claude -p hi` or `codex exec hi`. The app lists a signed-out CLI as ready, then fails on the first turn.
+- **Not an npm build, on a Mac.** If that file starts with `#!/usr/bin/env node`, the app cannot start it. This holds up to version 0.1.2, the current one. Install the CLI's standalone build instead, so a binary sits in one of those folders.
 - **Linux only.** The AppImage needs FUSE 2 (`libfuse2` on Ubuntu) and a desktop session.
 
 ## 3. Install the app
@@ -30,7 +30,7 @@ Read the script, then run it. It downloads the latest release, installs it and o
 - Mac or Linux: read https://d20adventures.com/install.sh, then `curl -fsSL https://d20adventures.com/install.sh | sh`
 - Windows, in PowerShell: read https://d20adventures.com/install.ps1, then `irm https://d20adventures.com/install.ps1 | iex`
 
-Running it again updates an installed app. It quits the app first, which stops a game being hosted, so ask before updating. If you are not allowed to open apps, ask the person to open D20 Adventures.
+If the app is already installed, run the script anyway: it replaces the app with the latest release and keeps saved games. It quits the app first, which stops a game being hosted, so ask before updating. If you are not allowed to open apps, ask the person to open D20 Adventures.
 
 ## 4. Link the account
 
