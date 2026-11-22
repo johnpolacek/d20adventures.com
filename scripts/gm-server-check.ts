@@ -8,7 +8,7 @@ import { sanitizeUserVisibleProse } from "../lib/utils/narrative-utils"
 
 // Execute the actual server adapters with only transport/auth/time stubbed.
 // No Clerk session, model API, or live token ledger is touched by these checks.
-function load(path: string, stubs: Record<string, unknown>, delays: number[]) {
+function load(path: string, stubs: Record<string, unknown>, delays: number[], globals: Record<string, unknown> = {}) {
   const exports: any = {}
   const source = readFileSync(path, "utf8")
   vm.runInNewContext(
@@ -25,6 +25,7 @@ function load(path: string, stubs: Record<string, unknown>, delays: number[]) {
         delays.push(ms)
         fn()
       },
+      ...globals,
     },
     { filename: path, timeout: 1000 }
   )
@@ -49,6 +50,27 @@ async function main() {
     },
     delays
   )
+  // The real budget, over a stubbed ledger, in production mode so the limit applies.
+  const ledger = { usd: 0, limit: 1 },
+    spends: number[] = []
+  const budget = load(
+    "lib/gm-server/budget.ts",
+    {
+      "@/convex/_generated/api": { api: { aiBudget: { day: "day", spend: "spend" } } },
+      "@/lib/convex/server": {
+        convex: {
+          query: async () => ({ ...ledger }),
+          mutation: async (_name: unknown, args: { usd: number }) => {
+            spends.push(args.usd)
+            ledger.usd += args.usd
+          },
+        },
+      },
+      "@/lib/convex/server-secret": { serverSecret: () => "test-secret" },
+    },
+    delays,
+    { process: { env: { NODE_ENV: "production" } } }
+  )
   const provider = async (args: unknown) => {
     requests.push(args)
     const response = responses.shift()
@@ -70,6 +92,7 @@ async function main() {
       "../ai/llm": { currentModel: { modelId: "fixture-model" } },
       "../ai/style": { composeSystemPrompt },
       "./billing": billing,
+      "./budget": budget,
     },
     delays
   ).createServerLlm()
@@ -107,7 +130,17 @@ async function main() {
   const count = charges.length
   await billing.serverBilling.chargeUsage(0, "usage_generate_text", "empty")
   assert.equal(charges.length, count)
-  console.log("GM server: style, sanitation, successful charges, retry delays, cleaned JSON, and non-retried billing errors passed.")
+
+  assert.ok(spends.length > 0 && spends.every((usd) => usd > 0), "each paid call records its cost")
+  ledger.usd = ledger.limit
+  chargeResult = { success: true }
+  for (const method of ["generateText", "generateObject"]) {
+    const before = requests.length
+    responses = [{ text: "Over budget.", object: { text: "Over budget.", characterId: "pc" }, usage: { totalTokens: 5 } }]
+    await assert.rejects(adapter[method](args), (error: any) => error.name === "BudgetError")
+    assert.equal(requests.length, before, "a spent budget refuses before the model is called")
+  }
+  console.log("GM server: style, sanitation, successful charges, retry delays, cleaned JSON, non-retried billing errors, and the daily budget passed.")
 }
 main().catch((error) => {
   console.error(error)
