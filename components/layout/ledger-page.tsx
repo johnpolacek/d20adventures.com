@@ -7,7 +7,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-update-mono"
 
 /**
  * Ledger is the site's look for pages that are read, not played: quiet parchment in place of the dark stage, in a
- * light and a dark look. Updates, Terms, Privacy, Licenses and Contact wear it, and /ui shows it.
+ * light and a dark look. Updates, About, Terms, Privacy, Licenses and Contact wear it, and /ui shows it.
  *
  * This puts a page in Ledger. The site header and footer follow whatever page wears it (the `body:has(.updates-page)`
  * rules in app/updates/updates.css, where its classes begin `up-`).
