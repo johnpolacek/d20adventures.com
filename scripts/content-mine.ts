@@ -276,7 +276,7 @@ function digestDay(day: string, commits: Commit[], exchanges: Exchange[]): strin
 
 // ---------- model ----------
 
-function claude(prompt: string): Promise<string> {
+export function claude(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(
       "claude",
@@ -301,7 +301,7 @@ function claude(prompt: string): Promise<string> {
   })
 }
 
-function parseJsonArray<T>(text: string): T[] {
+export function parseJsonArray<T>(text: string): T[] {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
   const raw = fenced ? fenced[1] : text
   const start = raw.indexOf("[")
@@ -310,10 +310,10 @@ function parseJsonArray<T>(text: string): T[] {
   return JSON.parse(raw.slice(start, end + 1))
 }
 
-const CONTEXT = `D20 Adventures (d20adventures.com) is John Polacek's solo-built tabletop RPG where an AI game master runs D&D-style adventures, with a painted 3D encounter stage, a desktop app that runs locally, and adventures authored as markdown. John builds it with AI coding agents. Audiences: tabletop and AI RPG players, and indie and AI-assisted developers.`
+export const CONTEXT = `D20 Adventures (d20adventures.com) is John Polacek's solo-built tabletop RPG where an AI game master runs D&D-style adventures, with a painted 3D encounter stage, a desktop app that runs locally, and adventures authored as markdown. John builds it with AI coding agents. Audiences: tabletop and AI RPG players, and indie and AI-assisted developers.`
 
 // The title lessons live in the voice guide, so what John teaches there reaches every run.
-function titleGuide(): string {
+export function titleGuide(): string {
   const doc = fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8")
   return doc.match(/\*\*Titles\.\*\*[\s\S]*?(?=\n\*\*Frontmatter\.\*\*)/)?.[0].trim() ?? ""
 }

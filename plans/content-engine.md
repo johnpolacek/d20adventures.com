@@ -54,6 +54,15 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
    - X and Bluesky through Buffer’s API.
    - Writes the posted URLs back to the draft.
 
+## Gameplay videos
+
+Owner decision, 2026-11-21: keep a record of when each gameplay video is recorded, and draft its posts from the commits made since the one before.
+
+- `content/queue/videos.json` holds each video's title, recorded time and YouTube link. It syncs with the queue.
+- `pnpm content:video add <url> --at <time>` records one. A time without an offset is Chicago time.
+- `pnpm content:video draft` writes `gameplay-<date>.md`: titles, the changes a player would notice, and 3 to 6 clips, each with a short post and the moment to cut.
+- John marks where each clip is in the video. The draft only knows what changed, not what the camera caught.
+
 ## Limits to work within
 
 - Buffer’s free plan holds 10 scheduled posts per channel. Schedule a few days at a time, not a whole week.
