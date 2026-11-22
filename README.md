@@ -6,10 +6,12 @@
 
 Paste one of these into Claude Code, Codex or another coding agent.
 
-Play on your computer with the desktop app:
+Host a game on your computer with the desktop app, with friends joining from the web:
 
 ```text
-Install the D20 Adventures desktop app and open it. On a Mac or Linux use https://d20adventures.com/install.sh, and on Windows https://d20adventures.com/install.ps1. It needs Node.js 24 or newer and a signed-in Claude Code, Codex, Grok or Antigravity CLI to run the Game Master. Check each first and tell me what is missing before installing anything. Read the script before running it.
+Help me host a game in D20 Adventures on this computer, with friends joining from the web.
+
+Follow https://d20adventures.com/host.md. Fetch the raw file so you read all of it.
 ```
 
 Set up local development:
