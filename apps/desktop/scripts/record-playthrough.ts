@@ -35,6 +35,7 @@ const stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-")
 const out = join(homedir(), "Desktop", "d20-playthroughs")
 const raw = join(out, `${play}-${stamp}-raw.mov`)
 const final = join(out, `${play}-${stamp}.mp4`)
+const rawSound = join(out, `${play}-${stamp}-sound.wav`)
 
 const say = (line: string) => console.log(`record: ${line}`)
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -145,9 +146,28 @@ async function main() {
   app.on("exit", () => {
     running = false
   })
-  let recorder: ChildProcess | null = null
+  // The screen and the sound are recorded by two ffmpeg processes. In one, encoding the full screen held up the audio
+  // queue, and dropped pieces of the sound left clicks all through the narration.
+  const recorders: ChildProcess[] = []
+  const capture = (args: string[]) => {
+    const proc = spawn("ffmpeg", ["-hide_banner", "-y", ...args], { stdio: ["pipe", "ignore", "pipe"] })
+    recorders.push(proc)
+    // Recording starts when ffmpeg says it is capturing.
+    const started = new Promise<number>((done) => {
+      proc.stderr!.on("data", (chunk: Buffer) => {
+        if (chunk.toString().includes("Press [q]")) done(Date.now())
+      })
+      setTimeout(() => done(Date.now()), 8000)
+    })
+    return { proc, started }
+  }
+  const stopRecording = async () => {
+    for (const r of recorders) r.stdin?.write("q")
+    await Promise.all(recorders.map((r) => (r.exitCode === null ? new Promise((done) => r.on("exit", done)) : null)))
+    recorders.length = 0
+  }
   const quit = () => {
-    recorder?.kill("SIGINT")
+    for (const r of recorders) r.kill("SIGINT")
     stopApp(app)
     process.exit(1)
   }
@@ -156,23 +176,13 @@ async function main() {
   try {
     await waitFor(join(marks, "ready.json"), 10, () => running)
     say("recording")
-    const input = sound ? `${screen}:${sound}` : `${screen}:none`
-    recorder = spawn(
-      "ffmpeg",
-      ["-hide_banner", "-y", "-f", "avfoundation", "-capture_cursor", "0", "-framerate", "30", "-i", input, "-c:v", "h264_videotoolbox", "-b:v", "20M", "-pix_fmt", "yuv420p", ...(sound ? ["-c:a", "aac", "-b:a", "192k"] : []), raw],
-      { stdio: ["pipe", "ignore", "pipe"] }
-    )
-    // The recording starts when ffmpeg says it is capturing.
-    const start = await new Promise<number>((done) => {
-      recorder!.stderr!.on("data", (chunk: Buffer) => {
-        if (chunk.toString().includes("Press [q]")) done(Date.now())
-      })
-      setTimeout(() => done(Date.now()), 8000)
-    })
+    const video = capture(["-f", "avfoundation", "-capture_cursor", "0", "-framerate", "30", "-i", `${screen}:none`, "-c:v", "h264_videotoolbox", "-b:v", "20M", "-pix_fmt", "yuv420p", raw])
+    const audio = sound ? capture(["-thread_queue_size", "4096", "-f", "avfoundation", "-i", `none:${sound}`, "-c:a", "pcm_s16le", rawSound]) : null
+    const start = await video.started
+    // How much later the sound began than the picture, so the two line up.
+    const soundLate = audio ? ((await audio.started) - start) / 1000 : 0
     const done: { spans: [number, number][]; problems: string[] } = await waitFor(join(marks, "done.json"), 45, () => running)
-    recorder.stdin!.write("q")
-    await new Promise((r) => recorder!.on("exit", r))
-    recorder = null
+    await stopRecording()
     stopApp(app)
     restore()
     for (const p of done.problems) say(`problem: ${p}`)
@@ -181,18 +191,18 @@ async function main() {
     const drop = cut.map(([a, b]) => `between(t,${a.toFixed(2)},${b.toFixed(2)})`).join("+")
     const keep = drop ? `not(${drop})` : "1"
     say(`cutting ${cut.length} waits, ${Math.round(cut.reduce((s, [a, b]) => s + b - a, 0))}s in all`)
-    const filter = `[0:v]select='${keep}',setpts=N/FRAME_RATE/TB,scale=1920:-2[v]${sound ? `;[0:a]aselect='${keep}',asetpts=N/SR/TB[a]` : ""}`
+    const filter = `[0:v]select='${keep}',setpts=N/FRAME_RATE/TB,scale=1920:-2[v]${sound ? `;[1:a]aselect='${keep}',asetpts=N/SR/TB[a]` : ""}`
     execFileSync(
       "ffmpeg",
-      ["-hide_banner", "-y", "-i", raw, "-filter_complex", filter, "-map", "[v]", ...(sound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
+      ["-hide_banner", "-y", "-i", raw, ...(sound ? ["-itsoffset", soundLate.toFixed(3), "-i", rawSound] : []), "-filter_complex", filter, "-map", "[v]", ...(sound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
       { stdio: "inherit" }
     )
     say(`saved ${final}`)
-    say(`uncut ${raw}`)
+    say(`uncut ${raw}${sound ? ` and ${rawSound}` : ""}`)
   } catch (e) {
     say(String(e instanceof Error ? e.message : e))
     say(`app log: ${join(base, "app.log")}`)
-    recorder?.kill("SIGINT")
+    await stopRecording()
     stopApp(app)
     process.exit(1)
   }
