@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard Designs</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0d12; color: #e5e7eb; font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1400px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  header p { margin: 0 0 24px; color: #9ca3af; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+  .card { display: block; overflow: hidden; border: 1px solid #262b36; border-radius: 10px; background: #12151c; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+  .card:hover, .card:focus-visible { border-color: #fcd34d; transform: translateY(-2px); outline: none; }
+  .thumb { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #000; }
+  .thumb iframe { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform: scale(var(--s, .28)); transform-origin: 0 0; pointer-events: none; }
+  .card div.t { padding: 12px 14px 14px; }
+  .card b { display: block; font-size: 16px; font-weight: 600; }
+  .card span { color: #9ca3af; font-size: 13.5px; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Admin Dashboard Designs</h1>
+    <p>Four minimal takes on <code>/admin</code>. Sample data, not live.</p>
+  </header>
+  <div class="grid">
+    <a class="card" href="01-list.html"><div class="thumb"><iframe src="01-list.html" loading="lazy" tabindex="-1"></iframe></div><div class="t"><b>01 List</b><span>Six rows. A name and one number each.</span></div></a>
+    <a class="card" href="02-sentence.html"><div class="thumb"><iframe src="02-sentence.html" loading="lazy" tabindex="-1"></iframe></div><div class="t"><b>02 Sentence</b><span>One sentence. Every number links to its page.</span></div></a>
+    <a class="card" href="03-numbers.html"><div class="thumb"><iframe src="03-numbers.html" loading="lazy" tabindex="-1"></iframe></div><div class="t"><b>03 Numbers</b><span>Six big numbers in a grid. No cards, no lines.</span></div></a>
+    <a class="card" href="04-quiet.html"><div class="thumb"><iframe src="04-quiet.html" loading="lazy" tabindex="-1"></iframe></div><div class="t"><b>04 Quiet</b><span>Only what needs you. Links along the bottom.</span></div></a>
+  </div>
+</main>
+<script>
+  for (const t of document.querySelectorAll('.thumb')) new ResizeObserver(() => t.style.setProperty('--s', t.clientWidth / 1440)).observe(t)
+</script>
+</body>
+</html>
