@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@d20/ui/utils"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
 import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
-import { briefFor } from "@/lib/content-queue/brief"
+import { briefFor, socialBriefFor } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"]
@@ -230,19 +230,19 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             ))}
           </SelectContent>
         </Select>
-        {/* A prompt to paste into Claude, which writes the /updates post. Gone once the idea has its post. */}
-        {!item.post && (
+        {/* The next prompt to paste into Claude: the /updates post first, then its thread and Reddit post. */}
+        {(!item.post || !bodies["X/Bluesky"]?.trim()) && (
           <Button
             variant="outline"
             size="sm"
-            title="Copies a prompt for Claude to write this idea’s /updates post"
+            title={item.post ? "Copies a prompt for Claude to write the thread and Reddit post from this idea’s post" : "Copies a prompt for Claude to write this idea’s /updates post"}
             onClick={async () => {
-              await navigator.clipboard.writeText(briefFor({ ...item, title, longTitle }))
+              await navigator.clipboard.writeText(item.post ? socialBriefFor(item) : briefFor({ ...item, title, longTitle }))
               setCopied("brief")
               setTimeout(() => setCopied(""), 1200)
             }}
           >
-            {copied === "brief" ? "Copied" : "Copy Post Prompt"}
+            {copied === "brief" ? "Copied" : item.post ? "Copy Thread Prompt" : "Copy Post Prompt"}
           </Button>
         )}
         <Button size="sm" disabled={!dirty || pending} onClick={save}>

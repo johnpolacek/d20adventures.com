@@ -16,3 +16,19 @@ ${lines("What it is about", part("Point"))}${lines("Why a reader wants it", part
 
 Write it to content/updates/ with draft: true. List the pictures and clips it needs, and make the ones the repo’s tools can make. Don’t publish or post anything.`
 }
+
+/**
+ * Once an idea has its /updates post: a prompt for a Claude Code session to write the X/Bluesky thread and the Reddit
+ * post from it, into the idea's file.
+ */
+export function socialBriefFor(item: QueueItem): string {
+  return `Write the social posts for the D20 Adventures post content/updates/${item.post}.md, into the content queue idea content/queue/${item.slug}.md.
+
+Read docs/writing-voice.md first, especially Social threads.
+
+X/Bluesky, under “## X/Bluesky”: a thread that follows the post section by section, in order, with each section’s own picture. One post per section, each under 280 characters, the first carrying the whole idea, the last only the link to the post at https://d20adventures.com/updates/${item.post}. Separate posts with a line of ---. Put each picture as [image: url] and its alt text as [alt: text] on the lines after the post’s words, using the post’s own image URLs and alt text.
+
+Reddit, under “## Reddit”: name the subreddit that fits, then a title and a native retelling for that sub, with the link once at the end.
+
+Use only facts in the post. Then run pnpm content:sync. Don’t post or schedule anything.`
+}
