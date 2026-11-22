@@ -25,7 +25,9 @@ export interface StageOptions<L> {
 // Creates a Stage in `container` for a set (and optional staging) and disposes it on unmount. three.js loads inside the
 // effect, so nothing WebGL touches the server bundle. A set the game plays as built is built from its look, with
 // figures for its cast, in place of its paintings and cards.
-export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: StageOptions<L> | null) {
+// `hold` keeps the last picture up while there are no options because the next set is still on its way, such as while
+// its files download, so the scene change never shows the new set before it is built and framed.
+export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: StageOptions<L> | null, hold = false) {
   const stageRef = useRef<Stage | null>(null)
   const [stage, setStage] = useState<Stage | null>(null)
   const [status, setStatus] = useState("Loading")
@@ -46,7 +48,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       c.style.opacity = "0"
       setTimeout(() => c.remove(), 400)
     }
-    if (!el || !opts) return void lift(false)
+    if (!el || !opts) return void (hold && el ? undefined : lift(false))
     let cancelled = false
     let created: Stage | null = null
     let undress: (() => void) | null = null
@@ -113,7 +115,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       const w = window as unknown as { __stage?: Stage }
       if (w.__stage === created) delete w.__stage
     }
-  }, [container, opts])
+  }, [container, opts, hold])
 
   return { stage, stageRef, status, error }
 }

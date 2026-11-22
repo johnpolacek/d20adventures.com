@@ -383,7 +383,10 @@ export function StagePlay(props: {
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene && files.ready ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene, files.ready])
-  const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
+  const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs, Boolean(scene))
+  // The next scene still on its way: its files downloading, or its set being built. The story waits for it, so the
+  // narration of a new place is never read over the last one.
+  const sceneWaits = Boolean(scene && !stage && !stageError)
   // Silent under the home screen and its pages: the set's ambience starts in play.
   useStageSound(stage, !props.overlay)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
@@ -412,7 +415,7 @@ export function StagePlay(props: {
     key: `${turn?._id}:${paragraph}`,
     text: rolled || used ? undefined : text[paragraph],
     next: nextWords,
-    on: reading && !hidden && !props.overlay,
+    on: reading && !hidden && !props.overlay && !sceneWaits,
   })
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
@@ -912,13 +915,13 @@ export function StagePlay(props: {
     }
   }, [stage, stageRef, reading, paragraph, staged, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || !text.length || voiced === "speaking") return
+    if (!auto || !reading || busy || sceneWaits || !text.length || voiced === "speaking") return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
     const seconds = voiced === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, text, rollTime, paragraph, voiced])
+  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, voiced])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
   // A roll waits as it does in auto.
   const continueMs = busy || !text.length || voiced === "speaking" ? undefined : voiced === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
@@ -944,7 +947,8 @@ export function StagePlay(props: {
     }
     // Narration that arrives while an earlier paragraph is still being read waits its turn.
     setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
-    setReading(true)
+    // A turn with nothing told yet, such as the hero's own turn opening a round, has nothing to read: its card shows.
+    setReading(text.length > 0)
   }, [text, paragraphs, turn?._id])
   useEffect(() => {
     setDraft("")
