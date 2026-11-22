@@ -25,10 +25,9 @@ export default async function AdminAdventuresPage() {
 
   return (
     <div className="container py-8">
-      <AdminBreadcrumb items={[{ label: "Adventures" }]} />
+      <AdminBreadcrumb items={[{ label: "Games" }]} />
       <div className="mb-8">
-        <Heading variant="h1">Adventures</Heading>
-        <p className="font-mono text-primary-300">Manage and view adventure information</p>
+        <Heading variant="h1">Games</Heading>
       </div>
       <Table>
         <TableHeader>
