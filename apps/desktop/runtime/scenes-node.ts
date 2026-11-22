@@ -25,5 +25,5 @@ for (const id of order) {
   const need = sceneFiles(scenes)
   const load = (dir: string, names: string[]) => Object.fromEntries(names.map((n) => [n, read(join(base, dir, `${n}.json`))]))
   const portraits = existsSync(join(base, "portraits.json")) ? (read(join(base, "portraits.json")) as AdventureStage["portraits"]) : undefined
-  addScenes({ scenes, sets: load("sets", need.sets), stagings: load("stagings", need.stagings), portraits })
+  addScenes({ id, scenes, sets: load("sets", need.sets), stagings: load("stagings", need.stagings), portraits })
 }

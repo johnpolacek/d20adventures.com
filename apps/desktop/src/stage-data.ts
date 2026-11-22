@@ -24,7 +24,7 @@ async function fromPackage(id: string): Promise<AdventureStage> {
   const need = sceneFiles(scenes)
   const load = (dir: string, names: string[]) => Promise.all(names.map(async (n) => [n, await get(`${base}/${dir}/${n}.json`)] as const)).then(Object.fromEntries)
   const [sets, stagings, portraits] = await Promise.all([load("sets", need.sets), load("stagings", need.stagings), get(`${base}/portraits.json`).catch(() => undefined)])
-  return { scenes, sets, stagings, portraits: portraits as AdventureStage["portraits"] }
+  return { id, scenes, sets, stagings, portraits: portraits as AdventureStage["portraits"] }
 }
 
 async function fromRepo(): Promise<AdventureStage[]> {
@@ -38,7 +38,7 @@ async function fromRepo(): Promise<AdventureStage[]> {
       const stagings = Object.fromEntries(
         await Promise.all(need.stagings.filter((k) => STAGINGS[`${id}/${k}`]).map(async (k) => [k, await STAGINGS[`${id}/${k}`]()] as const))
       )
-      return { scenes, sets, stagings, portraits: { cards: (await CARD_PORTRAITS[id]?.()) ?? {}, npcs } }
+      return { id, scenes, sets, stagings, portraits: { cards: (await CARD_PORTRAITS[id]?.()) ?? {}, npcs } }
     })
   )
 }

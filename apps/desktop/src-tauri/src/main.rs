@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::sync::Arc;
 use std::{path::PathBuf, process::Stdio};
 use tauri::Manager;
+mod files;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     process::{Child, Command},
@@ -114,6 +115,19 @@ async fn suggest_command(app: tauri::AppHandle, command: Value) -> Result<Value,
         .unwrap_or_default();
     if kind != "suggest" {
         return Err("Unknown suggestion request.".into());
+    }
+    run_runtime(&app, &command).await
+}
+// An adventure's art and figures: planning and downloading never touch the save, so they skip the game lock and run
+// behind play (runtime/files.ts).
+#[tauri::command]
+async fn files_command(app: tauri::AppHandle, command: Value) -> Result<Value, String> {
+    let kind = command
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if kind != "filesPlan" && kind != "filesFetch" {
+        return Err("Unknown files request.".into());
     }
     run_runtime(&app, &command).await
 }
@@ -411,6 +425,11 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
 }
 fn main() {
     tauri::Builder::default()
+        // The stage's files: downloaded adventures, then the app's own (files.rs).
+        .register_asynchronous_uri_scheme_protocol(files::SCHEME, |ctx, request, responder| {
+            let data = data_dir(ctx.app_handle()).ok();
+            files::handle(ctx, data, request, responder)
+        })
         .manage(GameLock(Mutex::new(())))
         .manage(Narrator(Mutex::new(None)))
         .manage(HostWorker(
@@ -420,6 +439,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             game_command,
             suggest_command,
+            files_command,
             model_command,
             account_command,
             host_command,

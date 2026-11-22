@@ -100,10 +100,20 @@ async function gather(id: string, settingId: string) {
   const cast = existsSync(castFile) ? (JSON.parse(readFileSync(castFile, "utf8")) as Record<string, string>) : {}
   const figureIds = new Set([...Object.values(cast), ...Object.values(looks).flatMap((l) => Object.values(l.figures ?? {}))])
   const figures: Record<string, string> = {}
+  // The files of each figure the app downloads, sized from its figure.json: the models are not in the workspace.
+  const figureFiles: Record<string, { bytes: number }> = {}
+  const figurePaths = (f: string) => [`asset-library/characters/${f}/figure.json`, `asset-library/characters/${f}/lod0.glb`, `asset-library/characters/${f}/lod1.glb`]
   for (const f of [...figureIds].sort()) {
     const file = join(ROOT, "asset-library/characters", f, "figure.json")
-    if (existsSync(file)) figures[f] = sha(readFileSync(file))
-    else missing.push(`figure ${f}`)
+    if (!existsSync(file)) {
+      missing.push(`figure ${f}`)
+      continue
+    }
+    const body = readFileSync(file)
+    figures[f] = sha(body)
+    const lods = (JSON.parse(body.toString("utf8")) as { lods?: { file: string; megabytes: number }[] }).lods ?? []
+    figureFiles[`asset-library/characters/${f}/figure.json`] = { bytes: body.length }
+    for (const l of lods.filter((l) => l.file === "lod0.glb" || l.file === "lod1.glb")) figureFiles[`asset-library/characters/${f}/${l.file}`] = { bytes: Math.round(l.megabytes * 1e6) }
   }
 
   // Every file named anywhere in it, and the adventure's own art by where it is kept.
@@ -146,6 +156,26 @@ async function gather(id: string, settingId: string) {
       return [rel, { sha256: sha(body), bytes: body.length }]
     })
   )
+  // What each scene needs before it shows: the files its set, staging and looks name, its art, and its cast's
+  // portraits and figures. The app downloads these first (apps/desktop/runtime/files.ts).
+  const needs: Record<string, string[]> = {}
+  for (const [encounter, scene] of Object.entries(scenes)) {
+    const staging = stagings[scene.staging] as { cast?: { id: string }[] } | undefined
+    const setsOf = [scene.set, ...(LOOKS[scene.set]?.join ?? []).map((j) => j.set)]
+    const named = new Set<string>()
+    strings([staging, setsOf.map((s) => sets[s]), setsOf.map((s) => looks[s])], named)
+    const want = new Set([...named].map((p) => p.slice(1)))
+    want.add(`stage/art/${id}/${encounter}.webp`)
+    // As asset-library/play.ts stands them: full detail for three figures or fewer, the middle level for more.
+    const standing = (staging?.cast ?? []).map((c) => looks[scene.set]?.figures?.[c.id] ?? cast[c.id]).filter((f): f is string => !!f)
+    const detail = standing.length <= 3 ? "lod0.glb" : "lod1.glb"
+    for (const f of standing) for (const p of figurePaths(f).filter((p) => p.endsWith("figure.json") || p.endsWith(detail))) want.add(p)
+    for (const c of staging?.cast ?? []) {
+      if (npcs[c.id]) want.add(npcs[c.id].slice(1))
+      if (cards[c.id]) want.add(cards[c.id].slice(1))
+    }
+    needs[encounter] = [...want].filter((p) => hashed[p] || figureFiles[p]).sort()
+  }
   const source = readFileSync(join(ROOT, "content/settings", settingId, "adventures", id, "adventure.md"), "utf8")
   const title = /^title:\s*"?([^"\n]+)"?\s*$/m.exec(source)?.[1] ?? id
   const contents = { story: story.version, scenes, portraits, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
@@ -161,6 +191,8 @@ async function gather(id: string, settingId: string) {
     sets: [...setIds].sort(),
     figures,
     files: hashed,
+    figureFiles,
+    needs,
   }
   return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, portraits, missing }
 }

@@ -33,6 +33,7 @@ export interface SceneEntry {
   at?: Record<string, number[]>
 }
 export interface AdventureStage {
+  id: string
   scenes: Record<string, SceneEntry>
   sets: Record<string, unknown>
   stagings: Record<string, unknown>
@@ -50,6 +51,9 @@ function merge(target: unknown, patch: unknown): unknown {
 }
 
 export const SCENES: Record<string, Scene> = {}
+// The adventure each scene belongs to, whose files it needs (files.ts).
+const ADVENTURE_OF: Record<string, string> = {}
+export const adventureOf = (encounterId: string | undefined) => (encounterId ? ADVENTURE_OF[encounterId] : undefined)
 
 /** Adds an adventure's scenes. A scene whose set or staging the package lacks is left out. */
 export function addScenes(stage: AdventureStage) {
@@ -61,6 +65,7 @@ export function addScenes(stage: AdventureStage) {
     if (!set || !staging) continue
     if (e.patch) staging = merge(structuredClone(staging), e.patch) as Scene["staging"]
     if (e.at) staging = { ...staging, cast: staging.cast.map((m) => ({ ...m, at: e.at?.[m.id] ?? m.at })) }
+    ADVENTURE_OF[id] = stage.id
     SCENES[id] = { set: set as Scene["set"], staging, location: e.location, where: e.where, party: e.party, ...(e.spare ? { spare: e.spare } : {}) }
   }
 }

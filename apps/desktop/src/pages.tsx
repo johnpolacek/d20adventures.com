@@ -16,6 +16,7 @@ import type { Hero } from "../runtime/heroes"
 import type { SaveSummary } from "../runtime/store"
 import { type FigureArt, STOCK_FIGURES } from "./figures"
 import { type RowMotion, useLeaving } from "@d20/ui/leaving"
+import { served } from "@d20/stage/served"
 import { portraitFor, sceneFor } from "./scenes"
 import { type Locked, LockIcon, price } from "./new-game"
 import type { Realm } from "./realm"
@@ -166,7 +167,7 @@ function CardRemove(props: {
 function ArchivedRow(props: { planId: string; title: string; kicker: string; busy: boolean; motion?: RowMotion; onRestore: () => void; children: ReactNode }) {
   return (
     <li {...props.motion} className={cn("flex items-center gap-5 px-5 py-3", props.motion?.className)}>
-      <img src={`/stage/covers/${props.planId}.jpg`} alt="" className="aspect-[3/4] w-10 rounded-sm object-cover saturate-50" />
+      <img src={served(`/stage/covers/${props.planId}.jpg`)} alt="" className="aspect-[3/4] w-10 rounded-sm object-cover saturate-50" />
       <div className="flex-1">
         <div className="font-display text-lg text-white/80">{props.title}</div>
         {props.kicker && <div className={siteLabel}>{props.kicker}</div>}
@@ -200,9 +201,9 @@ function SavedCard(props: {
   onOpen: () => void
   children?: ReactNode
 }) {
-  const cover = `/stage/covers/${props.planId}.jpg`
+  const cover = served(`/stage/covers/${props.planId}.jpg`)
   const [missing, setMissing] = useState(false)
-  const art = props.encounterId && !missing ? `/stage/art/${props.planId}/${props.encounterId}.webp` : cover
+  const art = props.encounterId && !missing ? served(`/stage/art/${props.planId}/${props.encounterId}.webp`) : cover
   return (
     <li {...props.motion} className={cn("relative", props.motion?.className)}>
       <Button
@@ -448,7 +449,7 @@ export function AdventuresPage(props: {
             aria-label={featured.locked ? `${featured.title}, locked` : `New game of ${featured.title}`}
           >
             {/* The cover again, blurred and dimmed, as the panel's backdrop. */}
-            <img src={`/stage/covers/${featured.id}.jpg`} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl" />
+            <img src={served(`/stage/covers/${featured.id}.jpg`)} alt="" className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/80 to-black/95" />
             <div className="relative p-8">
               <ModuleCover

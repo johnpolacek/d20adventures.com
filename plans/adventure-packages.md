@@ -51,7 +51,13 @@ One folder, or one archive of it, named by the adventure's id:
    - Portraits: `stage/portraits.json` in each package, cards from `stagings/<adventure>/portraits.json` and each character's painted one. `npc-portraits.ts` is gone. The site reads `packages/stage/src/portraits.json`, which `scripts/stage-encounter-art.ts` writes.
    - The website and its dev pages load the same scenes from the repo's stage (`useScenes("repo")`), and scripts through `scripts/repo-scenes.ts`.
    - Still code: `PREMADE_FIGURES` and hero art (`apps/desktop/src/figures.ts`), and the setting's city maps (`lib/citymap`), which the story pack carries.
-4. Fetch figures and files per package on first play into the app data folder, keyed by hash. Stop copying `public/stage` and figures into the build. This settles the app's size at any number of figures.
+4. Done 2026-11-22. An adventure's art and figures download as it is played, into the data folder's `files/` (`apps/desktop/runtime/files.ts`), from the asset host, each checked against its hash.
+   - Owner, 2026-11-22: download the whole adventure when it starts, but let play begin once the opening scene's files are in, with the rest behind it. A loading pulse, and a progress bar only when the wait looks longer than a few seconds.
+   - Each package lists what every scene needs (`needs` in `package.json`): its set, staging and look files, its art, its cast's portraits, and its figures at the detail the scene stands them in. Opening scenes need 3 to 37 MB.
+   - The window waits on the scene's own files (`src/files.ts`, `useSceneFiles`), then fetches the rest a few MB at a time, behind play. Downloads skip the game lock (`files_command`).
+   - The window reads every stage file at `d20://localhost` (`http://d20.localhost` on Windows) through `src-tauri/src/files.rs`: the repo's own first in development, then the downloads, then the app's bundled copy.
+   - The app bundles what shows before any download: the kit, covers, maps, premade heroes' art and the title screen's scene (`bundled.json`). Its stage files and figures fell from about 313 MB to 117 MB.
+   - Not yet tried in a built app, only in development and by its parts.
 5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.
 6. Later: publish a creator's package to the site, and the pipeline running on the player's machine with their own keys.
 

@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process"
 import { createReadStream, mkdirSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { extname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import tailwind from "@tailwindcss/postcss"
 import { defineConfig } from "vite"
@@ -68,23 +68,30 @@ function preview() {
   }
 }
 
-// A figure is served from the workspace's own copy while the app is being developed (asset-library/characters, not in
-// git), as the site's dev server does (next.config.ts). The app's own copies are taken once, when it starts
-// (scripts/build-runtime.ts): a figure shipped or rebuilt after that was not among them, the app was answered a web
-// page for the model, and the cast member stood as their flat painted card. A figure the workspace does not have is
-// left to the app's copy. The built app is not touched: it carries its copies.
+// While the app is being developed, the stage's files come from the workspace: public/stage and the asset library's
+// figures (asset-library/characters, not in git), so new art and a rebuilt figure show on the next reload. One the
+// workspace lacks is sent on to the asset host, as an adventure's downloaded files would be. The Tauri window reads
+// the same through its d20:// files (src-tauri/src/files.rs). The built app is not touched.
+const ASSET_HOST = "https://d1dkwd3w4hheqw.cloudfront.net"
+const TYPES = { ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".json": "application/json", ".glb": "model/gltf-binary", ".mp3": "audio/mpeg" }
 function figures() {
-  const shelf = fileURLToPath(new URL("../../asset-library/characters", import.meta.url))
+  const repo = fileURLToPath(new URL("../..", import.meta.url))
   return {
-    name: "d20-desktop-figures",
+    name: "d20-desktop-stage-files",
     apply: "serve",
     configureServer(server) {
-      server.middlewares.use("/asset-library/characters", (req, res, next) => {
-        const name = /^\/([a-z0-9-]+\/(?:lod\d\.glb|figure\.json))(\?.*)?$/.exec(req.url ?? "")?.[1]
-        const file = name && join(shelf, name)
-        const size = file && statSync(file, { throwIfNoEntry: false })?.size
-        if (!file || !size) return next()
-        res.setHeader("Content-Type", name.endsWith(".json") ? "application/json" : "model/gltf-binary")
+      server.middlewares.use((req, res, next) => {
+        const path = decodeURIComponent((req.url ?? "").split("?")[0])
+        const under = path.startsWith("/stage/") ? join(repo, "public") : path.startsWith("/asset-library/characters/") ? repo : null
+        if (!under || path.includes("..")) return next()
+        const file = join(under, path)
+        const size = statSync(file, { throwIfNoEntry: false })?.size
+        if (!size) {
+          res.statusCode = 302
+          res.setHeader("Location", `${ASSET_HOST}${path}`)
+          return res.end()
+        }
+        res.setHeader("Content-Type", TYPES[extname(file)] ?? "application/octet-stream")
         res.setHeader("Content-Length", size)
         res.setHeader("Cache-Control", "no-store")
         createReadStream(file).pipe(res)

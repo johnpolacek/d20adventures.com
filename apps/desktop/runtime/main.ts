@@ -8,6 +8,7 @@ import { applyCharacterUpdates } from "./characters"
 import { feedbackCommand } from "./feedback"
 import { adventureList, type CatalogInfo, commandSchema, type GameCommand, game, type Packs, suggest, suggestCommandSchema, transitionsOf } from "./game"
 import { creationOptions, type HeroCommand, type HeroDraft, heroCommand, heroCommandSchema } from "./heroes"
+import { filesFetch, filesPlan } from "./files"
 import { hostCommand, hostCommandSchema } from "./host-commands"
 import { localLlm } from "./llm"
 import { loadPacks } from "./packs"
@@ -67,6 +68,17 @@ async function main() {
         }
         const response = await accountCommand(accountCommandSchema.parse(input), site, fetch, { data: dirname(savePath), bundled })
         process.stdout.write(`${JSON.stringify(response)}\n`)
+        return
+      }
+      // An adventure's art and figures: what is still to download, and downloading a batch (files.ts). They never
+      // open the save, so they run beside a game action.
+      if (input?.kind === "filesPlan") {
+        process.stdout.write(`${JSON.stringify(filesPlan(dirname(savePath), String(input.adventureId), input.encounterId ? String(input.encounterId) : undefined))}\n`)
+        return
+      }
+      if (input?.kind === "filesFetch") {
+        const paths = Array.isArray(input.paths) ? input.paths.map(String) : []
+        process.stdout.write(`${JSON.stringify(await filesFetch(dirname(savePath), String(input.adventureId), paths))}\n`)
         return
       }
       // Host commands talk to the website too, reading only the hero roster.

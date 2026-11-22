@@ -18,6 +18,7 @@ for (const id of readdirSync(join(STAGE, "stagings")).sort()) {
   const scenes = read(file) as Record<string, SceneEntry>
   const need = sceneFiles(scenes)
   addScenes({
+    id,
     scenes,
     sets: Object.fromEntries(need.sets.map((s) => [s, read(join(STAGE, "sets", `${s}.json`))])),
     stagings: Object.fromEntries(need.stagings.map((k) => [k, read(join(STAGE, "stagings", id, `${k}.json`))])),

@@ -10,7 +10,7 @@ import { adventureList } from "../runtime/game"
 
 const require = createRequire(import.meta.url)
 const { loadLocalWikiAdventureRuntime } = require("../../../lib/wiki-adventures/local-runtime.ts")
-const { castFigures } = require("../../../asset-library/cast.ts") as typeof import("../../../asset-library/cast")
+const { PREMADE_FIGURES } = require("../src/figures.ts") as typeof import("../src/figures")
 const { CATALOG } = require("../../../lib/store/catalog.ts") as typeof import("../../../lib/store/catalog")
 const app = fileURLToPath(new URL("../", import.meta.url))
 const root = resolve(app, "../..")
@@ -45,6 +45,10 @@ await build({
 await rm(resolve(app, "public"), { recursive: true, force: true })
 await mkdir(resolve(app, "public/images/app"), { recursive: true })
 await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursive: true })
+// An adventure's own art downloads when it is played (runtime/files.ts), so it leaves the bundle. What shows before any
+// download stays: the stage's kit, the covers and maps, the premade heroes' art, and the title screen's scene.
+const HOME = { adventure: "welcome-to-kordavos", encounter: "the-gates-of-kordavos" }
+for (const dir of ["fixtures", "paintings", "art", "portraits"]) await rm(resolve(app, `public/stage/${dir}`), { recursive: true, force: true })
 // Each bundled adventure's stage, from its package (scripts/adventure-packages.ts): the window fetches it at
 // /adventures/<id>/stage (src/stage-data.ts), and the runtime reads it from resources (runtime/scenes-node.ts).
 execFileSync(resolve(root, "node_modules/.bin/tsx"), [resolve(root, "scripts/adventure-packages.ts"), ...ADVENTURES, "--stage-only"], { cwd: root, stdio: ["ignore", "ignore", "inherit"] })
@@ -53,20 +57,31 @@ for (const into of ["public/adventures", "src-tauri/resources/adventures"]) {
   for (const id of ADVENTURES) await cp(resolve(root, `build/adventures/${id}/stage`), resolve(app, `${into}/${id}/stage`), { recursive: true })
   await writeFile(resolve(app, `${into}/index.json`), JSON.stringify(ADVENTURES))
 }
+// Each package's manifest, for the runtime to plan its downloads by.
+for (const id of ADVENTURES) await cp(resolve(root, `build/adventures/${id}/package.json`), resolve(app, `src-tauri/resources/adventures/${id}/package.json`))
+const home = JSON.parse(await readFile(resolve(root, `build/adventures/${HOME.adventure}/package.json`), "utf8")) as { needs: Record<string, string[]> }
+const premade = Object.values(PREMADE_FIGURES).flatMap((f) => [f.art.front, f.art.back, f.art.portrait].map((p) => p.slice(1)))
+const kept = [...(home.needs[HOME.encounter] ?? []), ...premade]
+// The runtime counts these as present, so they are never downloaded (runtime/files.ts).
+await writeFile(resolve(app, "src-tauri/resources/adventures/bundled.json"), JSON.stringify(kept))
+for (const path of kept.filter((p) => p.startsWith("stage/"))) {
+  const from = resolve(root, "public", path)
+  if (!existsSync(from)) continue
+  await mkdir(resolve(app, "public", path, ".."), { recursive: true })
+  await cp(from, resolve(app, "public", path))
+}
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
 // The header's logo.
 await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20.jpg"))
-// The figures the bundled adventures stand (their figures.json, asset-library/cast.ts), at the path the site serves
-// them from, each with the figure.json that says how it moves. The models are not in git: the asset library's own copy
-// is taken when it is here, else the published one, kept between builds.
+// The title screen's figures, at the path the site serves them from, each with the figure.json that says how it
+// moves. Every other figure downloads with its adventure. The models are not in git: the asset library's own copy is
+// taken when it is here, else the published one, kept between builds.
 const FIGURE_SITE = process.env.D20_FIGURES_FROM ?? "https://d20adventures.com"
 const cache = resolve(root, "node_modules/.cache/d20-figures")
 const missing: string[] = []
-const casts = castFigures(root)
-const SHIPPED = [...new Set(ADVENTURES.flatMap((id) => Object.values(casts[id] ?? {})))]
-for (const id of SHIPPED)
-  for (const file of ["lod0.glb", "lod1.glb", "figure.json"]) {
-    const name = `${id}/${file}`
+const SHIPPED = [...new Set(kept.filter((p) => p.startsWith("asset-library/characters/")).map((p) => p.split("/")[2]))]
+for (const path of kept.filter((p) => p.startsWith("asset-library/characters/"))) {
+    const name = path.slice("asset-library/characters/".length)
     const to = resolve(app, `public/asset-library/characters/${name}`)
     await mkdir(resolve(to, ".."), { recursive: true })
     const own = resolve(root, `asset-library/characters/${name}`)

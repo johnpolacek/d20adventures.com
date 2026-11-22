@@ -46,7 +46,8 @@ import { useAutopilot } from "./autopilot"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { storyMoments } from "./moments"
-import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
+import { useSceneFiles } from "./files"
+import { adventureOf, castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 import { loadPlay } from "./stage-data"
 
 // The built looks the game plays its sets in, loaded with the stage.
@@ -342,7 +343,10 @@ export function StagePlay(props: {
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
   // lists its characters by initiative, so the party is keyed in a fixed order: a new round neither rebuilds the stage
   // nor moves heroes between places in the line.
-  const authored = sceneFor(shown?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos")
+  const sceneId = shown?.encounterId ?? props.fallbackEncounter ?? "the-gates-of-kordavos"
+  const authored = sceneFor(sceneId)
+  // The scene's art and figures, downloaded before it shows (files.ts).
+  const files = useSceneFiles(authored ? adventureOf(sceneId) : undefined, sceneId)
   const painted = Object.fromEntries((save?.painted ?? []).flatMap((id) => (art[id] ? [[id, art[id]]] : [])))
   const partyKey = turn
     ? JSON.stringify([
@@ -378,7 +382,7 @@ export function StagePlay(props: {
   const card = cardCharacter ? characterInfo(cardCharacter, portrait(cardCharacter), cardSheet, standingOf(cardCharacter, cardSheet), ordersFor) : null
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
-  const specs = useMemo(() => (scene ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene])
+  const specs = useMemo(() => (scene && files.ready ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene, files.ready])
   const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs)
   // Silent under the home screen and its pages: the set's ambience starts in play.
   useStageSound(stage, !props.overlay)
@@ -1234,6 +1238,7 @@ export function StagePlay(props: {
         </>
       }
     >
+      {scene && !files.ready && <SceneLoading progress={files.progress} />}
       {save && (
         <>
           {on && stage && speech.length > 0 && (
@@ -1537,5 +1542,19 @@ export function StagePlay(props: {
       </Presence>
       {props.children}
     </StageHud>
+  )
+}
+
+// While a scene's files download: a quiet pulse, and a bar once the wait looks longer than a few seconds.
+function SceneLoading({ progress }: { progress: number | null }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3" role="status" aria-live="polite">
+      <div className="font-display text-sm tracking-[0.2em] text-[#f3d6a6] uppercase animate-pulse">Loading</div>
+      {progress !== null && (
+        <div className="h-[3px] w-48 overflow-hidden bg-black/50 shadow-[0_0_0_1px_#0008]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+          <div className="h-full bg-[#f3d6a6] transition-[width] duration-500 ease-out" style={{ width: `${Math.round(progress * 100)}%` }} />
+        </div>
+      )}
+    </div>
   )
 }
