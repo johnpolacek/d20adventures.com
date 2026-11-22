@@ -194,8 +194,9 @@ textarea:-webkit-autofill {
   display: none;
 }
 
-/* An adventure's page enters by script (components/views/adventure-motion.tsx). Until the script takes over, what
-   will enter is hidden. It shows by itself after two seconds, so a page whose script never arrives is still read. */
+/* An adventure's page fades in by script (components/views/adventure-motion.tsx). Until the script takes over, its
+   title and what is under it are hidden. They show by themselves after two seconds, so a page whose script never
+   arrives is still read. */
 @keyframes intro-failsafe {
   to {
     visibility: visible;
