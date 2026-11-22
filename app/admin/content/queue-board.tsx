@@ -5,6 +5,7 @@ import { fieldClass } from "@d20/ui/input"
 import { cn } from "@d20/ui/utils"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
 import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
+import { briefFor } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "drafted", "approved", "scheduled", "posted", "folded", "cut"]
@@ -227,6 +228,17 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             </option>
           ))}
         </select>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            await navigator.clipboard.writeText(briefFor({ ...item, title, longTitle }))
+            setCopied("brief")
+            setTimeout(() => setCopied(""), 1200)
+          }}
+        >
+          {copied === "brief" ? "Copied" : "Copy Brief"}
+        </Button>
         <Button size="sm" disabled={!dirty || pending} onClick={save}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
         </Button>
