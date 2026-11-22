@@ -15,9 +15,11 @@ const SHOW_BAR = 3000
 
 const command = <T>(command: Record<string, unknown>) => invoke<T>("files_command", { command })
 
-/** Points the stage's files at the app's d20:// files. The window calls it once, in the app alone. */
+/** Points the stage's files at the app's d20:// files. The window calls it once, in the built app alone: in
+ * development the dev server serves the same files from the window's own origin (vite.config.mjs), and WebGL refuses
+ * images from another origin that WebKit gives no CORS answer for ("The operation is insecure"). */
 export function serveAppFiles() {
-  if (!isTauri()) return
+  if (!isTauri() || import.meta.env.DEV) return
   serveFrom(navigator.userAgent.includes("Windows") ? "http://d20.localhost" : "d20://localhost")
 }
 
