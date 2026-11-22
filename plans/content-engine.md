@@ -12,6 +12,15 @@ Goal: find the most shareable things in each week’s work and keep them as rank
 - The queue page edits files on localhost only.
 - Reddit posts are copied by hand from a text box on the queue page.
 
+## Owner decision, 2026-11-21: nothing posts on its own
+
+The engine plans, drafts, listens and organizes. John approves and posts every word.
+
+- No script calls a write endpoint on X, Bluesky or Reddit.
+- Buffer gets a post only when John presses Send to Buffer on an approved X or Bluesky draft. Approving alone sends nothing.
+- Reddit posts and all replies are copied and pasted by hand.
+- X is read through John’s signed-in Chrome only when he asks, in a live Claude session, never on a timer. X’s terms ban automated access, so it waits until Bluesky and Reddit listening work.
+
 ## Schedule it feeds
 
 From the 2026 schedule John pasted, starting at the low end:
@@ -50,9 +59,18 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
    - Ranked list, drag to reorder, status changes, copy edits.
    - A copy button per platform. Reddit’s text sits ready to paste.
    - Ideas can be merged into one update post.
-4. **Scheduler.** `pnpm content:schedule`.
-   - X and Bluesky through Buffer’s API.
-   - Writes the posted URLs back to the draft.
+4. **Week planner.** `pnpm content:plan` fills the schedule’s slots from the ranked queue and writes `content/queue/week-<date>.json`. The queue page gets a Week view.
+5. **Drafter.** `pnpm content:draft <slug>` fills an idea’s X, Bluesky and Reddit sections from the voice guide, its “Social threads” part above all. Status becomes drafted, and John approves.
+6. **Listener.** `pnpm content:listen` writes one file per conversation to `content/inbox/`, synced like the queue.
+   - Bluesky: replies, mentions and quotes, plus a few searches, with an app password.
+   - Reddit: new posts in the subs below, plus searches, from the public JSON.
+   - Claude scores each one on whether it is worth joining and drafts an answer.
+   - An Inbox tab on the queue page: the thread, the draft, Open, Copy, Replied, Skip.
+7. **X reader.** A project skill for a live Claude session that reads notifications and 2 or 3 searches through Claude in Chrome, slowly, into `content/inbox/`.
+8. **Buffer button.** Send to Buffer on approved X and Bluesky drafts.
+   - Buffer’s GraphQL API, one key on the free plan, 3,000 requests per 30 days.
+   - Pictures go by public URL, so an asset is in the public bucket first.
+   - Writes the Buffer id, then the posted URL, back to the draft.
 
 ## Gameplay videos
 
@@ -73,5 +91,8 @@ Owner decision, 2026-11-21: keep a record of when each gameplay video is recorde
 
 1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. The miner syncs before and after it writes.
 2. Queue page reading and writing those files. Done 2026-11-21. `/admin/content`, development only and admin only. Live, folded and cut views, sort by rank or score, drag or arrows to reorder, an editor per idea with X, Bluesky and Reddit drafts, character counts, Copy buttons, posted URLs, and a Sync button. Cmd+S saves.
-3. Scheduler for Buffer.
-4. Weekly run documented, first week seeded from the 3D figures post.
+3. Week planner and drafter.
+4. Bluesky and Reddit listener, with the Inbox tab.
+5. Buffer button.
+6. X reader through Chrome, tested once by hand before it becomes a skill.
+7. Weekly run documented, first week seeded from the 3D figures post.
