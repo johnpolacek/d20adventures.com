@@ -6,7 +6,7 @@ import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { openingParty, partyOf, type Seat, seatCreated } from "../src/carry"
 import { PREMADE_FIGURES } from "../src/figures"
-import { partyScene, portraitFor, SCENES } from "../src/scenes"
+import { partyScene, portraitFor, SCENES } from "./scenes-node"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
 import { LocalStore } from "./store"
 

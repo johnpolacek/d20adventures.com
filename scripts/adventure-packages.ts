@@ -5,12 +5,14 @@
  *   pnpm packages:build                    every adventure in the catalog, into build/adventures/<id>/
  *   pnpm packages:build covert-cargo       that one alone
  *   pnpm packages:check                    gathers them all and writes nothing: fails on a file named but missing
+ *   --stage-only                           writes no files/ and warns of a missing one, for the desktop build
  *
  * A package:
  *   package.json            id, version, title, setting, its encounters, sets and figures, and every file with its hash
  *   story/pack.json         the story pack, as scripts/desktop-packs.ts makes it
  *   story/city-map.json     the city its encounters stand on, if it has one
  *   stage/sets/<setting>/<set>.json, stage/stagings/<encounter>.json, stage/plans/{sets,encounters}/…
+ *   stage/scenes.json       each encounter's scene: its set and staging, place name and party spots (the app's scenes.ts)
  *   stage/looks.json        the played looks of its sets, by set id
  *   stage/figures.json      who stands as which figure (packages/stage/src/stagings/<adventure>/figures.json)
  *   files/stage/…           every file its story and stage name, at the path the stage asks for it by
@@ -39,6 +41,7 @@ const KIT = ["stage/textures", "stage/sounds", "stage/crowd", "stage/trees", "st
 
 const args = process.argv.slice(2)
 const check = args.includes("--check")
+const stageOnly = args.includes("--stage-only")
 const named = args.filter((a) => !a.startsWith("--"))
 
 const sha = (body: Buffer | string) => createHash("sha256").update(body).digest("hex")
@@ -68,7 +71,10 @@ async function gather(id: string, settingId: string) {
   // Its encounters' stagings, and the sets they and their looks stand on.
   const stagings: Record<string, unknown> = {}
   for (const [key, load] of Object.entries(STAGINGS)) if (key.startsWith(`${id}/`)) stagings[key.slice(id.length + 1)] = await load()
-  const setIds = new Set(Object.values(stagings).map((s) => (s as { set?: string }).set).filter((s): s is string => !!s))
+  const scenesFile = join(STAGE, "stagings", id, "scenes.json")
+  const scenes = existsSync(scenesFile) ? (JSON.parse(readFileSync(scenesFile, "utf8")) as Record<string, { set: string; staging: string }>) : {}
+  for (const [encounter, scene] of Object.entries(scenes)) if (!stagings[scene.staging]) missing.push(`staging ${id}/${scene.staging} (scene ${encounter})`)
+  const setIds = new Set([...Object.values(stagings).map((s) => (s as { set?: string }).set), ...Object.values(scenes).map((s) => s.set)].filter((s): s is string => !!s))
   for (const set of [...setIds]) for (const j of LOOKS[set]?.join ?? []) setIds.add(j.set)
   const sets: Record<string, unknown> = {}
   for (const set of setIds) {
@@ -125,7 +131,7 @@ async function gather(id: string, settingId: string) {
   )
   const source = readFileSync(join(ROOT, "content/settings", settingId, "adventures", id, "adventure.md"), "utf8")
   const title = /^title:\s*"?([^"\n]+)"?\s*$/m.exec(source)?.[1] ?? id
-  const contents = { story: story.version, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
+  const contents = { story: story.version, scenes, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
   const manifest = {
     format: "d20.adventure",
     formatVersion: 1,
@@ -139,7 +145,7 @@ async function gather(id: string, settingId: string) {
     figures,
     files: hashed,
   }
-  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, missing }
+  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, missing }
 }
 
 function write(dir: string, rel: string, value: unknown) {
@@ -155,9 +161,9 @@ async function main() {
     const p = await gather(id, settingId)
     const bytes = Object.values(p.manifest.files).reduce((n, f) => n + f.bytes, 0)
     if (p.missing.length) {
-      failed = true
+      failed = !stageOnly || p.missing.some((m) => !m.startsWith("/"))
       console.error(`${id}: ${p.missing.length} named but missing:\n${p.missing.map((m) => `  ${m}`).join("\n")}`)
-      continue
+      if (failed) continue
     }
     const summary = `${p.manifest.encounters.length} encounters, ${p.manifest.sets.length} sets, ${Object.keys(p.manifest.figures).length} figures, ${Object.keys(p.manifest.files).length} files (${(bytes / 1e6).toFixed(1)} MB)`
     if (check) {
@@ -172,9 +178,10 @@ async function main() {
     for (const [encounter, staging] of Object.entries(p.stagings)) write(dir, `stage/stagings/${encounter}.json`, staging)
     for (const [set, spec] of Object.entries(p.sets)) write(dir, `stage/sets/${set}.json`, spec)
     for (const [rel, plan] of Object.entries(p.plans)) write(dir, `stage/plans/${rel}`, plan)
+    write(dir, "stage/scenes.json", p.scenes)
     write(dir, "stage/looks.json", p.looks)
     write(dir, "stage/figures.json", p.cast)
-    for (const rel of Object.keys(p.manifest.files)) {
+    for (const rel of stageOnly ? [] : Object.keys(p.manifest.files)) {
       mkdirSync(dirname(join(dir, "files", rel)), { recursive: true })
       cpSync(join(PUBLIC, rel), join(dir, "files", rel))
     }

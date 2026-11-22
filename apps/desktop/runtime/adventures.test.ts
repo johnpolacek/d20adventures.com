@@ -6,7 +6,7 @@ import { test } from "node:test"
 import type { Llm } from "@d20/gm-core"
 import { conditionWords } from "@d20/gm-core/sheet/conditions"
 import { findCurrentActor } from "@d20/gm-core/utils/turn-actors"
-import { castIdFor, portraitFor, sceneFor } from "../src/scenes"
+import { castIdFor, portraitFor, sceneFor } from "./scenes-node"
 import { adventureList, game, type Packs, transitionsOf } from "./game"
 import { LocalStore } from "./store"
 

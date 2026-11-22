@@ -1,0 +1,112 @@
+{
+  "the-shipment": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-shipment",
+    "location": "Mordava pier",
+    "where": "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit saloon before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern. Neither hide can be seen from the other.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-transaction": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-transaction",
+    "location": "Riverboat saloon",
+    "where": "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-disturbance": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-disturbance",
+    "location": "Mordava pier",
+    "where": "Before dawn at the riverboat's pier. Something stirred on the bank. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-escape": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-escape",
+    "location": "Mordava woods",
+    "where": "A trail runs from the pier along the misty riverbank and into the woods toward Kordavos.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-fake": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-fake",
+    "location": "Riverboat saloon",
+    "where": "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "battle-on-the-boat": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "battle-on-the-boat",
+    "location": "Riverboat saloon",
+    "where": "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "overboard": {
+    "set": "realm-of-myr/mordava-river-pier-empty",
+    "staging": "overboard",
+    "location": "Mordava pier",
+    "where": "The pier just before dawn, after the riverboat has cast off and gone downstream into the mist. The gangway ends over open water. Lyra stands soaked in the reeds beside it. Poppen is in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank downstream. Neither hide can be seen from the other.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-crate": {
+    "set": "realm-of-myr/mordava-river-pier",
+    "staging": "the-crate",
+    "location": "Riverboat saloon",
+    "where": "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "return-to-the-city": {
+    "set": "realm-of-myr/kordavos-riverfront",
+    "staging": "return-to-the-city",
+    "location": "Kordavos riverfront",
+    "where": "The quay along the river in Kordavos, ships at their moorings and the castle on its hill above the city.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  },
+  "the-end": {
+    "set": "realm-of-myr/old-forest-path",
+    "staging": "the-end",
+    "location": "The old forest",
+    "where": "A mossy path winds between huge old trees in green-gold light.",
+    "party": [
+      "lyra",
+      "poppen",
+      "thalbern"
+    ]
+  }
+}

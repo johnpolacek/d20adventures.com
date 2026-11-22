@@ -1,0 +1,53 @@
+{
+  "well-met": {
+    "set": "realm-of-myr/marquis-road",
+    "staging": "well-met",
+    "location": "The Marquis Road",
+    "where": "Morning on the Marquis Road through wooded hills of firs under pale rock peaks. The party has stopped at a wayside shrine on the west verge, where Sister Mira rests. Dmitri Volkov rides up the road at the head of his caravan: two covered wagons marked with a black wolf's head, a teamster, pack horses at the tail and two guards alongside. Elaraen stands with his lute by the milestone across the road.",
+    "party": [
+      "hero-1",
+      "hero-2",
+      "hero-3"
+    ],
+    "spare": [
+      [
+        -1.2,
+        -0.6
+      ]
+    ]
+  },
+  "the-fortune-teller": {
+    "set": "realm-of-myr/marquis-road-fortune",
+    "staging": "the-fortune-teller",
+    "location": "The Marquis Road",
+    "where": "Afternoon on the Marquis Road nearer Kordavos, between giant old trees, the road busy with travellers going both ways. Borina Runetongue sits at a small carpeted table with a crystal ball and her cards, under a great tree on the west verge. The party stands before her table.",
+    "party": [
+      "hero-1",
+      "hero-2",
+      "hero-3"
+    ],
+    "spare": [
+      [
+        -2.9,
+        0.6
+      ]
+    ]
+  },
+  "the-gates-ahead": {
+    "set": "realm-of-myr/kordavos-south-gate",
+    "staging": "the-gates-ahead",
+    "location": "Before the gates of Kordavos",
+    "where": "The Marquis Road at the end of the long line of travellers, merchants and villagers waiting outside the south gate of Kordavos, its towers hung with Asterian and Valkaran banners. Festival music carries from the city.",
+    "party": [
+      "hero-1",
+      "hero-2",
+      "hero-3"
+    ],
+    "spare": [
+      [
+        3.8,
+        79.8
+      ]
+    ]
+  }
+}

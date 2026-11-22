@@ -45,6 +45,8 @@ One folder, or one archive of it, named by the adventure's id:
    - The kit stays the app's: `stage/textures`, `sounds`, `crowd`, `trees`, `realm`, `heroes`, `photoreal.json`.
    - Still code, for phase 3: `apps/desktop/src/scenes.ts` (`PORTRAITS`, `PREMADE_FIGURES`), `npc-portraits.ts`, and the set and staging loaders in `@d20/stage/sets`.
 3. Teach the app to load stage data from a package, not from compiled source. Bundled adventures become bundled packages.
+   - Done 2026-11-22: the desktop app's scenes. The table in `apps/desktop/src/scenes.ts` is now each adventure's `scenes.json`, carried in its package. The desktop build copies each bundled package's `stage/` to `/adventures/<id>/stage` for the window (`src/stage-data.ts`) and to resources for the runtime (`runtime/scenes-node.ts`). All 69 scenes built from data match the old table.
+   - Left: the runtime's floor plans (`runtime/floor.ts` still reads `@d20/stage/plans`), a played look's figures (`asset-library/play.ts` reads `FIGURES`), and the portrait lists in `scenes.ts` and `npc-portraits.ts`. The website keeps the compiled stage: it plays the demo alone.
 4. Fetch figures and files per package on first play into the app data folder, keyed by hash. Stop copying `public/stage` and figures into the build. This settles the app's size at any number of figures.
 5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.
 6. Later: publish a creator's package to the site, and the pipeline running on the player's machine with their own keys.

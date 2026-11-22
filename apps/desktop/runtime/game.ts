@@ -14,7 +14,7 @@ import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/chara
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { z } from "zod"
-import { scenePlaces } from "../src/scenes"
+import { scenePlaces } from "./scenes-node"
 import { applyCharacterUpdates, characterContext, desktopPatchSchema } from "./characters"
 import { encounterFloor } from "./floor"
 import { gmModelSchema, partyFor, writeArrivals } from "./heroes"

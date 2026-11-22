@@ -1,0 +1,65 @@
+{
+  "broken-silence": {
+    "set": "realm-of-myr/valkarr-forest-trail",
+    "staging": "broken-silence",
+    "location": "Valkarr woods",
+    "where": "Thalbern walks a deer trail through the Valkarr woods at night toward the Old Standing Stones.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "the-owlbear-prowls": {
+    "set": "realm-of-myr/valkarr-forest-trail",
+    "staging": "the-owlbear-prowls",
+    "location": "Valkarr woods",
+    "where": "Thalbern hides in cover beside the deer trail as an owlbear comes out of the tree line onto the trail ahead, unaware of him.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "owlbear-confrontation": {
+    "set": "realm-of-myr/valkarr-forest-trail",
+    "staging": "owlbear-confrontation",
+    "location": "Valkarr woods",
+    "where": "An owlbear faces Thalbern across a small moonlit clearing on the deer trail.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "timely-rescue": {
+    "set": "realm-of-myr/valkarr-forest-trail",
+    "staging": "timely-rescue",
+    "location": "Valkarr woods",
+    "where": "Thalbern lies wounded by the great oak beside the trail as Wollandora steps out of the trees.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "meeting-at-the-stones": {
+    "set": "realm-of-myr/old-standing-stones",
+    "staging": "meeting-at-the-stones",
+    "location": "Old Standing Stones",
+    "where": "Moonlight fills the clearing where a line of ancient standing stones runs beside the river.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "preparing-for-the-city": {
+    "set": "realm-of-myr/thalberns-forest-home",
+    "staging": "preparing-for-the-city",
+    "location": "Thalbern's home",
+    "where": "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.",
+    "party": [
+      "thalbern"
+    ]
+  },
+  "back-home": {
+    "set": "realm-of-myr/thalberns-forest-home",
+    "staging": "back-home",
+    "location": "Thalbern's home",
+    "where": "Morning sun falls on Thalbern's stone and timber cottage at the edge of the woods.",
+    "party": [
+      "thalbern"
+    ]
+  }
+}

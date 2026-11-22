@@ -4,7 +4,7 @@ import { test } from "node:test"
 import { placeCharacters, standingWords } from "@d20/gm-core/sheet/placement"
 import { buildLocalWikiTurnCharacters } from "@d20/gm-core/wiki-adventures/characters"
 import { STOCK_FIGURES } from "../src/figures"
-import { castIdFor, partyScene, portraitFor, sceneFor } from "../src/scenes"
+import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes-node"
 import { encounterFloor } from "./floor"
 import type { Packs } from "./game"
 

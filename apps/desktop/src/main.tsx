@@ -11,10 +11,12 @@ import { invoke, isTauri } from "@tauri-apps/api/core"
 import { createRoot } from "react-dom/client"
 import { narratorEngine } from "./bridge"
 import { DesktopGame } from "./play"
+import { loadStages } from "./stage-data"
 import "./style.css"
 // The app's narrator runs in Node. A browser tab in development keeps the browser's.
 if (isTauri()) setNarratorEngine(narratorEngine)
-const start = () => createRoot(document.getElementById("root")!).render(<DesktopGame />)
+// The scenes come from the app's adventure packages, so they are loaded before anything shows.
+const start = () => loadStages().then(() => createRoot(document.getElementById("root")!).render(<DesktopGame />))
 // In a browser tab during development there is no Tauri, so the bridge goes to the dev server instead.
 if (import.meta.env.DEV && !isTauri()) void import("./preview").then((m) => m.installPreview()).then(start)
 else start()

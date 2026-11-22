@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { cp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
@@ -44,6 +45,14 @@ await build({
 await rm(resolve(app, "public"), { recursive: true, force: true })
 await mkdir(resolve(app, "public/images/app"), { recursive: true })
 await cp(resolve(root, "public/stage"), resolve(app, "public/stage"), { recursive: true })
+// Each bundled adventure's stage, from its package (scripts/adventure-packages.ts): the window fetches it at
+// /adventures/<id>/stage (src/stage-data.ts), and the runtime reads it from resources (runtime/scenes-node.ts).
+execFileSync(resolve(root, "node_modules/.bin/tsx"), [resolve(root, "scripts/adventure-packages.ts"), ...ADVENTURES, "--stage-only"], { cwd: root, stdio: ["ignore", "ignore", "inherit"] })
+await rm(resolve(app, "src-tauri/resources/adventures"), { recursive: true, force: true })
+for (const into of ["public/adventures", "src-tauri/resources/adventures"]) {
+  for (const id of ADVENTURES) await cp(resolve(root, `build/adventures/${id}/stage`), resolve(app, `${into}/${id}/stage`), { recursive: true })
+  await writeFile(resolve(app, `${into}/index.json`), JSON.stringify(ADVENTURES))
+}
 for (const name of ["backgrounds", "art"]) await cp(resolve(root, `public/images/app/${name}`), resolve(app, `public/images/app/${name}`), { recursive: true })
 // The header's logo.
 await cp(resolve(root, "public/images/d20.jpg"), resolve(app, "public/images/d20.jpg"))
