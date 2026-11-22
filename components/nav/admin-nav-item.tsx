@@ -1,7 +1,7 @@
 "use client"
 
 import { useUser } from "@clerk/nextjs"
-import { ClipboardListIcon, ShieldCheckIcon } from "lucide-react"
+import { ShieldCheckIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -41,7 +41,6 @@ export function AdminNavItem() {
 
   const links = [
     { href: "/admin", label: "Admin", icon: ShieldCheckIcon, isActive: pathname === "/admin" },
-    { href: "/admin/adventure-plans", label: "Plans", icon: ClipboardListIcon, isActive: pathname.startsWith("/admin/adventure-plans") },
   ]
 
   // Only an admin sees the admin links

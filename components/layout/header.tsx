@@ -64,6 +64,16 @@ export default function Header() {
       <div className="flex flex-1 justify-end items-center scale-90 sm:scale-100 -mt-1 sm:-mt-0 gap-4 sm:gap-8 pl-4">
         {/* Shown only on a page in Ledger, which also draws this header as a quiet strip (app/updates/updates.css). */}
         <UpdateThemeToggle />
+        <Link
+          data-site-about
+          href="/about"
+          className={cn(
+            "text-xs sm:text-sm font-bold font-display tracking-wide transition-[color,opacity] duration-150 hover:text-accent-950 active:opacity-70",
+            path === "/about" ? "text-accent-950" : "text-accent-950/70"
+          )}
+        >
+          About
+        </Link>
         <AdminNavItem />
         <AuthButtons />
       </div>

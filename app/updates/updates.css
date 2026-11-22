@@ -172,6 +172,12 @@ html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand]:focus-v
       opacity 150ms;
   }
 }
+body:has(.updates-page) [data-site-about] {
+  color: var(--up-muted);
+}
+body:has(.updates-page) [data-site-about]:hover {
+  color: var(--up-strong);
+}
 body:has(.updates-page) [data-site-header] .text-white\/60 {
   color: var(--up-muted);
 }
