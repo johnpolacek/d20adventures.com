@@ -1,6 +1,6 @@
 # D20 Adventures Agent Guide
 
-Auto-commit local changes whenever confident that the code is good and there are no questions about implementation. Prefer to pull before work when it is safe and useful.
+Commit and push to `main` when the work is done and nothing about it is in question.
 
 ## Checks
 
@@ -20,13 +20,6 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - A post for `/updates` (`content/updates/*.md`, in John's voice): `docs/writing-voice.md`.
 - Rules work toward full SRD 5.2.1: `plans/srd-rules.md`. Other open multi-session plans live in `plans/`.
 - Stage UI motion and `enter-*` classes: `plans/stage-motion.md`.
-
-## Working Rules
-
-- Inspect existing files and Git state before writing.
-- Preserve user-authored files and existing Git history.
-- For admin/editor UI, keep surfaces dense and operational: do not add explanatory helper text, status phrases, or "what this does" copy unless the user asks for it or it is required for accessibility, validation, or error handling.
-- Name unknowns and contradictions instead of inventing certainty.
 
 ## Where to Look
 
@@ -54,7 +47,6 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Convex functions reach production only by `pnpm convex:deploy`, not by a push. Never edit `convex/_generated`, which `npx convex codegen` writes.
 - Auto mode blocks `pnpm convex:deploy`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`.
 - `proxy.ts` is the Clerk middleware.
-- The shell is zsh, which fails a whole command on an unquoted glob. Quote it, as in `grep -rn --include='*.ts'`, or use `git grep`.
 - There is no `wiki/`, `tailwind.config.ts`, Prettier or Biome. Match the formatting of the file you edit.
 - Scratchpad scripts cannot resolve `@d20/*` imports. Import the package's source file by absolute path.
 - Pull with `git pull --rebase --autostash`. Plain `--rebase` fails on unstaged changes.
@@ -63,22 +55,10 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Site code imports `served` from `lib/served.ts`, which names the asset host on the server and in the browser alike. Background textures in CSS read the `--tex-*` variables that `app/layout.tsx` sets on `<html>`.
 - Run `pnpm images:sync` after adding or repainting a picture the content names, then commit `lib/images-manifest.json`. `lib/images.ts` picks a size: `picture()` for an `<img>` with a size list, `pictureAt()` for a single address. The site does not use `next/image`.
 
-## Automation Policy
+## Branches and Dev
 
-- Commit code changes: allow
-- Push changes: allow
-- Install dependencies: allow
-- Run long commands: ask
-- Create plans before code: optional, large work only
-
-## Branches
-
-Owner decision, 2026-10-10: the project is back in alpha with no players, so work happens directly on `main`. This replaces the 2026-10-08 decision to use feature branches. Worktrees return at beta.
-
-- Commit to `main` in the main checkout. Do not create feature branches or git worktrees, and do not run `pnpm wt:create`.
-- `pnpm dev` starts Convex, the website, and the desktop app pointed at the local website. `pnpm dev:web` starts the website alone, and `pnpm dev:app` the app alone.
-- `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
-- The `wt:*` scripts remain for reference until beta.
+- Work on `main` in the main checkout. No feature branches or worktrees until beta.
+- `pnpm dev` starts Convex, the website, and the desktop app. `pnpm dev:web` and `pnpm dev:app` start one each. `pnpm dev:fresh` kills the ports first.
 
 ## Doc Upkeep
 
