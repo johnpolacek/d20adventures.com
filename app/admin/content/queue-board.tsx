@@ -230,17 +230,21 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            await navigator.clipboard.writeText(briefFor({ ...item, title, longTitle }))
-            setCopied("brief")
-            setTimeout(() => setCopied(""), 1200)
-          }}
-        >
-          {copied === "brief" ? "Copied" : "Copy Brief"}
-        </Button>
+        {/* A prompt to paste into Claude, which writes the /updates post. Gone once the idea has its post. */}
+        {!item.post && (
+          <Button
+            variant="outline"
+            size="sm"
+            title="Copies a prompt for Claude to write this idea’s /updates post"
+            onClick={async () => {
+              await navigator.clipboard.writeText(briefFor({ ...item, title, longTitle }))
+              setCopied("brief")
+              setTimeout(() => setCopied(""), 1200)
+            }}
+          >
+            {copied === "brief" ? "Copied" : "Copy Post Prompt"}
+          </Button>
+        )}
         <Button size="sm" disabled={!dirty || pending} onClick={save}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
         </Button>
