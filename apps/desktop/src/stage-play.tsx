@@ -9,6 +9,7 @@ import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
 import type { Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
+import { compose, planTakes, type Take } from "@d20/stage/director"
 import { served } from "@d20/stage/served"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -43,6 +44,7 @@ import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import type { Save } from "../runtime/store"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
+import { storyMoments } from "./moments"
 import { castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 
 // The built looks the game plays its sets in, loaded with the stage.
@@ -768,37 +770,6 @@ export function StagePlay(props: {
       if (low !== stage.isLow(id)) stage.setLow(id, low, fresh)
     }
   }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, walks, onError])
-  // Each paragraph moves the camera to fit it: its first speaker, someone making an entrance, whoever it is about, or
-  // the place it describes. The first view on a new stage is a cut, not a glide from its opening view.
-  const framed = useRef<Stage | null>(null)
-  useEffect(() => {
-    if (!stage || !reading) return
-    const cut = framed.current !== stage
-    framed.current = stage
-    const go = (which: Parameters<Stage["shot"]>[0], follow: string[] = []) => stage.shot(which, { instant: cut, follow })
-    if (speech.length) return void go({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
-    if (departing?.shot) return void go(departing.shot)
-    if (arriving) {
-      if (arriving.shot) return void go(arriving.shot)
-      // Facing the way they come: from beyond their place, looking back at where they enter.
-      const mark = (at: string | number[] | undefined) => (typeof at === "string" ? stage.set.marks[at]?.at : at)
-      const home = mark(stage.staging?.cast.find((c) => c.id === arriving.cast)?.at)
-      const from = mark(arriving.from)
-      if (home && from) {
-        const [fx, fz] = from
-        const [hx, hz] = home
-        const d = Math.hypot(hx - fx, hz - fz) || 1
-        const k = 3.6 / d
-        return void go({ position: [hx + (hx - fx) * k, 1.75, hz + (hz - fz) * k], target: [(fx + hx) / 2, 1.3, (fz + hz) / 2], fov: 50 })
-      }
-      return void go({ subject: arriving.cast, distance: 5.5, angle: 12, height: 1.8, lookHeight: 1.2, fov: 48 })
-    }
-    const view = beats[paragraph]?.view
-    if (!view) return
-    const shot = shotFor(stage, view, heroes.current)
-    // A walk under way in this paragraph is followed: two facing off keep both in the picture.
-    if (shot) go(shot, "pair" in view ? view.pair : [])
-  }, [stage, speech, departing, arriving, beats, paragraph, reading])
   // What labelled paragraphs do on stage: effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
   // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
@@ -839,6 +810,69 @@ export function StagePlay(props: {
     }
     return out
   }, [paragraphs, turn?._id, turn?.characters])
+  // Each paragraph as a moment for the stage's director (packages/stage/src/director.ts): a crit, a death, a threat, a
+  // quiet word, a monster coming on. The director plans the turn's takes as one sequence, so every player sees the same.
+  const plans = useMemo(() => {
+    if (!stage || !turn) return []
+    const spot = (at: string | number[] | undefined) => (typeof at === "string" ? stage.set.marks[at]?.at : at) as [number, number] | undefined
+    // Heroes the turn leaves dying: dropped in the last paragraph that hurt them.
+    const dropped = new Map<number, string[]>()
+    for (const c of turn.characters) {
+      const id = c.type === "pc" && c.hitPoints === 0 && !isDead(c) ? castOf(c.id) : undefined
+      if (!id) continue
+      const at = paragraphs.findLastIndex((p) => p.beats.some((b) => b.kind === "roll" && (b.attack?.target === c.id || b.harm?.some((h) => h.target === c.id && h.kind === "damage"))))
+      if (at >= 0) dropped.set(at, [...(dropped.get(at) ?? []), id])
+    }
+    const moments = storyMoments(paragraphs, {
+      castOf,
+      big: (id) => {
+        const c = stage.cast.find((m) => m.id === id)
+        return !!c && (c.height >= 2.3 || c.voice === "beast")
+      },
+      killed: (i) => [...exits].flatMap(([id, e]) => (!e.run && e.at === i ? [id] : [])),
+      dropped: (i) => dropped.get(i) ?? [],
+      arriving: (i) => {
+        const e = cues.find((c) => c.at === i)
+        const from = spot(e?.from)
+        const home = spot(e && (spots.get(e.cast)?.at ?? stage.staging?.cast.find((c) => c.id === e.cast)?.at))
+        return e && from && home ? { cast: e.cast, from, home } : undefined
+      },
+      effects: (i) =>
+        (staged.get(i) ?? []).flatMap(({ beat, effect, miss }) => {
+          const actor = castOf(beat.actor)
+          return effect && beat.effect && actor ? [{ actor, target: castOf(beat.target), kind: beat.effect.kind, miss }] : []
+        }),
+      party: heroes.current.filter((id) => stage.isOnStage(id)),
+    })
+    return planTakes(moments, turn._id)
+  }, [stage, turn, paragraphs, castOf, exits, cues, spots, staged])
+  // The camera answers a change in the paragraph's plan, not each save that rebuilds it, which would restart the take.
+  const plansRef = useRef(plans)
+  plansRef.current = plans
+  const planKey = JSON.stringify(plans[paragraph] ?? null)
+  // Each paragraph moves the camera to fit it, as the director shoots its moment. An author's shot for an entrance or
+  // an exit is kept, with the take's move. A paragraph the director has no take for frames its first speaker or the
+  // place it describes. The first view on a new stage is a cut, not a glide from its opening view.
+  const framed = useRef<Stage | null>(null)
+  useEffect(() => {
+    if (!stage || !reading) return
+    const cut = framed.current !== stage
+    framed.current = stage
+    const plan = plansRef.current[paragraph]
+    const cast = stage.cast.filter((c) => stage.isOnStage(c.id))
+    const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, 4).short }) : null
+    const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) =>
+      stage.shot(which, { instant: cut || !!t?.cut, follow, duration: t?.duration, ease: t?.ease, move: t?.move, impact: t?.impact, take: t?.label })
+    if (departing?.shot) return void go(departing.shot, take)
+    if (arriving?.shot) return void go(arriving.shot, take)
+    if (take) return void go(take.shot, take)
+    if (speech.length) return void go({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }, null)
+    const view = beats[paragraph]?.view
+    if (!view) return
+    const shot = shotFor(stage, view, heroes.current)
+    // A walk under way in this paragraph is followed: two facing off keep both in the picture.
+    if (shot) go(shot, null, "pair" in view ? view.pair : [])
+  }, [stage, speech, departing, arriving, beats, planKey, paragraph, reading])
   const played = useRef(new Set<string>())
   // The paragraph on screen, so an effect waiting on the camera is dropped once the reader moves on.
   const showing = useRef("")

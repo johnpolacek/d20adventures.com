@@ -4,6 +4,7 @@
 // quality switches and render stats. three.js loads inside the effect, so nothing WebGL touches the server bundle.
 
 import type { Flags, Stage, StageStats, TierName } from "@d20/stage"
+import { compose, type Moment, planTakes } from "@d20/stage/director"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@d20/ui/button"
 import { Tip } from "@d20/ui/tooltip"
@@ -24,6 +25,56 @@ interface Speaker {
 
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
+
+// The director's takes, played on the staging's first two cast members (a acts, b is acted on), with the effect or the
+// fall the moment would bring, so the impact and the move can be judged as they play.
+type Play = "slash" | "bolt" | "burst" | "fall" | null
+const TAKES: { key: string; moment: (a: string, b: string, s: Stage) => Moment; play: Play }[] = [
+  { key: "establish", moment: (a, b) => ({ kind: "establish", party: [a, b] }), play: null },
+  { key: "calm", moment: (a, b) => ({ kind: "line", speaker: a, listener: b, tone: "calm" }), play: null },
+  { key: "reply", moment: (a, b) => ({ kind: "line", speaker: b, listener: a, tone: "calm" }), play: null },
+  { key: "tense", moment: (a, b) => ({ kind: "line", speaker: a, listener: b, tone: "tense" }), play: null },
+  { key: "hushed", moment: (a, b) => ({ kind: "line", speaker: a, listener: b, tone: "hushed" }), play: null },
+  { key: "shout", moment: (a, b) => ({ kind: "line", speaker: a, listener: b, tone: "loud" }), play: null },
+  { key: "windup", moment: (a, b) => ({ kind: "windup", actor: a, target: b, outcome: "hit" }), play: null },
+  { key: "hit", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "hit" }), play: "slash" },
+  { key: "crit windup", moment: (a, b) => ({ kind: "windup", actor: a, target: b, outcome: "crit" }), play: null },
+  { key: "crit", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "crit" }), play: "slash" },
+  { key: "miss", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "miss" }), play: null },
+  { key: "fumble", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "fumble" }), play: null },
+  { key: "bolt", moment: (a, b) => ({ kind: "spell", actor: a, target: b, outcome: "hit" }), play: "bolt" },
+  { key: "burst", moment: (a) => ({ kind: "spell", actor: a, area: true, outcome: "hit" }), play: "burst" },
+  { key: "kill", moment: (a, b) => ({ kind: "kill", victim: b, killer: a }), play: "fall" },
+  { key: "death save", moment: (a) => ({ kind: "deathSave", hero: a, success: false }), play: null },
+  { key: "nat 20", moment: (a) => ({ kind: "check", actor: a, success: true, natural: 20 }), play: null },
+  { key: "heal", moment: (a, b) => ({ kind: "heal", actor: a, target: b }), play: null },
+  {
+    key: "monster",
+    moment: (a, b, s) => {
+      const c = s.castAt(b)
+      return { kind: "entrance", who: b, monster: true, from: [c.x + Math.sin(c.ry) * 8, c.z + Math.cos(c.ry) * 8], home: [c.x, c.z] }
+    },
+    play: null,
+  },
+]
+let takeCount = 0
+function playTake(stage: Stage, t: (typeof TAKES)[number]) {
+  const [a, b] = stage.cast.filter((c) => stage.isOnStage(c.id)).map((c) => c.id)
+  if (!a || !b) return
+  for (const id of [a, b]) if (stage.isDown(id)) stage.setDown(id, false, true)
+  const [plan] = planTakes([t.moment(a, b, stage)], `dev:${takeCount++}`)
+  const take = plan && compose(plan, { cast: stage.cast.filter((c) => stage.isOnStage(c.id)), clear: (from, at) => !stage.reach(from.id, at, 4).short })
+  if (!take) return
+  stage.shot(take.shot, { instant: take.cut, follow: take.follow, duration: take.duration, ease: take.ease, move: take.move, impact: take.impact, take: take.label })
+  void stage.shotSettled().then(() => {
+    if (t.play === "slash" || t.play === "bolt") void stage.effect(t.play, a, b, t.play === "bolt" ? "lightning" : undefined)
+    if (t.play === "burst") void stage.effect("burst", a, undefined, "fire")
+    if (t.play === "fall") {
+      void stage.effect("slash", a, b)
+      setTimeout(() => stage.setDown(b, true), 900)
+    }
+  })
+}
 
 function flagsFrom(p: Props["params"]): Partial<Flags> {
   const f: Partial<Flags> = {}
@@ -207,6 +258,14 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 </Button>
               </Tip>
             ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {TAKES.map((t) => (
+              <Button variant="plain" key={t.key} className={pill(false)} onClick={() => set((s) => playTake(s, t))}>
+                {t.key}
+              </Button>
+            ))}
+            {stats?.take && <span className="self-center opacity-60">{stats.take}</span>}
           </div>
           <details
             open={more}

@@ -10,6 +10,7 @@ import { Models } from "./figures/models"
 import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
 import { createRand, hashSeed } from "./kit/rng"
+import { type CameraMove, type Ease, eased, type Impact } from "./director"
 import { birds, type Disposable, dust, type LifeUpdate, land } from "./life"
 import { LookControls } from "./look"
 import { QueueLoop } from "./loops/queue"
@@ -60,6 +61,8 @@ export interface StageStats {
   ao: boolean
   bloom: boolean
   shot: string | null
+  // The director's name for the take on screen (director.ts), when a take put it there.
+  take: string | null
   // The painted point the camera stands at, in a painted set.
   point: string | null
   camera: number[]
@@ -133,7 +136,16 @@ const PEOPLE_STILL = true
 // view fitted to the edge of its painting stays on the paint.
 const DRIFT_SECONDS = 7
 const DRIFT_PUSH = 0.03
-type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number }
+type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number; ease: Ease }
+// A take's move once the camera has arrived (see director.ts): `start` on the stage's clock when it began, null until
+// the camera arrives, and `done` the share of it already made.
+type Moving = CameraMove & { start: number | null; done: number }
+// A shake's seconds: how long a jolt takes to die away, and how long a lens punch takes to reach its widest.
+const SHAKE_SECONDS = 0.32
+const PUNCH_RISE = 0.05
+// The most a full shake turns the camera, and a full punch tightens the lens.
+const SHAKE_ANGLE = THREE.MathUtils.degToRad(1.5)
+const PUNCH_ZOOM = 0.12
 
 export class Stage {
   readonly canvas: HTMLCanvasElement
@@ -223,6 +235,14 @@ export class Stage {
   // How far it has still to go round, in radians, when the shot gave a sweep.
   private sweepLeft = Number.POSITIVE_INFINITY
   private followed = new Map<string, { x: number; z: number }>()
+  // The take's move, its dutch tilt now (radians), an impact waiting for the next blow to land, and the jolts playing.
+  private moving: Moving | null = null
+  private roll = 0
+  private waiting: (Impact & { until: number }) | null = null
+  private jolts: { shake: number; punch: number; at: number; seed: number }[] = []
+  private joltTimers: ReturnType<typeof setTimeout>[] = []
+  // What the current take is, by the director's name for it.
+  take: string | null = null
   private insets = { right: 0, bottom: 0 }
   private raf = 0
   private running = false
@@ -398,6 +418,12 @@ export class Stage {
         this.body(id, "struck")
       },
       event: (e) => {
+        // The take's impact comes as the blow lands on someone.
+        const w = this.waiting
+        if (w && e.type === "effect" && e.phase === "land" && e.struck && performance.now() < w.until) {
+          this.waiting = null
+          this.jolt(w.shake, w.punch ?? 0)
+        }
         for (const l of this.effectListeners) l(e)
       },
       camera: this.camera,
@@ -489,6 +515,7 @@ export class Stage {
       this.transition = null
       this.driving = true
       this.circling = 0
+      this.moving = null
       // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
       // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
       c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
@@ -615,7 +642,20 @@ export class Stage {
   }
   // A named shot, or an inline one (absolute, group or subject). Eased over 2.2 s unless instant or motion is off.
   // The camera follows whoever of its subjects walks, and anyone in `follow`.
-  shot(which: string | StagingShot, { instant = false, duration = 2200, follow = [] as string[] } = {}) {
+  // `ease` shapes the glide, `move` keeps the camera moving once it arrives, and `impact` jolts it, now or as the next
+  // blow lands on someone (see director.ts). A shot without a move lets the last one's tilt ease away.
+  shot(
+    which: string | StagingShot,
+    {
+      instant = false,
+      duration = 2200,
+      follow = [] as string[],
+      ease = "glide" as Ease,
+      move,
+      impact,
+      take,
+    }: { instant?: boolean; duration?: number; follow?: string[]; ease?: Ease; move?: CameraMove; impact?: Impact; take?: string } = {}
+  ) {
     let s: ResolvedShot | undefined
     const authored = typeof which === "string" ? this.staging?.shots[which] : which
     const painted = this.painted?.on ? this.painted : null
@@ -630,6 +670,21 @@ export class Stage {
     }
     if (!s) return false
     this.asked = { which, follow, duration }
+    this.take = take ?? null
+    // On a painted set the last take's push is a tighter lens: the new view glides from it, rather than pop wide.
+    const pushed = this.pushZoom()
+    if (pushed !== 1) {
+      this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) / pushed))
+      this.camera.updateProjectionMatrix()
+    }
+    this.moving = move && this.motion ? { ...move, start: null, done: 0 } : null
+    for (const t of this.joltTimers) clearTimeout(t)
+    this.joltTimers = []
+    this.waiting = null
+    if (impact && this.motion) {
+      if (impact.on === "land") this.waiting = { ...impact, until: performance.now() + 12_000 }
+      else this.joltTimers.push(setTimeout(() => this.jolt(impact.shake, impact.punch ?? 0), (impact.delay ?? 0) * 1000))
+    }
     this.framed = new Set(on)
     // A walker the new shot is not on is let go. One it is on is followed from where they stand now.
     for (const id of this.followed.keys()) if (!this.framed.has(id)) this.followed.delete(id)
@@ -652,7 +707,7 @@ export class Stage {
         this.spot(),
         (p) => (one ? this.blocked(p, framed.target) : 0) + this.backs(p, framed.position, members)
       )
-      this.standOn(view, instant, duration)
+      this.standOn(view, instant, duration, ease)
       return true
     }
     const to = { pos: V(...s.position), target: V(...s.target), fov: this.lens(s.fov) }
@@ -673,7 +728,7 @@ export class Stage {
       this.settle()
     } else {
       const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
-      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration }
+      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration, ease }
     }
     return true
   }
@@ -841,6 +896,80 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.settle()
   }
 
+  // ── Takes: moves, tilts and jolts (director.ts) ──
+  // A jolt, as a blow lands: the camera shakes and the lens kicks in, both dying away in a fraction of a second.
+  jolt(shake: number, punch = 0) {
+    if (!this.motion || (shake <= 0 && punch <= 0)) return
+    this.jolts.push({ shake: THREE.MathUtils.clamp(shake, 0, 1), punch: THREE.MathUtils.clamp(punch, 0, 1), at: this.shared.time.value, seed: Math.random() * 100 })
+  }
+  // How far along the take's move is, 0..1, easing out.
+  private moveShare(m: Moving) {
+    if (m.start === null) return 0
+    const t = THREE.MathUtils.clamp((this.shared.time.value - m.start - (m.delay ?? 0)) / Math.max(0.1, m.seconds), 0, 1)
+    return 1 - (1 - t) ** 3
+  }
+  // On a painted set, whose camera cannot leave its point, a push is the lens closing in.
+  private pushZoom() {
+    const m = this.moving
+    if (!m?.push || !this.tripod) return 1
+    return 1 / Math.max(0.4, 1 - m.push * this.moveShare(m))
+  }
+  // The take's move, made a step at a time once the camera has arrived, so the player's drag or someone walking it
+  // follows still compose with it. It ends short of a wall or a trunk.
+  private stepMove() {
+    const m = this.moving
+    if (!m || this.transition || this.cut) return
+    if (m.start === null) m.start = this.shared.time.value
+    const share = this.moveShare(m)
+    const d = share - m.done
+    m.done = share
+    if (d <= 0 || this.tripod || !this.controls) return
+    const p = this.camera.position
+    const t = this.controls.target
+    const next = p.clone().addScaledVector(V().subVectors(t, p), (m.push ?? 0) * d)
+    next.y += (m.rise ?? 0) * d
+    // Never through what it looks at, nor below the ground.
+    if (next.distanceTo(t) < 0.6 || next.y < 0.25 || !roomAt(this.sight, next.x, next.y, next.z)) {
+      this.moving = { ...m, push: 0, rise: 0 }
+      return
+    }
+    p.copy(next)
+  }
+  // Draws the frame with the take's tilt and any jolt, then puts the camera back as it was, so the controls and the
+  // tripod never see them.
+  private rendered(dt: number) {
+    const m = this.moving
+    const want = m?.roll && this.motion ? THREE.MathUtils.degToRad(m.roll) * Math.max(this.moveShare(m), this.transition ? 0 : 0.15) : 0
+    this.roll += (want - this.roll) * (1 - Math.exp(-dt / 0.35))
+    if (Math.abs(this.roll) < 1e-5) this.roll = 0
+    const now = this.shared.time.value
+    this.jolts = this.jolts.filter((j) => now - j.at < SHAKE_SECONDS * 4)
+    let yaw = 0
+    let pitch = 0
+    let kick = 0
+    for (const j of this.jolts) {
+      const t = now - j.at
+      const fade = Math.exp(-t / SHAKE_SECONDS)
+      yaw += Math.sin(t * 61 + j.seed) * Math.sin(t * 23 + j.seed * 2) * j.shake * SHAKE_ANGLE * fade
+      pitch += Math.sin(t * 53 + j.seed * 3) * j.shake * SHAKE_ANGLE * 0.7 * fade
+      kick += j.punch * PUNCH_ZOOM * (t < PUNCH_RISE ? t / PUNCH_RISE : Math.exp(-(t - PUNCH_RISE) / (SHAKE_SECONDS * 0.8)))
+    }
+    if (!this.roll && !yaw && !pitch && !kick) return this.render()
+    const q = this.camera.quaternion.clone()
+    const zoom = this.camera.zoom
+    this.camera.rotateY(yaw)
+    this.camera.rotateX(pitch)
+    this.camera.rotateZ(this.roll)
+    this.camera.zoom = zoom * (1 + kick)
+    this.camera.updateProjectionMatrix()
+    this.camera.updateMatrixWorld()
+    this.render()
+    this.camera.quaternion.copy(q)
+    this.camera.zoom = zoom
+    this.camera.updateProjectionMatrix()
+    this.camera.updateMatrixWorld()
+  }
+
   // ── Tripod (painted sets) ──
   // Where a shot's subject sits on the canvas: the middle of what a docked panel leaves uncovered (see setInsets).
   private spot(): Spot {
@@ -874,7 +1003,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // Take a view from a painted point. On the same point the camera turns and zooms to it. To another point it cuts,
   // through a short fade: the way between two points was never painted.
-  private standOn(view: View, instant: boolean, duration: number) {
+  private standOn(view: View, instant: boolean, duration: number, ease: Ease = "glide") {
     if (this.cut) {
       clearTimeout(this.cut.timer)
       this.cut = null
@@ -907,6 +1036,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         to: { pos: view.point.position.clone(), target: view.target, fov: view.fov },
         start: performance.now(),
         duration,
+        ease,
       }
       return
     }
@@ -1463,7 +1593,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     if (this.transition) {
       const tr = this.transition
       const t = THREE.MathUtils.clamp((performance.now() - tr.start) / tr.duration, 0, 1)
-      const e = t * t * (3 - 2 * t)
+      const e = eased(tr.ease, t)
       this.camera.position.lerpVectors(tr.from.pos, tr.to.pos, e)
       const target = V().lerpVectors(tr.from.target, tr.to.target, e)
       if (this.controls) this.controls.target.copy(target)
@@ -1476,6 +1606,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         this.settle()
       }
     }
+    this.stepMove()
     if (this.tripod) {
       // The camera drifts in to its point, looking at what it was aimed at, and then holds still.
       const { point, aim } = this.tripod
@@ -1483,7 +1614,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       const left = this.motion && amp ? (1 - THREE.MathUtils.clamp((this.shared.time.value - this.arrived) / DRIFT_SECONDS, 0, 1)) ** 3 : 0
       this.camera.position.copy(point.position).add(driftIn(V().subVectors(aim, point.position), this.camera.fov, amp, left))
       this.camera.lookAt(aim)
-      const zoom = amp ? 1 + DRIFT_PUSH * (1 - left) : 1
+      const zoom = (amp ? 1 + DRIFT_PUSH * (1 - left) : 1) * this.pushZoom()
       if (zoom !== this.camera.zoom) {
         this.camera.zoom = zoom
         this.camera.updateProjectionMatrix()
@@ -1501,7 +1632,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     // A fade takes a third of a second, or none with motion off.
     this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
     this.crowd.flush()
-    this.render()
+    this.rendered(dt)
     if (++this.frame === 3) {
       this.ready = true
       this.readyResolve?.()
@@ -1562,6 +1693,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       ao: this.pipeline.gtao.enabled,
       bloom: this.pipeline.bloom.enabled,
       shot: this.activeShot,
+      take: this.take,
       point: this.tripod?.point.name ?? null,
       camera: this.camera.position.toArray().map((v) => +v.toFixed(2)),
       programs: this.renderer.info.programs?.length ?? 0,
@@ -1750,11 +1882,12 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // A PNG of the current view, rendered on demand (no preserveDrawingBuffer needed: read in the same task).
   capture(): Promise<Blob | null> {
-    this.render()
+    this.rendered(0)
     return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
   }
 
   dispose() {
+    for (const t of this.joltTimers) clearTimeout(t)
     if (this.probe) {
       this.probe.seen.depthTexture?.dispose()
       this.probe.seen.dispose()
