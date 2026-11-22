@@ -139,15 +139,27 @@ function tables(html: string): string {
     .replace(/<td([^>]*)>((?:<strong>)?\$[\d.,]+(?:<\/strong>)?)<\/td>/g, '<td$1 class="up-cell-money">$2</td>')
 }
 
+/** In a section with one "Explore" link, each picture opens that link too. */
+function exploreFigures(html: string): string {
+  return html
+    .split(/(?=<h[23][ >])/)
+    .map((section) => {
+      const links = [...section.matchAll(/<a href="([^"]+)">Explore [^<]*<\/a>/g)]
+      if (links.length !== 1) return section
+      return section.replace(/(<figure class="up-fig[^"]*">)(<img\b[^>]*>)/g, `$1<a href="${links[0][1]}">$2</a>`)
+    })
+    .join("")
+}
+
 // Reading speed, in words a minute.
 const READING_SPEED = 200
 
-/** Markdown to HTML, with the post's sections and reading time. A link whose text starts with "Play" is drawn as a button. */
+/** Markdown to HTML, with the post's sections and reading time. A link whose text starts with "Play" is drawn as a button, and one starting "Explore" makes its section's pictures links. */
 export function renderPost(post: Update): RenderedPost {
   const tokens = markdown.lexer(post.body)
   const depths = tokens.flatMap((token) => (token.type === "heading" ? [token.depth as number] : []))
   run = { top: depths.length ? Math.min(...depths) : 2, sections: [] }
-  const html = tables(figures(markdown.parser(tokens))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-btn is-primary is-lg up-play">$2</a>')
+  const html = exploreFigures(tables(figures(markdown.parser(tokens)))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-btn is-primary is-lg up-play">$2</a>')
   // Tags, link addresses and the lines that open and close a fenced block are not read.
   const words = post.body.replace(/<[^>]+>|\]\([^)]*\)|^```.*$/gm, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
   return { html, sections: run.sections, minutes: Math.max(1, Math.round(words / READING_SPEED)) }
