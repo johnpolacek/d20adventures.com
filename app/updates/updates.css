@@ -544,7 +544,9 @@ body:has(.updates-page) main + footer {
 .up-prose p {
   margin: 0 0 1.25em;
 }
+/* A link is a step heavier than the text around it. In bold text or a heading it keeps that weight. */
 .up-prose a {
+  font-weight: 500;
   color: var(--up-strong);
   text-decoration: underline;
   text-decoration-color: var(--up-accent-line);
@@ -557,6 +559,9 @@ body:has(.updates-page) main + footer {
 .up-prose a:hover {
   color: var(--up-accent);
   text-decoration-color: var(--up-accent);
+}
+.up-prose :is(strong, b, h2, h3, h4) a {
+  font-weight: inherit;
 }
 .up-prose h2 {
   margin: 2.4em 0 0.7em;
