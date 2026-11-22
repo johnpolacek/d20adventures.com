@@ -194,6 +194,24 @@ textarea:-webkit-autofill {
   display: none;
 }
 
+/* An adventure's page enters by script (components/views/adventure-motion.tsx). Until the script takes over, what
+   will enter is hidden. It shows by itself after two seconds, so a page whose script never arrives is still read. */
+@keyframes intro-failsafe {
+  to {
+    visibility: visible;
+  }
+}
+[data-intro-state="pending"] :is([data-enter], h2) {
+  visibility: hidden;
+  animation: intro-failsafe 0s linear 2s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-intro-state="pending"] :is([data-enter], h2) {
+    visibility: visible;
+    animation: none;
+  }
+}
+
 /* Keep last: in this build, plain rules after a nested @starting-style are dropped. */
 .fade-in {
   @apply opacity-100 transition-opacity duration-300 ease-out;

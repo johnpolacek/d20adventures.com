@@ -1,11 +1,12 @@
 import ImageHeader from "@d20/ui/image-header"
 import { AdventureDetails } from "@/components/views/adventure-details"
+import { AdventureMotion } from "@/components/views/adventure-motion"
 import { hostPrompt } from "@/lib/host-prompt"
 import { headerImage } from "@/lib/images"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
 // An adventure's public page: its cover, its badges, and a body that tells what it is or how to host it
-// (adventure-details.tsx). It shows no cast and no places, which would give the story away.
+// (adventure-details.tsx). Every element enters, rests and leaves by adventure-motion.tsx, which finds them by `data-enter`. It shows no cast and no places, which would give the story away.
 
 export function partyLabel(party: AdventurePlan["party"]) {
   if (party[0] === 1 && party[1] === 1) return "Single Player"
@@ -33,14 +34,14 @@ export default function AdventurePreview({
   const premade = plan.premadePlayerCharacters.length > 0
 
   return (
-    <div className="flex min-h-screen flex-col relative">
-      <div className="fade-in delay-150 relative z-10">
+    <div className="relative flex min-h-screen flex-col">
+      <AdventureMotion>
         <ImageHeader {...headerImage(plan.image)} title={plan.title} imageAlt={plan.title} />
         <div className="max-w-3xl mx-auto -mt-32 relative z-10 px-6 pb-24">
           <div className="flex flex-wrap justify-center gap-2">
-            <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
-            {premade && <span className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>}
-            <span className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{hosted ? "Desktop App" : "Play in Browser"}</span>
+            <span data-enter="badge" className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{partyLabel(plan.party)}</span>
+            {premade && <span data-enter="badge" className="bg-accent-500/90 text-black text-3xs font-mono px-2 py-1 rounded font-semibold">Premade Characters</span>}
+            <span data-enter="badge" className="bg-white/10 text-white text-3xs font-mono px-2 py-1 rounded">{hosted ? "Desktop App" : "Play in Browser"}</span>
           </div>
           <AdventureDetails
             settingId={settingId}
@@ -54,7 +55,7 @@ export default function AdventurePreview({
             spent={spent}
           />
         </div>
-      </div>
+      </AdventureMotion>
     </div>
   )
 }

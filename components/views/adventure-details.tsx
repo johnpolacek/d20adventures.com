@@ -6,6 +6,7 @@ import { Heading } from "@d20/ui/typography/heading"
 import Link from "next/link"
 import { useId, useRef, useState } from "react"
 import { CopyBlock } from "@/components/copy-block"
+import { useAdventureLeave } from "@/components/views/adventure-motion"
 import { DEMO_LIMIT_MESSAGE } from "@/lib/demo-limit"
 import { cn } from "@/lib/utils"
 
@@ -59,6 +60,15 @@ export function AdventureDetails({
   const running = useRef<gsap.core.Timeline | null>(null)
   const hostId = useId()
   const headingId = useId()
+  // Play and the link to the demo send the page off before the router moves (adventure-motion.tsx).
+  const leave = useAdventureLeave()
+  const playHref = `/settings/${settingId}/${planId}/character-select`
+  const demoHref = demo ? `/settings/${settingId}/${demo.id}` : ""
+  const sendOff = (href: string) => (event: { preventDefault: () => void }) => {
+    if (!leave) return
+    event.preventDefault()
+    leave(href)
+  }
 
   const swap = () => {
     before.current = frame.current?.offsetHeight ?? 0
@@ -75,8 +85,11 @@ export function AdventureDetails({
       if (!box || !incoming || !outgoing) return
       const direction = view === "host" ? 1 : -1
       const all = [box, incoming, outgoing]
+      // What the host view holds, which arrives one piece at a time once the view is in.
+      const parts = gsap.utils.toArray<HTMLElement>("[data-item]", host.current)
       const rest = () => {
         gsap.set(all, { clearProps: "transform,opacity,visibility,height,overflow" })
+        gsap.set(parts, { clearProps: "transform,opacity,visibility" })
         settled.current = true
         running.current = null
       }
@@ -101,6 +114,7 @@ export function AdventureDetails({
         .to(outgoing, { x: -direction * DISTANCE, opacity: 0, duration: DURATION * 0.5, ease: "power2.in" }, 0)
         // The view arriving waits until the other has mostly gone, so the two texts never overlap to read.
         .to(incoming, { x: 0, opacity: 1, duration: DURATION, ease: "back.out(1.4)" }, turning ? 0 : DURATION * 0.45)
+      if (view === "host") running.current.fromTo(parts, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power3.out", stagger: 0.06 }, turning ? 0 : DURATION * 0.5)
     },
     { dependencies: [view] }
   )
@@ -109,11 +123,11 @@ export function AdventureDetails({
     <>
       <div className="my-8 flex flex-wrap justify-center gap-4">
         {!hosted && !spent && (
-          <Link href={`/settings/${settingId}/${planId}/character-select`}>
+          <Link data-enter="action" href={playHref} onNavigate={sendOff(playHref)}>
             <Button variant="epic">Play</Button>
           </Link>
         )}
-        <span ref={hostButton}>
+        <span ref={hostButton} data-enter="action">
           <Button variant="epic" className="bg-violet-700 text-white" aria-expanded={view === "host"} aria-controls={hostId} onClick={swap}>
             Host
           </Button>
@@ -122,15 +136,19 @@ export function AdventureDetails({
 
       <div ref={frame} className="relative">
         <div ref={about} inert={view !== "about"} className={cn(view === "about" ? "relative" : AWAY)}>
-          {!hosted && spent && <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">{DEMO_LIMIT_MESSAGE}</p>}
+          {!hosted && spent && (
+            <p data-enter="line" className="-mt-2 mb-8 text-center text-sm text-zinc-400">
+              {DEMO_LIMIT_MESSAGE}
+            </p>
+          )}
           {hosted && (
-            <p className="-mt-2 mb-8 text-center text-sm text-zinc-400">
+            <p data-enter="line" className="-mt-2 mb-8 text-center text-sm text-zinc-400">
               One player hosts this adventure in the desktop app, and friends join in a browser.
               {demo && (
                 <>
                   {" "}
                   To play in a browser now, try{" "}
-                  <Link href={`/settings/${settingId}/${demo.id}`} className="text-accent-300 underline underline-offset-2 transition-colors duration-150 hover:text-accent-200">
+                  <Link href={demoHref} onNavigate={sendOff(demoHref)} className="text-accent-300 underline underline-offset-2 transition-colors duration-150 hover:text-accent-200">
                     {demo.title}
                   </Link>
                   .
@@ -138,11 +156,17 @@ export function AdventureDetails({
               )}
             </p>
           )}
-          <p className="text-lg text-zinc-200">{teaser || overview}</p>
-          {teaser && overview && overview !== teaser && <p className="mt-4 whitespace-pre-line text-zinc-300">{overview}</p>}
+          <p data-enter="line" className="text-lg text-zinc-200">
+            {teaser || overview}
+          </p>
+          {teaser && overview && overview !== teaser && (
+            <p data-enter="line" className="mt-4 whitespace-pre-line text-zinc-300">
+              {overview}
+            </p>
+          )}
 
           {video && (
-            <section>
+            <section data-enter="line">
               <Heading variant="h3" className="mt-14 mb-4">
                 Gameplay
               </Heading>
@@ -161,13 +185,15 @@ export function AdventureDetails({
         </div>
 
         <section ref={host} id={hostId} aria-labelledby={headingId} tabIndex={-1} inert={view !== "host"} className={cn("outline-none", view === "host" ? "relative" : AWAY)}>
-          <Heading variant="h3" as="h2" id={headingId}>
+          <Heading variant="h3" as="h2" id={headingId} data-item>
             Host This Adventure
           </Heading>
-          <p className="mt-3 text-lg text-zinc-200">You run the game on your computer in the desktop app, and your friends join from the web.</p>
-          <p className="mt-3 text-zinc-300">Paste this prompt into an AI coding agent, such as Claude Code or Codex. It installs the app and helps you start {title}.</p>
-          <CopyBlock label="Prompt" text={prompt} className="mt-6" />
-          <div className="mt-6 flex justify-center">
+          <p data-item className="mt-3 text-lg text-zinc-200">You run the game on your computer in the desktop app, and your friends join from the web.</p>
+          <p data-item className="mt-3 text-zinc-300">Paste this prompt into an AI coding agent, such as Claude Code or Codex. It installs the app and helps you start {title}.</p>
+          <div data-item className="mt-6">
+            <CopyBlock label="Prompt" text={prompt} />
+          </div>
+          <div data-item className="mt-6 flex justify-center">
             <Button variant="ghost" onClick={swap}>
               Back
             </Button>
