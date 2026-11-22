@@ -7,7 +7,7 @@ import { cn } from "@d20/ui/utils"
 import { createPortal } from "react-dom"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
 import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
-import { briefFor, socialBriefFor } from "@/lib/content-queue/brief"
+import { briefFor, missingHandles, socialBriefFor, tagHandle } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"]
@@ -467,6 +467,15 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
               )}
             </div>
             <textarea className={cn(fieldClass, "field-sizing-content min-h-16 py-2 text-sm")} value={post.text} onChange={(e) => set(i, { text: e.target.value })} />
+            {missingHandles(post.text).length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {missingHandles(post.text).map((h) => (
+                  <Button key={h.name} variant="outline" size="xs" title={`Checked: ${h.source}`} onClick={() => set(i, { text: tagHandle(post.text, h) })}>
+                    {h.name} → {h.as}
+                  </Button>
+                ))}
+              </div>
+            )}
             {post.image && (
               <button type="button" aria-label="View Full Size" className="cursor-zoom-in self-start" onClick={() => setZoom(post)}>
                 <img src={post.image} alt={post.alt} className="max-h-72 w-auto rounded border border-white/10 object-contain transition-opacity duration-150 hover:opacity-85" />
