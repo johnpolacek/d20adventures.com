@@ -42,7 +42,7 @@ import { Presence } from "@d20/ui/presence"
 import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import type { Save } from "../runtime/store"
-import { useAutopilot } from "./autopilot"
+import { logShot, useAutopilot } from "./autopilot"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { storyMoments } from "./moments"
@@ -627,8 +627,18 @@ export function StagePlay(props: {
       const way = authored.find((e) => e.cast === id)
       if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], at: leftAt[id] ?? -1 })
     }
+    // An encounter that ends with someone still in it, who has a way off, sends them along it while its end is told:
+    // the Owlbear that never found Thalbern walks back into the trees. They go at the first closing paragraph that
+    // names them, or the first.
+    if (closingNow)
+      for (const e of authored) {
+        if (e.when || !e.to || out.has(e.cast)) continue
+        const name = e.cast.replace(/-/g, " ")
+        const named = text.findIndex((p, i) => i < closing && p.toLowerCase().includes(name))
+        out.set(e.cast, { run: true, to: e.to, via: e.via, shot: e.shot, speed: PACE[e.pace ?? "hurry"], at: Math.max(0, named) })
+      }
     return out
-  }, [stage, text, gone, leftAt, leavingKey])
+  }, [stage, text, gone, leftAt, leavingKey, closingNow, closing])
   // The exit this paragraph shows, when its staging says where to watch it from.
   const departing = reading ? [...exits.values()].find((e) => e.at === paragraph && e.shot) : undefined
   const ran = useRef(new Set<string>())
@@ -712,6 +722,7 @@ export function StagePlay(props: {
   useEffect(() => {
     if (!stage) return
     for (const loop of stage.loops.values()) loop.paused = true
+    logShot(turn?._id, -1, `new stage, opening ${stage.staging?.shot ?? "none"}`, true)
     if (stage.staging?.shot) stage.shot(stage.staging.shot, { instant: true })
     const timer = setInterval(() => redraw((n) => n + 1), 1000)
     return () => clearInterval(timer)
@@ -866,8 +877,9 @@ export function StagePlay(props: {
     const plan = plansRef.current[paragraph]
     const cast = stage.cast.filter((c) => stage.isOnStage(c.id))
     const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, 4).short }) : null
-    const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) =>
-      stage.shot(which, { instant: cut || !!t?.cut, follow, duration: t?.duration, ease: t?.ease, move: t?.move, impact: t?.impact, take: t?.label })
+    const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => (
+      logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut),
+      stage.shot(which, { instant: cut || !!t?.cut, follow, duration: t?.duration, ease: t?.ease, move: t?.move, impact: t?.impact, take: t?.label }))
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
     if (take) return void go(take.shot, take)

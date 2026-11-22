@@ -60,6 +60,11 @@ export const mark = (name: "ready" | "done", data: unknown) => invoke<void>("aut
 // Development only, so it reaches apps/desktop/.logs/window.log (src/dev-log.ts).
 const log = (...parts: unknown[]) => console.warn("[autopilot]", ...parts)
 
+// Each camera move, for a run whose scene changes look wrong. Nothing outside the autopilot.
+export const logShot = (turn: string | undefined, paragraph: number, shot: string, cut: boolean) => {
+  if (autopilot) log("shot", `${turn?.slice(0, 8)}:${paragraph}`, shot, cut ? "cut" : "glide")
+}
+
 const TYPE_MS = 28
 const THINK_MS = 1400
 const SEND_MS = 700
