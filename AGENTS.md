@@ -12,6 +12,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - `pnpm test:store`: store and desktop unit tests.
 - `pnpm test:srd`: SRD rules package.
 - `pnpm stage:plans:check`, `pnpm stage:check` and `pnpm stage:director`: stagings, plans, camera sight lines and the director's takes.
+- `pnpm packages:check`: each adventure gathers into a package with no set, figure or file missing.
 - `pnpm test` builds the site and runs Playwright against dev servers. It is long, so ask first.
 
 ## Read before you write

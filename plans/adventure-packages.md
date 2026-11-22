@@ -39,7 +39,11 @@ One folder, or one archive of it, named by the adventure's id:
 ## Phases
 
 1. Done 2026-11-22. Who plays whom is data: each adventure's `figures.json` beside its stagings, and `motion` in each `figure.json`, fetched at play. A look's own `figures` stays in `looks.ts` and moves with the looks in phase 2.
-2. Write `pnpm packages:build <adventure>`: gathers the story pack, the sets, stagings, plans and files it uses into the folder above, with hashes. A check fails on a file a set names that the package lacks.
+2. Done 2026-11-22. `pnpm packages:build [adventure]` writes `build/adventures/<id>/` (`scripts/adventure-packages.ts`), and `pnpm packages:check` fails on a set, figure or file named but missing. The same content gives the same version.
+   - Sizes: Welcome to Kordavos 106 MB, The Road to Kordavos 32 MB, The Midnight Summons 17 MB, Covert Cargo 7 MB.
+   - Files come from every `/stage/…` path its story, sets, stagings and looks name, plus by where they are kept: `stage/fixtures/<id>`, `stage/art/<id>`, `stage/covers/<id>`, and each NPC's `stage/portraits/<cast id>.webp`.
+   - The kit stays the app's: `stage/textures`, `sounds`, `crowd`, `trees`, `realm`, `heroes`, `photoreal.json`.
+   - Still code, for phase 3: `apps/desktop/src/scenes.ts` (`PORTRAITS`, `PREMADE_FIGURES`), `npc-portraits.ts`, and the set and staging loaders in `@d20/stage/sets`.
 3. Teach the app to load stage data from a package, not from compiled source. Bundled adventures become bundled packages.
 4. Fetch figures and files per package on first play into the app data folder, keyed by hash. Stop copying `public/stage` and figures into the build. This settles the app's size at any number of figures.
 5. Load a package from a local folder, unsigned, in a creator mode. This is where a person's own adventure first plays.

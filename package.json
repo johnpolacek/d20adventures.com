@@ -58,6 +58,8 @@
     "assets:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/sync.ts",
     "assets:archive": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/archive.ts",
     "assets:fetch": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/archive.ts --fetch",
+    "packages:build": "tsx scripts/adventure-packages.ts",
+    "packages:check": "tsx scripts/adventure-packages.ts --check",
     "stage:check": "tsx scripts/stage-check.ts",
     "stage:plans": "tsx scripts/stage-plans.ts",
     "stage:plans:check": "tsx scripts/stage-plans.ts --check",
