@@ -1,0 +1,9 @@
+# Stageview
+
+Rules for encounter stagings, sets, the camera and how the stage's files are served.
+
+- Where everyone starts is the encounter's 3D staging (`src/stagings`): an NPC whose intro reads as a close ambush is staged close to the party's spots. The rules read each encounter's floor from its generated plan in `src/plans`, so run `pnpm stage:plans` after changing a set or a staging. `pnpm stage:plans:check` fails on a stale one. `components/floorplan` on the site draws from the same plans.
+- The camera takes a view of the cast only from where nothing solid hides them (`src/spec/view.ts`, tested against the set as built in `src/spec/sight.ts`, then against what the GPU draws). `pnpm stage:check` prints a `sight:` line per staging and a `WARN hidden` for each view of someone that no camera position clears. Leaves count as see-through there, so check a warning against the real picture at `/dev/stage` before moving anyone.
+- The camera's takes in play come from the director (`src/director.ts`): `apps/desktop/src/moments.ts` reads each paragraph's story beats as a moment (a crit, a death, a tense line), and the director shoots it with a framing, a cut or glide, a move once it lands, and an impact. `/dev/stage` has a button for each take, and `pnpm stage:director` checks the grammar.
+- The stage's files are named by path and fetched through `served()` (`src/served.ts`). On the live site visitors fetch them from the bucket's own address, not through the deploy's relay in `next.config.ts`. That needs the CloudFront response headers policy “CORS-With-Preflight”. “SimpleCORS” fails in browsers, which send a `Priority` header. Setting `NEXT_PUBLIC_ASSET_HOST` empty on a deploy goes back to the relay. A new loader passes its address through `served()`. The three.js loaders already do.
+- `plans/stage-motion.md` at the repo root is the stage UI's move to GSAP motion, and says how a part's `enter-*` class is played there.

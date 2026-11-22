@@ -1,42 +1,52 @@
-# AGENTS.md instructions for /Users/johnpolacek/Projects/d20adventures.com
+# D20 Adventures Agent Guide
 
 Auto-commit local changes whenever confident that the code is good and there are no questions about implementation. Prefer to pull before work when it is safe and useful.
 
-## D20 Adventures Agent Guide
+## Checks
 
-### Working Rules
+Each finishes in under 30 seconds. There is no lint or typecheck script.
+
+- `pnpm test:gm-core`: game master core and its server adapter, plus `tsc` on `convex/`.
+- `pnpm test:store`: store and desktop unit tests.
+- `pnpm test:srd`: SRD rules package.
+- `pnpm stage:plans:check`, `pnpm stage:check` and `pnpm stage:director`: stagings, plans, camera sight lines and the director's takes.
+- `pnpm test` builds the site and runs Playwright against dev servers. It is long, so ask first.
+
+## Read before you write
+
+- Encounters, sets, stagings, the camera, the director, `apps/desktop/src/moments.ts`, or a loader for stage files: `packages/stage/AGENTS.md`.
+- A post for `/updates` (`content/updates/*.md`, in John's voice): `docs/writing-voice.md`.
+- Rules work toward full SRD 5.2.1: `plans/srd-rules.md`. Other open multi-session plans live in `plans/`.
+- Stage UI motion and `enter-*` classes: `plans/stage-motion.md`.
+
+## Working Rules
 
 - Inspect existing files and Git state before writing.
 - Preserve user-authored files and existing Git history.
 - For admin/editor UI, keep surfaces dense and operational: do not add explanatory helper text, status phrases, or "what this does" copy unless the user asks for it or it is required for accessibility, validation, or error handling.
 - Name unknowns and contradictions instead of inventing certainty.
 
-### Where Things Live
+## Where New Code Goes
 
-- `packages/gm-core` is the game master: turn flow, NPC turns, rolls, narrative. Game logic goes here. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
-- `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there. `turn-audio-service.ts` and `mailing-list.ts` are the exceptions.
-- `apps/desktop` is the Tauri app. `apps/desktop/runtime` is its bundled Node game runtime: the same core over SQLite. `apps/desktop-spike` is a throwaway phase 0 spike, not the app.
-- `packages/stage` is Stageview, the painted 3D encounter stage. `packages/ui` (`@d20/ui`) is the React UI shared by the site and the desktop app, built on UI SDK (`@ui-sdk/react`, docs in its `docs` folder). Its `stage` folder is the UI around Stageview (HUD, dice, journal). It imports nothing from Next, Clerk, Convex or the site. `components/floorplan` is the site's top-down floor plan, drawn from the plans under `packages/stage/src/plans`, which `pnpm stage:plans` generates from the sets and stagings.
-- Posts for `/updates` live in `content/updates/*.md`, written in John's voice. Before drafting or editing one, read `docs/writing-voice.md`.
-- The site's own GM, which the site pays for, starts new games of the demo adventure only: `demo` in `LOCAL_WIKI_ADVENTURES`, checked by `playsOnSite()`. Every other adventure is hosted from the desktop app. Development runs them all.
-- Every AI call the site pays for runs inside a daily budget (`lib/gm-server/budget.ts`, ledger in `convex/aiBudget.ts`): wrap a new one in `paid()`, or ask `budgetOpen()` first and `recordSpend()` after. The limit is $1 a day until the owner sets another on `/admin`. A new model needs its price added there. Convex functions reach production only by `pnpm convex:deploy`, not by a push.
-- Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`. `lib/wiki-adventures` compiles and validates them. `data/adventure-plans/*.json` is the old format, referenced only by the `scripts/migrate-*` scripts.
-- `app/` is the Next.js site. Server actions live in `app/_actions`, and `proxy.ts` is the Clerk middleware.
-- `convex/` is the database and its functions. `convex/_generated` is written by `npx convex codegen`, so never edit it.
-- Ledger is the look of the pages that are read, not played: quiet parchment, in light and dark. Updates, Terms, Privacy, Licenses and Contact wear it through `components/layout/ledger-page.tsx`. Its styles are `app/updates/updates.css` (classes begin `up-`), and `/ui` shows it.
+- Game logic goes in `packages/gm-core`. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
+- `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there.
+- `packages/ui` (`@d20/ui`) is shared by the site and the desktop app. It imports nothing from Next, Clerk, Convex or the site. It is built on UI SDK (`@ui-sdk/react`, docs in its `docs` folder).
+- `apps/desktop` is the Tauri app, with its Node game runtime in `apps/desktop/runtime`. `apps/desktop-spike` is a throwaway spike, not the app.
+- Adventures are authored as markdown under `content/settings/<setting>/adventures/<adventure>/`, compiled by `lib/wiki-adventures`. `data/adventure-plans/*.json` is the old format, used only by `scripts/migrate-*`.
+- Ledger is the look of pages that are read, not played. Those pages wear it through `components/layout/ledger-page.tsx`, with styles in `app/updates/updates.css` (classes begin `up-`). `/ui` shows it.
 - `app/dev` and `lab/stage-art` are dev pages and experiments, not shipped features.
-- `plans/` holds open multi-session plans. `plans/srd-rules.md` is the staged move to the full SRD 5.2.1 rules. `plans/stage-motion.md` is the stage UI's move to GSAP motion, and says how a part's `enter-*` class is played there.
 
-### Encounter Authoring
+## Gotchas
 
-- Where everyone starts is the encounter's 3D staging (`packages/stage/src/stagings`): an NPC whose intro reads as a close ambush is staged close to the party's spots. The rules read each encounter's floor from its generated plan, so run `pnpm stage:plans` after changing a set or a staging. `pnpm stage:plans:check` fails on a stale one.
-- The camera takes a view of the cast only from where nothing solid hides them (`packages/stage/src/spec/view.ts`, tested against the set as built in `spec/sight.ts`, then against what the GPU draws). `pnpm stage:check` prints a `sight:` line per staging and a `WARN hidden` for each view of someone that no camera position clears. Leaves count as see-through there, so check a warning against the real picture at `/dev/stage` before moving anyone.
-- The camera's takes in play come from the director (`packages/stage/src/director.ts`): `apps/desktop/src/moments.ts` reads each paragraph's story beats as a moment (a crit, a death, a tense line), and the director shoots it with a framing, a cut or glide, a move once it lands, and an impact. `/dev/stage` has a button for each take, and `pnpm stage:director` checks the grammar.
+- The site's own GM starts new games of the demo adventure only: `demo` in `LOCAL_WIKI_ADVENTURES`, checked by `playsOnSite()`. Every other adventure is hosted from the desktop app. Development runs them all.
+- Every AI call the site pays for runs inside a daily budget (`lib/gm-server/budget.ts`, ledger in `convex/aiBudget.ts`): wrap a new one in `paid()`, or ask `budgetOpen()` first and `recordSpend()` after. The owner sets the limit on `/admin`. A new model needs its price added there.
+- Convex functions reach production only by `pnpm convex:deploy`, not by a push. Never edit `convex/_generated`, which `npx convex codegen` writes.
+- `proxy.ts` is the Clerk middleware.
 - Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Vercel deploys leave them out and the site serves them from the public bucket.
-- The stage's files are named by path and fetched through `served()` (`packages/stage/src/served.ts`). On the live site visitors fetch them from the bucket's own address, not through the deploy's relay in `next.config.ts`. That needs the CloudFront response headers policy “CORS-With-Preflight”. “SimpleCORS” fails in browsers, which send a `Priority` header. Setting `NEXT_PUBLIC_ASSET_HOST` empty on a deploy goes back to the relay. A new loader passes its address through `served()`. The three.js loaders already do. Site code imports `served` from `lib/served.ts`, which names the host on the server and in the browser alike. Background textures in CSS read the `--tex-*` variables that `app/layout.tsx` sets on `<html>`.
-- Run `pnpm images:sync` after adding or repainting a picture the content names, then commit `lib/images-manifest.json`. It stores light sizes of each picture in the public bucket, and `lib/images.ts` picks one for the slot: `picture()` for an `<img>` with a size list, `pictureAt()` for a single address. A picture without them is served whole. The site does not use `next/image`.
+- Site code imports `served` from `lib/served.ts`, which names the asset host on the server and in the browser alike. Background textures in CSS read the `--tex-*` variables that `app/layout.tsx` sets on `<html>`.
+- Run `pnpm images:sync` after adding or repainting a picture the content names, then commit `lib/images-manifest.json`. `lib/images.ts` picks a size: `picture()` for an `<img>` with a size list, `pictureAt()` for a single address. The site does not use `next/image`.
 
-### Automation Policy
+## Automation Policy
 
 - Commit code changes: allow
 - Push changes: allow
@@ -52,3 +62,7 @@ Owner decision, 2026-10-10: the project is back in alpha with no players, so wor
 - `pnpm dev` starts Convex, the website, and the desktop app pointed at the local website. `pnpm dev:web` starts the website alone, and `pnpm dev:app` the app alone.
 - `pnpm dev` does not kill ports. Use `pnpm dev:fresh` to kill ports first.
 - The `wt:*` scripts remain for reference until beta.
+
+## Doc Upkeep
+
+When guidance changes, update the narrowest doc that holds it. Each rule lives in one place.
