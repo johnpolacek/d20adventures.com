@@ -34,6 +34,16 @@ pnpm assets:sync --dry            # list what would upload
 pnpm assets:sync thalbern-rodin   # one character's files, then the index
 ```
 
+```sh
+pnpm assets:archive               # every file of every character, trials too, to the private bucket
+pnpm assets:archive --prune       # then delete the heavy local files of figures SHIPPED does not name
+pnpm assets:fetch thalbern-rodin  # bring a pruned character back
+```
+
+- The workspace holds only the shipped figures in full (the owner, 2026-11-22). The rest live in the private bucket (`pipeline/archive.ts`).
+- Prune deletes only files git ignores, each only once the bucket holds it byte for byte.
+- A pruned figure's published files come from the CDN in development. A trial is not published: fetch it before working on it.
+
 - A figure that takes another's body (`body` in its brief: a rig or clips tried on a model already made) is a trial. It stays in the workspace: a sync does not upload it and the published index leaves it out.
 
 ### One card a character

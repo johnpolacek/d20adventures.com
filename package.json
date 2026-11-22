@@ -56,6 +56,8 @@
     "assets:arms": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/armcheck.ts",
     "assets:parts": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/parts.ts",
     "assets:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/sync.ts",
+    "assets:archive": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/archive.ts",
+    "assets:fetch": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/archive.ts --fetch",
     "stage:check": "tsx scripts/stage-check.ts",
     "stage:plans": "tsx scripts/stage-plans.ts",
     "stage:plans:check": "tsx scripts/stage-plans.ts --check",
