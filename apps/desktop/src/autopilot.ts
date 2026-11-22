@@ -42,9 +42,12 @@ const PLAYS: Record<string, Play> = {
 
 export const autopilot = PLAYS[import.meta.env.VITE_D20_AUTOPILOT ?? ""] ?? null
 
-// Nothing on screen answers to the pointer in a recording: a tooltip under the resting cursor, such as Feedback's,
-// stays hidden, and so does the cursor.
+// Nothing on screen asks for the viewer in a recording: the Feedback callout a session shows once is taken as seen
+// (@d20/ui/stage/feedback), and tooltips under the resting cursor stay hidden, as does the cursor.
 if (autopilot && typeof document !== "undefined") {
+  try {
+    sessionStorage.setItem("d20-feedback-callout", "1")
+  } catch {}
   const style = document.createElement("style")
   style.textContent = `[role="tooltip"] { display: none !important } * { cursor: none !important }`
   document.head.append(style)
