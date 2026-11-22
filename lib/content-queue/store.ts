@@ -37,6 +37,8 @@ export type QueueItem = {
   // The /updates post this idea became, by its slug.
   post?: string
   posted: Record<string, string>
+  // The day each platform's post is planned for, as YYYY-MM-DD, keyed like posted.
+  schedule: Record<string, string>
   sections: QueueSection[]
 }
 
@@ -76,12 +78,14 @@ function parseItem(slug: string, text: string): QueueItem {
     ...(meta.into ? { into: String(meta.into) } : {}),
     ...(meta.post ? { post: String(meta.post) } : {}),
     posted: meta.posted && typeof meta.posted === "object" ? meta.posted : {},
+    schedule: meta.schedule && typeof meta.schedule === "object" ? meta.schedule : {},
     sections,
   }
 }
 
 function serialize(item: QueueItem): string {
-  const { slug: _slug, sections, ...meta } = item
+  const { slug: _slug, sections, schedule, ...rest } = item
+  const meta = Object.keys(schedule).length ? { ...rest, schedule } : rest
   const front = stringify(meta, { lineWidth: 0 }).trimEnd()
   const body = sections.map((s) => `## ${s.name}\n\n${s.body.trim()}`).join("\n\n")
   return `---\n${front}\n---\n\n${body}\n`

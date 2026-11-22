@@ -19,6 +19,7 @@ export async function saveQueueItem(input: {
   status: string
   sections: { name: string; body: string }[]
   posted: Record<string, string>
+  schedule: Record<string, string>
 }) {
   await guard()
   const item = readItem(input.slug)
@@ -27,7 +28,7 @@ export async function saveQueueItem(input: {
   const parked = status === "shelved"
   const lastLive = listQueue().filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0)
   const rank = parked && item.rank < 90 ? 90 : !parked && item.rank >= 90 ? lastLive + 1 : item.rank
-  writeItem({ ...item, title: input.title.trim() || item.title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted })
+  writeItem({ ...item, title: input.title.trim() || item.title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted, schedule: input.schedule })
   revalidatePath("/admin/content")
 }
 

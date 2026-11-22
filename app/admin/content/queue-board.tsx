@@ -20,6 +20,15 @@ type Sort = "rank" | "score"
 
 const parked = (item: QueueItem) => item.status === "shelved"
 
+type PostRef = { slug: string; title: string; date: string; draft: boolean }
+
+// Today and the days after it, as YYYY-MM-DD in Chicago time, where John posts.
+function days(count: number): string[] {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" })
+  const start = new Date(`${today}T12:00:00Z`)
+  return Array.from({ length: count }, (_, i) => new Date(start.getTime() + i * 86_400_000).toISOString().slice(0, 10))
+}
+
 const statusTone: Record<string, string> = {
   idea: "bg-white/10 text-white/70",
   draft: "bg-sky-900/60 text-sky-200",
@@ -32,13 +41,14 @@ function section(item: QueueItem, name: string): string {
   return item.sections.find((s) => s.name === name)?.body ?? ""
 }
 
-export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
+export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; posts: PostRef[] }) {
   const [items, setItems] = useState(initial)
   const [filter, setFilter] = useState<Filter>("live")
   const [sort, setSort] = useState<Sort>("rank")
   const [selected, setSelected] = useState(initial.find((i) => !parked(i))?.slug ?? initial[0]?.slug)
   const [dragging, setDragging] = useState<string | null>(null)
   const [syncNote, setSyncNote] = useState("")
+  const [showSchedule, setShowSchedule] = useState(true)
   const [pending, start] = useTransition()
 
   useEffect(() => setItems(initial), [initial])
@@ -89,9 +99,22 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
         <Option size="xs" active={sort === "rank"} onClick={() => setSort("rank")}>Rank</Option>
         <Option size="xs" active={sort === "score"} onClick={() => setSort("score")}>Score</Option>
         <span className="mx-1 h-5 w-px bg-white/15" />
+        <Option size="xs" active={showSchedule} onClick={() => setShowSchedule((v) => !v)}>Schedule</Option>
         <Button variant="outline" size="xs" disabled={pending} onClick={sync}>Sync</Button>
         {syncNote && <span className="text-xs text-white/50">{syncNote}</span>}
       </div>
+
+      {showSchedule && (
+        <Schedule
+          items={items}
+          posts={posts}
+          selected={selected}
+          onSelect={(slug) => {
+            setSelected(slug)
+            if (parked(items.find((i) => i.slug === slug)!)) setFilter("all")
+          }}
+        />
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <ol className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
@@ -152,6 +175,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
   const [longTitle, setLongTitle] = useState(item.longTitle)
   const [status, setStatus] = useState(item.status)
   const [posted, setPosted] = useState<Record<string, string>>(item.posted)
+  const [schedule, setSchedule] = useState<Record<string, string>>(item.schedule)
   const [bodies, setBodies] = useState<Record<string, string>>(() => Object.fromEntries(item.sections.map((s) => [s.name, s.body])))
   const [dirty, setDirty] = useState(false)
   const [copied, setCopied] = useState("")
@@ -173,10 +197,11 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
     ]
     const sections: QueueSection[] = names.map((name) => ({ name, body: bodies[name] ?? "" }))
     const cleanPosted = Object.fromEntries(Object.entries(posted).filter(([, url]) => url.trim()))
+    const cleanSchedule = Object.fromEntries(Object.entries(schedule).filter(([, day]) => day))
     start(async () => {
       try {
-        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted })
-        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted })
+        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted, schedule: cleanSchedule })
+        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted, schedule: cleanSchedule })
         setDirty(false)
         setError("")
       } catch (e) {
@@ -318,15 +343,27 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
                   onChange={(e) => edit(name, e.target.value)}
                 />
               )}
-              <input
-                className={cn(fieldClass, "mt-1.5 h-8 text-xs")}
-                placeholder="Posted URL"
-                value={posted[name.toLowerCase()] ?? ""}
-                onChange={(e) => {
-                  setPosted((p) => ({ ...p, [name.toLowerCase()]: e.target.value }))
-                  setDirty(true)
-                }}
-              />
+              <div className="mt-1.5 flex gap-1.5">
+                <input
+                  type="date"
+                  aria-label={`${name} Day`}
+                  className={cn(fieldClass, "h-8 w-36 text-xs [color-scheme:dark]")}
+                  value={schedule[name.toLowerCase()] ?? ""}
+                  onChange={(e) => {
+                    setSchedule((d) => ({ ...d, [name.toLowerCase()]: e.target.value }))
+                    setDirty(true)
+                  }}
+                />
+                <input
+                  className={cn(fieldClass, "h-8 flex-1 text-xs")}
+                  placeholder="Posted URL"
+                  value={posted[name.toLowerCase()] ?? ""}
+                  onChange={(e) => {
+                    setPosted((p) => ({ ...p, [name.toLowerCase()]: e.target.value }))
+                    setDirty(true)
+                  }}
+                />
+              </div>
             </Field>
           )
         })}
@@ -343,6 +380,69 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           ))}
         </div>
       </details>
+    </div>
+  )
+}
+
+// Two weeks of the plan in plans/content-engine.md: X once or twice a day, Reddit on Wednesday,
+// the week's best picture on Saturday, and /updates posts on their dates.
+function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; posts: PostRef[]; selected?: string; onSelect: (slug: string) => void }) {
+  const list = days(14)
+  const today = list[0]
+  return (
+    <div className="mb-4 grid grid-cols-7 gap-1.5">
+      {list.map((day) => {
+        const date = new Date(`${day}T12:00:00Z`)
+        const weekday = date.getUTCDay()
+        const updates = posts.filter((p) => p.date === day)
+        const slots = items.flatMap((item) =>
+          Object.entries(item.schedule)
+            .filter(([, d]) => d === day)
+            .map(([platform]) => ({ item, platform, done: Boolean(item.posted[platform]) }))
+        )
+        const x = slots.filter((s) => s.platform === "x").length
+        const reddit = slots.some((s) => s.platform === "reddit")
+        return (
+          <div key={day} className={cn("min-h-24 rounded-md border p-1.5 text-[11px]", day === today ? "border-primary-400/60 bg-primary-950/30" : "border-white/10 bg-white/5")}>
+            <div className="mb-1 flex items-baseline gap-1 text-white/50">
+              <span className="font-medium text-white/80">{date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}</span>
+              <span>{date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", timeZone: "UTC" })}</span>
+              {weekday === 6 && <span className="ml-auto text-accent-300" title="#ScreenshotSaturday">SS</span>}
+            </div>
+            <div className="grid gap-1">
+              {updates.map((p) => (
+                <a
+                  key={p.slug}
+                  href={`/updates/${p.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate rounded bg-amber-900/50 px-1 py-px text-amber-100 hover:bg-amber-800/60"
+                  title={p.title}
+                >
+                  Post{p.draft ? " (Draft)" : ""}: {p.title}
+                </a>
+              ))}
+              {slots.map(({ item, platform, done }) => (
+                <button
+                  key={item.slug + platform}
+                  type="button"
+                  title={item.title}
+                  onClick={() => onSelect(item.slug)}
+                  className={cn(
+                    "truncate rounded px-1 py-px text-left",
+                    done ? "bg-emerald-800/50 text-emerald-100" : "bg-sky-900/60 text-sky-100",
+                    item.slug === selected && "ring-1 ring-primary-300"
+                  )}
+                >
+                  {platform === "x" ? "X" : "Reddit"}: {item.title}
+                </button>
+              ))}
+              {x === 0 && <span className="rounded border border-dashed border-white/15 px-1 py-px text-white/30">X</span>}
+              {weekday === 3 && !reddit && <span className="rounded border border-dashed border-white/15 px-1 py-px text-white/30">Reddit</span>}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

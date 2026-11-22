@@ -91,7 +91,7 @@ Owner decision, 2026-11-21: keep a record of when each gameplay video is recorde
 
 1. Miner, run by hand, writing candidates to `content/queue`. Done 2026-11-21. `pnpm content:mine`, with `--dry`, `--day` and `--since`. One call per day, then one to merge and rank. A day takes about 45 seconds. The miner syncs before and after it writes.
 2. Queue page reading and writing those files. Done 2026-11-21. `/admin/content`, development only and admin only. Live, folded and cut views, sort by rank or score, drag or arrows to reorder, an editor per idea with X, Bluesky and Reddit drafts, character counts, Copy buttons, posted URLs, and a Sync button. Cmd+S saves.
-3. Week planner and drafter.
+3. Week planner and drafter. The queue page shows two weeks: each X and Reddit draft has a day, open slots dashed, /updates posts on their dates. Done 2026-11-22, planned by hand.
 4. Bluesky and Reddit listener, with the Inbox tab.
 5. Buffer button.
 6. X reader through Chrome, tested once by hand before it becomes a skill.
