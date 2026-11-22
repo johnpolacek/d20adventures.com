@@ -151,6 +151,13 @@ type Subject = Extract<StagingShot, { subject: string }>
 // the lens below their eyes or above their head.
 function on(c: CastMember, size: "extreme" | "close" | "medium" | "wide", side: number, angle = 22, lens?: number): Subject {
   const h = c.height
+  // A close shot sized for a person shows only the crown of a beast's head. A big one is framed from the shoulders up
+  // instead, from a little below, so its face and eyes fill the frame.
+  if (big(c) && (size === "extreme" || size === "close")) {
+    const look = h * 0.74
+    const distance = clamp(h * (size === "extreme" ? 1.15 : 1.45), 2.6, 9)
+    return { subject: c.id, distance, angle: side * angle, height: h * 0.6, lookHeight: look, fov: fovFor(h * (size === "extreme" ? 0.24 : 0.32), distance) }
+  }
   if (size === "extreme") return { subject: c.id, distance: clamp(h * 0.62, 0.9, 3), angle: side * angle * 0.7, height: h * 0.9, lookHeight: h * 0.9, fov: lens ?? 28 }
   if (size === "close") return { subject: c.id, distance: clamp(h * 0.95, 1.3, 4), angle: side * angle, height: h * 0.88, lookHeight: h * 0.86, fov: lens ?? 32 }
   if (size === "medium") return { subject: c.id, distance: clamp(h * 2.1, 2.6, 7), angle: side * angle, height: h * 0.95, lookHeight: h * 0.66, fov: lens ?? 40 }
