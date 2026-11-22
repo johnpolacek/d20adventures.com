@@ -34,8 +34,13 @@ function parseFrontmatter(text: string): Record<string, string> {
   return data
 }
 
-async function readPost(file: string): Promise<Update> {
-  const content = await readFile(path.join(UPDATES_DIR, file), "utf8")
+/** A markdown file in `content/`, set like a post: its front matter, and its body. */
+export async function readPage(file: string): Promise<Update> {
+  return readPost(file, path.join(process.cwd(), "content"))
+}
+
+async function readPost(file: string, dir = UPDATES_DIR): Promise<Update> {
+  const content = await readFile(path.join(dir, file), "utf8")
   const match = content.match(FRONTMATTER_RE)
   const data = match ? parseFrontmatter(match[1]) : {}
   const slug = file.replace(/\.md$/, "")
@@ -53,7 +58,7 @@ async function readPost(file: string): Promise<Update> {
 
 export async function getPosts(): Promise<Update[]> {
   const files = (await readdir(UPDATES_DIR)).filter((file) => file.endsWith(".md"))
-  const posts = await Promise.all(files.map(readPost))
+  const posts = await Promise.all(files.map((file) => readPost(file)))
   // In development every post shows. On the site a post shows from its date, Chicago time, unless it is a draft.
   const showAll = process.env.NODE_ENV === "development"
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" })
