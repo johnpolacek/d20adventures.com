@@ -21510,11 +21510,11 @@
     {
       "type": "bush",
       "at": [
-        -1.29,
+        -2.51,
         -0.3,
         -9.5
       ],
-      "size": 2.55,
+      "size": 1.68,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21536,11 +21536,11 @@
     {
       "type": "bush",
       "at": [
-        -0.12,
+        -2.18,
         -0.3,
         -9.89
       ],
-      "size": 3.77,
+      "size": 2.29,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21575,11 +21575,11 @@
     {
       "type": "bush",
       "at": [
-        -1.57,
+        -2.6,
         -0.3,
         -11.29
       ],
-      "size": 2.95,
+      "size": 1.88,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21692,11 +21692,11 @@
     {
       "type": "bush",
       "at": [
-        -0.08,
+        -2.09,
         -0.3,
         -3.29
       ],
-      "size": 3.89,
+      "size": 2.35,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21770,6 +21770,19 @@
     {
       "type": "bush",
       "at": [
+        -3,
+        0.24,
+        -8.01
+      ],
+      "size": 2.26,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
         -2.56,
         -0.28,
         -44.3
@@ -21827,6 +21840,19 @@
         -25.81
       ],
       "size": 2.53,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.95,
+        0.17,
+        -7.84
+      ],
+      "size": 2.22,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21900,6 +21926,19 @@
     {
       "type": "bush",
       "at": [
+        -2.22,
+        -0.3,
+        -4.37
+      ],
+      "size": 2.03,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
         0.16,
         -0.3,
         -28.48
@@ -21913,11 +21952,11 @@
     {
       "type": "bush",
       "at": [
-        -2.17,
-        -0.3,
+        -2.76,
+        -0.09,
         -9.64
       ],
-      "size": 3.65,
+      "size": 2.23,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -21978,11 +22017,11 @@
     {
       "type": "bush",
       "at": [
-        -1.07,
+        -2.44,
         -0.3,
         -8.61
       ],
-      "size": 2.49,
+      "size": 1.65,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22251,6 +22290,19 @@
     {
       "type": "bush",
       "at": [
+        -2.75,
+        -0.02,
+        -4.08
+      ],
+      "size": 2.45,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
         -2.41,
         -0.3,
         -20.72
@@ -22290,11 +22342,11 @@
     {
       "type": "bush",
       "at": [
-        -1.09,
+        -2.46,
         -0.3,
         -10.29
       ],
-      "size": 3.35,
+      "size": 2.07,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22303,11 +22355,11 @@
     {
       "type": "bush",
       "at": [
-        1.02,
+        -1.88,
         -0.3,
         -11.99
       ],
-      "size": 2.69,
+      "size": 1.75,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22433,11 +22485,11 @@
     {
       "type": "bush",
       "at": [
-        -2.87,
-        0.14,
+        -2.96,
+        0.26,
         -4.42
       ],
-      "size": 2.71,
+      "size": 1.75,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22472,11 +22524,11 @@
     {
       "type": "bush",
       "at": [
-        -2.53,
-        -0.3,
+        -2.87,
+        -0.02,
         -11.21
       ],
-      "size": 2.58,
+      "size": 1.69,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22511,11 +22563,11 @@
     {
       "type": "bush",
       "at": [
-        0.49,
+        -1.93,
         -0.3,
         -3.92
       ],
-      "size": 4.22,
+      "size": 2.51,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22537,11 +22589,11 @@
     {
       "type": "bush",
       "at": [
-        0.8,
+        -1.94,
         -0.3,
         -11.95
       ],
-      "size": 2.43,
+      "size": 1.61,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22581,6 +22633,32 @@
         -33.44
       ],
       "size": 2.95,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.27,
+        -0.3,
+        -8.36
+      ],
+      "size": 2.43,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.55,
+        -0.3,
+        -3.96
+      ],
+      "size": 2.13,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22776,6 +22854,19 @@
         -34.77
       ],
       "size": 3.99,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.76,
+        -0.08,
+        -8.11
+      ],
+      "size": 2.54,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -22992,11 +23083,11 @@
     {
       "type": "bush",
       "at": [
-        0.74,
+        -1.93,
         -0.3,
         -9.43
       ],
-      "size": 3.98,
+      "size": 2.39,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -23135,11 +23226,24 @@
     {
       "type": "bush",
       "at": [
-        -1.39,
+        -2.54,
         -0.3,
         -9.48
       ],
-      "size": 3.81,
+      "size": 2.3,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.94,
+        0.16,
+        -8.23
+      ],
+      "size": 2.53,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -23166,6 +23270,19 @@
         -25.78
       ],
       "size": 4.15,
+      "materials": {
+        "leaves": "shrub",
+        "leavesDark": "shrubDark"
+      }
+    },
+    {
+      "type": "bush",
+      "at": [
+        -2.37,
+        -0.3,
+        -4.69
+      ],
+      "size": 2.06,
       "materials": {
         "leaves": "shrub",
         "leavesDark": "shrubDark"
@@ -24754,13 +24871,13 @@
     {
       "type": "mist",
       "at": [
-        -13,
+        -14,
         -0.8,
-        -12
+        -22
       ],
-      "width": 24,
+      "width": 22,
       "height": 11,
-      "layers": 3,
+      "layers": 2,
       "spacing": 10
     },
     {

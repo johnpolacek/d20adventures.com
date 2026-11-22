@@ -145,6 +145,7 @@ function pierSet() {
       saloon: 0.72,
       height: 3,
       interior: true,
+      shutters: false,
       materials: { helm: "helmGlass", panel: "panel", post: "timber", night: "night", door: "door", brass: "brass", floor: "saloonFloor", ceiling: "ceiling", pane: "windowGlass" },
     },
     { type: "lantern", at: [2.75, 0, 5.15], height: 1.45, post: true },
@@ -311,10 +312,13 @@ function pierSet() {
   }
   // The bank behind the tug is a wall of leaves down to the water, as in the art: big bushes at the water's edge and
   // young trees leaning out over the river downstream of the gangway, where no camera stands.
+  // Abreast of the tug they keep back from the water and stay small: a big one there stood in the river beside the hull,
+  // a ball of leaves close to every camera on the gangway.
   for (let k = 0; k < 160; k++) {
     const zz = rnd(-46, -3)
-    const x = rnd(-3, center(zz) - width(zz) / 2 + 0.4)
-    const size = rnd(2.4, 4.4)
+    const abreast = zz > -12
+    const x = rnd(-3, abreast ? -1.8 : center(zz) - width(zz) / 2 + 0.4)
+    const size = abreast ? rnd(1.6, 2.6) : rnd(2.4, 4.4)
     objects.push({ type: "bush", at: [r2(x), onHill(x, zz, 0.3), r2(zz)], size: r2(size), materials: shrubs })
   }
   for (let k = 0; k < 26; k++) {
@@ -329,11 +333,12 @@ function pierSet() {
     if (x >= -0.6 || !clearOf(x, zz, 1.4)) continue
     objects.push(rnd() < 0.5 ? { type: "bush", at: [r2(x), 0, r2(zz)], size: r2(rnd(1.0, 2.2)), materials: shrubs } : { type: "fern", at: [r2(x), 0, r2(zz)], size: r2(rnd(0.9, 1.5)) })
   }
-  // Mist in banks down the river and along the hill, and a low sheet over the water.
+  // Mist in banks down the river and along the hill, and a low sheet over the water. The hill's nearest card stands past
+  // the tug's bow: one abreast of the boat was a flat pale wall to every camera on deck.
   for (const [x, zz, w, h, layers, spacing] of [
     [9, -22, 34, 9, 3, 12],
     [10, -62, 54, 13, 3, 16],
-    [-13, -12, 24, 11, 3, 10],
+    [-14, -22, 22, 11, 2, 10],
     [-16, -48, 30, 13, 2, 14],
   ])
     objects.push({ type: "mist", at: [x, -0.8, zz], width: w, height: h, layers, spacing })
@@ -464,6 +469,7 @@ function pierSet() {
   const pier = {
     ...base("mordava-river-pier", "mordava-river-pier", "A quiet pier on the Mordava"),
     seed: 4212,
+    ambience: ["river", "birds"],
     // Blue predawn mist that brightens to cyan down the river, and warm lamplight from the tug's saloon pooling on the
     // deck and hull and glinting in the water.
     atmosphere: {
