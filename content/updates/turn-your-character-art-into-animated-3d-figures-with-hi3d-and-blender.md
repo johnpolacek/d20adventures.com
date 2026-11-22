@@ -18,7 +18,7 @@ A figure now costs $2.30 and about fifteen minutes, most of it waiting:
 | # | Step | Cost |
 | --- | --- | ---: |
 | 1 | Write a short brief for the character. | Free |
-| 2 | Have an image model paint a pose sheet, front and back. | Free |
+| 2 | Have the [Codex CLI](https://github.com/openai/codex) image tool paint a pose sheet, front and back. | Free |
 | 3 | Find the joints on the sheet with [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker). | Free |
 | 4 | Send the front and back to [Hi3D v3.0 on fal](https://fal.ai/models/hitem3d/hi3d/v3.0/multi-view-to-3d) for the model. | $2.10 |
 | 5 | Rig it with [Hyper3D](https://hyper3d.ai) to a human skeleton with fingers. | $0.20 |
@@ -51,6 +51,28 @@ Lighting: soft, even, shadowless studio light from the front, the same in both v
 ```
 
 For a beast like the owlbear, ask for “a photorealistic studio photograph of a living animal” standing on its hind legs, so you don’t get a person in a costume.
+
+### Painting the Sheet
+
+The sheets come from the image tool built into the Codex CLI. It runs on my ChatGPT sign-in, so a sheet costs nothing extra.
+
+The build flattens both cards onto the same mid-grey, shrinks them to 1536 pixels, and attaches them to a headless Codex run with every tool but image generation switched off:
+
+```sh
+codex --ask-for-approval never --sandbox read-only \
+  -c features.image_generation=true -c features.shell_tool=false -c 'web_search="disabled"' \
+  exec --image front.jpg --image back.jpg --ephemeral --skip-git-repo-check --json - < prompt.txt
+```
+
+The pose sheet prompt goes in after one line that keeps Codex on task:
+
+```prompt Codex Wrapper Prompt
+Use only your built-in image generation tool exactly once to generate one landscape 3:2 image at the largest size it offers, working from the attached images. Do not use any other tools or write files yourself. Then stop.
+```
+
+Codex saves the picture under `~/.codex/generated_images/`. The build cuts it down the middle into the front and the back that go to Hi3D.
+
+After five or six pictures in a few minutes it refuses with `429 Too Many Requests`. Nothing is lost. Run it again four minutes later and it picks up from the step that failed.
 
 ### Trying Every Generator
 
