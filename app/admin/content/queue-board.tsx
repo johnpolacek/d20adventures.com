@@ -381,6 +381,18 @@ function serializeThread(posts: Post[]): string {
     .join("\n\n---\n\n")
 }
 
+// Copies a picture as PNG, the one image type the clipboard takes everywhere, ready to paste into X or Bluesky.
+async function copyImage(url: string) {
+  const res = await fetch(`/admin/content/image?url=${encodeURIComponent(url)}`)
+  const bitmap = await createImageBitmap(await res.blob())
+  const canvas = document.createElement("canvas")
+  canvas.width = bitmap.width
+  canvas.height = bitmap.height
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0)
+  const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("No image"))), "image/png"))
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": png })])
+}
+
 const postLength = (text: string) => [...text.replace(/https?:\/\/\S+/g, "x".repeat(23))].length
 
 function Thread({ value, limit, onChange }: { value: string; limit: number; onChange: (value: string) => void }) {
@@ -418,6 +430,19 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
               >
                 {copied === i ? "Copied" : "Copy"}
               </Button>
+              {post.image && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={async () => {
+                    await copyImage(post.image)
+                    setCopied(i + 1000)
+                    setTimeout(() => setCopied(-1), 1200)
+                  }}
+                >
+                  {copied === i + 1000 ? "Copied" : "Copy Image"}
+                </Button>
+              )}
               {posts.length > 1 && (
                 <Button variant="ghost" size="xs" onClick={() => remove(i)}>
                   Remove
