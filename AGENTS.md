@@ -55,7 +55,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Auto mode blocks `pnpm convex:deploy`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`.
 - `proxy.ts` is the Clerk middleware.
 - The shell is zsh, which fails a whole command on an unquoted glob. Quote it, as in `grep -rn --include='*.ts'`, or use `git grep`.
-- There is no `wiki/`, `tailwind.config.ts` or Prettier. Format with `pnpm exec biome check --write <files>`.
+- There is no `wiki/`, `tailwind.config.ts`, Prettier or Biome. Match the formatting of the file you edit.
 - Scratchpad scripts cannot resolve `@d20/*` imports. Import the package's source file by absolute path.
 - Pull with `git pull --rebase --autostash`. Plain `--rebase` fails on unstaged changes.
 - Other sessions edit `main` at the same time. Re-read a file after a pull, before editing it.

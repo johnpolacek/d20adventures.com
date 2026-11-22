@@ -43,7 +43,7 @@ The same core runs in two places: the website, backed by Convex, and a Tauri des
 - Vercel AI SDK with Gemini and OpenAI models
 - Three.js for the encounter stage
 - Tauri 2 with a bundled Node runtime for the desktop app
-- pnpm workspaces, Biome, Playwright
+- pnpm workspaces, Playwright
 
 ## Layout
 
@@ -75,7 +75,6 @@ Copy `.env.example` to `.env.local` and fill in the required keys: Convex, Clerk
 ## Checks
 
 ```sh
-pnpm check                          # Biome lint and format
 pnpm --filter @d20/gm-core test     # Game master tests
 pnpm test:srd                       # SRD data checks
 pnpm stage:plans:check              # Fails on a stale floor plan
