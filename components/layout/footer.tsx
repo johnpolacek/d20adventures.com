@@ -39,6 +39,9 @@ export default function SiteFooter({ currentYear }: { currentYear: number }) {
             <Link href="/contact" className={link}>
               Contact
             </Link>
+            <a href="https://github.com/johnpolacek/d20adventures.com" target="_blank" rel="noopener noreferrer" className={link}>
+              GitHub
+            </a>
           </nav>
         </div>
       </div>
