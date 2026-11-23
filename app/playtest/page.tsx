@@ -1,3 +1,4 @@
+import { share } from "@/lib/share"
 import { Heading } from "@d20/ui/typography/heading"
 import { auth } from "@clerk/nextjs/server"
 import { Github } from "lucide-react"
@@ -10,7 +11,7 @@ import { Leaving } from "./leaving"
 import { served } from "@/lib/served"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Become a Playtester | D20 Adventures" }
+export const metadata = share({ title: "Become a Playtester", description: "Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web." })
 
 const repo = REPO
 const soloDemo = "/settings/realm-of-myr/the-midnight-summons"

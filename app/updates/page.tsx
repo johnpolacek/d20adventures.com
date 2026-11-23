@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { share } from "@/lib/share"
 import Link from "next/link"
 import { formatPostDate, getPosts, renderPost } from "@/lib/updates"
 
@@ -6,8 +7,7 @@ import { formatPostDate, getPosts, renderPost } from "@/lib/updates"
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: "Updates | D20 Adventures",
-  description: "What's new in D20 Adventures.",
+  ...share({ title: "Updates", description: "What’s new in D20 Adventures, with notes on how it is built." }),
   alternates: { canonical: "./", types: { "application/rss+xml": "/updates/rss.xml" } },
 }
 

@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
+import { share } from "@/lib/share"
 import Link from "next/link"
 import { contactUs, LegalPage, type LegalSection } from "@/components/legal/legal-page"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | D20 Adventures",
-  description: "What D20 Adventures collects and what we do with it, in plain words.",
+  ...share({ title: "Privacy Policy", description: "What D20 Adventures collects and what we do with it, in plain words." }),
 }
 
 const sections: LegalSection[] = [

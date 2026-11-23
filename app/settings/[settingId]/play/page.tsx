@@ -8,10 +8,18 @@ import ImageHeader from "@d20/ui/image-header"
 import Image from "@d20/ui/native-image"
 import { partyLabel } from "@/components/views/adventure-preview"
 import { getCachedSetting, getCachedSettingAdventures } from "@/lib/setting-cache"
-import { headerImage, picture } from "@/lib/images"
+import type { Metadata } from "next"
+import { share } from "@/lib/share"
+import { headerImage, picture, shareImage } from "@/lib/images"
 import { getLocalWikiAdventureDefinition, playsOnSite } from "@/lib/wiki-adventures/local-runtime"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import type { Setting } from "@/types/setting"
+
+export async function generateMetadata(props: { params: Promise<{ settingId: string }> }): Promise<Metadata> {
+  const setting = await getCachedSetting((await props.params).settingId).catch(() => null)
+  if (!setting) return {}
+  return share({ title: `${setting.name} Adventures`, description: setting.description || `Fantasy 5E adventures in the ${setting.name}, played with an AI Game Master.`, image: setting.image ? { url: shareImage(setting.image), alt: setting.name } : undefined })
+}
 
 export default async function SettingAdventures(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params

@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
+import { share } from "@/lib/share"
 import { srdAttribution } from "@d20/srd/attribution"
 import { LedgerPage } from "@/components/layout/ledger-page"
 
-export const metadata: Metadata = { title: "Licenses | D20 Adventures" }
+export const metadata: Metadata = share({ title: "Licenses", description: "Credits for the SRD 5.2.1 rules and the 3D figures in D20 Adventures." })
 
 // The attribution statement, as written, with its two URLs as links.
 const parts = srdAttribution.split(/(https:\/\/\S+?)(?=\.(?:\s|$))/)

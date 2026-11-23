@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
+import { share } from "@/lib/share"
 import { ConfigCard } from "@/components/admin/config-card"
 import { ContactForm } from "@/components/contact/contact-form"
 import { LedgerPage } from "@/components/layout/ledger-page"
 
 export const metadata: Metadata = {
-  title: "Contact | D20 Adventures",
-  description: "Questions, bugs or ideas? Send a note.",
+  ...share({ title: "Contact", description: "Questions, bugs or ideas? Send a note." }),
 }
 
 async function checkEnvironmentVariables() {

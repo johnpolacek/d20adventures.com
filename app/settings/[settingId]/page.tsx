@@ -4,8 +4,16 @@ import { buttonClassName, buttonStyle } from "@d20/ui/button"
 import ImageHeader from "@d20/ui/image-header"
 import { isDev } from "@/lib/auth-utils"
 import { getCachedSetting } from "@/lib/setting-cache"
-import { headerImage } from "@/lib/images"
+import type { Metadata } from "next"
+import { share } from "@/lib/share"
+import { headerImage, shareImage } from "@/lib/images"
 import type { Setting } from "@/types/setting"
+
+export async function generateMetadata(props: { params: Promise<{ settingId: string }> }): Promise<Metadata> {
+  const setting = await getCachedSetting((await props.params).settingId).catch(() => null)
+  if (!setting) return {}
+  return share({ title: setting.name, description: setting.description || `Fantasy 5E adventures in the ${setting.name}, played with an AI Game Master.`, image: setting.image ? { url: shareImage(setting.image), alt: setting.name } : undefined })
+}
 
 export default async function SettingHome(props: { params: Promise<{ settingId: string }> }) {
   const { settingId } = await props.params

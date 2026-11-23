@@ -12,11 +12,12 @@
 // of search.
 
 import type { Metadata } from "next"
+import { share } from "@/lib/share"
 import { notFound } from "next/navigation"
 import { loadLibrary } from "@/asset-library/load"
 import { AssetLibrary } from "@/asset-library/ui/library"
 
-export const metadata: Metadata = { title: "Asset Library · The Realm of Myr", robots: { index: false, follow: false } }
+export const metadata: Metadata = { ...share({ title: "Asset Library · The Realm of Myr", description: "The pictures, 3D figures and sets behind the Realm of Myr adventures." }), robots: { index: false, follow: false } }
 
 export default async function SettingAssets(props: { params: Promise<{ settingId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const { settingId } = await props.params
