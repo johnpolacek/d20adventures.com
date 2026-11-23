@@ -115,11 +115,11 @@ const markdown = new Marked({
 
 const attribute = (tag: string, name: string) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1]
 
-/** A picture standing alone becomes a numbered figure, captioned with its alt text. */
+/** A picture standing alone becomes a numbered figure, captioned with its alt text. A linked one keeps its link. */
 function figures(html: string): string {
   let count = 0
-  // Alone in its paragraph, or a block of its own with a tag or nothing after it.
-  return html.replace(/<p>(<img\b[^>]*>)<\/p>|(?<=^|\n)(<img\b[^>]*>)(?=\s*(?:<(?!\/p>)|$))/g, (_, inParagraph: string | undefined, alone: string | undefined) => {
+  // Alone in its paragraph, linked or not, or a block of its own with a tag or nothing after it.
+  return html.replace(/<p>(?:<a href="([^"]+)">)?(<img\b[^>]*>)(?:<\/a>)?<\/p>|(?<=^|\n)(<img\b[^>]*>)(?=\s*(?:<(?!\/p>)|$))/g, (_, href: string | undefined, inParagraph: string | undefined, alone: string | undefined) => {
     const tag = (inParagraph ?? alone) as string
     count += 1
     const alt = attribute(tag, "alt") ?? ""
@@ -127,7 +127,7 @@ function figures(html: string): string {
     // The first picture may be on screen at once, so only the later ones load lazily.
     const img = count > 1 && !/\sloading=/.test(tag) ? tag.replace(/\s*\/?>$/, ' loading="lazy" decoding="async" />') : tag
     const caption = alt ? `<figcaption><span class="up-fig-num">Fig. ${count}</span>${/[.!?]$/.test(alt) ? alt : `${alt}.`}</figcaption>` : ""
-    return `<figure class="up-fig${tall ? " is-tall" : ""}">${img}${caption}</figure>`
+    return `<figure class="up-fig${tall ? " is-tall" : ""}">${href ? `<a href="${href}">${img}</a>` : img}${caption}</figure>`
   })
 }
 

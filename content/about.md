@@ -106,7 +106,7 @@ I wrote up the whole thing, every prompt included: [Turn Your Character Art into
 
 Every character, place and 3D figure lives in the [asset library](/settings/realm-of-myr/assets). Each figure has one card with every version of it, and you can open any place and fly around it.
 
-![The asset library’s character cards marked 3D, grouped by adventure.](https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/figures.webp)
+[![The asset library’s character cards marked 3D, grouped by adventure.](https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/figures.webp)](/settings/realm-of-myr/assets)
 
 ### Making Your Own Adventures
 
