@@ -723,10 +723,39 @@ function FacesDemo() {
   )
 }
 
+// The desktop app's icon, and its die cut from the tile as the site's favicon, at the sizes each is seen.
+const icons = [
+  { name: "App icon", note: "The desktop app, on its tile", src: "/images/app-icon.png", sizes: [128, 64, 32] },
+  { name: "Favicon", note: "The same die without the tile", src: "/images/favicon.png", sizes: [128, 32, 16] },
+]
+
+function IconsDemo() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      {icons.map((icon) => (
+        <div key={icon.name} className="flex flex-col gap-3">
+          <span className={siteLabel}>
+            {icon.name} <span className="normal-case tracking-normal text-white/50">{icon.note}</span>
+          </span>
+          <div className="flex items-end gap-5">
+            {icon.sizes.map((size) => (
+              <div key={size} className="flex flex-col items-center gap-1">
+                <img src={icon.src} alt="" width={size} height={size} />
+                <span className="font-mono text-3xs text-white/50">{size}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Which tab each tile is under. A popup opens over either look, so it is shared. Everything else is the game's.
-const SHARED = new Set(["Faces", "Dialog", "Alert Dialog", "Hover Card", "Toast", "Tooltip", "Menu"])
+const SHARED = new Set(["Icons", "Faces","Dialog", "Alert Dialog", "Hover Card", "Toast", "Tooltip", "Menu"])
 
 const tiles: Tile[] = [
+  { name: "Icons", full: true, demo: <IconsDemo /> },
   { name: "Faces", full: true, demo: <FacesDemo /> },
   { name: "Typography", full: true, demo: <TypographyDemo /> },
   { name: "Narration", full: true, demo: <NarrationDemo /> },

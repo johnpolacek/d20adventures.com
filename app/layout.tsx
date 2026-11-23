@@ -45,7 +45,13 @@ export const metadata: Metadata = {
   title: siteConfig.title,
   description: siteConfig.description,
   icons: {
-    icon: "/images/favicon.svg",
+    // The desktop app's die, cut from its tile (lab/favicon-designs). Apple's icon keeps a tile, since iOS fills
+    // transparency with black.
+    icon: [
+      { url: "/images/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/images/favicon.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/images/apple-touch-icon.png",
   },
   openGraph: {
     title: siteConfig.title,

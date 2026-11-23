@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Favicon Designs</title>
+<link id="fav" rel="icon" href="../../public/images/favicon.svg">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0d12; color: #e5e7eb; font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1400px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  h2 { margin: 36px 0 12px; font-size: 15px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  header p { margin: 0; color: #9ca3af; }
+  code { font-size: 13px; color: #fcd34d; }
+
+  /* tab strips */
+  .strips { display: grid; gap: 10px; }
+  .strip { display: flex; gap: 2px; align-items: flex-end; padding: 8px 8px 0; border-radius: 10px 10px 0 0; overflow-x: auto; }
+  .strip.light { background: #dee1e6; }
+  .strip.dark { background: #202124; }
+  .tab { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; width: 180px; height: 34px; padding: 0 12px; border-radius: 8px 8px 0 0; font-size: 12px; white-space: nowrap; overflow: hidden; cursor: pointer; }
+  .tab img { width: 16px; height: 16px; flex: none; }
+  .light .tab { color: #3c4043; }
+  .light .tab.on { background: #fff; }
+  .dark .tab { color: #bdc1c6; }
+  .dark .tab.on { background: #35363a; color: #e8eaed; }
+  .tab:not(.on):hover { background: rgb(128 128 128 / .15); }
+
+  /* compare row */
+  .compare { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+  .cmp { display: grid; justify-items: center; gap: 6px; padding: 10px 4px; border: 1px solid #262b36; border-radius: 8px; background: #12151c; cursor: pointer; font-size: 11px; color: #9ca3af; text-align: center; }
+  .cmp.on { border-color: #fcd34d; color: #fcd34d; }
+  .cmp .pair { display: flex; gap: 6px; }
+  .cmp .pair span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; }
+  .cmp .pair span:first-child { background: #fff; }
+  .cmp .pair span:last-child { background: #202124; }
+  .cmp img { width: 16px; height: 16px; }
+
+  /* cards */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+  .card { border: 1px solid #262b36; border-radius: 10px; background: #12151c; overflow: hidden; }
+  .card.on { border-color: #fcd34d; }
+  .card .t { display: flex; align-items: baseline; gap: 10px; padding: 12px 14px 0; }
+  .card b { font-size: 16px; font-weight: 600; }
+  .card .note { padding: 2px 14px 10px; color: #9ca3af; font-size: 13.5px; }
+  .card .acts { margin-left: auto; display: flex; gap: 6px; }
+  button { font: inherit; font-size: 12px; color: #e5e7eb; background: #1c212b; border: 1px solid #323846; border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+  button:hover { border-color: #fcd34d; }
+  .sizes { display: flex; align-items: flex-end; gap: 18px; padding: 14px; flex-wrap: wrap; }
+  .sizes.light { background: #f4f1ea; color: #65553f; }
+  .sizes.dark { background: #0b0d12; color: #6b7280; }
+  .sz { display: grid; justify-items: center; gap: 6px; font-size: 11px; }
+  .zoom { image-rendering: pixelated; width: 64px; height: 64px; outline: 1px dashed rgb(128 128 128 / .35); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Favicon Designs</h1>
+    <p>Click any design to make it this page’s real favicon. “×4” shows the raw 16 pixel raster, zoomed. Live icon is <code>public/images/favicon.svg</code>.</p>
+  </header>
+
+  <h2>In the tab bar</h2>
+  <div class="strips">
+    <div class="strip light" id="stripLight"></div>
+    <div class="strip dark" id="stripDark"></div>
+  </div>
+
+  <h2>Side by side at 16px</h2>
+  <div class="compare" id="compare"></div>
+
+  <h2>Each design</h2>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+// Icosahedron in a 64 box: hexagon silhouette, front face, and the edges between.
+const H = { t: [32, 3], tr: [57.1, 17.5], br: [57.1, 46.5], b: [32, 61], bl: [6.9, 46.5], tl: [6.9, 17.5] }
+const F = { t: [32, 15], l: [14.5, 44], r: [49.5, 44] }
+const p = (...pts) => pts.map(q => q.join(',')).join(' ')
+const hex = p(H.t, H.tr, H.br, H.b, H.bl, H.tl)
+const face = p(F.t, F.l, F.r)
+const edges = [[H.t, F.t], [H.tl, F.t], [H.tr, F.t], [H.tl, F.l], [H.tr, F.r], [H.bl, F.l], [H.br, F.r], [H.b, F.l], [H.b, F.r]]
+const edgePath = edges.map(([a, b]) => `M${a}L${b}`).join('')
+const facets = (c) => [
+  [c[0], p(H.t, H.tl, F.t)], [c[0], p(H.t, H.tr, F.t)],
+  [c[1], p(H.tl, F.t, F.l)], [c[2], p(H.tr, F.t, F.r)],
+  [c[3], p(H.tl, F.l, H.bl)], [c[4], p(H.tr, F.r, H.br)],
+  [c[3], p(H.bl, F.l, H.b)], [c[5], p(F.l, F.r, H.b)], [c[4], p(H.br, F.r, H.b)],
+  [c[6], face],
+].map(([fill, pts]) => `<polygon points="${pts}" fill="${fill}"/>`).join('')
+const svg = (body, vb = '0 0 64 64') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${body}</svg>`
+const serif = `font-family="Georgia,'Times New Roman',serif" font-weight="700" text-anchor="middle"`
+
+const FA = `<path d="M106.75 215.06L1.2 370.95c-3.08 5 .1 11.5 5.930 12.14l208.26 22.07-108.64-190.1zM7.41 315.43L82.7 193.08 6.06 147.1c-2.67-1.6-6.06.32-6.06 3.43v162.81c0 4.03 5.29 5.53 7.41 2.09zM18.25 423.6l194.4 87.66c5.3 2.45 11.35-1.43 11.35-7.26v-65.67l-203.55-22.3c-4.45-.5-6.23 5.59-2.2 7.57zm81.22-257.78L179.4 22.88c4.340-7.06-3.59-15.25-10.78-11.14L17.81 110.35c-2.47 1.62-2.39 5.26.13 6.78l81.53 48.69zM240 176h109.21L253.63 7.62C250.5 2.54 245.25 0 240 0s-10.5 2.54-13.630 7.62L130.79 176H240zm233.94-28.9l-76.64 45.99 75.29 122.35c2.11 3.44 7.41 1.94 7.41-2.1V150.53c0-3.11-3.39-5.03-6.06-3.430zm-93.41 18.72l81.53-48.7c2.53-1.52 2.6-5.16.13-6.78l-150.81-98.6c-7.19-4.11-15.12 4.08-10.78 11.14l79.93 142.94zm79.02 250.21L256 438.32v65.67c0 5.84 6.05 9.71 11.35 7.26l194.4-87.66c4.03-1.97 2.25-8.06-2.2-7.56zm-86.3-200.97l-108.63 190.1 208.26-22.07c5.83-.65 9.01-7.14 5.93-12.14L373.25 215.06zM240 208H139.57L240 383.75 340.43 208H240z"/>`
+
+const tile = (fill, r = 14) => `<rect width="64" height="64" rx="${r}" fill="${fill}"/>`
+const grad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`
+
+const DESIGNS = [
+  { id: 'current', name: 'Current', note: 'Font Awesome d20 in RoyalBlue. Thin gaps vanish at 16px.',
+    svg: svg(`<g fill="RoyalBlue">${FA}</g>`, '-16 0 512 512') },
+  { id: 'app', name: 'Desktop app icon', note: 'The painted crystal d20 from the Tauri app. Raster, for reference.',
+    src: '../../apps/desktop/src-tauri/icons/icon.png' },
+  { id: 'app-die', name: 'App die, no tile', note: 'The app icon’s die cut out on transparency, filling the square at its own aspect ratio. The paint fleck on its top left edge is trimmed.',
+    src: 'die.png', file: 'die.png' },
+  { id: 'facet-indigo', name: 'Faceted indigo', note: 'Solid d20 in the app’s periwinkle, shaded by facet. Reads as a die even when blurry.',
+    svg: svg(facets(['#b9b3f0', '#9d95e6', '#7d74d1', '#6a61c0', '#544aa6', '#4a4196', '#d6d1ff'])) },
+  { id: 'tile-facet', name: 'App tile', note: 'Faceted die on the indigo rounded tile. Matches the desktop icon.',
+    svg: svg(grad('g1', '#3b3392', '#1c1752') + `<rect width="64" height="64" rx="14" fill="url(#g1)"/><g transform="translate(9 9) scale(.72)">${facets(['#c9c4ff', '#ada6f2', '#8d85e0', '#7a71cf', '#6157b5', '#544aa6', '#e6e3ff'])}</g>`) },
+  { id: 'outline', name: 'Line die', note: 'Icosahedron in one stroke weight. Clean, but thin at 16px.',
+    svg: svg(`<g fill="none" stroke="#6a61c0" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><polygon points="${hex}"/><polygon points="${face}"/><path d="${edgePath}"/></g>`) },
+  { id: 'outline-bold', name: 'Bold line die', note: 'Silhouette and face only, heavier stroke. Survives 16px.',
+    svg: svg(`<g fill="none" stroke="#5148b0" stroke-width="6" stroke-linejoin="round"><polygon points="${hex}"/><polygon points="${face}"/></g>`) },
+  { id: 'twenty', name: 'Die with 20', note: 'Faceted die, 20 on the front face. The number shows from 32px up.',
+    svg: svg(facets(['#8f87e3', '#7a71d4', '#6157b5', '#544aa6', '#433a8f', '#3a327d', '#f3f1ff']) + `<text x="32" y="38.5" font-size="15" fill="#3a327d" ${serif}>20</text>`) },
+  { id: 'crit', name: 'Natural 20', note: 'Gold die on night, 20 on the face. The crit as the mark.',
+    svg: svg(tile('#14111f') + `<g transform="translate(6 6) scale(.8125)">${facets(['#f6d77a', '#e8bf52', '#d1a23a', '#b8892c', '#9c7020', '#86601a', '#fff2c4'])}</g><text x="32" y="38" font-size="12.5" fill="#6e4d10" ${serif}>20</text>`) },
+  { id: 'face', name: 'Front face', note: 'Just the triangle face with 20. Simplest shape, biggest number.',
+    svg: svg(`<polygon points="32,4 61,56 3,56" fill="#5148b0" stroke="#5148b0" stroke-width="5" stroke-linejoin="round"/><text x="32" y="50" font-size="23" fill="#fff" ${serif}>20</text>`) },
+  { id: 'monogram', name: 'D monogram', note: 'Serif D on an indigo tile, like the logotype. Not a die at all.',
+    svg: svg(tile('#453D80') + `<text x="32" y="49" font-size="46" fill="#f3f1ff" ${serif}>D</text>`) },
+  { id: 'd20-text', name: 'D20 wordmark', note: 'The letters on a tile. Tight at 16px.',
+    svg: svg(tile('#453D80') + `<text x="32" y="42" font-size="27" fill="#f3f1ff" ${serif} letter-spacing="-1.5">D20</text>`) },
+  { id: 'ledger', name: 'Ledger stamp', note: 'Ink die on paper, in the Ledger blue. Fits the reading pages.',
+    svg: svg(tile('#fbf7ee') + `<rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#cdbfa3" stroke-width="3"/><g transform="translate(10 10) scale(.6875)" fill="none" stroke="#2b4a7e" stroke-width="6" stroke-linejoin="round"><polygon points="${hex}"/><polygon points="${face}" fill="#2b4a7e"/></g>`) },
+  { id: 'seal', name: 'Wax seal', note: 'Red seal with a pressed die. Fantasy, warm, odd one out.',
+    svg: svg(`<circle cx="32" cy="32" r="30" fill="#9a3324"/><circle cx="32" cy="32" r="23.5" fill="none" stroke="#c75a45" stroke-width="2.5"/><g transform="translate(15 15) scale(.53)" fill="none" stroke="#f5d9c8" stroke-width="7" stroke-linejoin="round"><polygon points="${hex}"/><polygon points="${face}"/></g>`) },
+  { id: 'shield', name: 'Shield', note: 'Heater shield with the die face. Says adventure, less says dice.',
+    svg: svg(`<path d="M32 3 L58 11 V30 C58 46 46 56 32 61 C18 56 6 46 6 30 V11 Z" fill="#453D80"/><polygon points="32,16 47,42 17,42" fill="#d6d1ff"/>`) },
+  { id: 'mono-dark', name: 'Knockout', note: 'White faceted die on black. Highest contrast in a light tab bar.',
+    svg: svg(tile('#000') + `<g transform="translate(8 8) scale(.75)">${facets(['#ffffff', '#e2e2e2', '#c4c4c4', '#b0b0b0', '#8f8f8f', '#7d7d7d', '#ffffff'])}</g>`) },
+  { id: 'adaptive', name: 'Adaptive', note: 'Indigo in light mode, periwinkle in dark, through prefers-color-scheme in the SVG. Tab previews here show light.',
+    svg: svg(`<style>g{fill:#453D80}@media (prefers-color-scheme: dark){g{fill:#b9b3f0}}</style><g>${facets(['currentColor', 'currentColor', 'currentColor', 'currentColor', 'currentColor', 'currentColor', 'currentColor']).replaceAll('fill="currentColor"', '')}</g><g style="fill:none;stroke:#fff;stroke-opacity:.55;stroke-width:2.5;stroke-linejoin:round"><polygon points="${face}"/><path d="${edgePath}"/></g>`) },
+]
+
+for (const d of DESIGNS) d.src ??= 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(d.svg)
+
+let current = 'current'
+const $ = (s) => document.querySelector(s)
+const img = (src, alt = '') => `<img src="${src}" alt="${alt}">`
+
+function render() {
+  for (const [el, mode] of [[$('#stripLight'), 'light'], [$('#stripDark'), 'dark']]) {
+    el.innerHTML = DESIGNS.map(d => `<div class="tab ${d.id === current ? 'on' : ''}" data-id="${d.id}">${img(d.src)}<span>${d.id === current ? 'D20 Adventures' : d.name}</span></div>`).join('')
+  }
+  $('#compare').innerHTML = DESIGNS.map(d => `<div class="cmp ${d.id === current ? 'on' : ''}" data-id="${d.id}"><div class="pair"><span>${img(d.src)}</span><span>${img(d.src)}</span></div>${d.name}</div>`).join('')
+  $('#grid').innerHTML = DESIGNS.map(d => `
+    <div class="card ${d.id === current ? 'on' : ''}" data-id="${d.id}">
+      <div class="t"><b>${d.name}</b><div class="acts">${d.svg ? `<button data-copy="${d.id}">Copy SVG</button>` : ''}${d.svg || d.file ? `<button data-dl="${d.id}">Download</button>` : ''}</div></div>
+      <div class="note">${d.note}</div>
+      ${['light', 'dark'].map(m => `<div class="sizes ${m}">
+        <div class="sz"><canvas class="zoom" data-src="${d.id}" data-px="16"></canvas>16 ×4</div>
+        <div class="sz"><canvas class="zoom" data-src="${d.id}" data-px="32" style="width:64px;height:64px"></canvas>32 ×2</div>
+        <div class="sz"><img src="${d.src}" width="16" height="16">16</div>
+        <div class="sz"><img src="${d.src}" width="32" height="32">32</div>
+        <div class="sz"><img src="${d.src}" width="48" height="48">48</div>
+        <div class="sz"><img src="${d.src}" width="96" height="96">96</div>
+      </div>`).join('')}
+    </div>`).join('')
+  for (const c of document.querySelectorAll('canvas[data-src]')) {
+    const d = DESIGNS.find(x => x.id === c.dataset.src), px = +c.dataset.px
+    c.width = c.height = px
+    const im = new Image()
+    im.onload = () => c.getContext('2d').drawImage(im, 0, 0, px, px)
+    im.src = d.src
+  }
+  $('#fav').href = DESIGNS.find(d => d.id === current).src
+}
+
+document.addEventListener('click', (e) => {
+  const copy = e.target.closest('[data-copy]'), dl = e.target.closest('[data-dl]')
+  if (copy) {
+    navigator.clipboard.writeText(DESIGNS.find(d => d.id === copy.dataset.copy).svg)
+    copy.textContent = 'Copied'
+    setTimeout(() => (copy.textContent = 'Copy SVG'), 1200)
+    return
+  }
+  if (dl) {
+    const d = DESIGNS.find(x => x.id === dl.dataset.dl)
+    const a = Object.assign(document.createElement('a'), { href: d.src, download: d.file ?? `favicon-${d.id}.svg` })
+    a.click()
+    return
+  }
+  const pick = e.target.closest('[data-id]')
+  if (pick) { current = pick.dataset.id; render() }
+})
+
+render()
+</script>
+</body>
+</html>
