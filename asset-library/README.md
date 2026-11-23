@@ -88,6 +88,15 @@ The owner, 2026-11-23: "it would be nice to be able to have the old and new vers
 - Images lists the current painting only, with how many versions it has. Opened, it lists them, and `&v=<day>` opens an earlier one.
 - The Images tab on the site shows versions after the next `pnpm assets:sync`. The Painted view comes with the deploy.
 
+### Before and after of a played look
+
+The owner, 2026-11-23: "when done i want to be able to see the before/after comparison in the assets library".
+
+- A played look is code, so an earlier one cannot be built again live. What is kept is its frames: the same shots captured before a round of work on the look and after it (`look-rounds.ts`, listed in `look-rounds.json`).
+- A place with rounds has a Before & After view beside Isometric and Stage. The two frames lie one over the other: drag across the picture to move the line, ← and → for the next shot, B or A for one side alone. Each shot says what a blind judge chose, where one was asked. `&view=compare&round=<day>&shot=<staging>:<shot>` opens one.
+- The frames are in `public/stage/looks/<set>/<day>/<shot>-before.webp` and `-after.webp`, out of git. `pnpm stage:sync public/stage/looks` puts them in the public bucket, and the view comes with the deploy.
+- Capture both sides with `capture.ts --page=stage`, which opens `/dev/stage` with `&look=play`: the set as the game builds it, cast as their figures.
+
 ## One command
 
 ```sh
@@ -409,6 +418,8 @@ A set with a room gets an Isometric view for nothing. A set out of doors gets on
 | `cast` | Cast members added to the scene for this view, written as a staging writes them. |
 | `materials` | Changes to the set's materials, for this view alone. |
 | `edit` | Changes to the set's parts by id, for this view alone. `null` leaves a part out. |
+| `rim` | How much of `figrim` each cast member takes, 1 if not named. A beast's fur catches it all over and glows. |
+| `tint` | A colour a cast member's figure is multiplied by, to sit a pale model in a night. |
 | `join` | Other sets that stand in the same world, each with where its middle falls in this one and the part types to leave out. |
 
 - `params`: `isowhole: "1"` keeps the whole set under its own sky, and is what an outdoor place wants. Without it the place is a model on a board, cut to `isobox`. `paint: "0"` turns the painterly pass off. `isolight: "gain,ambient,key"`, `isosky`, and `isolamps` (`x,y,z,strength,reach` and, if not a flame's, a colour, joined by `;`) light it. `isohide` leaves out part types that roof people over. `rings` are the cast ids ringed in gold. `shade` darkens the ground under the crowd. `bloom: "on"`. Four more are for night and for woods, below: `isofill`, `isohaze`, `figenv` and `isoclear`.

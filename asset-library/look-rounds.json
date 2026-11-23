@@ -1,0 +1,195 @@
+{
+  "realm-of-myr/valkarr-forest-trail": [
+    {
+      "made": "2026-11-23",
+      "note": "Played look, two rounds: the owlbear greyed and its rim light cut, shorter grass, more moonlight on bark, soft contact shadows under figures, and speaker views that fit a beast",
+      "shots": [
+        {
+          "shot": "standoff",
+          "label": "Standoff",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/standoff-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/standoff-after.webp",
+          "judged": "Blind judge chose After, 5.6 to 5.5"
+        },
+        {
+          "shot": "beast",
+          "label": "Owlbear",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/beast-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/beast-after.webp",
+          "judged": "Blind judge chose Before, 6.2 to 5.8, as After's owlbear went navy. Greyed since: a tie"
+        },
+        {
+          "shot": "ranger",
+          "label": "Thalbern",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/ranger-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/ranger-after.webp",
+          "judged": "Blind judge chose After, 5.8 to 5.5, and its lower framing again, 5.5 to 5.0"
+        },
+        {
+          "shot": "reveal",
+          "label": "The Owlbear Comes Out",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/reveal-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/reveal-after.webp",
+          "judged": "Blind judge chose After, 5.4 to 5.1"
+        },
+        {
+          "shot": "on-owlbear",
+          "label": "Speaking: Owlbear",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/on-owlbear-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/on-owlbear-after.webp",
+          "judged": "Blind judge chose After, 6.0 to 5.0: the whole owlbear in frame"
+        },
+        {
+          "shot": "on-thalbern",
+          "label": "Speaking: Thalbern",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/on-thalbern-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/on-thalbern-after.webp"
+        },
+        {
+          "shot": "trail",
+          "label": "The Trail",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/trail-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/trail-after.webp"
+        },
+        {
+          "shot": "clearing",
+          "label": "The Clearing",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/clearing-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/clearing-after.webp"
+        },
+        {
+          "shot": "oak",
+          "label": "The Great Oak",
+          "staging": "the-midnight-summons/owlbear-confrontation",
+          "before": "/stage/looks/valkarr-forest-trail/2026-11-23/oak-before.webp",
+          "after": "/stage/looks/valkarr-forest-trail/2026-11-23/oak-after.webp",
+          "judged": "Blind judge chose After, 4.4 to 4.1. Both cut Thalbern at the edge"
+        }
+      ]
+    }
+  ],
+  "realm-of-myr/old-standing-stones": [
+    {
+      "made": "2026-11-23",
+      "note": "Played look, two rounds: pale weathered granite with lichen in place of dark lumps, lighter grass blades, the druid framed whole with the moon",
+      "shots": [
+        {
+          "shot": "meeting",
+          "label": "Meeting",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/meeting-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/meeting-after.webp",
+          "judged": "Blind judge chose After, 4.8 to 4.6. Stones darkened since: a tie"
+        },
+        {
+          "shot": "druid",
+          "label": "Wollandora",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/druid-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/druid-after.webp",
+          "judged": "Blind judge chose After, 4.4 to 4.0, and the moon back in frame, 4.9 to 4.6"
+        },
+        {
+          "shot": "ranger",
+          "label": "Thalbern",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/ranger-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/ranger-after.webp",
+          "judged": "Blind judge chose After, 4.2 to 3.7: his feet in frame"
+        },
+        {
+          "shot": "on-wollandora",
+          "label": "Speaking: Wollandora",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/on-wollandora-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/on-wollandora-after.webp",
+          "judged": "Blind judge chose After, 4.6 to 4.2"
+        },
+        {
+          "shot": "on-thalbern",
+          "label": "Speaking: Thalbern",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/on-thalbern-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/on-thalbern-after.webp"
+        },
+        {
+          "shot": "stones",
+          "label": "The Stones",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/stones-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/stones-after.webp",
+          "judged": "Blind judge chose After, 5.1 to 4.8"
+        },
+        {
+          "shot": "river",
+          "label": "The River",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/river-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/river-after.webp"
+        },
+        {
+          "shot": "path",
+          "label": "The Path",
+          "staging": "the-midnight-summons/meeting-at-the-stones",
+          "before": "/stage/looks/old-standing-stones/2026-11-23/path-before.webp",
+          "after": "/stage/looks/old-standing-stones/2026-11-23/path-after.webp"
+        }
+      ]
+    }
+  ],
+  "realm-of-myr/thalberns-forest-home": [
+    {
+      "made": "2026-11-23",
+      "note": "Played look, two rounds: stones, shingles, boards and flags at a cottage's sizes, the door brought out of the wall, Thalbern framed to his feet",
+      "shots": [
+        {
+          "shot": "home",
+          "label": "The Cottage",
+          "staging": "the-midnight-summons/preparing-for-the-city",
+          "before": "/stage/looks/thalberns-forest-home/2026-11-23/home-before.webp",
+          "after": "/stage/looks/thalberns-forest-home/2026-11-23/home-after.webp",
+          "judged": "Blind judge chose After, 4.9 to 4.7, and with the door, 4.7 to 4.4"
+        },
+        {
+          "shot": "porch",
+          "label": "The Porch",
+          "staging": "the-midnight-summons/preparing-for-the-city",
+          "before": "/stage/looks/thalberns-forest-home/2026-11-23/porch-before.webp",
+          "after": "/stage/looks/thalberns-forest-home/2026-11-23/porch-after.webp",
+          "judged": "Blind judge chose After, 4.5 to 4.4, and with the door, 4.5 to 4.2"
+        },
+        {
+          "shot": "ranger",
+          "label": "Thalbern",
+          "staging": "the-midnight-summons/preparing-for-the-city",
+          "before": "/stage/looks/thalberns-forest-home/2026-11-23/ranger-before.webp",
+          "after": "/stage/looks/thalberns-forest-home/2026-11-23/ranger-after.webp",
+          "judged": "Blind judge chose After, 5.0 to 4.1: his feet in frame"
+        },
+        {
+          "shot": "on-thalbern",
+          "label": "Speaking: Thalbern",
+          "staging": "the-midnight-summons/preparing-for-the-city",
+          "before": "/stage/looks/thalberns-forest-home/2026-11-23/on-thalbern-before.webp",
+          "after": "/stage/looks/thalberns-forest-home/2026-11-23/on-thalbern-after.webp",
+          "judged": "Blind judge chose Before, 5.2 to 5.0, for the sun's shadow at his feet"
+        },
+        {
+          "shot": "woods",
+          "label": "The Woods",
+          "staging": "the-midnight-summons/preparing-for-the-city",
+          "before": "/stage/looks/thalberns-forest-home/2026-11-23/woods-before.webp",
+          "after": "/stage/looks/thalberns-forest-home/2026-11-23/woods-after.webp"
+        }
+      ]
+    }
+  ]
+}

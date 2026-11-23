@@ -33,6 +33,8 @@ export interface FigureSpec {
   // A light along its edges, brightest on what faces up: in a dark wood the figure stands out of it by its outline,
   // as under a moon, wherever it stands.
   rim?: { color: string; strength: number }
+  // A colour its own is multiplied by: a pale model darkened to sit in a night, as the card it replaces was painted.
+  tint?: string
   // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
   // way. One it has none for, it does not make.
   moves?: { melee?: string; ranged?: string; dodge?: string }
@@ -276,6 +278,7 @@ export class Models {
           // A generated skin shines like wax and its relief is cut too deep: both catch a low light as streaks.
           made.normalScale.setScalar(0.7)
         }
+        if (spec.tint) made.color.multiply(new THREE.Color(spec.tint))
         materials.set(src, made)
       }
       o.material = materials.get(src) as Mat

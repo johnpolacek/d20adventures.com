@@ -9,7 +9,7 @@ import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
 import type { SoundCue, Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
-import { compose, planTakes, type Take } from "@d20/stage/director"
+import { compose, planTakes, speakerShot, type Take } from "@d20/stage/director"
 import { served } from "@d20/stage/served"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -100,7 +100,12 @@ function wayOff(stage: Stage, id: string, heroes: string[]): [number, number] | 
 }
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
-  if ("subject" in aim) return { subject: aim.subject, distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
+  // Framed for a person, and farther off and higher for someone much taller (speakerShot).
+  const on = (id: string, shot: { distance: number; angle: number; height: number; lookHeight: number; fov: number }) => {
+    const c = stage.cast.find((m) => m.id === id)
+    return c ? speakerShot(c, shot) : { subject: id, ...shot }
+  }
+  if ("subject" in aim) return on(aim.subject, { distance: 4.5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 })
   if ("pair" in aim) {
     const [actor, target] = aim.pair
     // A shot the scene's author framed on both of them, clear of trees and walls.
@@ -116,7 +121,7 @@ function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string
     const cam = { x: a.x - dx * 2.4 + dz * 0.9, z: a.z - dz * 2.4 - dx * 0.9 }
     if (d > 0.3 && d < 14 && a.height <= 2.2 && !stage.reach(actor, cam, 4).short)
       return { position: [cam.x, a.y + 1.9, cam.z], target: [a.x + dx * d * 0.6, a.y + (b.y - a.y) * 0.6 + 1.2, a.z + dz * d * 0.6], fov: 48 }
-    return { subject: target, distance: 6, angle: 25, height: 1.8, lookHeight: 1.2, fov: 48 }
+    return on(target, { distance: 6, angle: 25, height: 1.8, lookHeight: 1.2, fov: 48 })
   }
   const mark = stage.set.marks[aim.place]
   if (!mark) return null
@@ -934,7 +939,11 @@ export function StagePlay(props: {
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
     if (take) return void go(take.shot, take)
-    if (lead) return void go({ subject: lead, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }, null)
+    if (lead) {
+      const shot = { distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
+      const leader = stage.cast.find((c) => c.id === lead)
+      return void go(leader ? speakerShot(leader, shot) : { subject: lead, ...shot }, null)
+    }
     const view = beats[paragraph]?.view
     if (!view) return
     const shot = shotFor(stage, view, heroes.current)
@@ -1013,7 +1022,9 @@ export function StagePlay(props: {
       if (!character) return
       const sid = stage && castIdFor(stage.cast, character)
       if (stage && sid && focused.current !== id) {
-        stage.shot({ subject: sid, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 })
+        const member = stage.cast.find((c) => c.id === sid)
+        const shot = { distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 }
+        stage.shot(member ? speakerShot(member, shot) : { subject: sid, ...shot })
         focused.current = id
         return
       }

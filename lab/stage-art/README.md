@@ -280,6 +280,18 @@ The Midnight Summons audited as played, 2026-11-23. Every shot and speaker's vie
 - Round 2, blind again: `standoff`, `fight` and `druid` retouched, each won clearly. `fallen` lost slightly and keeps its first painting.
 - The cottage keeps all its first paintings. Its retouches came back with crunchy stone and the lantern still lit. Left: the bow lying like a hoop on the sill, the lantern lit by day.
 
+The three places' played looks (the built sets, not the paintings) went through the dream loop on 2026-11-23, judged at device scale 2 with the cast as their figures (`capture.ts --page=stage`). Targets were painted from each set's own frames, cast and all. Every change was settled blind, before against after, sides shuffled. The frames are in the asset library's Before & After view.
+
+- Round 1: the trail's after won 5 of 6 pairs, the stones' 5 of 5, the home's 3 of 4. Scores 3.7 to 6.2, the margins mostly under half a point, with two clear wins: framings that kept feet and a whole owlbear in frame.
+- Round 2: lower framings and the cottage's door won, a neutral owlbear tint and darker stones tied.
+- The game's speaker views framed everyone as a person, so a 3.3 m owlbear lost its head (`speakerShot` in `director.ts`, used by the play screen). Close shots on Thalbern and Wollandora cut their feet: their stagings look lower now.
+- Contact shadows were hard black discs. Their texture faded white by its alpha, and an alpha map reads green (`contactTexture` in `standees.ts`). It is soft now, for cards on every set too, and darker under a figure.
+- The owlbear glowed: its feathers caught the rim light all over. The trail takes less of it for the owlbear and greys its model (`rim`, `tint` in the look).
+- No leaves fall across the owlbear in any played frame. No judge saw the stones' river mist in a still frame, only a haze along the far bank: it is faint, and drifts.
+- The cottage's door stood 17 cm inside its wall and never showed. The set's door is brought forward.
+- Stopped at about 5 of 10 everywhere. What is left wants rebuilding, not tuning: the standing stones are smooth wedges, bushes are leafy ellipsoids, the roof is masonry and not shingles, ferns and grass are flat cards, the ground smears up close, the far bank is a bare plane. Bushes, ferns and trees are shared builders that also stand in painted sets, so they were left alone here.
+- Over budget before and after, measured: the trail draws 2.8M triangles and the stones 3.4M, against 2.5M.
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.

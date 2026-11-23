@@ -155,7 +155,10 @@ export async function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Lo
   await Promise.all(
     cast.map(async (c) => {
       const character = figureOf(c.id)
-      if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(rim ? { rim } : {}), ...(await motionOf(character)) }
+      // A figure's own share of the rim light: a beast's fur turns every way and catches it all over.
+      const edge = rim && { ...rim, strength: rim.strength * (look.rim?.[c.id] ?? 1) }
+      const tint = look.tint?.[c.id]
+      if (character) c.figure = { model: `${FIGURE_FILES}/${character}/${detail}.glb`, env, ...(edge ? { rim: edge } : {}), ...(tint ? { tint } : {}), ...(await motionOf(character)) }
     })
   )
   const flags: Partial<Flags> = { figures: true, ...(q.paint === "0" ? { brush: 0 } : {}), ...(q.bloom ? { bloom: q.bloom === "on" } : {}) }

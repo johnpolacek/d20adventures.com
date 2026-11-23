@@ -122,7 +122,8 @@ async function main() {
     .resize(w, Math.round((w * height) / width), { fit: "fill" })
     .png()
     .toFile(`${out}.png`)
-  if (style !== "retouch") await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`)
+  // A plate from /dev/stage (capture.ts --page=stage) has no camera file: its target is judged, not projected.
+  if (style !== "retouch") await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`).catch(() => null)
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${name}.jpg`)
   const m = await sharp(png).metadata()
   console.log(`${out}.png from ${m.width}x${m.height}`)

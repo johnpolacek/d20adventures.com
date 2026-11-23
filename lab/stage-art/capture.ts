@@ -8,6 +8,7 @@
 // Writes lab/stage-art/raw/captures/<name>-<shot>.png, and with --camera the shot's camera as <name>-<shot>.json.
 
 import { mkdir, writeFile } from "node:fs/promises"
+import { speakerShot } from "../../packages/stage/src/director"
 
 const BASE = process.env.STAGE_BASE || "http://localhost:3057"
 const PORT = process.env.STAGE_CDP_PORT || "9478"
@@ -71,13 +72,15 @@ async function main() {
   await send("Emulation.setDeviceMetricsOverride", { width: 1350, height: 900, deviceScaleFactor: Number(arg("dpr") ?? 2), mobile: false })
   await send("Emulation.setFocusEmulationEnabled", { enabled: true })
   await mkdir(OUT, { recursive: true })
-  const url = `${BASE}/dev/stage-lab?motion=${process.argv.includes("--motion") || arg("glide") ? 1 : 0}&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
+  // --page=stage: /dev/stage, the game's own stage page, where &look=play builds a set as the game plays it (play.ts).
+  const page = arg("page") === "stage" ? "stage" : "stage-lab"
+  const url = `${BASE}/dev/${page}?motion=${process.argv.includes("--motion") || arg("glide") ? 1 : 0}&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
   await send("Page.navigate", { url })
   let ready = false
   for (let i = 0; i < 480 && !ready; i++) {
     await delay(250)
     const state = await ev<{ ready: boolean; error?: string } | null>(
-      "window.__stageError ? { ready: false, error: window.__stageError } : window.__stage && window.__lab ? { ready: window.__stage.ready } : null"
+      `window.__stageError ? { ready: false, error: window.__stageError } : window.__stage && (window.__lab || ${page === "stage"}) ? { ready: window.__stage.ready } : null`
     ).catch(() => null)
     if (state?.error) throw new Error(state.error)
     ready = !!state?.ready
@@ -147,8 +150,8 @@ async function main() {
   // --heroes: each cast member's speaker view as well, framed as stage:check's HERO_SHOT, as <name>-on-<id>.png.
   const views: [string, unknown][] = shots.map((s) => [s, s])
   if (process.argv.includes("--heroes"))
-    for (const c of await ev<string[]>("window.__stage.cast.map(c => c.id)"))
-      views.push([`on-${c.split("/").pop()}`, { subject: c, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 }])
+    for (const c of await ev<{ id: string; height: number; voice?: "beast" }[]>("window.__stage.cast.map(c => ({ id: c.id, height: c.height, voice: c.voice }))"))
+      views.push([`on-${c.id.split("/").pop()}`, speakerShot(c, { distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 })])
   for (const [shot, which] of views) {
     await ev(`window.__stage.shot(${JSON.stringify(which)}, { instant: true })`)
     await delay(1500)

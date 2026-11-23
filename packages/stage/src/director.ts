@@ -144,7 +144,7 @@ const DEG = Math.PI / 180
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 const fovFor = (half: number, far: number) => clamp((2 * Math.atan(half / Math.max(0.5, far))) / DEG, 18, 70)
 // Someone much taller than a person, to be looked up at: a beast, an ogre, a drake.
-const big = (c: CastMember) => c.height >= 2.3 || c.voice === "beast"
+const big = (c: Pick<CastMember, "height" | "voice">) => c.height >= 2.3 || c.voice === "beast"
 
 type Subject = Extract<StagingShot, { subject: string }>
 // The size of shot on one person, scaled by how tall they are. `side` swings it off their face, `low` and `high` put
@@ -162,6 +162,13 @@ function on(c: CastMember, size: "extreme" | "close" | "medium" | "wide", side: 
   if (size === "close") return { subject: c.id, distance: clamp(h * 0.95, 1.3, 4), angle: side * angle, height: h * 0.88, lookHeight: h * 0.86, fov: lens ?? 32 }
   if (size === "medium") return { subject: c.id, distance: clamp(h * 2.1, 2.6, 7), angle: side * angle, height: h * 0.95, lookHeight: h * 0.66, fov: lens ?? 40 }
   return { subject: c.id, distance: clamp(h * 3.6 + 2, 5, 16), angle: side * angle, height: h * 1.25, lookHeight: h * 0.5, fov: lens ?? 48 }
+}
+// A speaker's view, framed for a person. Someone much taller stands farther off and is looked at higher up, so the
+// whole of them is in the frame: framed as a person, the owlbear's head went off the top.
+export function speakerShot(c: Pick<CastMember, "id" | "height" | "voice">, shot: Omit<Subject, "subject">): Subject {
+  if (!big(c)) return { subject: c.id, ...shot }
+  const h = c.height
+  return { ...shot, subject: c.id, distance: clamp(h * 2.2, shot.distance, 12), height: h * 0.55, lookHeight: h * 0.6, fov: Math.max(shot.fov, 45) }
 }
 // From below, looking up: a hero's moment, or a monster's size.
 const low = (c: CastMember, side: number, near = 1.6): Subject => ({

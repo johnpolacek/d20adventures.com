@@ -47,6 +47,7 @@ const castMember = z
           .object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "colours are #rrggbb"), strength: num(0, 4) })
           .strict()
           .optional(),
+        tint: z.string().regex(/^#[0-9a-fA-F]{6}$/, "colours are #rrggbb").optional(),
         hide: z.array(z.string().max(80)).max(40).optional(),
         pace: num(0.1, 4).optional(),
         ownLight: z.boolean().optional(),

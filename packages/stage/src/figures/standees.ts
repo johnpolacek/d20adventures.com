@@ -233,7 +233,12 @@ function contactTexture() {
   c.width = c.height = 64
   const cx = c.getContext("2d")!
   const g = cx.createRadialGradient(32, 32, 0, 32, 32, 32)
-  for (let i = 0; i <= 8; i++) g.addColorStop(i / 8, `rgba(255,255,255,${((1 - i / 8) ** 2).toFixed(3)})`)
+  // An alpha map reads the green channel, so the falloff is drawn in grey on black. Drawn as white fading by its alpha,
+  // the green stayed full to the edge and the shadow was a hard black disc.
+  for (let i = 0; i <= 8; i++) {
+    const v = Math.round(255 * (1 - i / 8) ** 2)
+    g.addColorStop(i / 8, `rgb(${v},${v},${v})`)
+  }
   cx.fillStyle = g
   cx.fillRect(0, 0, 64, 64)
   contactMap = new THREE.CanvasTexture(c)
@@ -476,7 +481,8 @@ export class Standees {
       const r = 0.2 + c.height * 0.1
       s.contact.visible = s.loaded && s.fall < 0.95
       s.contact.scale.set(r * 2.2, r * 1.6, 1)
-      s.contact.material.opacity = 0.42 * (1 - s.fall)
+      // Under a figure it is darker: a model's feet stand in the grass, and at night a faint one left them floating.
+      s.contact.material.opacity = (this.replaced.has(c.id) ? 0.7 : 0.42) * (1 - s.fall)
       const hit = this.hits.get(c.id)
       if (hit) {
         hit.t += dt

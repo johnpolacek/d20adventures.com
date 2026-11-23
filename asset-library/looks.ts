@@ -14,6 +14,10 @@ export interface Look {
   // Cast members shown as figures from the library: a cast id, and the character (asset-library/characters) who stands
   // there. One whose figure is not built yet stays a card.
   figures?: Record<string, string>
+  // How much of the rim light (`figrim`) each cast member takes, 1 if not named.
+  rim?: Record<string, number>
+  // A colour a cast member's figure is multiplied by, to darken a pale model for the place.
+  tint?: Record<string, string>
   // Cast members this view adds to the scene, as a staging writes them.
   cast?: Record<string, unknown>[]
   // Other sets that stand in the same world, each with where its middle falls in this one. The parts it `leaves` out
@@ -125,7 +129,17 @@ export const LOOKS: Record<string, Look> = {
       bloom: "on",
     },
     // Grass a shade nearer the moon's colour: lit from above it went a daylight green.
-    materials: { grass: { tip: "#3f6650" }, grassTall: { tip: "#4a6c54" }, ground: { grass: "#2f4f33", moss: "#3a5c30" } },
+    // The stones are weathered granite, pale under the moon, with lichen and moss low on them: dark and deeply bumped,
+    // they read as lumps of clay with moss in blocks. A blade seen from behind took no light and stood black: its base is
+    // lighter.
+    materials: {
+      grass: { tip: "#3f6650", base: "#26392b" },
+      grassTall: { tip: "#4a6c54", base: "#24382b" },
+      ground: { grass: "#2f4f33", moss: "#3a5c30" },
+      stone: { a: "#4e5450", b: "#6d746e", lichen: "#9ba597", mossAmount: 0.4, lichenAmount: 0.6, relief: 0.28 },
+      stoneBank: { a: "#4e5450", b: "#6d746e", lichen: "#9ba597", mossAmount: 0.32, lichenAmount: 0.6, relief: 0.28 },
+      boulder: { a: "#4c534f", b: "#6b726c", relief: 0.3 },
+    },
     trees: {
       files: "/stage/trees",
       near: [-1.3, 0.4],
@@ -154,7 +168,7 @@ export const LOOKS: Record<string, Look> = {
       paint: "0",
       isobox: "-14,-18,14,22",
       isowhole: "1",
-      isolight: "1.25,0.08",
+      isolight: "1.45,0.1",
       isosky: "7f9cd0",
       isofill: "0.3",
       // Enough of the set's haze that the far wood goes into the dark, and not so much that the near one does.
@@ -176,7 +190,20 @@ export const LOOKS: Record<string, Look> = {
       bloom: "on",
     },
     // Neither of the set's shafts of light: a beam read as a pane of glass.
-    edit: { "oak-shaft": null, "clearing-shaft": null },
+    // The grass shorter, so the trail and the feet on it show: knee high, it hid both.
+    edit: {
+      "oak-shaft": null,
+      "clearing-shaft": null,
+      "trail-grass": { height: [0.1, 0.3] },
+      "clearing-grass": { height: [0.12, 0.32] },
+      "verge-grass": { height: [0.16, 0.42] },
+      "dry-grass": { height: [0.12, 0.34] },
+    },
+    // The owlbear's feathers turn every way and caught the rim light all over: it glowed against the wood.
+    rim: { owlbear: 0.35 },
+    // Its model is a pale slate, and stood out of the dark wood like a lit statue. A grey and not a blue: blued, it went navy
+    // close up.
+    tint: { owlbear: "#b0b0b0" },
     // Under a canopy nothing is lit at the height of the eye. The set's sky is a bright blue down to the ground, which
     // showed between the trunks as a band of daylight (the owner, 2026-11-15: "it should be almost black as the forest
     // canopy blocks all the light"). Here the sky goes to black at the horizon, the haze is black, and the far wood
@@ -191,7 +218,7 @@ export const LOOKS: Record<string, Look> = {
       sky: { horizon: "#152742", mid: "#0a1424", gain: 0.3 },
       fog: { color: "#060c15" },
       sun: { intensity: 0.7 },
-      hemisphere: { sky: "#64799c", ground: "#0e131b", intensity: 3 },
+      hemisphere: { sky: "#64799c", ground: "#0e131b", intensity: 3.6 },
       fill: { color: "#8ea6cc" },
     },
     // An old wood: oaks, pines, a few birches, and the dead among them.
@@ -216,7 +243,7 @@ export const LOOKS: Record<string, Look> = {
       // foot; dead branches low on them and a broken limb here and there.
       girth: [0.85, 1.6],
       lean: 0.13,
-      bark: { rim: ["#9db4d8", 0.05], moss: "#24301f", roots: true, stubs: 2, limbs: 0.3 },
+      bark: { rim: ["#9db4d8", 0.08], moss: "#24301f", roots: true, stubs: 2, limbs: 0.3 },
       // The wood goes on past the set's own into the haze, so between the trunks there is always another trunk.
       beyond: { count: 300, from: 44, to: 140, height: [11, 21], leaves: 0.4 },
       // Under the crowns, outside where the game is played: saplings, young spruce, snags.
@@ -237,6 +264,14 @@ export const LOOKS: Record<string, Look> = {
     play: true,
     // The trees over the path are left out, so the cottage is seen from down it.
     params: { paint: "0", isobox: "-14,-14,14,22", isowhole: "1", isolight: "1.05,0.2", isosky: "9db8e8", isoclear: "0,14,7;0.5,22,8;2,30,8", rings: "thalbern", bloom: "on" },
+    // Stones, shingles and boards the size they are on a cottage: at the set's own sizes, seen from a step away, the
+    // wall was a few big bevelled blocks and the roof a dozen tiles, a toy's.
+    materials: {
+      fieldstone: { block: [0.36, 0.24], joint: 0.05, relief: 0.07, variance: 0.9 },
+      shingles: { block: [0.22, 0.14], joint: 0.03 },
+      logs: { plank: [0.24, 6] },
+      path: { block: [0.55, 0.42], joint: 0.05 },
+    },
     // The same wood by day. The oak at the door is the set's own tallest tree.
     trees: {
       files: "/stage/trees",
