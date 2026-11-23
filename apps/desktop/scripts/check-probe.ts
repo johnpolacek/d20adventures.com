@@ -95,6 +95,8 @@ type Probe = {
   spellEffectsOn?: Record<string, SpellEffect[]>
   // Whether a hidden hero's turn is read as a sound louder than a whisper, which gives them away.
   loud?: boolean
+  // Whether the read takes a fight to be on. False is a talk or a trade, where a move draws no Opportunity Attack.
+  fight?: boolean
 }
 // A stake as a scene writes it: damage or healing, or a condition given ("condition") or ended ("end-condition").
 type Wanted = { on: string; target: string; kind: string; condition?: string }
@@ -216,6 +218,8 @@ async function run(probe: Probe): Promise<Graded> {
     if (!probe.checks.includes(picked)) faults.push(`check ${picked}, wanted ${probe.checks.join(" or ")}`)
     // One who is hidden and makes a sound louder than a whisper gives themselves away.
     if (probe.loud !== undefined && !!reading.loud !== probe.loud) faults.push(`${reading.loud ? "loud" : "quiet"}, wanted ${probe.loud ? "loud" : "quiet"}`)
+    // A fight is on unless the read says none is.
+    if (probe.fight !== undefined && (reading.fight !== false) !== probe.fight) faults.push(`${reading.fight === false ? "no fight" : "a fight"}, wanted ${probe.fight ? "a fight" : "no fight"}`)
     const surged = !!reading.choices?.surge
     if (probe.surge !== undefined && surged !== probe.surge) faults.push(`Action Surge ${surged ? "used" : "not used"}, wanted ${probe.surge ? "used" : "not used"}`)
     const cunning = got && isAttackRoll(got) ? got.attack.choices?.cunning : undefined

@@ -649,6 +649,7 @@
     "floor": true,
     "action": "I turn and sprint down the trail back toward home as fast as I can run.",
     "checks": ["dash"],
+    "fight": true,
     "moved": {
       "feet": [31, 60]
     }
@@ -8621,5 +8622,39 @@
     "moved": {
       "toward": "ferns"
     }
+  },
+  {
+    "id": "market-walk-off",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "labyrinthine-stalls",
+    "hero": "branka-stoneveil",
+    "floor": true,
+    "narrative": "Vera names her price for the carved dagger. Rae the Scarred leans on her spear an arm's length away, smirking at the newcomers.",
+    "action": "Branka counts the silver out onto Vera's stall, takes the dagger, and walks on down the lane to Mizrith's tent.",
+    "checks": ["none"],
+    "fight": false
+  },
+  {
+    "id": "market-rae-walks-past",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "labyrinthine-stalls",
+    "hero": "branka-stoneveil",
+    "actor": "rae-the-scarred",
+    "floor": true,
+    "narrative": "The newcomers linger at the charm stall. Vendors call their wares down the lane.",
+    "action": "Rae the Scarred saunters past the newcomers and off down the main lane, chuckling.",
+    "checks": ["none"],
+    "fight": false
+  },
+  {
+    "id": "market-fight-breaks",
+    "adventure": "welcome-to-kordavos",
+    "encounter": "labyrinthine-stalls",
+    "hero": "branka-stoneveil",
+    "floor": true,
+    "narrative": "Rae the Scarred lunges and her spear scores Branka's breastplate. Steel rings in the lane and the vendors scatter. Rae draws back for another thrust.",
+    "action": "Branka backs off from Rae toward Vera's stall with her shield up.",
+    "checks": ["none", "disengage", "dodge"],
+    "fight": true
   }
 ]

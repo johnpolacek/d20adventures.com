@@ -71,7 +71,7 @@ const rollPickSchema = z.object({
   spell: z.string().max(80).optional().describe('For "cast": the id of one of the character\'s own spells, from Their Spells'),
   targets: z.array(z.string().max(80)).max(8).optional().describe('For "cast": the ids of everyone the spell is cast on, from Who Is Here or the character\'s own id'),
   ritual: z.boolean().optional().describe('For "cast": true when a spell marked ritual is cast slowly, outside a fight, to spare its slot'),
-  fight: z.boolean().optional().describe('For "cast": true when a fight is on in the scene, false when it is not'),
+  fight: z.boolean().optional().describe('For "cast", and for a turn that moves: true when a fight is on in the scene, false when it is not'),
   slot: z.number().int().min(1).max(9).optional().describe('For "cast": the spell slot level, only when the player says they cast it with a higher slot'),
   damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
@@ -143,6 +143,11 @@ export type TurnReading = {
   ruling?: { name: string; text: string }
   /** One who is hidden made a sound louder than a whisper this turn, which gives them away (../sheet/hiding `heard`). */
   loud?: true
+  /**
+   * No fight is on in the scene, as the game master read it. A move then draws no Opportunity Attack
+   * (../sheet/reactions `moveWithReactions`). Unset when a fight is on, or when the read did not say.
+   */
+  fight?: false
 }
 
 // How a spell that stays on the floor is put, for the read's list of spells: a wall across the way to the one named, or
@@ -574,6 +579,7 @@ ${
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
+   - Every turn that moves sets "fight": true when a fight is on in the scene, false when it is not. A scene of talk or trade is no fight, whoever stands near.
    - A "hide" goes into cover: when the action names a place they hide at, "moveTo" is that place. When it names none, leave it out and the game finds the nearest cover.
 ${leapers.length ? `   - ${leapers.join(" and ")} ${leapers.length > 1 ? "teleport" : "teleports"} them: cast it, and "moveTo" or "moveAway" is where it takes them. The game puts them there with no walk, and that is their move this turn.\n` : ""}   - Never refuse or change an action because of distance. The game settles reach and range itself.
    - A spell marked "an area" takes whoever stands in it, friend or foe: in "targets" give the one it is aimed at first, and for a spell that picks its creatures, each one picked.
@@ -690,7 +696,7 @@ Action: "${action}"
       }
       const quickChoice = quick ? choiceFor(quick.spell) : undefined
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
-      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices" | "loud"> = used
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices" | "loud" | "fight"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? {
@@ -704,6 +710,9 @@ Action: "${action}"
           : {}
       // One who is hidden and makes a sound louder than a whisper gives themselves away.
       if (pick.loud === true && isHidden(character)) also.loud = true
+      // No fight is on, as the game master reads the scene, so a move draws no Opportunity Attack. The game master says
+      // it, as for a long casting, since a talk runs in rounds as a fight does. An attack is a fight whatever the read says.
+      if (pick.fight === false && pick.check !== "attack") also.fight = false
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
       const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }

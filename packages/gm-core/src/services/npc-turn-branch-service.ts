@@ -161,6 +161,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         characters: updatedCharacters,
         moverId: args.npc.id,
         path: reading.move.path,
+        // No fight is on, as the game master read the scene: no one strikes as the NPC walks off.
+        fight: reading.fight,
         // A spell's teleport walks nothing (../sheet/moves `takeTeleport`).
         teleport: reading.move.teleport,
         // The Disengage action, or a Bonus Action that takes it (Cunning Action, Nimble Escape).

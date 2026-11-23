@@ -582,6 +582,8 @@ export type OpportunityAttackMade = { attacker: string; blow: Strike; reactions:
  * save, Spike Growth's spikes), told in `told`. A mover the blow or the area drops stops where it fell. Everyone comes
  * back as the move left them, the mover standing where it ended. One who took the Disengage action draws no attack.
  * A teleport (`teleport`: ./moves `takeTeleport`) draws none either, and only an area it lands in touches the mover.
+ * A move made while no fight is on (`fight: false`) draws none: a hero who walks from a stall past a cutpurse they have
+ * no quarrel with is not struck. Unset, a fight is taken to be on.
  */
 export function moveWithReactions<T extends InPlay>(args: {
   characters: readonly T[]
@@ -589,6 +591,7 @@ export function moveWithReactions<T extends InPlay>(args: {
   path: readonly Point[]
   disengaged?: boolean
   teleport?: boolean
+  fight?: false
   ask: Ask
   d20: () => number
   roll: (sides: number) => number
@@ -602,7 +605,7 @@ export function moveWithReactions<T extends InPlay>(args: {
     const mover = moverNow()
     const from = mover.position
     if (!from) break
-    for (const { attacker, weapon } of opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged, teleport: args.teleport })) {
+    for (const { attacker, weapon } of args.fight === false ? [] : opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged, teleport: args.teleport })) {
       const attack = attacksOf(attacker).find((entry) => entry.id === weapon)
       const text = `${mover.name} is leaving ${attacker.name}'s reach. ${attacker.name} may strike with ${attack?.name ?? "an attack"}.`
       if (!args.ask({ id: "opportunity-attack", to: attacker.id, from: mover.id, weapon, matters: true }, text)) continue

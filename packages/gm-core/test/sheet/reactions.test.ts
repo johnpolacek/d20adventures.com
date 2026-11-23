@@ -316,6 +316,9 @@ test("a move draws an Opportunity Attack from each whose reach it leaves, and a 
   // One who Disengaged draws none, and one the Bandit is told not to strike is let go.
   assert.equal(moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, disengaged: true, ask: yes, d20: () => 15, roll: () => 4 }).attacks.length, 0)
   assert.equal(moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, ask: () => false, d20: () => 15, roll: () => 4 }).attacks.length, 0)
+  // With no fight on, the Bandit is a stranger he walks past: no blow, no Reaction spent, and he ends where he walked.
+  const calm = moveWithReactions({ characters: [thalbern, robber], moverId: "thalbern", path, fight: false, ask: yes, d20: () => 15, roll: () => 4 })
+  assert.deepEqual([calm.attacks.length, find(calm.characters, "thalbern").position, find(calm.characters, "thalbern").hitPoints, canReact(find(calm.characters, "bandit"))], [0, { x: -20, y: 0 }, 11, true])
   // With 5 hit points left the blow drops him, and he falls where he stood.
   const hurt = { ...thalbern, hitPoints: 5 }
   const fell = moveWithReactions({ characters: [hurt, robber], moverId: "thalbern", path, ask: yes, d20: () => 15, roll: () => 4 })

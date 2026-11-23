@@ -716,7 +716,7 @@
             "type": "boolean"
           },
           "fight": {
-            "description": "For \"cast\": true when a fight is on in the scene, false when it is not",
+            "description": "For \"cast\", and for a turn that moves: true when a fight is on in the scene, false when it is not",
             "type": "boolean"
           },
           "slot": {
@@ -1106,7 +1106,7 @@
             "type": "boolean"
           },
           "fight": {
-            "description": "For \"cast\": true when a fight is on in the scene, false when it is not",
+            "description": "For \"cast\", and for a turn that moves: true when a fight is on in the scene, false when it is not",
             "type": "boolean"
           },
           "slot": {
