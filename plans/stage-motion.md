@@ -33,12 +33,13 @@ Quiet under play. Parts are set down like cards and tokens: short, close, and se
   - Fixed: a glide ran straight through the Owlbear on its way to the next view. A glide that would pass through someone standing now cuts (`throughSomeone` in `stage.ts`).
   - Fixed: a hero dying or Stable never lay down. They now fall on the paragraph that drops them, and lie there after.
   - Fixed: a turn that opens a new encounter tells the old one's end first, so the new place's opening never got its establishing shot (`moments.ts`).
-  - Open: the frame rate drops to 1 to 4 fps for a few seconds while a scene builds, with frames of 1 to 3.5 s. It holds 52 to 60 in play.
+  - Fixed: the frame rate dropped to 1 to 4 fps for ten seconds as a game opened, with frames of up to 3.5 s. A scene that changes twice as a game opens built three stages at once. Builds now queue, and one called off while it waits never starts (`use-stage.ts`). A stage also draws nothing until it has loaded and compiled its shaders (`compileAsync`), which took its first frame from about 700 ms to 380 ms.
+  - Open: a cold build still holds the window for two frames of about a second together, mostly building the set (`new Stage`, about 800 ms), behind the last picture. A second build of a scene is smooth.
 - A second fight in the app, 2026-11-23: Covert Cargo's Battle on the Boat, playing Lyra. Seen working: Magic Missile's darts in flight, Ray of Frost rolled with Disadvantage (both dice, the kept one lit), a miss, a hit turning Silas Hurt on its own paragraph. Still not seen: a Critical Hit, which wants a natural 20 (the autopilot's `roll: 20` can force one), and a level gained. There is no initiative reveal on the stage: the turn order is all the player sees of it.
   - Fixed: a shot over someone's shoulder ignored anyone standing across the look, so Silas filled the frame meant for Reinhard. It is passed over now (`inTheWay` in `director.ts`).
   - Fixed: a side-on shot of two people in the saloon stood outside its walls. It tries the other side, then nearer with a wider lens, for a spot with nothing solid between it and them, and the app's test of a spot is no longer cut off at 4 m.
   - Open: a paragraph with no take of the director's, framed by the staging's view of a pair (Lyra and Poppen), was taken from outside the saloon. So was the two-shot behind Reinhard in its doorway.
-  - Open: the Shipment's opening view of the bank is buried in the reeds' leaves.
+  - Fixed: the Shipment opened buried in the reeds. Its party starts split across the set, Lyra aboard and the others hidden on the bank, and the establishing shot stood behind them all. A party more than 8 m apart gets no establishing shot, and the scene's own opening view stands.
 - Narration: the paragraph swap is timers and CSS transitions (`narration.tsx`).
 - The HUD hiding and showing, the turn order's changes and its health bars are CSS transitions.
 - The order parts come in when a stage first appears.

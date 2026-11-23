@@ -93,6 +93,13 @@ check("a spell across a cabin keeps the camera inside its walls", () => {
   const t = compose(plan!, { cast, clear: (_from, at) => Math.abs(at.x) < 2 })
   assert.ok(t && "position" in t.shot && Math.abs(t.shot.position[0]) < 2)
 })
+check("a party split across the set gets no establishing shot", () => {
+  const [together] = planTakes([{ kind: "establish", party: ["hero", "foe"] }], "t")
+  assert.ok(compose(together!, ctx))
+  const split = [...cast, member("scout", 20, 9, 0)]
+  const [apartPlan] = planTakes([{ kind: "establish", party: ["hero", "scout"] }], "t")
+  assert.equal(compose(apartPlan!, { cast: split }), null)
+})
 check("a tense line and a quiet one look different", () => {
   const a = shoot({ kind: "line", speaker: "foe", listener: "hero", tone: "tense" })
   const b = shoot({ kind: "line", speaker: "foe", listener: "hero", tone: "calm" })

@@ -22,6 +22,11 @@ export interface StageOptions<L> {
   play?: () => Promise<PlayLooks<L>>
 }
 
+// One stage builds at a time. A build cannot be stopped part way, so a scene that changes twice as a game opens (the
+// old encounter's closing paragraphs, then the new one) built three stages at once, and the window dropped to 2 fps
+// for ten seconds. Each build now waits for the last to finish, and one called off while it waited never starts.
+let building: Promise<unknown> = Promise.resolve()
+
 // Creates a Stage in `container` for a set (and optional staging) and disposes it on unmount. three.js loads inside the
 // effect, so nothing WebGL touches the server bundle. A set the game plays as built is built from its look, with
 // figures for its cast, in place of its paintings and cards.
@@ -62,10 +67,15 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
     // A new set starts clean: no error or status left over from the one it replaces.
     setError(null)
     setStatus("Loading")
-    ;(async () => {
+    const before = building
+    const build = (async () => {
+      await before.catch(() => {})
+      if (cancelled) return
       const [{ createStage }, play] = await Promise.all([import("@d20/stage"), opts.play?.()])
+      if (cancelled) return
       const look = play?.playedLook((opts.staging as { set?: string } | undefined)?.set) ?? null
       const built = play && look ? await play.builtPlay(opts.set, opts.staging, look) : null
+      if (cancelled) return
       if (built?.cards.length) console.warn(`[stage] no figure for ${built.cards.join(", ")}: shown as a card`)
       created = await createStage({
         container: el,
@@ -102,6 +112,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
         setError(err instanceof Error ? err.message : String(err))
       }
     })
+    building = build
     return () => {
       cancelled = true
       // Leave the stage's last picture up while the next one loads.

@@ -269,6 +269,10 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
     case "establish": {
       const party = m.party.filter((id) => byId.has(id))
       if (!party.length) return null
+      // A party split across the set, as in the Shipment (Lyra aboard, Poppen and Thalbern hidden on the bank), has no
+      // behind to stand at: the view from behind them all lands in the reeds. The scene's own opening view stands.
+      const spread = Math.max(...party.flatMap((a) => party.map((b) => apart(byId.get(a)!, byId.get(b)!))))
+      if (spread > 8) return null
       // Behind the party and above, looking past them at where they face, sweeping slowly round.
       return take({ subjects: party, offset: [s * 2.4, 3.4, -6.5], target: [0, 1.2, 5], relative: "facing", fov: 52, orbit: s * -4, sweep: 22 }, "establishing", {
         duration: 3200,

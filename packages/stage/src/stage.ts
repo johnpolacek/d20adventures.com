@@ -571,6 +571,10 @@ export class Stage {
     } else if (this.painted) this.orbit()
     const first = this.staging?.shot ?? Object.keys(this.shots)[0]
     if (first) this.shot(first, { instant: true })
+    // The shaders compile before the first frame asks for them, where the browser can do it off the page's thread:
+    // compiled by that frame instead, they held the window still for over half a second in the desktop app.
+    await this.renderer.compileAsync(this.scene, this.camera).catch(() => {})
+    this.loaded = true
     this.sync()
   }
   private waitForAtlas() {
@@ -1571,8 +1575,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.paused = false
     this.sync()
   }
+  // No frame is drawn until the stage has loaded and its shaders are compiled. A frame drawn on the way compiled them
+  // itself, on the page's thread, while the stage was still loading behind the last picture.
+  private loaded = false
   private sync() {
-    const run = !this.paused && this.visible && document.visibilityState !== "hidden"
+    const run = this.loaded && !this.paused && this.visible && document.visibilityState !== "hidden"
     if (run && !this.running) {
       this.running = true
       this.last = performance.now()
