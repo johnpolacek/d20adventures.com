@@ -45,6 +45,7 @@ pnpm assets:fetch thalbern-rodin  # bring a pruned character back
 - Prune deletes only files git ignores, each only once the private bucket holds it byte for byte. A file the page shows is kept until the public bucket holds it too: sync, then prune.
 - The site's dev server and the desktop build take a pruned figure's published copy from the site. A trial is not published: fetch it before working on it.
 - Fetch a figure before rebuilding it: the pipeline reads its source files from disk.
+- Fetch brings back only missing files. A file on disk that differs from the bucket's is kept and named, since the bucket is only as new as the last archive: a fetch once wrote an old `figure.json` over the one in git. Archive after a rebuild so the bucket keeps up.
 
 - A figure that takes another's body (`body` in its brief: a rig or clips tried on a model already made) is a trial. It stays in the workspace: a sync does not upload it and the published index leaves it out.
 

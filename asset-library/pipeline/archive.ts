@@ -4,7 +4,7 @@
 //   pnpm assets:archive thalbern-rodin   # that character's files alone
 //   pnpm assets:archive --dry            # list what would upload
 //   pnpm assets:archive --prune          # upload, then delete the heavy local files
-//   pnpm assets:fetch thalbern-rodin     # bring a character's files back from the bucket
+//   pnpm assets:fetch thalbern-rodin     # bring back a character's missing files: one on disk is never written over
 //
 // sync.ts uploads what the page shows and what a character was made from. This uploads the rest beside it, under the
 // same path in the private bucket: the paint passes, the pilot's working files, and the trials sync leaves out.
@@ -102,6 +102,7 @@ async function fetchBack() {
   if (!named.length) throw new Error("name the characters to fetch")
   let got = 0
   let bytes = 0
+  const kept: string[] = []
   for (const id of named) {
     let token: string | undefined
     let found = 0
@@ -111,7 +112,13 @@ async function fetchBack() {
         const file = item.Key
         if (!file) continue
         found++
-        if (existsSync(file) && (await held(file, await readFile(file)))) continue
+        // Only what is missing is brought back. A file on disk is newer than the bucket's or the same: git holds the
+        // small files and a rebuild writes the rest, and the bucket's copy is only as new as the last archive. A fetch
+        // once wrote a figure.json from before its motion was set over the one in git.
+        if (existsSync(file)) {
+          if (!(await held(file, await readFile(file)))) kept.push(file)
+          continue
+        }
         if (!dry) {
           const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: file }))
           await mkdir(dirname(file), { recursive: true })
@@ -125,7 +132,8 @@ async function fetchBack() {
     } while (token)
     if (!found) throw new Error(`the bucket holds nothing of ${id}`)
   }
-  console.log(`${got} files, ${(bytes / 1e6).toFixed(1)} MB ${dry ? "would fetch" : "fetched"}.`)
+  for (const file of kept) console.log(`kept ${file}: it differs from the bucket's, and the one on disk stands`)
+  console.log(`${got} files, ${(bytes / 1e6).toFixed(1)} MB ${dry ? "would fetch" : "fetched"}.${kept.length ? ` ${kept.length} kept as they are.` : ""}`)
 }
 
 ;(fetching ? fetchBack() : archive()).catch((err) => {
