@@ -165,6 +165,11 @@
       "ripple": 1,
       "flow": [-0.1, 1]
     },
+    "mist": {
+      "type": "mist",
+      "color": "#4a5c72",
+      "opacity": 0.34
+    },
     "leaves": {
       "type": "foliage",
       "color": "#2e4a3a"
@@ -218,6 +223,36 @@
       "depth": 0.04,
       "plane": "xz",
       "material": "water"
+    },
+    {
+      "type": "mist",
+      "id": "river-mist",
+      "at": [14, 0.15, 2],
+      "width": 22,
+      "height": 14,
+      "layers": 3,
+      "spacing": 12,
+      "flat": true
+    },
+    {
+      "type": "mist",
+      "id": "river-mist-far",
+      "at": [18, 0.15, -36],
+      "width": 26,
+      "height": 18,
+      "layers": 3,
+      "spacing": 16,
+      "flat": true
+    },
+    {
+      "type": "mist",
+      "id": "far-bank-mist",
+      "at": [31, -1.4, -12],
+      "yaw": 90,
+      "width": 60,
+      "height": 5,
+      "layers": 2,
+      "spacing": 6
     },
     {
       "type": "flagstones",

@@ -606,14 +606,34 @@ export function mist(ctx: MaterialContext, bank: TextureBank, name: string, colo
   // orbits through the tree line's mist, and a pale wall with a hard edge slid across the screen. So a card thins to
   // nothing close to the camera and where it is seen edge on, and mist stays something in the distance. A card lying
   // flat over water is always seen near edge on, so it keeps its edge.
+  // The bank breathes: its thickness follows a slow cloud noise in world space that drifts with the wind, so fog slides
+  // over a painted set, whose own paint holds still.
   return stageMaterial(m, ctx.shared, "mist", (s) => {
-    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vMistView;").replace("#include <project_vertex>", "#include <project_vertex>\nvMistView = -mvPosition.xyz;")
-    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vMistView;").replace(
+    s.uniforms.uTime = ctx.shared.time
+    s.vertexShader = s.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vMistView; varying vec3 vMistWorld;")
+      .replace(
+        "#include <project_vertex>",
+        `#include <project_vertex>
+vMistView = -mvPosition.xyz;
+{ vec4 mw = vec4(transformed, 1.0);
+#ifdef USE_BATCHING
+ mw = batchingMatrix * mw;
+#endif
+#ifdef USE_INSTANCING
+ mw = instanceMatrix * mw;
+#endif
+ vMistWorld = (modelMatrix * mw).xyz; }`
+      )
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", `#include <common>\nuniform float uTime; varying vec3 vMistView; varying vec3 vMistWorld;\n${NOISE}`).replace(
       "#include <map_fragment>",
       `#include <map_fragment>
 { vec3 mistNormal = normalize(cross(dFdx(vMistView), dFdy(vMistView)));
  float mistEdge = smoothstep(0.08, 0.4, abs(dot(normalize(vMistView), mistNormal)));
- diffuseColor.a *= smoothstep(1.5, 8.0, length(vMistView)) * mix(mistEdge, 1.0, abs((mistNormal * mat3(viewMatrix)).y)); }`
+ diffuseColor.a *= smoothstep(1.5, 8.0, length(vMistView)) * mix(mistEdge, 1.0, abs((mistNormal * mat3(viewMatrix)).y));
+ vec2 mistAt = vMistWorld.xz * .11 + vec2(vMistWorld.y * .2, 0.0);
+ float mistN = mfbm(mistAt + uTime * vec2(.07, .025)) * .65 + mfbm(mistAt * 1.9 - uTime * vec2(.03, .08)) * .35;
+ diffuseColor.a *= mix(.15, 1.7, smoothstep(.25, .7, mistN)); }`
     )
   })
 }
