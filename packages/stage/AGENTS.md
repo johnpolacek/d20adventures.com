@@ -8,3 +8,4 @@ Rules for encounter stagings, sets, the camera and how the stage's files are ser
 - The director (`src/director.ts`) shoots each moment that `apps/desktop/src/moments.ts` reads from the story. `/dev/stage` has a button for each take. `pnpm stage:director` checks them.
 - Stage files load through `served()` (`src/served.ts`), and a new loader must too. The live site fetches them from the bucket, which needs the CloudFront policy “CORS-With-Preflight”, not “SimpleCORS”. An empty `NEXT_PUBLIC_ASSET_HOST` falls back to the relay in `next.config.ts`.
 - A set built or rebuilt for its finished look goes through the dream loop before it is done: `.agents/skills/stage-dream-loop/SKILL.md`. A blockout, a change to the rules alone and a painted set skip it.
+- Textures, models and skies come from Poly Haven (polyhaven.com) first. All of it is CC0. Take 1K or 2K, never 4K or 8K. Name each asset and its licence in a README beside the files, as `public/stage/trees/README.md` does.

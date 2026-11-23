@@ -51,7 +51,7 @@ node --import tsx lab/stage-art/repaint.ts drift <set>-r0-<shot> <set>-target-<s
 
 ## 3. A round
 
-1. Build toward the target: models, materials, textures, light, dressing. Sets are in `packages/stage/src/sets`, their parts in `builders`, `kit` and `materials`. For a model worth generating, see “Asset library” in `lab/stage-art/README.md`.
+1. Build toward the target: models, materials, textures, light, dressing. Sets are in `packages/stage/src/sets`, their parts in `builders`, `kit` and `materials`. Look for textures, models and skies on Poly Haven first, as `packages/stage/AGENTS.md` says. For a model worth generating, see “Asset library” in `lab/stage-art/README.md`.
 2. Run the checks above.
 3. Capture again as `--name=<set>-r<n>`, with the same flags.
 4. Cut three crops per shot, the same rectangles from the live frame and the target: the nearest surface, the main prop, a light. Check the two pictures are the same size first.
