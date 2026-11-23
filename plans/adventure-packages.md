@@ -8,14 +8,6 @@ Goal: an adventure is one package, its story and everything its stage needs, tha
 - Keeping models in the workspace does not scale: 100 or 1,000 figures must not grow the repo, the workspace or the app.
 - Design the package format now and move our own adventures into it first. Opening the asset pipeline to players comes later.
 
-## Today
-
-- The story already travels as a pack: `packs.json` is bundled, and owned adventures download a versioned, hashed pack (`apps/desktop/runtime/packs.ts`, `@d20/gm-core/packs`).
-- The stage does not. Sets, stagings and plans are source in `packages/stage/src`, compiled into the app.
-- Set textures and art are `public/stage`, 186 MB, copied whole into every build.
-- Who plays whom was code until phase 1. A look's `figures` still is (`looks.ts`).
-- Figures are copied into the build, lod0 and lod1 of every shipped one (`build-runtime.ts`), about 14 MB each.
-
 ## The package
 
 One folder, or one archive of it, named by the adventure's id:

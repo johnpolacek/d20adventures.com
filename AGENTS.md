@@ -21,6 +21,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - A post for `/updates` (`content/updates/*.md`, in John's voice): `docs/writing-voice.md`.
 - Rules work toward full SRD 5.2.1: `plans/srd-rules.md`. Other open multi-session plans live in `plans/`.
 - Stage UI motion and `enter-*` classes: `plans/stage-motion.md`.
+- Shared components in `packages/ui`: `packages/ui/AGENTS.md`.
 
 ## Where to Look
 
