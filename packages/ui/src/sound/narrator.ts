@@ -105,6 +105,14 @@ export function sentences(text: string): string[] {
   return out
 }
 
+// Which of a paragraph's sentences, as the narrator reads them, holds a phrase: where a cue tied to those words plays.
+// The first, when no sentence holds it.
+export function sentenceOf(text: string, phrase: string): number {
+  const want = phrase.replace(/\s+/g, " ").trim().toLowerCase().slice(0, 40)
+  if (!want) return 0
+  return Math.max(0, sentences(text).findIndex((s) => s.toLowerCase().includes(want)))
+}
+
 // Makes a paragraph ahead of time, for the one the player will read next.
 export function prepareNarration(text: string, voice: NarratorVoice) {
   if (state !== "ready") return
@@ -120,8 +128,9 @@ const LATE_MS = 12_000
 let spokeOnce = false
 
 // Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `done` settles when the last
-// sentence ends, or at once when stopped, with whether any of it was heard.
-export function speak(text: string, voice: NarratorVoice): { done: Promise<boolean>; stop: () => void } | null {
+// sentence ends, or at once when stopped, with whether any of it was heard. `onSentence` is told as each sentence is
+// heard, by its place in sentences(text), so what the stage shows keeps time with the words.
+export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void): { done: Promise<boolean>; stop: () => void } | null {
   const c = audio()
   // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
   if (!c || state !== "ready") return null
@@ -133,12 +142,14 @@ export function speak(text: string, voice: NarratorVoice): { done: Promise<boole
   let last: AudioBufferSourceNode | null = null
   let finish = () => {}
   const playing = new Set<AudioBufferSourceNode>()
+  const heard: ReturnType<typeof setTimeout>[] = []
   const gain = c.createGain()
   gain.gain.value = LIFT
   gain.connect(bus("voice"))
   const stop = () => {
     if (stopped) return
     stopped = true
+    heard.forEach(clearTimeout)
     for (const s of playing) {
       s.onended = null
       s.stop()
@@ -155,7 +166,7 @@ export function speak(text: string, voice: NarratorVoice): { done: Promise<boole
     }
     void (async () => {
       let at = c.currentTime + 0.05
-      for (const m of made) {
+      for (const [i, m] of made.entries()) {
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = new Promise<"late">((r) => (timer = setTimeout(() => r("late"), LATE_MS)))
         const clip = await Promise.race([m.catch(() => null), late])
@@ -177,6 +188,7 @@ export function speak(text: string, voice: NarratorVoice): { done: Promise<boole
         src.connect(gain)
         at = Math.max(at, c.currentTime)
         src.start(at)
+        if (onSentence) heard.push(setTimeout(() => !stopped && onSentence(i), Math.max(0, (at - c.currentTime) * 1000)))
         at += buffer.duration
         playing.add(src)
         src.onended = () => playing.delete(src)

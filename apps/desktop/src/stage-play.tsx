@@ -16,7 +16,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
-import { NARRATOR_VOICES, narratorAvailable, setNarratorVoice } from "@d20/ui/sound/narrator"
+import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorVoice } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
 import { useStageSound } from "@d20/ui/sound/use-stage-sound"
@@ -72,6 +72,11 @@ type View = Aim | null
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
 const STROLL = 0.6
+// Where an authored cue's words come in the story: the first paragraph that holds them, and the sentence in it.
+const when = (text: string[], words: string) => {
+  const at = text.findIndex((p) => p.toLowerCase().includes(words.toLowerCase()))
+  return { at, s: at >= 0 ? sentenceOf(text[at], words) : 0 }
+}
 // How long a reveal holds on the way in before the one revealed steps out, in milliseconds.
 const REVEAL_BEAT = 1400
 // Whether a character is kept low on the stage: hidden by the Hide action, or about to roll for it, having gone to cover.
@@ -423,6 +428,15 @@ export function StagePlay(props: {
     next: nextWords,
     on: reading && !hidden && !props.overlay && !sceneWaits,
   })
+  // What the stage shows keeps time with the narrator. A paragraph read aloud plays nothing until its first words are
+  // heard, and a cue tied to a later sentence ("the cabin door opened") waits for that sentence. `heard` is the sentence
+  // being heard in the paragraph on screen: -1 before the first, and all of them when nothing is read aloud.
+  const speaking = voiced.status === "waiting" || voiced.status === "speaking"
+  const heard = voiced.status === "waiting" ? -1 : voiced.status === "speaking" ? voiced.sentence : Number.POSITIVE_INFINITY
+  const started = heard >= 0
+  // Whether the reader has reached a cue at sentence `s` of paragraph `at`, or has still to.
+  const reached = (at: number, s: number) => reading && paragraph === at && heard >= s
+  const toCome = (at: number, s: number) => reading && at >= 0 && (paragraph < at || (paragraph === at && heard < s))
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
     (id: string | undefined) => {
@@ -439,16 +453,16 @@ export function StagePlay(props: {
   })
   // The narration paragraph by paragraph, from its beats: who speaks in it and where the camera goes. A paragraph that
   // names no one and no place leaves the camera where it is.
-  const beats = useMemo((): { view: View; speech: { id: string; text: string }[] }[] => {
+  const beats = useMemo((): { view: View; speech: { id: string; text: string; s: number }[] }[] => {
     if (!stage) return []
     return paragraphs.map((p) => {
       // One bubble a speaker: lines said in a row join, or they would stack over the same head.
-      const speech = p.beats.reduce<{ id: string; text: string }[]>((all, b) => {
+      const speech = p.beats.reduce<{ id: string; text: string; s: number }[]>((all, b) => {
         const id = b.kind === "line" ? castOf(b.speaker) : undefined
         if (!id || b.kind !== "line") return all
         const said = all.find((l) => l.id === id)
         if (said) said.text = `${said.text} ${b.text}`
-        else all.push({ id, text: b.text })
+        else all.push({ id, text: b.text, s: sentenceOf(p.text, b.text) })
         return all
       }, [])
       const act = p.beats.find((b) => b.kind === "action")
@@ -468,16 +482,16 @@ export function StagePlay(props: {
   const viewNow = useRef<View>(null)
   viewNow.current = reading ? (beats[paragraph]?.view ?? null) : null
   const spotlit = reading ? shown?.characters.find((c) => c.id === tellerId) : actor
-  // Everyone who speaks in the paragraph gets a bubble, and the first speaker a portrait plate.
+  // Everyone who speaks in the paragraph gets a bubble once the narrator reaches their words.
   const speech = useMemo(
     () =>
       reading && stage
         ? (beats[paragraph]?.speech ?? []).flatMap((l) => {
-            const cast = stage.cast.find((c) => c.id === l.id)
+            const cast = heard >= l.s && stage.cast.find((c) => c.id === l.id)
             return cast ? [{ cast, text: l.text }] : []
           })
         : [],
-    [stage, beats, paragraph, reading]
+    [stage, beats, paragraph, reading, heard]
   )
   // In story view, whoever speaks first in the paragraph gets the portrait plate a scene would give them.
   const voice = useMemo(() => {
@@ -506,19 +520,19 @@ export function StagePlay(props: {
   const cues = useMemo(() => {
     const entrances = stage?.staging?.entrances ?? []
     const authored = entrances.flatMap((e) =>
-      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())) }] : []
+      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, ...when(text, e.when) }] : []
     )
     const told = paragraphs.flatMap((p, at) =>
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], at }]
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], at, s: sentenceOf(p.text, b.text) }]
           : []
       })
     )
     return [...authored.filter((e) => !told.some((t) => t.cast === e.cast)), ...told]
   }, [stage, text, paragraphs, castOf])
-  const arriving = reading ? cues.find((e) => e.at === paragraph) : undefined
+  const arriving = cues.find((e) => reached(e.at, e.s))
   // The entrances played on this stage, by cast and paragraph. A stage built at a scene change can be ready only once
   // the reader is on the entrance's paragraph, with everyone standing in place: the entrance is still walked.
   const entered = useRef(new Set<string>())
@@ -535,11 +549,11 @@ export function StagePlay(props: {
       const from = spot(e.from)
       if (!home || !to || !from) continue
       const key = `${e.cast}:${e.at}`
-      if (reading && e.at >= 0 && paragraph < e.at) {
+      if (toCome(e.at, e.s)) {
         entered.current.delete(key)
         stage.placeCast(e.cast, from)
         stage.setOnStage(e.cast, false)
-      } else if (reading && paragraph === e.at && !entered.current.has(key)) {
+      } else if (reached(e.at, e.s) && !entered.current.has(key)) {
         entered.current.add(key)
         stage.placeCast(e.cast, from, to)
         stage.setOnStage(e.cast, true)
@@ -555,7 +569,7 @@ export function StagePlay(props: {
         stage.placeCast(e.cast, to, home.facing)
       }
     }
-  }, [stage, cues, spots, reading, paragraph])
+  }, [stage, cues, spots, reading, paragraph, heard])
   // Who the game has taken out of this encounter, by cast id: the dead and those who fled. A round is built without
   // them, so each character's last appearance in the encounter says how they left.
   // While the end of the last round is told on the old scene, that is the encounter, and the turn that closes it can
@@ -615,7 +629,7 @@ export function StagePlay(props: {
   // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
   const exits = useMemo(() => {
     const authored = stage?.staging?.exits ?? []
-    type Exit = { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; speed: number; at: number }
+    type Exit = { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; speed: number; at: number; s: number }
     const out = new Map<string, Exit>()
     for (const e of authored)
       if (e.when)
@@ -626,7 +640,7 @@ export function StagePlay(props: {
           lands: e.lands,
           shot: e.shot,
           speed: PACE[e.pace ?? "hurry"],
-          at: text.findIndex((p) => p.toLowerCase().includes(e.when!.toLowerCase())),
+          ...when(text, e.when),
         })
     // Someone just gone, whose paragraph the effect above has still to find, waits for it: taken now, they would be
     // gone before the paragraph that tells it.
@@ -634,7 +648,7 @@ export function StagePlay(props: {
     for (const [id, how] of gone) {
       if (!(id in leftAt) && !(settled.turn === leavingKey && settled.out.has(id))) continue
       const way = authored.find((e) => e.cast === id)
-      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], at: leftAt[id] ?? -1 })
+      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], at: leftAt[id] ?? -1, s: 0 })
     }
     // An encounter that ends with someone still in it, who has a way off, sends them along it while its end is told:
     // the Owlbear that never found Thalbern walks back into the trees. They go at the first closing paragraph that
@@ -644,12 +658,15 @@ export function StagePlay(props: {
         if (e.when || !e.to || out.has(e.cast)) continue
         const name = e.cast.replace(/-/g, " ")
         const named = text.findIndex((p, i) => i < closing && p.toLowerCase().includes(name))
-        out.set(e.cast, { run: true, to: e.to, via: e.via, shot: e.shot, speed: PACE[e.pace ?? "hurry"], at: Math.max(0, named) })
+        out.set(e.cast, { run: true, to: e.to, via: e.via, shot: e.shot, speed: PACE[e.pace ?? "hurry"], at: Math.max(0, named), s: named >= 0 ? sentenceOf(text[named], name) : 0 })
       }
     return out
   }, [stage, text, gone, leftAt, leavingKey, closingNow, closing])
   // The exit this paragraph shows, when its staging says where to watch it from.
-  const departing = reading ? [...exits.values()].find((e) => e.at === paragraph && e.shot) : undefined
+  const departing = [...exits.values()].find((e) => reached(e.at, e.s) && e.shot)
+  // The exits the reader has reached in the paragraph on screen. Their effect answers this, not each sentence heard,
+  // which would call off a fall waiting to be seen.
+  const exitsHeard = [...exits].flatMap(([id, e]) => (reached(e.at, e.s) ? [id] : [])).join()
   const ran = useRef(new Set<string>())
   const ranOn = useRef(stage)
   useEffect(() => {
@@ -659,7 +676,7 @@ export function StagePlay(props: {
     const falls: ReturnType<typeof setTimeout>[] = []
     for (const [id, e] of exits) {
       const home = stage.staging?.cast.find((c) => c.id === id)
-      if (reading && e.at >= 0 && paragraph < e.at) {
+      if (toCome(e.at, e.s)) {
         // Not yet: back on their feet in their place, as when the reader steps back.
         const at = spots.get(id)?.at ?? home?.at
         if ((ran.current.delete(id) || stage.isDown(id)) && at) stage.placeCast(id, at, home?.facing)
@@ -668,13 +685,13 @@ export function StagePlay(props: {
       } else if (!e.run) {
         // On their paragraph they stand a moment longer, so the camera is there to see them go down. Reading on
         // before that finds them already down.
-        if (!(reading && paragraph === e.at)) stage.setDown(id, true, true, e.lands)
+        if (!reached(e.at, e.s)) stage.setDown(id, true, true, e.lands)
         else if (!stage.isDown(id)) falls.push(setTimeout(() => stage.setDown(id, true, false, e.lands), FALL_DELAY))
       } else if (stage.isOnStage(id) && !ran.current.has(id)) {
         ran.current.add(id)
         // Someone who leaves with no way of their own walks off away from the heroes, rather than vanish on the spot.
-        const to = e.to ?? (reading && paragraph === e.at ? wayOff(stage, id, heroes.current) : null)
-        if (!(reading && paragraph === e.at && to)) stage.setOnStage(id, false)
+        const to = e.to ?? (reached(e.at, e.s) ? wayOff(stage, id, heroes.current) : null)
+        if (!(reached(e.at, e.s) && to)) stage.setOnStage(id, false)
         else {
           const legs = [...(e.via ?? []), to].map((leg) => stage.point(leg))
           // Reading on does not cut the run short. Stepping back, or a new scene, does.
@@ -688,7 +705,7 @@ export function StagePlay(props: {
       }
     }
     return () => falls.forEach(clearTimeout)
-  }, [stage, exits, spots, reading, paragraph])
+  }, [stage, exits, spots, reading, paragraph, started, exitsHeard])
   // Walks the scene ties to the narration for someone already on stage, such as Thalbern on his way through the woods as
   // the story opens. They stand where the walk starts until its paragraph, then walk to where the engine has them. This
   // comes before the opening view, which frames them where the walk starts.
@@ -696,7 +713,7 @@ export function StagePlay(props: {
   const walks = useMemo(
     () =>
       (stage?.staging?.walks ?? [])
-        .map((w) => ({ ...w, speed: w.pace === "stroll" ? STROLL : PACE[w.pace ?? "walk"], at: text.findIndex((p) => p.toLowerCase().includes(w.when.toLowerCase())) }))
+        .map((w) => ({ ...w, speed: w.pace === "stroll" ? STROLL : PACE[w.pace ?? "walk"], ...when(text, w.when) }))
         .filter((w) => w.at >= 0),
     [stage, text]
   )
@@ -710,10 +727,10 @@ export function StagePlay(props: {
       const spot = spots.get(w.cast)?.at ?? home?.at
       if (!spot || !stage.isOnStage(w.cast)) continue
       const legs = [...(w.via ?? []), spot].map((leg) => stage.point(leg))
-      if (paragraph < w.at) {
+      if (toCome(w.at, w.s)) {
         s.on.delete(w.cast)
         stage.placeCast(w.cast, w.from, [legs[0].x, legs[0].z])
-      } else if (paragraph === w.at && !s.on.has(w.cast)) {
+      } else if (reached(w.at, w.s) && !s.on.has(w.cast)) {
         const token = ++s.next
         s.on.set(w.cast, token)
         stage.placeCast(w.cast, w.from, [legs[0].x, legs[0].z])
@@ -726,7 +743,7 @@ export function StagePlay(props: {
         stage.placeCast(w.cast, spot)
       }
     }
-  }, [stage, walks, spots, reading, paragraph])
+  }, [stage, walks, spots, reading, paragraph, heard])
   // A new stage: loops held and its opening view, before the camera frames anyone.
   useEffect(() => {
     if (!stage) return
@@ -760,7 +777,7 @@ export function StagePlay(props: {
       // The first paragraph of the character's latest step in the story on screen.
       let from = paragraphs.findLastIndex((p) => p.beats[0]?.by.character === character)
       while (from > 0 && paragraphs[from - 1].beats[0]?.by.character === character && paragraphs[from - 1].beats[0]?.by.step === paragraphs[from].beats[0]?.by.step) from--
-      if (reading && paragraph < from) continue
+      if (toCome(from, 0)) continue
       d.at.set(id, key)
       strolls.current.on.set(id, 0)
       const walk = (d.walks.get(id) ?? 0) + 1
@@ -794,16 +811,19 @@ export function StagePlay(props: {
       const low = keptLow(c) && (!spot || d.at.get(id) === spot.at.join())
       if (low !== stage.isLow(id)) stage.setLow(id, low, fresh)
     }
-  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, walks, onError])
+  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, started, walks, onError])
   // What labelled paragraphs do on stage: effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
   // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
   // the roll or its target made it. No one walks by a beat: where everyone stands is the engine's.
   const staged = useMemo(() => {
-    const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }[]>()
+    const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean; s: number }[]>()
     const all = paragraphs.flatMap((p, i) => p.beats.map((beat) => ({ beat, at: i })))
     const same = (a: StoryBeat, b: StoryBeat) => a.by.step === b.by.step && a.by.character === b.by.character
-    const add = (at: number, entry: { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }) => out.set(at, [...(out.get(at) ?? []), entry])
+    type Entry = { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }
+    // At the sentence that tells it, in its own paragraph. One played after a roll plays as that paragraph opens.
+    const add = (at: number, own: number, entry: Entry) =>
+      out.set(at, [...(out.get(at) ?? []), { ...entry, s: at === own ? sentenceOf(paragraphs[at].text, entry.beat.text) : 0 }])
     // Where a beat's effect plays, and whether it misses: undefined when it does not play yet, or not at all.
     const effectAt = (beat: Extract<StoryBeat, { kind: "action" }>, at: number, i: number): { at: number; miss: boolean } | undefined => {
       let j = i - 1
@@ -829,9 +849,9 @@ export function StagePlay(props: {
     for (const [i, { beat, at }] of all.entries()) {
       if (beat.kind !== "action") continue
       const key = `${turn?._id}:${i}`
-      if (beat.object) add(at, { key: `${key}:own`, beat, effect: false, miss: false })
+      if (beat.object) add(at, at, { key: `${key}:own`, beat, effect: false, miss: false })
       const fx = beat.effect ? effectAt(beat, at, i) : undefined
-      if (fx) add(fx.at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss })
+      if (fx) add(fx.at, at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss })
     }
     return out
   }, [paragraphs, turn?._id, turn?.characters])
@@ -879,8 +899,10 @@ export function StagePlay(props: {
   // an exit is kept, with the take's move. A paragraph the director has no take for frames its first speaker or the
   // place it describes. The first view on a new stage is a cut, not a glide from its opening view.
   const framed = useRef<Stage | null>(null)
+  // A speaker framed only where the director has no take, so a bubble that comes up mid-paragraph does not restart one.
+  const lead = plans[paragraph] ? undefined : speech[0]?.cast.id
   useEffect(() => {
-    if (!stage || !reading) return
+    if (!stage || !reading || !started) return
     const cut = framed.current !== stage
     framed.current = stage
     const plan = plansRef.current[paragraph]
@@ -892,13 +914,13 @@ export function StagePlay(props: {
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
     if (take) return void go(take.shot, take)
-    if (speech.length) return void go({ subject: speech[0].cast.id, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }, null)
+    if (lead) return void go({ subject: lead, distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }, null)
     const view = beats[paragraph]?.view
     if (!view) return
     const shot = shotFor(stage, view, heroes.current)
     // A walk under way in this paragraph is followed: two facing off keep both in the picture.
     if (shot) go(shot, null, "pair" in view ? view.pair : [])
-  }, [stage, speech, departing, arriving, beats, planKey, paragraph, reading])
+  }, [stage, lead, departing, arriving, beats, planKey, paragraph, reading, started])
   const played = useRef(new Set<string>())
   // The paragraph on screen, so an effect waiting on the camera is dropped once the reader moves on.
   const showing = useRef("")
@@ -906,8 +928,8 @@ export function StagePlay(props: {
     const here = reading && turn ? `${turn._id}:${paragraph}` : ""
     showing.current = here
     if (!stage || !here || !turn || stageRef.current !== stage) return
-    for (const { key, beat: b, effect, miss } of staged.get(paragraph) ?? []) {
-      if (played.current.has(key)) continue
+    for (const { key, beat: b, effect, miss, s } of staged.get(paragraph) ?? []) {
+      if (played.current.has(key) || heard < s) continue
       const actor = castOf(b.actor)
       if (!actor || !stage.isOnStage(actor)) continue
       played.current.add(key)
@@ -919,18 +941,18 @@ export function StagePlay(props: {
         else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
       })
     }
-  }, [stage, stageRef, reading, paragraph, staged, turn, castOf])
+  }, [stage, stageRef, reading, paragraph, heard, staged, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || sceneWaits || !text.length || voiced === "speaking") return
+    if (!auto || !reading || busy || sceneWaits || !text.length || speaking) return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
-    const seconds = voiced === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
+    const seconds = voiced.status === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, voiced])
+  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
   // A roll waits as it does in auto.
-  const continueMs = busy || !text.length || voiced === "speaking" ? undefined : voiced === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
+  const continueMs = busy || !text.length || speaking ? undefined : voiced.status === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
@@ -1193,7 +1215,7 @@ export function StagePlay(props: {
     story: text,
     step: turn?.story.length,
     encounter: turn?.encounterId,
-    paragraph: reading ? `${turn?._id}:${paragraph}:${voiced}` : null,
+    paragraph: reading ? `${turn?._id}:${paragraph}:${voiced.status}` : null,
     advance: () => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)),
     setAuto,
     setDraft,

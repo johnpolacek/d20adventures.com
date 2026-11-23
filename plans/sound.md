@@ -33,7 +33,7 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 2. Stage events. Done 2026-11-19. No `hit`, `line` or `shot` events: effects cover hits, and nothing sounds lines or shots yet.
 3. Combat cues. Done 2026-11-19. Blades, blows, arrow thunks, fire and spells are CC0 recordings. Swings that miss, flights, aura, mist, sparkles, lightning and frost are made noise.
 4. Ambience. Done 2026-11-19. Nine beds: hearth, crowd, wind, night, birds, river, dawn, dungeon, drip. All 41 sets have beds. Levels halved 2026-11-20 at the owner’s ask. Silent under the home screen and its pages, which the owner asked for.
-5. Voice. Partly done 2026-11-21. `sound/narrator.ts` reads the story aloud with Kokoro on the `voice` bus, in the desktop app only. Ambience does not duck under it yet.
+5. Voice. Partly done 2026-11-21. `sound/narrator.ts` reads the story aloud with Kokoro on the `voice` bus, in the desktop app only. The stage keeps time with it 2026-11-23: a paragraph's camera, entrances, walks, exits and effects wait for its first words, and a cue tied to a later sentence, or a spoken line, waits for that sentence. Ambience does not duck under it yet.
 6. UI cues, if wanted. At most a soft cue for "your turn" and a card opening.
 
 ## Checked
