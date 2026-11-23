@@ -228,7 +228,12 @@ export function Narration({
                   onContinue?.()
                 }}
               >
-                {timed && <span ref={fill} aria-hidden="true" className="pointer-events-none absolute inset-0 origin-left bg-white/60 mix-blend-overlay" style={{ transform: "scaleX(0)" }} />}
+                {/* WebKit lets a moving layer spill past a rounded overflow-hidden parent, so the fill has a clip of its own. */}
+                {timed && (
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 mix-blend-overlay [clip-path:inset(0_round_9999px)]">
+                    <span ref={fill} className="absolute inset-0 origin-left bg-white/60"style={{ transform: "scaleX(0)" }} />
+                  </span>
+                )}
                 <span className="relative flex items-center gap-1.5">
                   Continue
                   <Chevron />

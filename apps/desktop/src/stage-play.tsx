@@ -450,6 +450,39 @@ export function StagePlay(props: {
   // Whether the reader has reached a cue at sentence `s` of paragraph `at`, or has still to.
   const reached = (at: number, s: number) => reading && paragraph === at && heard >= s
   const toCome = (at: number, s: number) => reading && at >= 0 && (paragraph < at || (paragraph === at && heard < s))
+  // The turn order tells no more than the story has: while a turn is read, each character stands as the turn before
+  // left them until the paragraph that hurts, heals, drops or marks them, so Thalbern is not shown dying while his
+  // arrow is still in the air. A creature new to this turn comes in unhurt, with nothing on it yet, and a hero the last
+  // turn did not have shows as the turn ends.
+  const prior = turn && save?.turns.find((t) => t.order === (turn.order ?? 0) - 1)
+  const fresh = (c: NonNullable<typeof turn>["characters"][number]): typeof c | undefined => {
+    if (c.type !== "npc") return undefined
+    const { dead: _dead, deathSaves: _saves, ...rest } = c
+    return { ...rest, healthPercent: 100, hitPoints: Math.max(1, c.hitPoints),conditions: [], turnEffects: [], spellEffects: [], concentration: undefined }
+  }
+  const touchedAt = useMemo(() => {
+    const at = new Map<string, number>()
+    paragraphs.forEach((p, i) => {
+      for (const b of p.beats) {
+        const ids =
+          b.kind === "roll"
+            ? [b.attack?.target, ...(b.harm ?? []).map((h) => h.target), ...(b.conditions ?? []).map((c) => c.target), b.deathSave ? b.character : undefined]
+            : b.kind === "feature"
+              ? (b.harm ?? []).map((h) => h.target)
+              : b.kind === "action" && b.effect
+                ? [b.target]
+                : []
+        for (const id of ids) if (id) at.set(id, i)
+      }
+    })
+    return at
+  }, [paragraphs])
+  const toldCharacters = (shown?.characters ?? []).map((c) => {
+    const at = touchedAt.get(c.id)
+    const then = closingNow || at === undefined || !toCome(at, 0) ? undefined : (prior?.characters.find((p) => p.id === c.id) ?? fresh(c))
+    return then ?? c
+  })
+  const toldSheets = useSheetViews(toldCharacters)
   // The cast member who plays a character in the turn, by the character's id.
   const castOf = useCallback(
     (id: string | undefined) => {
@@ -1339,8 +1372,8 @@ export function StagePlay(props: {
           </Presence>
           <Presence show={on} motion="drop" asChild>
             <TurnOrder
-              order={(shown?.characters ?? []).map((c) => {
-                const standing = standingOf(c, sheets[c.id])
+              order={toldCharacters.map((c) => {
+                const standing = standingOf(c, toldSheets[c.id])
                 const conditions = conditionLabel(c)
                 return { id: c.id, name: c.name, portrait: portrait(c), npc: c.type === "npc", ...(standing ? { standing } : {}), ...(conditions ? { conditions } : {}) }
               })}

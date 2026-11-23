@@ -61,6 +61,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 
 - Work on `main` in the main checkout. No feature branches or worktrees until beta.
 - `pnpm dev` starts Convex, the website, and the desktop app. `pnpm dev:web` and `pnpm dev:app` start one each. `pnpm dev:fresh` kills the ports first.
+- The dev app runs as "D20 Adventures Dev" (`com.d20adventures.desktop.dev`), the name computer-use tools ask for. `VITE_D20_TRACE=1` writes its sound buses and frame rate to `apps/desktop/.logs/window.log`.
 
 ## Doc Upkeep
 

@@ -39,9 +39,11 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 ## Checked
 
 - Every file decodes in Chrome. Every cue and bed reaches the output, all under the dice. Beds loop with no gap, switch, and stop with sound off.
-- Not yet heard by the owner. Not yet heard in the Tauri app's WebKit view, or on iOS.
+- In the Tauri app's WebKit view, 2026-11-23, measured, not heard, by playing into the Owlbear fight with `VITE_D20_TRACE=1` (`apps/desktop/src/dev-trace.ts`): the context runs at 48 kHz after the first click and is suspended before it. The bed starts with the scene, dice sound with the roll, the arrow cue with the hit, and the narrator with each paragraph. The ambience dips while the voice speaks and comes back after. Peaks at each bus, before the master: voice to −1 dB, fx to −6, dice to −13, ambience −35 to −63.
+- The narrator skips the first paragraph of a game while its voice is still loading, as `use-narrator.ts` intends.
+- Not yet heard by the owner, or on iOS.
 
 ## Follow-ups
 
 - Listen on `/dev/sound` and tune levels, and the duck's depth, dip, hold and ramp. The crowd bed is a shouting crowd, filtered and kept low. It may not suit a quiet ballroom.
-- Effects in a real fight were not played through end to end.
+- In the app, listen to the Owlbear fight: whether the forest bed, at −35 to −63 dB before the master, is heard at all, the arrow against the dice, and the narrator over both.

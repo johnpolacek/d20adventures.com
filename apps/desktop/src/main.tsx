@@ -18,6 +18,7 @@ import "./style.css"
 // The app's narrator runs in Node. A browser tab in development keeps the browser's.
 if (isTauri()) setNarratorEngine(narratorEngine)
 if (import.meta.env.DEV) installDevLog()
+if (import.meta.env.DEV && import.meta.env.VITE_D20_TRACE) void import("./dev-trace").then((m) => m.installDevTrace())
 // The scenes come from the app's adventure packages, so they are loaded before anything shows.
 // The stage's files come from the app's own file server (files.ts).
 const start = () => Promise.all([loadStages(), serveAppFiles()]).then(() => createRoot(document.getElementById("root")!).render(<DesktopGame />))
