@@ -12,9 +12,8 @@
 body:has(.updates-page),
 .up-surface {
   --up-bg: #fff7eb;
-  --up-raise: #fdead3;
-  /* The head of a panel or a table: the raised tone, half as strong. */
-  --up-head: color-mix(in srgb, var(--up-raise) 45%, var(--up-bg));
+  /* A raised part, a step darker than the paper and quieter: a filled tone in a stronger peach read as a band. */
+  --up-raise: #f8eee0;
   --up-code: #fff2e0;
   --up-bar: #ffefdd;
   --up-bar-line: #f1d4b5;
@@ -646,7 +645,7 @@ body:has(.updates-page) main + footer {
   vertical-align: top;
 }
 :is(.up-prose, .up-table) thead th {
-  background: var(--up-head);
+  background: var(--up-raise);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -1117,8 +1116,11 @@ html[data-update-theme="dark"] .up-sent-die {
 .up-side a:hover {
   color: var(--up-strong);
 }
+/* The current section: the raised tone with the accent along its left edge. A chosen row anywhere on the desk is
+   marked the same way, and a blue wash is kept off the paper, where it greys. */
 .up-side a[aria-current="page"] {
   background: var(--up-raise);
+  box-shadow: inset 2px 0 0 var(--up-accent);
   font-weight: 600;
   color: var(--up-strong);
 }
@@ -1236,7 +1238,7 @@ a.up-stat:hover {
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--up-line);
-  background: var(--up-head);
+  background: var(--up-raise);
 }
 .up-panel-head h2 {
   margin: 0;
@@ -1404,8 +1406,8 @@ a.up-stat:hover {
 .up-chip[aria-pressed="true"],
 .up-chip[aria-current="page"] {
   border-color: var(--up-accent-line);
-  background: var(--up-slot);
-  color: var(--up-slot-text);
+  background: var(--up-raise);
+  color: var(--up-accent-strong);
 }
 
 /* Cards in a grid: a picture over its name and a line of small facts. */

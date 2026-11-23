@@ -69,20 +69,23 @@ textarea.up-field.is-auto {
 .up-pick:hover {
   border-color: var(--up-line-strong);
 }
+/* Chosen, as the side's current section is: the raised tone with the accent along its left edge. */
 .up-pick[aria-current="true"] {
-  border-color: var(--up-accent-line);
-  background: var(--up-slot);
+  border-color: var(--up-line-strong);
+  background: var(--up-raise);
+  box-shadow: inset 2px 0 0 var(--up-accent);
 }
 
-/* A box inside a panel: a day of the schedule, a post of a thread. */
+/* A box inside a panel: a day of the schedule, a post of a thread. It is the paper, ruled round. Today is ruled in
+   the accent, with no fill of its own. */
 .up-well {
   border: 1px solid var(--up-line);
   border-radius: 6px;
-  background: var(--up-raise);
+  background: var(--up-bg);
 }
 .up-well[aria-current="date"] {
   border-color: var(--up-accent-line);
-  background: var(--up-slot);
+  box-shadow: inset 0 0 0 1px var(--up-accent-line);
 }
 
 /* A link in the desk's own text, in the accent. */
