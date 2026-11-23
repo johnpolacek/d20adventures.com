@@ -22,8 +22,8 @@ async function figureRoom(stage: Stage) {
 }
 
 // A figure rigged by rig.py carries the shared skeleton and no clips: it plays the written ones (clips.ts), `clip` or Idle.
-// `env` is how brightly it reflects its room: 0 leaves it to the stage's own sky.
-export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean; clip?: string; env?: number } = {}) {
+// `env` is how brightly it reflects its room: 0 leaves it to the stage's own sky. `tint` is multiplied into its colour.
+export async function addFigure(stage: Stage, url: string, castId: string, o: { yaw?: number; keep?: boolean; clip?: string; env?: number; tint?: string } = {}) {
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
   const s = stage.standees.items.get(castId)
   if (!s) throw new Error(`No cast member ${castId}`)
@@ -62,6 +62,8 @@ export async function addFigure(stage: Stage, url: string, castId: string, o: { 
     m.frustumCulled = false
     triangles += (m.geometry.index?.count ?? m.geometry.attributes.position.count) / 3
     for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+      // The look's colour for this figure, as the game multiplies it (`tint` in models.ts).
+      if (o.tint && mat instanceof THREE.MeshStandardMaterial) mat.color.multiply(new THREE.Color(o.tint))
       if (!room || !(mat instanceof THREE.MeshStandardMaterial)) continue
       mat.envMap = room
       mat.envMapIntensity = shine

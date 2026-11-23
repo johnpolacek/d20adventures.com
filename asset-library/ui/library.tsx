@@ -13,7 +13,7 @@
 
 import { type Armed, arm } from "@d20/stage/figures/fight"
 import { carry, fingered, wield } from "@d20/stage/figures/hold"
-import { createContext, type PointerEvent as Pointer, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import * as THREE from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js"
@@ -21,7 +21,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged, MOVE_NAMES } from "../clips"
 import { served } from "@d20/stage/served"
 import { holdProps } from "../props"
-import { type LookRound, lookRounds } from "../look-rounds"
+import { EARLIER_LOOKS } from "../looks-earlier"
 import { paintedDays } from "../paintings"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place, Sound } from "../types"
@@ -516,11 +516,12 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   // A painted set can also be seen as the game plays it, from its painted points, with its paintings as they are now
   // or as they stood on a day before one was replaced.
   const canPaint = env.paintings > 0
-  // A played look worked on in rounds shows each round's frames, before beside after.
-  const rounds = lookRounds(env.key)
-  const [view, setView] = useState(params.view === "stage" || params.view === "painted" || params.view === "compare" ? params.view : "iso")
-  const comparing = view === "compare" && rounds.length > 0
-  const cut = view === "iso" && canCut && !comparing
+  // A played look that has been worked on can be built as it stood before, to switch between the two live.
+  const earlier = EARLIER_LOOKS[env.key] ?? []
+  const [lookOn, setLookOn] = useState(earlier.find((e) => e.made === params.look)?.made ?? "current")
+  const shownLook = earlier.find((e) => e.made === lookOn)
+  const [view, setView] = useState(params.view === "stage" || params.view === "painted" ? params.view : "iso")
+  const cut = view === "iso" && canCut
   const painting = view === "painted" && canPaint
   const days = paintedDays(env.key.split("/")[1] ?? env.key)
   const [paintDay, setPaintDay] = useState(params.paint && days.includes(params.paint) ? params.paint : "current")
@@ -533,23 +534,23 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   }, [])
   useEffect(() => {
     const short = env.key.startsWith(`${config.setting}/`) ? env.key.slice(config.setting.length + 1) : env.key
-    if (comparing) return
     const shown = painting ? `painted${paintDay === "current" ? "" : `&paint=${paintDay}`}` : cut ? "iso" : "stage"
-    history.replaceState(null, "", `${config.home}?env=${short}&view=${shown}&scene=${staging ?? "empty"}`)
-  }, [env, cut, painting, comparing, paintDay, staging, config.home])
-  if (comparing)
-    return (
-      <Compare
-        rounds={rounds}
-        params={params}
-        title={named(env.title)}
-        onLeave={setView}
-        address={(q) => history.replaceState(null, "", `${config.home}?env=${env.key.startsWith(`${config.setting}/`) ? env.key.slice(config.setting.length + 1) : env.key}&view=compare${q}`)}
-      />
-    )
+    const look = shownLook && !painting ? `&look=${shownLook.made}` : ""
+    history.replaceState(null, "", `${config.home}?env=${short}&view=${shown}&scene=${staging ?? "empty"}${look}`)
+  }, [env, cut, painting, paintDay, staging, shownLook, config.home])
   return (
     <>
-      <Scene set={env.key} staging={staging} iso={cut} painted={painting ? paintDay : undefined} files={config.files} figures={config.figures} onNav={onNav} onPick={setAt} />
+      <Scene
+        set={env.key}
+        staging={staging}
+        iso={cut}
+        painted={painting ? paintDay : undefined}
+        lookOn={painting ? undefined : shownLook?.made}
+        files={config.files}
+        figures={config.figures}
+        onNav={onNav}
+        onPick={setAt}
+      />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="up-lib-title">{named(env.title)}</div>
         {place.variants.length > 1 && (
@@ -570,7 +571,7 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             ))}
           </div>
         )}
-        {(canCut || canPaint || rounds.length > 0) && (
+        {(canCut || canPaint) && (
           <div className="flex items-center gap-1">
             <span className="w-12 opacity-60">View</span>
             {canCut && (
@@ -586,11 +587,20 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
                 Painted
               </button>
             )}
-            {rounds.length > 0 && (
-              <button type="button" className={pill(false)} onClick={() => setView("compare")}>
-                Before & After
+          </div>
+        )}
+        {!painting && earlier.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="w-12 opacity-60">Look</span>
+            {[...earlier].reverse().map((e) => (
+              <button key={e.made} type="button" className={pill(lookOn === e.made)} onClick={() => setLookOn(e.made)}>
+                Before {day(e.made)}
               </button>
-            )}
+            ))}
+            <button type="button" className={pill(lookOn === "current")} onClick={() => setLookOn("current")}>
+              After
+            </button>
+            <span className="w-full text-4xs opacity-70">{(shownLook ?? earlier[0]).note}</span>
           </div>
         )}
         {painting && days.length > 0 && (
@@ -645,107 +655,6 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
         <div className="text-4xs opacity-55">
           {painting ? "Drag to look around · scroll to zoom · the camera stands where the paintings were made" : "Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character"}
         </div>
-      </div>
-    </>
-  )
-}
-
-// A label on the picture itself, legible over a night frame and a day one alike.
-const CHIP = "pointer-events-none absolute bottom-2 rounded bg-black/65 px-2 py-0.5 text-xs text-white"
-
-// ── A played look's rounds: each shot before and after, one over the other, the line between them dragged across ──
-// `&round=<day>&shot=<staging>:<shot>` opens one. The arrow keys move between shots, and B flips to before alone.
-function Compare({ rounds, params, title, onLeave, address }: { rounds: LookRound[]; params: Params; title: string; onLeave: (view: "stage" | "iso") => void; address: (q: string) => void }) {
-  const [made, setMade] = useState(rounds.find((r) => r.made === params.round)?.made ?? rounds[0].made)
-  const round = rounds.find((r) => r.made === made) ?? rounds[0]
-  const id = (s: LookRound["shots"][number]) => `${s.staging}:${s.shot}`
-  const [shotId, setShotId] = useState(round.shots.find((s) => id(s) === params.shot) ? params.shot : id(round.shots[0]))
-  const shot = round.shots.find((s) => id(s) === shotId) ?? round.shots[0]
-  const [split, setSplit] = useState(0.5)
-  const [held, setHeld] = useState<"before" | "after" | null>(null)
-  const frame = useRef<HTMLDivElement>(null)
-  useEffect(() => address(`&round=${round.made}&shot=${encodeURIComponent(id(shot))}`), [round, shot, address])
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const i = round.shots.indexOf(shot)
-      if (e.key === "ArrowRight") setShotId(id(round.shots[(i + 1) % round.shots.length]))
-      if (e.key === "ArrowLeft") setShotId(id(round.shots[(i - 1 + round.shots.length) % round.shots.length]))
-      if (e.key === "b" || e.key === "B") setHeld((h) => (h === "before" ? null : "before"))
-      if (e.key === "a" || e.key === "A") setHeld((h) => (h === "after" ? null : "after"))
-    }
-    addEventListener("keydown", onKey)
-    return () => removeEventListener("keydown", onKey)
-  }, [round, shot])
-  const drag = (e: Pointer) => {
-    if (!(e.buttons & 1) || !frame.current) return
-    const r = frame.current.getBoundingClientRect()
-    setHeld(null)
-    setSplit(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)))
-  }
-  const cutAt = held === "before" ? 1 : held === "after" ? 0 : split
-  const scenes = [...new Set(round.shots.map((s) => s.staging))]
-  return (
-    <>
-      <div className="absolute inset-0 flex items-center justify-center p-4" style={{ containerType: "size" }}>
-        <div ref={frame} className="relative touch-none select-none" style={{ cursor: "ew-resize", width: "min(100cqw, 150cqh)", aspectRatio: "3 / 2" }} onPointerDown={drag} onPointerMove={drag}>
-          <img src={shot.after} alt={`${shot.label}, after`} className="absolute inset-0 h-full w-full object-contain" draggable={false} />
-          <img src={shot.before} alt={`${shot.label}, before`} className="absolute inset-0 h-full w-full object-contain" style={{ clipPath: `inset(0 ${(1 - cutAt) * 100}% 0 0)` }} draggable={false} />
-          {cutAt > 0 && cutAt < 1 && <div className="pointer-events-none absolute top-0 bottom-0 w-px bg-white/80" style={{ left: `${cutAt * 100}%` }} />}
-          <span className={`${CHIP} left-2`}>Before</span>
-          <span className={`${CHIP} right-2`}>After</span>
-        </div>
-      </div>
-      <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
-        <div className="up-lib-title">{title}</div>
-        <div className="flex items-center gap-1">
-          <span className="w-12 opacity-60">View</span>
-          <button type="button" className={pill(false)} onClick={() => onLeave("iso")}>
-            Isometric
-          </button>
-          <button type="button" className={pill(false)} onClick={() => onLeave("stage")}>
-            Stage
-          </button>
-          <button type="button" className={pill(true)}>
-            Before & After
-          </button>
-        </div>
-        {rounds.length > 1 && (
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="w-12 opacity-60">Round</span>
-            {rounds.map((r) => (
-              <button key={r.made} type="button" className={pill(r.made === round.made)} onClick={() => (setMade(r.made), setShotId(id(r.shots[0])))}>
-                {day(r.made)}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="opacity-70">{round.note}</div>
-        {scenes.map((st) => (
-          <div key={st} className="flex flex-wrap items-center gap-1">
-            <span className="w-full opacity-60">{scene(st)}</span>
-            {round.shots
-              .filter((s) => s.staging === st)
-              .map((s) => (
-                <button key={id(s)} type="button" className={pill(id(s) === id(shot))} onClick={() => setShotId(id(s))}>
-                  {s.label}
-                </button>
-              ))}
-          </div>
-        ))}
-        <div className="flex items-center gap-1">
-          <span className="w-12 opacity-60">Show</span>
-          <button type="button" className={pill(held === "before")} onClick={() => setHeld(held === "before" ? null : "before")}>
-            Before
-          </button>
-          <button type="button" className={pill(held === null)} onClick={() => setHeld(null)}>
-            Both
-          </button>
-          <button type="button" className={pill(held === "after")} onClick={() => setHeld(held === "after" ? null : "after")}>
-            After
-          </button>
-        </div>
-        {shot.judged && <div className="text-4xs opacity-75">{shot.judged}</div>}
-        <div className="text-4xs opacity-55">Drag across the picture to move the line · ← → for the next shot · B and A for one side alone</div>
       </div>
     </>
   )

@@ -280,7 +280,7 @@ The Midnight Summons audited as played, 2026-11-23. Every shot and speaker's vie
 - Round 2, blind again: `standoff`, `fight` and `druid` retouched, each won clearly. `fallen` lost slightly and keeps its first painting.
 - The cottage keeps all its first paintings. Its retouches came back with crunchy stone and the lantern still lit. Left: the bow lying like a hoop on the sill, the lantern lit by day.
 
-The three places' played looks (the built sets, not the paintings) went through the dream loop on 2026-11-23, judged at device scale 2 with the cast as their figures (`capture.ts --page=stage`). Targets were painted from each set's own frames, cast and all. Every change was settled blind, before against after, sides shuffled. The frames are in the asset library's Before & After view.
+The three places' played looks (the built sets, not the paintings) went through the dream loop on 2026-11-23, judged at device scale 2 with the cast as their figures (`capture.ts --page=stage`). Targets were painted from each set's own frames, cast and all. Every change was settled blind, before against after, sides shuffled. The asset library builds each place both ways, live: its Look row switches Before and After (`asset-library/looks-earlier.ts`).
 
 - Round 1: the trail's after won 5 of 6 pairs, the stones' 5 of 5, the home's 3 of 4. Scores 3.7 to 6.2, the margins mostly under half a point, with two clear wins: framings that kept feet and a whole owlbear in frame.
 - Round 2: lower framings and the cottage's door won, a neutral owlbear tint and darker stones tied.

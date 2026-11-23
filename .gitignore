@@ -81,8 +81,6 @@ convex/_generated/
 
 # Earlier versions of set paintings, listed in asset-library/paintings.json. The bucket keeps them (pnpm stage:sync).
 /public/stage/paintings/*/earlier/
-# A played look's before and after frames, listed in asset-library/look-rounds.json. The bucket keeps them.
-/public/stage/looks/
 
 # Content queue drafts stay local until we pick a private home (public repo)
 /content/queue/

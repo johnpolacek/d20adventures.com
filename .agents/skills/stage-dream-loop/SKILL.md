@@ -31,7 +31,7 @@ S="staging=<adventure>/<encounter>"
 
 Stop the server and that Chrome when the loop ends.
 
-For a set the game plays in a look (`play: true` in `asset-library/looks.ts`), judge it as it is played: `capture.ts --page=stage --heroes "--q=staging=<adventure>/<encounter>&look=play"`, with its cast as their figures. Paint the targets from those frames, cast and all, and keep each round's before and after for the asset library's Before & After view (`asset-library/look-rounds.ts`).
+For a set the game plays in a look (`play: true` in `asset-library/looks.ts`), judge it as it is played: `capture.ts --page=stage --heroes "--q=staging=<adventure>/<encounter>&look=play"`, with its cast as their figures. Paint the targets from those frames, cast and all, and copy the look's entry into `asset-library/looks-earlier.ts` before the first round, so the library can switch the place between before and after, live.
 
 ## 1. Pick the shots
 

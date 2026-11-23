@@ -11,6 +11,7 @@ import { onFootprint } from "@d20/stage/spec/walk"
 import { addFigure, castRings, crowdShade } from "./figures"
 import { iso, isoLamps, isoSet } from "./iso"
 import { LOOKS } from "./looks"
+import { earlierLook } from "./looks-earlier"
 import { applyLook, editLook } from "./play"
 import { markBuiltTrees, standTrees } from "./trees"
 
@@ -28,6 +29,8 @@ export interface SceneOptions {
   // A painted set as the game plays it, from its painted points: "current", or a day to show the paintings as they
   // stood then (paintings.ts). Left out, the set is shown as built.
   painted?: string
+  // A played look as it stood until a day (looks-earlier.ts), in place of the current one.
+  lookOn?: string
 }
 // A place to send the camera: one of the place's own views, or a member of the cast.
 export interface Spot {
@@ -155,7 +158,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   const set = structuredClone(await SETS[o.set]()) as SetLike
   const staging = o.staging && STAGINGS[o.staging] ? (structuredClone(await STAGINGS[o.staging]()) as StagingLike) : null
   if (o.painted && set.painted) return openPainted(container, o, set, staging, createStage)
-  const look = LOOKS[o.set]
+  const look = earlierLook(o.set, o.lookOn) ?? LOOKS[o.set]
   const room = set.rooms?.[0]?.box
   const stops: (() => void)[] = []
   // A camera the visitor moves needs the set as built: paintings hold it to the points they were made from.
@@ -303,7 +306,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       const detail = Object.keys(stand).length <= 3 ? "lod0" : "lod1"
       await Promise.all(
         Object.entries(stand).map(async ([cast, character]) => {
-          const f = await addFigure(stage, `${o.files}/${character}/${detail}.glb`, cast, { clip: "Idle", env: q.figenv ? Number(q.figenv) : undefined }).catch(() => null)
+          const f = await addFigure(stage, `${o.files}/${character}/${detail}.glb`, cast, { clip: "Idle", env: q.figenv ? Number(q.figenv) : undefined, tint: look?.tint?.[cast] }).catch(() => null)
           if (f) stops.push(f.stop)
         })
       )
