@@ -166,6 +166,10 @@ export const riverboat = defineBuilder(
       // With `interior`, every other side window has its shutters closed. Without, every window stands open, so one on
       // the bank can see and shoot into the saloon through any of them.
       shutters: z.boolean().default(true),
+      // With `interior`, whether the saloon's windows hold leaded glass. Off, each is an open hole in the wall with its
+      // shutters propped up, as on most working boats, where glass was a rich man's: one on the bank sees and shoots in
+      // with nothing between.
+      glazed: z.boolean().default(true),
       // A mast on the roof aft with its sail furled on the yard, and sweeps stowed on the roof.
       mast: z.boolean().default(true),
       // The height of the water on the hull. Set, the hull carries a pale band of scum and weed there.
@@ -415,7 +419,7 @@ export const riverboat = defineBuilder(
     // a mullion and transom, leaded glass, and shutters. `glass` is a real pane in an opening, or a lit or dark panel set
     // on a solid wall. Shutters: "drop" hangs an awning leaf from the head, propped out, and a drop leaf from the sill,
     // or with `shut` closes both over the window; "side" folds two leaves back flat against the wall, or closes them.
-    const casement = (x: number, y: number, zz: number, yaw: number, w: number, h: number, glass: THREE.Material, opts: { pane?: boolean; shut?: boolean; shutters?: "drop" | "side" | "none" } = {}) => {
+    const casement = (x: number, y: number, zz: number, yaw: number, w: number, h: number, glass: THREE.Material, opts: { pane?: boolean; open?: boolean; shut?: boolean; shutters?: "drop" | "side" | "none" } = {}) => {
       const P = onWall(x, y, zz, yaw)
       const e = V(Math.cos(yaw), 0, -Math.sin(yaw))
       const out = V(Math.sin(yaw), 0, Math.cos(yaw))
@@ -428,13 +432,18 @@ export const riverboat = defineBuilder(
       box(0, h / 2 + fw / 2, 0.03, w + 2 * fw + 0.04, fw, 0.06)
       box(0, h / 2 + fw + 0.02, 0.06, w + 2 * fw + 0.14, 0.045, 0.12)
       box(0, -h / 2 - 0.03, 0.06, w + 2 * fw + 0.1, 0.055, 0.14)
-      if (opts.pane) {
+      // `open`: no glass, no lead, no mullion: the frame round an empty hole.
+      if (opts.open) {
+        // nothing in the opening
+      } else if (opts.pane) {
         const c = P(0, 0, -0.012)
         b.add(G("pane", () => new THREE.PlaneGeometry(1, 1)), glass, M4(c.x, c.y, c.z, yaw, w, h, 1), { uv: "keep" })
       } else box(0, 0, -0.004, w, h, 0.02, glass)
-      lattice(P, w, h, 0.004)
-      box(0, 0, 0.012, 0.045, h, 0.03)
-      box(0, h * 0.22, 0.012, w, 0.04, 0.03)
+      if (!opts.open) {
+        lattice(P, w, h, 0.004)
+        box(0, 0, 0.012, 0.045, h, 0.03)
+        box(0, h * 0.22, 0.012, w, 0.04, 0.03)
+      }
       for (const o of [-1, 1]) box(o * (w / 2 - 0.015), 0, 0.012, 0.03, h, 0.03)
       box(0, h / 2 - 0.015, 0.012, w, 0.03, 0.03)
       box(0, -h / 2 + 0.015, 0.012, w, 0.03, 0.03)
@@ -502,23 +511,25 @@ export const riverboat = defineBuilder(
     }
     // Inside, a window is a deep timber frame on the wall's inner face: jambs, a head and a sill, dark glass with leaded
     // lights, and on every other window along the sides a pair of closed shutters.
-    const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number, shut = false) => {
+    const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number, shut = false, open = false) => {
       const ins = (d: number, o = 0) => [x - Math.sin(yaw) * d + Math.cos(yaw) * o, zz - Math.cos(yaw) * d - Math.sin(yaw) * o] as const
       for (const o of [-1, 1]) F.box(M.post, ...pick3(ins(L0 + 0.05, o * (w / 2 + 0.05)), y), 0.1, h + 0.2, 0.1, yaw)
       F.box(M.post, ...pick3(ins(L0 + 0.05), y + h / 2 + 0.05), w + 0.2, 0.1, 0.1, yaw)
       F.box(M.post, ...pick3(ins(L0 + 0.08), y - h / 2 - 0.04), w + 0.34, 0.06, 0.16, yaw)
       // The glass's inner face, faint, facing into the room.
-      b.add(
-        G("pane", () => new THREE.PlaneGeometry(1, 1)),
-        M.night,
-        M4(...pick3(ins(T * 0.5), y), yaw + Math.PI, w, h, 1),
-        { uv: "keep" }
-      )
+      if (!open)
+        b.add(
+          G("pane", () => new THREE.PlaneGeometry(1, 1)),
+          M.night,
+          M4(...pick3(ins(T * 0.5), y), yaw + Math.PI, w, h, 1),
+          { uv: "keep" }
+        )
       if (shut) {
         for (const o of [-1, 1]) F.box(M.panel, ...pick3(ins(L0 + 0.06, (o * w) / 4), y), w / 2 - 0.01, h, 0.03, yaw)
         for (const o of [-1, 1]) for (const dy of [-0.3, 0.3]) F.box(M.iron, ...pick3(ins(L0 + 0.08, (o * w) / 4), y + dy * h), w / 2 - 0.06, 0.04, 0.01, yaw)
         return
       }
+      if (open) return
       lattice(onWall(x, y, zz, yaw), w, h, -T - 0.004)
       F.box(M.post, ...pick3(ins(T + 0.02), y), 0.04, h, 0.03, yaw)
       F.box(M.post, ...pick3(ins(T + 0.02), y + h * 0.22), w, 0.035, 0.03, yaw)
@@ -625,8 +636,8 @@ export const riverboat = defineBuilder(
         for (const q of opens) {
           if (q.door) continue
           const [wx, wz] = inAt(q.o, 0)
-          casement(wx, WY, wz, yaw, q.w, WH, M.pane, { pane: true, shut: q.shut, shutters: "drop" })
-          inner(wx, WY, wz, yaw, q.w, WH, q.shut)
+          casement(wx, WY, wz, yaw, q.w, WH, M.pane, { pane: true, open: !p.glazed && !q.shut, shut: q.shut, shutters: "drop" })
+          inner(wx, WY, wz, yaw, q.w, WH, q.shut, !p.glazed && !q.shut)
         }
       }
       // Along each side: ribs between the windows, a rail under them, and a skirting board.

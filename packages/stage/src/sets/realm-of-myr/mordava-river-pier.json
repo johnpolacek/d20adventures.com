@@ -1965,7 +1965,8 @@
         "pane": "windowGlass",
         "shutter": "shutter",
         "scum": "hullScum"
-      }
+      },
+      "glazed": false
     },
     {
       "type": "lantern",

@@ -32,7 +32,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## GM Notes
 
-The elves are gone and take no part. Silas and Reinhard do not know anyone is outside. The saloon's port windows are lit and face the bank, so a watcher on the bank can see the fight and shoot through the glass.
+The elves are gone and take no part. Silas and Reinhard do not know anyone is outside. The saloon's port windows are lit, unglazed and face the bank, their shutters propped open, so a watcher on the bank can see the fight and shoot in through them, with the sill as half cover.
 
 Silas and Reinhard want no witness and no body on their boat. They mean to overpower Lyra, throw her over the side into the river and cast off with the crate for Kordavos. This is the most likely way the fight ends, and it should take about three rounds. Reinhard closes and takes hold of her, drags her out on deck and puts her over the rail. Then Silas cuts the mooring lines and the current takes the tug downstream into the mist. Once she is in the water the two men do not stay to fight anyone on the bank. They cast off at once.
 
