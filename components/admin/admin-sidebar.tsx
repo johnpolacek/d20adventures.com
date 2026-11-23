@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BoxesIcon, ClipboardListIcon, Gamepad2Icon, HomeIcon, InboxIcon, MessageSquareIcon, UsersIcon, type LucideIcon } from "lucide-react"
+import { BoxesIcon, PaletteIcon, ClipboardListIcon, Gamepad2Icon, HomeIcon, InboxIcon, MessageSquareIcon, UsersIcon, type LucideIcon } from "lucide-react"
 
 type Item = { href: string; label: string; icon: LucideIcon }
 type Group = { label?: string; items: Item[] }
@@ -28,6 +28,7 @@ const groups = (local: boolean): Group[] => [
     items: [
       { href: "/admin/adventure-plans", label: "Adventure Plans", icon: ClipboardListIcon },
       { href: "/settings/realm-of-myr/assets", label: "Asset Library", icon: BoxesIcon },
+      { href: "/ui", label: "UI", icon: PaletteIcon },
     ],
   },
 ]
