@@ -281,10 +281,11 @@ float wId, wSeam; float wH = wHeight(wP, wId, wSeam, wFoot, wSharp);
 #ifdef WMAP
 // Each board shows its own patch of the painting; the gradient comes from the continuous coordinate so seams keep
 // their mip level.
-vec2 wT = vec2(wP.y / wMapSize.x, wP.x / wMapSize.y);
-vec4 wTex = textureGrad(wMap, wT + vec2(wId * 7.31, wId * 3.77), dFdx(wT), dFdy(wT));
+vec2 wT = vec2(wP.y / wMapSize.x, wP.x / wMapSize.y), wTo = wT + vec2(wId * 7.31, wId * 3.77), wGx = dFdx(wT), wGy = dFdy(wT);
+vec4 wTex = textureGrad(wMap, wTo, wGx, wGy);
 vec3 wCol = wTex.rgb * wTint * (1.0 + (wId - .5) * wVar);
 float wLum = dot(wTex.rgb, vec3(.3, .55, .15));
+float wGroove = wH;
 wH *= .8 + .35 * wLum;
 float wNailAmt = wNail(wP, wFoot);
 #else
@@ -315,8 +316,15 @@ diffuseColor.rgb *= wCol;`
         "#include <normal_fragment_maps>",
         `#include <normal_fragment_maps>
 #ifdef WMAP
-{ float wHn = wH + wNailAmt * .5;
- normal = wPerturb(-vViewPosition, normal, vec2(dFdx(wHn), dFdy(wHn)) * wRelief * (wSharp * .7 + .3), faceDirection); }
+{ // The painting's relief is sloped in texture space, a texel or the pixel's footprint across, whichever is wider. Taken
+ // from the screen instead, each magnified texel shades as a flat facet (stair steps up a post) and a slanted face
+ // aliases into speckle.
+ vec2 e = max(1.0 / vec2(textureSize(wMap, 0)), max(abs(wGx), abs(wGy)));
+ vec3 Y = vec3(.3, .55, .15);
+ vec2 gT = vec2(dot(textureGrad(wMap, wTo + vec2(e.x, 0.0), wGx, wGy).rgb - textureGrad(wMap, wTo - vec2(e.x, 0.0), wGx, wGy).rgb, Y) / e.x,
+  dot(textureGrad(wMap, wTo + vec2(0.0, e.y), wGx, wGy).rgb - textureGrad(wMap, wTo - vec2(0.0, e.y), wGx, wGy).rgb, Y) / e.y) * .5;
+ vec2 dh = vec2(dFdx(wGroove), dFdy(wGroove)) * (.8 + .35 * wLum) + wGroove * .35 * vec2(dot(gT, wGx), dot(gT, wGy)) + vec2(dFdx(wNailAmt), dFdy(wNailAmt)) * .5;
+ normal = wPerturb(-vViewPosition, normal, dh * wRelief * (wSharp * .7 + .3), faceDirection); }
 #else
 { float i0, s0; float hx = wHeight(wP + dFdx(wP), i0, s0, wFoot, wSharp), hy = wHeight(wP + dFdy(wP), i0, s0, wFoot, wSharp);
  normal = wPerturb(-vViewPosition, normal, vec2(hx - wH, hy - wH) * wRelief * (wSharp * .7 + .3), faceDirection); }
