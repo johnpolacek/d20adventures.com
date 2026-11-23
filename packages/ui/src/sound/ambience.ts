@@ -28,6 +28,10 @@ const url = (bed: AmbienceBed) => `/stage/sounds/ambience/${bed}.mp3`
 const CROSS = 2.5
 const FADE = 1.6
 
+// How far each bed is turned from its level by where the camera stands (setAmbienceMix), 1 untouched.
+let mix: Partial<Record<AmbienceBed, number>> = {}
+const level = (bed: AmbienceBed) => BEDS[bed] * (mix[bed] ?? 1)
+
 type Playing = { bed: AmbienceBed; gain: GainNode; next: number; sources: AudioBufferSourceNode[]; buffer: AudioBuffer | null; gone: boolean }
 let playing: Playing[] = []
 let wanted: AmbienceBed[] = []
@@ -69,7 +73,7 @@ async function begin(bed: AmbienceBed) {
   if (!c) return
   const gain = c.createGain()
   gain.gain.setValueAtTime(0, c.currentTime)
-  gain.gain.linearRampToValueAtTime(BEDS[bed], c.currentTime + FADE)
+  gain.gain.linearRampToValueAtTime(level(bed), c.currentTime + FADE)
   gain.connect(bus("ambience"))
   const p: Playing = { bed, gain, next: 0, sources: [], buffer: null, gone: false }
   playing.push(p)
@@ -99,6 +103,15 @@ function apply() {
 }
 // Before the first touch the context cannot start: the beds start when it does.
 onRunning(apply)
+
+// Turns beds up or down from their levels, as where the camera stands changes: a few seconds to settle, so a camera
+// that sweeps past the water is not heard lurching.
+export function setAmbienceMix(next: Partial<Record<AmbienceBed, number>>) {
+  mix = next
+  const c = current()
+  if (!c) return
+  for (const p of playing) if (!p.gone) p.gain.gain.setTargetAtTime(level(p.bed), c.currentTime + FADE, 0.8)
+}
 
 // The beds to play now. An empty list fades them all out, after a moment: when the next set follows soon enough, beds
 // the two share play on.

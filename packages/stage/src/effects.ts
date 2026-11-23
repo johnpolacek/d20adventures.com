@@ -35,12 +35,14 @@ export interface EffectEnd {
 }
 // What the effects do, for a host that sounds them: an effect starting, a missile landing (`struck` when it lands on
 // someone), an object taken in hand, a sound the story names (`near`: how far from the camera, in metres, when it
-// comes from someone), and the camera going into a room or out of one, with the beds that play there.
+// comes from someone), the camera going into a room or out of one, with the beds that play there, and how near the
+// camera is to open water, 0 to 1.
 export type EffectEvent =
   | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean }
   | { type: "prop"; kind: PropKind; passed: boolean }
   | { type: "sound"; cue: SoundCue; near?: number }
   | { type: "room"; ambience?: string[] }
+  | { type: "place"; water: number }
   | BodyEvent
 // What a cast member's own body does, for the same host: a footfall as they are seen to walk, a fall, sinking into
 // cover, walking on, the move of an attack, getting out of one's way, and being struck. `height` in metres says how big

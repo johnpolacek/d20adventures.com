@@ -139,7 +139,7 @@ function bodySound(e: BodyEvent) {
 export function effectSound(e: EffectEvent) {
   if (e.type === "body") return bodySound(e)
   if (e.type === "prop") return void play(PROPS[e.kind] ?? FX.cloth, "fx", { gain: 0.8 * LEVEL })
-  if (e.type === "room") return
+  if (e.type === "room" || e.type === "place") return
   if (e.type === "sound") {
     const cue = CUES[e.cue]
     // From someone far off it is fainter, as their steps are, and never gone.

@@ -212,6 +212,11 @@ export class Stage {
   private room: SetSpec["rooms"][number] | null = null
   // The room the camera is in, for its sound.
   private heard: SetSpec["rooms"][number] | null = null
+  // The set's open water as outlines on the ground (x, z), how near the camera last was to it, and when it was last
+  // measured.
+  private waters: [number, number][][] | null = null
+  private wet = -1
+  private sinceWet = 0
   private lit: SetSpec["rooms"][number] | null = null
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
@@ -1630,6 +1635,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       this.collide()
     }
     this.lightRoom(dt)
+    this.hearPlace(dt)
     if (this.motion) this.effects.update(dt)
     this.standees.update(dt, this.camera)
     this.models.update(dt, this.motion, this.camera)
@@ -1654,6 +1660,39 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       lamp.decay = l.decay
       lamp.intensity = l.intensity * k
     })
+  }
+  // How near the camera is to open water, 1 at the water's edge or over it and 0 from 15 metres off, told to the
+  // listeners a few times a second when it changes: a host turns the river up near it and the land's beds down.
+  private hearPlace(dt: number) {
+    this.sinceWet += dt
+    if (this.sinceWet < 0.25 || !this.effectListeners.size) return
+    this.sinceWet = 0
+    this.waters ??= this.set.objects.flatMap((o) => {
+      const p = o as { type: string; material?: string; plane?: string; points?: number[][]; at?: number[]; yaw?: number }
+      if (p.type !== "extrude" || p.plane !== "xz" || p.yaw || !p.points || this.set.materials[p.material ?? ""]?.type !== "water") return []
+      const [ax, , az] = p.at ?? [0, 0, 0]
+      return [p.points.map(([x, z]) => [x + ax, z + az] as [number, number])]
+    })
+    if (!this.waters.length) return
+    const { x, z } = this.camera.position
+    let d = Infinity
+    for (const poly of this.waters) {
+      let inside = false
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const [x1, z1] = poly[i]
+        const [x2, z2] = poly[j]
+        if (z1 > z !== z2 > z && x < ((x2 - x1) * (z - z1)) / (z2 - z1) + x1) inside = !inside
+        const dx = x2 - x1
+        const dz = z2 - z1
+        const t = THREE.MathUtils.clamp(((x - x1) * dx + (z - z1) * dz) / (dx * dx + dz * dz || 1), 0, 1)
+        d = Math.min(d, Math.hypot(x - x1 - t * dx, z - z1 - t * dz))
+      }
+      if (inside) d = 0
+    }
+    const near = 1 - THREE.MathUtils.smoothstep(d, 1, 15)
+    if (Math.abs(near - this.wet) < 0.04) return
+    this.wet = near
+    for (const l of this.effectListeners) l({ type: "place", water: near })
   }
   // Inside a room the sky's light fades and the room's lamps take over: the set's lamps dim out, then the room's come up,
   // over about half a second as the camera passes the wall.
