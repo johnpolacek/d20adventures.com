@@ -72,6 +72,52 @@ if (typeof window !== "undefined") {
   })
 }
 
+// ── Ducking ──
+// The ambience dips under the narrator and comes back after the last words. Each hold is one voice speaking: the bed
+// dips when the first begins and rises only once none has spoken for HOLD, so the gaps between sentences and between
+// paragraphs ride through without the bed pumping. Tune these by ear on /dev/sound.
+export const DUCK = {
+  // The ambience's level under the voice, of its own: 0.5 is about 6 dB down.
+  depth: 0.5,
+  // Seconds to settle down, from the first words.
+  dip: 0.8,
+  // Seconds of quiet after the last words before the bed rises.
+  hold: 1.5,
+  // Seconds to settle back up.
+  ramp: 2.5,
+}
+let holds = 0
+let rising: ReturnType<typeof setTimeout> | null = null
+// Glides the ambience bus to `to`, reaching most of the way in `seconds`, from wherever it is now.
+function glide(to: number, seconds: number) {
+  const c = context
+  const g = buses.get("ambience")?.gain
+  if (!c || !g) return
+  const t = c.currentTime
+  if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t)
+  else {
+    g.cancelScheduledValues(t)
+    g.setValueAtTime(g.value, t)
+  }
+  g.setTargetAtTime(to, t, seconds / 3)
+}
+// Holds the ambience down while a voice speaks. Call the returned release when it stops: more than once is harmless.
+export function duck(): () => void {
+  if (rising) clearTimeout(rising)
+  rising = null
+  if (holds++ === 0) glide(LEVELS.ambience * DUCK.depth, DUCK.dip)
+  let held = true
+  return () => {
+    if (!held) return
+    held = false
+    if (--holds > 0) return
+    rising = setTimeout(() => {
+      rising = null
+      if (holds === 0) glide(LEVELS.ambience, DUCK.ramp)
+    }, DUCK.hold * 1000)
+  }
+}
+
 // ── Files ──
 const buffers = new Map<string, Promise<AudioBuffer>>()
 // A decoded file, fetched once. A failed load tries again next time.

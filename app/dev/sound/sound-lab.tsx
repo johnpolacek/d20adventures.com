@@ -4,16 +4,30 @@ import type { EffectEvent } from "@d20/stage"
 import { AMBIENCE_BEDS, type AmbienceBed } from "@d20/stage/spec/set"
 import { Button } from "@d20/ui/button"
 import { setAmbience } from "@d20/ui/sound/ambience"
+import { duck } from "@d20/ui/sound/engine"
 import { rattle, type Verdict, verdict } from "@d20/ui/sound/dice"
 import { effectSound, preloadFx } from "@d20/ui/sound/fx"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 const ELEMENTS = [undefined, "fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
 const PROPS = ["scroll", "pouch", "key", "book", "blade"] as const
 const VERDICTS: Verdict[] = ["success", "failure", "critical-success", "critical-failure"]
 const MISSILES = new Set(["arrow", "bolt"])
+
+// The narrator plays only in the desktop app, so here a line is stood in by holding the duck for as long as it would
+// speak: two paragraphs with a short pause between, heard as one dip.
+function line(seconds: number[], gap: number) {
+  let t = 0
+  for (const s of seconds) {
+    setTimeout(() => {
+      const release = duck()
+      setTimeout(release, s * 1000)
+    }, t * 1000)
+    t += s + gap
+  }
+}
 
 function fire(kind: (typeof KINDS)[number], element: (typeof ELEMENTS)[number], struck: boolean) {
   const e = (phase: "start" | "land"): EffectEvent => ({ type: "effect", kind, element, phase, struck })
@@ -25,10 +39,15 @@ export function SoundLab() {
   const [on, setOn] = useState(true)
   const [element, setElement] = useState<(typeof ELEMENTS)[number]>(undefined)
   const [beds, setBeds] = useState<AmbienceBed[]>([])
+  const held = useRef<(() => void) | null>(null)
+  const [holding, setHolding] = useState(false)
   useEffect(() => {
     setOn(soundOn())
     preloadFx()
-    return () => setAmbience([])
+    return () => {
+      held.current?.()
+      setAmbience([])
+    }
   }, [])
   const toggleBed = (b: AmbienceBed) => {
     const next = beds.includes(b) ? beds.filter((x) => x !== b) : [...beds, b].slice(-3)
@@ -107,6 +126,28 @@ export function SoundLab() {
             {b}
           </Button>
         ))}
+      </div>
+      <div className={row}>
+        <span className={head}>Duck</span>
+        <Button
+          variant="outline"
+          active={holding}
+          onClick={() => {
+            if (held.current) {
+              held.current()
+              held.current = null
+            } else held.current = duck()
+            setHolding(!!held.current)
+          }}
+        >
+          hold
+        </Button>
+        <Button variant="outline" onClick={() => line([4], 0)}>
+          4 s line
+        </Button>
+        <Button variant="outline" onClick={() => line([4, 5], 1)}>
+          two paragraphs
+        </Button>
       </div>
     </div>
   )

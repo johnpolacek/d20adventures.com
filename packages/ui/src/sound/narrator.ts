@@ -1,6 +1,6 @@
 "use client"
 
-import { audio, bus } from "./engine"
+import { audio, bus, duck } from "./engine"
 import type { Pronunciations } from "./pronunciations"
 import { onSoundSetting } from "./settings"
 
@@ -157,6 +157,8 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
   let stopped = false
   let last: AudioBufferSourceNode | null = null
   let finish = () => {}
+  // The ambience dips from the first words until the last have ended, and eases back after (engine.ts, DUCK).
+  let unduck = () => {}
   const playing = new Set<AudioBufferSourceNode>()
   const heard: ReturnType<typeof setTimeout>[] = []
   const gain = c.createGain()
@@ -171,6 +173,7 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
       s.stop()
     }
     gain.disconnect()
+    unduck()
     finish()
   }
   // Sound turned off mid-sentence holds the context, so the narration would never end: it stops instead.
@@ -197,6 +200,7 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
         }
         if (!clip) continue
         spokeOnce = true
+        if (!last) unduck = duck()
         const buffer = c.createBuffer(1, clip.audio.length, clip.rate)
         buffer.copyToChannel(clip.audio as Float32Array<ArrayBuffer>, 0)
         const src = c.createBufferSource()
