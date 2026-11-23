@@ -80,6 +80,8 @@ function surfaceUV(g: THREE.BufferGeometry, mode: UVMode, r: number, orig: Array
 // world space, each vertex records that axis (xyz, world space) and, on round pieces, the girth (w) that turns the wrapped
 // uv into metres. Flat faces take the axis that runs longest along the face (its extent times how much of it lies in the
 // face), projected into the face, so a curved hull's planks follow the hull to the bow. Round pieces run along their axis.
+// A lofted skin that sets `userData.across` gives its own uv.x as metres across the grain, so its boards keep their width
+// where the skin curves: a hull's strakes run level below the sheer.
 const ROUND = new Set(["CylinderGeometry", "LatheGeometry"])
 function woodGrain(orig: THREE.BufferGeometry, g: THREE.BufferGeometry, matrix: THREE.Matrix4 | null, uvMode: UVMode) {
   g.computeBoundingBox()
@@ -92,6 +94,7 @@ function woodGrain(orig: THREE.BufferGeometry, g: THREE.BufferGeometry, matrix: 
   const n = g.attributes.normal
   const out = new Float32Array(n.count * 4)
   const round = ROUND.has(orig.type)
+  const across = orig.userData.across === true ? 1 : 0
   const girth = uvMode === "radial" ? 1 : Math.PI * Math.max(ext[0], ext[2])
   const t = new THREE.Vector3()
   for (let i = 0; i < n.count; i++) {
@@ -119,7 +122,7 @@ function woodGrain(orig: THREE.BufferGeometry, g: THREE.BufferGeometry, matrix: 
     out[i * 4] = t.x
     out[i * 4 + 1] = t.y
     out[i * 4 + 2] = t.z
-    out[i * 4 + 3] = 0
+    out[i * 4 + 3] = across
   }
   return out
 }

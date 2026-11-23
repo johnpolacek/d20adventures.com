@@ -20,13 +20,14 @@ class PaintedTextures {
   private pending: Promise<void>[] = []
   constructor(private anisotropy: number) {}
   // `repeat` scales the texture over the surface's uv: an `image` laid by surface metres covers `size` metres a tile.
-  get(url: string, repeat?: [number, number]) {
-    const key = repeat ? `${url}|${repeat[0]},${repeat[1]}` : url
+  // `linear` keeps the image's values as they are, for a normal map.
+  get(url: string, repeat?: [number, number], linear = false) {
+    const key = `${url}|${repeat ? `${repeat[0]},${repeat[1]}` : ""}|${linear ? "linear" : ""}`
     const hit = this.cache.get(key)
     if (hit) return hit
     const t = new THREE.Texture()
     if (repeat) t.repeat.set(...repeat)
-    t.colorSpace = THREE.SRGBColorSpace
+    t.colorSpace = linear ? THREE.NoColorSpace : THREE.SRGBColorSpace
     t.wrapS = t.wrapT = THREE.RepeatWrapping
     t.anisotropy = this.anisotropy
     this.cache.set(key, t)
@@ -71,9 +72,11 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         m = card(ctx, name, painted.get(s.map), s.tint, s.roughness)
         break
       case "image": {
-        const map = painted.get(s.map, s.size ? [1 / s.size[0], 1 / s.size[1]] : undefined)
+        const repeat: [number, number] | undefined = s.size ? [1 / s.size[0], 1 / s.size[1]] : undefined
+        const map = painted.get(s.map, repeat)
         m = plain(ctx, name, s.tint ?? "#ffffff", s.roughness ?? 0.8, {
           map,
+          ...(s.normal ? { normalMap: painted.get(s.normal, repeat, true), normalScale: new THREE.Vector2(s.relief ?? 1, s.relief ?? 1) } : {}),
           metalness: s.metalness ?? 0,
           side: s.double ? THREE.DoubleSide : THREE.FrontSide,
           ...(s.glow ? { emissive: new THREE.Color("#ffffff"), emissiveMap: map, emissiveIntensity: s.glow } : {}),

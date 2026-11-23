@@ -17,8 +17,9 @@ const unitBeard = () => G("beard5", () => new THREE.ConeGeometry(1, 1, 5, 1))
 
 // A mass of leaves in the unit sphere: `n` leaf cards facing every way, their normals pointing out from the centre so
 // the cluster shades like a rounded mass, lit on top and dark beneath. Four variants per count.
-function leafCards(n: number, variant: number) {
-  return G(`leafcards${n}-${variant}`, () => {
+// `card` is each card's size in the unit sphere: smaller cards, more of them, for crowns that show twigs and gaps.
+function leafCards(n: number, variant: number, card = 1.1) {
+  return G(card === 1.1 ? `leafcards${n}-${variant}` : `leafcards${n}-${variant}-${card}`, () => {
     let seed = 7919 * (variant + 1) + n
     const rnd = () => {
       seed = (seed * 16807) % 2147483647
@@ -30,9 +31,9 @@ function leafCards(n: number, variant: number) {
     const q = new THREE.Quaternion()
     const v = new THREE.Vector3()
     for (let i = 0; i < n; i++) {
-      const c = new THREE.Vector3(rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1).normalize().multiplyScalar(0.25 + rnd() * 0.4)
+      const c = new THREE.Vector3(rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1).normalize().multiplyScalar(card === 1.1 ? 0.25 + rnd() * 0.4 : 0.3 + rnd() ** 0.6 * 0.6)
       q.setFromEuler(new THREE.Euler(rnd() * Math.PI, rnd() * Math.PI * 2, rnd() * Math.PI))
-      const s = 1.1 + rnd() * 0.4
+      const s = card === 1.1 ? 1.1 + rnd() * 0.4 : card * (1 + rnd() * 0.36)
       const corners = [
         [-0.5, -0.5, 0, 0],
         [0.5, -0.5, 1, 0],
@@ -60,8 +61,9 @@ function leafCards(n: number, variant: number) {
 }
 
 // A mass of leaves: leafy sphere, or leaf cards when the material carries a painted leaf clump.
-function mass(b: Sink, mat: THREE.Material, m: THREE.Matrix4, rand: () => number, low = false) {
-  if (mat.userData.cards) b.add(leafCards(low ? 6 : 9, Math.floor(rand() * 4)), mat, m, { uv: "keep" })
+function mass(b: Sink, mat: THREE.Material, m: THREE.Matrix4, rand: () => number, low = false, fine = false) {
+  if (mat.userData.cards && fine) b.add(leafCards(low ? 18 : 30, Math.floor(rand() * 4), 0.42), mat, m, { uv: "keep" })
+  else if (mat.userData.cards) b.add(leafCards(low ? 6 : 9, Math.floor(rand() * 4)), mat, m, { uv: "keep" })
   else b.add(low ? unitBlobLow() : unitBlob(), mat, m, { uv: "keep" })
 }
 
@@ -118,6 +120,10 @@ export const tree = defineBuilder(
       low: z.boolean().default(false),
       // Grey moss hanging in beards from the limbs (live oaks and old willows): 0 none, 1 heavy. Needs a `moss` material.
       moss: num(0, 1).default(0),
+      // Crowns of many small leaf cards instead of a few large ones, so a crown seen across water at night shows
+      // twigs and sky between them rather than sheets of leaves. Off in the painted woods, whose paintings were made
+      // over the large cards.
+      fine: z.boolean().default(false),
     })
     .strict(),
   (ctx, p) => {
@@ -176,7 +182,7 @@ export const tree = defineBuilder(
           const tip = mid.clone().add(V(Math.cos(b2) * h * rand(0.08, 0.16), h * rand(0.08, 0.2), Math.sin(b2) * h * rand(0.08, 0.16)))
           beam(b, M.bark, mid, tip, rr * 0.3, 8, rr * 0.12)
           const s = h * rand(0.08, 0.12)
-          mass(b, leaves(), M4(tip.x, tip.y + s * 0.3, tip.z, rand(0, TAU), s * 1.3, s * 0.75, s * 1.3), rand, p.low)
+          mass(b, leaves(), M4(tip.x, tip.y + s * 0.3, tip.z, rand(0, TAU), s * 1.3, s * 0.75, s * 1.3), rand, p.low, p.fine)
           if (p.moss > 0 && rand() < p.moss) beards(b, M.moss, rand, tip, 2 + Math.floor(rand() * 3), h * 0.1)
         }
       }
@@ -210,7 +216,7 @@ export const tree = defineBuilder(
           if (p.moss > 0 && rand() < p.moss) beards(b, M.moss, rand, tip, 2 + Math.floor(rand() * 3), h * 0.12)
           if (rand() < 0.45) {
             const s = h * rand(0.05, 0.09)
-            mass(b, leaves(), M4(tip.x, tip.y, tip.z, rand(0, TAU), s, s * 0.7, s), rand, p.low)
+            mass(b, leaves(), M4(tip.x, tip.y, tip.z, rand(0, TAU), s, s * 0.7, s), rand, p.low, p.fine)
           }
         }
       }
@@ -248,7 +254,7 @@ export const tree = defineBuilder(
           const a = a0 + (k / ring) * TAU
           const out = ring === 1 ? 0 : R * 0.38
           const s = R * (ring === 1 ? 1.0 : 0.75)
-          mass(b, leaves(), M4(c.x + Math.cos(a) * out, y - s * 0.1, c.z + Math.sin(a) * out, rand(0, TAU), s, s * 0.75, s), rand, p.low)
+          mass(b, leaves(), M4(c.x + Math.cos(a) * out, y - s * 0.1, c.z + Math.sin(a) * out, rand(0, TAU), s, s * 0.75, s), rand, p.low, p.fine)
         }
       }
       ctx.circle(0, 0, r + 0.25, h)
@@ -277,7 +283,7 @@ export const tree = defineBuilder(
       const anchor = i < ends.length ? ends[i] : crown
       const s = h * (birch ? 0.11 : 0.17) * rand(0.75, 1.15)
       const off = V(rand(-1, 1) * spread * 0.5, rand(-0.2, 0.5) * s, rand(-1, 1) * spread * 0.5)
-      mass(b, leaves(), M4(anchor.x + off.x, anchor.y + off.y, anchor.z + off.z, rand(0, TAU), s, s * rand(0.65, 0.85), s), rand, p.low)
+      mass(b, leaves(), M4(anchor.x + off.x, anchor.y + off.y, anchor.z + off.z, rand(0, TAU), s, s * rand(0.65, 0.85), s), rand, p.low, p.fine)
       if (p.moss > 0 && rand() < p.moss) beards(b, M.moss, rand, V(anchor.x + off.x, anchor.y + off.y - s * 0.55, anchor.z + off.z), 3 + Math.floor(rand() * 4), h * 0.16)
     }
     if (p.moss > 0) for (const end of ends) beards(b, M.moss, rand, end, Math.round(2 + p.moss * 3), h * 0.13)

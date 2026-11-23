@@ -72,8 +72,22 @@ function sideAt(st: ReturnType<typeof station>, y: number) {
   const c = THREE.MathUtils.clamp((st.top - y) / (st.top - st.keel), 0, 1) ** (1 / 0.6)
   return st.w * Math.sin(Math.acos(c))
 }
+// How far round the hull's skin a point at height y lies below the deck edge, in metres.
+function girth(st: ReturnType<typeof station>, y: number) {
+  let d = 0
+  let x0 = sideAt(st, st.top)
+  let y0 = st.top
+  for (let i = 1; i <= 10; i++) {
+    const y1 = st.top + ((y - st.top) * i) / 10
+    const x1 = sideAt(st, y1)
+    d += Math.hypot(x1 - x0, y1 - y0)
+    x0 = x1
+    y0 = y1
+  }
+  return d
+}
 // A band of hull skin between two heights (each a function of the station), lofted along the length. `inner` faces
-// inward, for bulwarks seen from the deck.
+// inward, for bulwarks seen from the deck. Its uv is [girth below the deck edge, z], so strakes follow the sheer.
 function loft(
   L: number,
   B: number,
@@ -87,6 +101,7 @@ function loft(
   k = 7
 ) {
   const pos: number[] = []
+  const uv: number[] = []
   const rows: number[][] = []
   for (let i = 0; i <= n; i++) {
     const st = station(i / n, L, B, draft, sheer)
@@ -96,24 +111,32 @@ function loft(
     for (let side = -1; side <= 1; side += 2)
       for (let j = 0; j <= k; j++) {
         const y = side < 0 ? y1 - ((y1 - y0) * j) / k : y0 + ((y1 - y0) * j) / k
-        ring.push(side * sideAt(st, y) * inset, y, st.z)
+        ring.push(side * sideAt(st, y) * inset, y, st.z, girth(st, y))
       }
     rows.push(ring)
   }
-  const per = rows[0].length / 3
+  // Shared corners, so the skin shades as one curve from stern to bow and not a facet a station.
+  const per = rows[0].length / 4
+  const index: number[] = []
+  for (const ring of rows)
+    for (let j = 0; j < per; j++) {
+      pos.push(ring[j * 4], ring[j * 4 + 1], ring[j * 4 + 2])
+      uv.push(ring[j * 4 + 3], ring[j * 4 + 2])
+    }
   for (let i = 0; i < n; i++)
     for (let j = 0; j < per - 1; j++) {
       if (j === k) continue
-      const a = rows[i].slice(j * 3, j * 3 + 3)
-      const b = rows[i].slice(j * 3 + 3, j * 3 + 6)
-      const c = rows[i + 1].slice(j * 3, j * 3 + 3)
-      const d = rows[i + 1].slice(j * 3 + 3, j * 3 + 6)
-      if (inner) pos.push(...a, ...c, ...b, ...b, ...c, ...d)
-      else pos.push(...a, ...b, ...c, ...b, ...d, ...c)
+      const a = i * per + j
+      const c = (i + 1) * per + j
+      if (inner) index.push(a, c, a + 1, a + 1, c, c + 1)
+      else index.push(a, a + 1, c, a + 1, c + 1, c)
     }
   const g = new THREE.BufferGeometry()
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3))
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2))
+  g.setIndex(index)
   g.computeVertexNormals()
+  g.userData.across = true
   return g
 }
 
@@ -145,6 +168,8 @@ export const riverboat = defineBuilder(
       shutters: z.boolean().default(true),
       // A mast on the roof aft with its sail furled on the yard, and sweeps stowed on the roof.
       mast: z.boolean().default(true),
+      // The height of the water on the hull. Set, the hull carries a pale band of scum and weed there.
+      waterline: num(-4, 0).optional(),
     })
     .strict(),
   (ctx, p) => {
@@ -175,7 +200,7 @@ export const riverboat = defineBuilder(
       ),
       M.hull,
       null,
-      { uv: "planar" }
+      { uv: "keep" }
     )
     b.add(
       loft(
@@ -188,8 +213,26 @@ export const riverboat = defineBuilder(
       ),
       M.strake,
       null,
-      { uv: "planar" }
+      { uv: "keep" }
     )
+    if (p.waterline !== undefined) {
+      const wl = p.waterline
+      b.add(
+        loft(
+          L,
+          B,
+          p.draft,
+          p.sheer,
+          () => wl - 0.06,
+          () => wl + 0.2,
+          false,
+          1.012
+        ),
+        M.scum,
+        null,
+        { uv: "keep" }
+      )
+    }
     b.add(
       loft(
         L,
@@ -203,7 +246,7 @@ export const riverboat = defineBuilder(
       ),
       M.bulwark,
       null,
-      { uv: "planar" }
+      { uv: "keep" }
     )
     // Transom, deck, a timber rub rail and gunwale cap.
     const stern = at(0)
@@ -744,7 +787,7 @@ export const riverboat = defineBuilder(
       for (const t of [0.3, 0.42, 0.54, 0.66]) {
         const st = at(t)
         F.cyl(M.rope, side * (sideAt(st, -0.25) + 0.13), -0.62, st.z, 0.12, 0.12, 0.45, 8)
-        beam(b, M.rope, V(side * (sideAt(st, -0.25) + 0.13), -0.17, st.z), V(side * (st.w - 0.05), st.top + 0.03, st.z), 0.012, 4)
+        beam(b, M.rope, V(side * (sideAt(st, -0.25) + 0.13), -0.17, st.z), V(side * (st.w - 0.05), st.top + 0.03, st.z), 0.02, 5)
       }
     // Two barrels lashed on the foredeck to starboard.
     {
@@ -781,18 +824,33 @@ export const riverboat = defineBuilder(
       const yh = B * 0.48
       beam(b, M.mast, V(-yh, yy, mz + 0.16), V(0, yy, mz + 0.16), 0.045, 8, 0.075)
       beam(b, M.mast, V(0, yy, mz + 0.16), V(yh, yy, mz + 0.16), 0.075, 8, 0.045)
-      const parts = 14
-      for (let k = 0; k < parts; k++) {
-        const u0 = -yh * 0.92 + (k * 2 * yh * 0.92) / parts
-        const u1 = u0 + (2 * yh * 0.92) / parts
-        const fat = 0.15 + 0.11 * Math.sin(((k + 0.5) / parts) * Math.PI) ** 0.6 + rand(-0.012, 0.012)
+      // The canvas is gathered in bays between gaskets: pinched where each gasket binds it, bellied and sagging below
+      // the yard between, with a loose fold or two hanging out of a bay.
+      const bays = 7
+      const span = 2 * yh * 0.92
+      const per = 4
+      for (let k = 0; k < bays * per; k++) {
+        const t = (k + 0.5) / (bays * per)
+        const inBay = ((k % per) + 0.5) / per
+        const pinch = Math.sin(inBay * Math.PI)
+        const whole = Math.sin(t * Math.PI) ** 0.5
+        const fat = (0.1 + 0.07 * whole) * (0.62 + 0.38 * pinch) + rand(-0.01, 0.01)
+        const sag = 0.05 * pinch * (0.6 + whole)
+        const u = -span / 2 + t * span
         b.add(
           G("sph10", () => new THREE.SphereGeometry(1, 10, 7)),
           M.sail,
-          M4((u0 + u1) / 2, yy - fat * 0.8, mz + 0.2, rand(-0.06, 0.06), (u1 - u0) * 0.95, fat, fat * 0.85),
+          M4(u, yy - fat * 0.75 - sag, mz + 0.2 + rand(-0.015, 0.015), rand(-0.25, 0.25), (span / (bays * per)) * 1.25, fat * rand(0.92, 1.08), fat * rand(0.78, 0.92)),
           { uv: "keep" }
         )
-        if (k > 0 && k % 2 === 0) b.add(G("gasket", () => new THREE.TorusGeometry(0.17, 0.012, 4, 14)), M.rope, M4(u0, yy - fat * 0.8, mz + 0.2, Math.PI / 2, (fat * 0.9) / 0.17, (fat * 1.04) / 0.17, 1), { uv: "keep" })
+        if (k % per === 0 && k > 0) b.add(G("gasket", () => new THREE.TorusGeometry(0.17, 0.012, 4, 14)), M.rope, M4(u - span / (bays * per) / 2, yy - 0.1, mz + 0.2, Math.PI / 2, 0.66, 0.78, 1), { uv: "keep" })
+        if (k % per === 1 && rand() < 0.55)
+          b.add(
+            G("sph10", () => new THREE.SphereGeometry(1, 10, 7)),
+            M.sail,
+            M4(u + rand(-0.05, 0.05), yy - fat * 1.5 - sag - 0.05, mz + 0.22, rand(-0.35, 0.35), span / (bays * per) * rand(0.9, 1.4), rand(0.06, 0.09), 0.05),
+            { uv: "keep" }
+          )
       }
       beam(b, M.rope, V(0.04, ry + mh - 0.05, mz + 0.1), V(0.04, yy + 0.05, mz + 0.16), 0.012, 4)
       const head = V(0, ry + mh - 0.15, mz)
@@ -801,12 +859,12 @@ export const riverboat = defineBuilder(
           const st = at((mz + dz + L / 2) / L)
           const foot = V(side * (st.w + 0.04), st.top + 0.02, mz + dz)
           const dead = foot.clone().lerp(head, 0.12)
-          beam(b, M.rope, head, dead, 0.014, 4)
-          beam(b, M.rope, dead, foot, 0.01, 4)
+          beam(b, M.rope, head, dead, 0.024, 5)
+          beam(b, M.rope, dead, foot, 0.02, 5)
           F.sphere(M.trim, dead.x, dead.y, dead.z, 0.06, 0.07, 0.06, 8)
         }
-      beam(b, M.rope, head, V(0, bow.top + 0.5, L / 2 - 0.1), 0.014, 4)
-      beam(b, M.rope, head, V(sx, pivot.y + 0.1, -L / 2 - 0.1), 0.014, 4)
+      beam(b, M.rope, head, V(0, bow.top + 0.5, L / 2 - 0.1), 0.024, 5)
+      beam(b, M.rope, head, V(sx, pivot.y + 0.1, -L / 2 - 0.1), 0.024, 5)
       // Cargo forward on the roof: a crate and kegs under a tarpaulin, roped down.
       const cz = zr - 0.4
       crate(b, M, -0.55, ry, cz, 0.6, 0.1)
@@ -820,6 +878,7 @@ export const riverboat = defineBuilder(
   {
     hull: "hull",
     strake: "strake",
+    scum: "hull",
     deck: "deck",
     bulwark: "plank",
     wall: "siding",

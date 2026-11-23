@@ -83,7 +83,8 @@ const painted = z
 const card = z.object({ type: z.literal("card"), map: texture, tint: color.optional(), roughness: unit.optional() }).strict()
 // A painting laid on a surface by the builder's own uv (a rug, a fresco, a book's spine, stained glass): `tint` multiplies
 // it, `glow` lights it from within by its own colours (glass with daylight behind it), `double` shows both sides. `size`
-// is the metres one tile covers on surfaces whose uv runs in metres (walls, boxes).
+// is the metres one tile covers on surfaces whose uv runs in metres (walls, boxes). `normal` is the same picture's
+// normal map (OpenGL green up), `relief` how deep it reads: bark seen from an arm's length needs its furrows.
 const image = z
   .object({
     type: z.literal("image"),
@@ -94,6 +95,8 @@ const image = z
     metalness: unit.optional(),
     glow: num(0, 20).optional(),
     double: z.boolean().optional(),
+    normal: texture.optional(),
+    relief: num(0, 4).optional(),
   })
   .strict()
 const cloth = z

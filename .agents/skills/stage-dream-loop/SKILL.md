@@ -18,6 +18,7 @@ Not for a set with a `painted` section. There the painting is the set: see “Pa
 - Each shot stays inside 300 draw calls and 2.5 million triangles (`scripts/stage-verify.ts`). `capture.ts --fps` prints both.
 - Frames are judged at device scale 2, whole and as native-pixel crops. A whole frame shown small hides blocky models.
 - Measure what can be measured: drift, frame rate, calls, triangles. The judge scores only the rest.
+- A set's loop changes that set and its own builder. Trees and other shared builders also stand in painted sets, whose paintings were made over them, so a gap in one is reported and not fixed here.
 
 ## Setup
 
@@ -44,7 +45,8 @@ node --import tsx lab/stage-art/repaint.ts drift <set>-r0-<shot> <set>-target-<s
 
 - The plate is the build as it stands, with nobody in it. The target is that frame as the finished game would draw it, not a film still or concept art.
 - `--cli` paints on the owner's ChatGPT subscription. Without it the call is paid, so ask first.
-- `--detail` names real materials and the light, as `GATE.detail` in `repaint.ts` does. Never ask for flat or simple art.
+- `--detail` names real materials and the light, as `GATE.detail` in `repaint.ts` does. Never ask for flat or simple art. Name what the set has: the barge's wooden shutters came back as canvas when the wording said awnings.
+- Paint one target at a time if two at once are refused with a 429.
 - Drift is how well the painter kept the plate's edges. Chance is 75% within 8 px, and GPT Image 2 scored 98%. Paint again when a target falls well short, or adds, moves or drops anything.
 - The target lands in `public/stage-lab/` and in the Desktop folder. Send it to the owner, then start. Stop and ask only if it reads as a different place or style than the adventure's art.
 - The target does not change during the loop.
@@ -95,6 +97,7 @@ A fresh subagent each round, never a fork. Give it the file paths and this promp
 - Stalled: the large change did not raise the score. Stop and show the owner the target, the best frame and the gaps.
 - Five rounds short of the bar, unless the owner set another limit: stop and report.
 - A higher score never pays for a failed check or a broken budget.
+- A rise under half a point is not a rise. On the barge the score moved 0.3 between rounds with no clear cause.
 
 Past the bar, if the owner wants more, paint a new target from the current plate and loop again.
 
