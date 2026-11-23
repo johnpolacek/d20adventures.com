@@ -1,9 +1,10 @@
 import * as THREE from "three"
 import { z } from "zod"
 import { beam, Frame, G, M4, type Sink, shape, V, type Vec2 } from "../kit/geometry"
+import { barrel, crate } from "./market"
 import { defineBuilder, num, size, vec3 } from "./types"
 
-// Rivers and harbours: a riverboat with a lit cabin, a pier on pilings, and sailing ships at their moorings. Decks and
+// Rivers and harbours: a river barge with a lit cabin, a pier on pilings, and sailing ships at their moorings. Decks and
 // pier boards sit at y = 0, where people stand; hulls and pilings reach down past the set's water line.
 
 // An outline on the ground [x, z], extruded up from y0 by `depth` in the object's frame. (The bare `extrude` primitive's
@@ -116,10 +117,13 @@ function loft(
   return g
 }
 
-// An old river tug, as in Covert Cargo's art: a lofted hull that rises to the bow, dark below a blue-grey strake and a
-// rust rub rail; a pale cabin with rust trim, its forward saloon glazed and lit, small windows aft; a pilothouse with a
-// rounded roof on the cabin top, a thin stack and a gooseneck vent; rails, life rings and bitts. Bow toward +z. Decks are
-// at y = 0. The cabin is solid, or with `interior` the saloon is a room with an open door.
+// A Valkaran river barge, as in Covert Cargo: a lofted plank hull that rises to the bow, tarred below a painted strake,
+// with a timber rub rail and gunwale, and a wooden rail on stanchions round the deck's edge; a timber deckhouse of
+// board-and-batten walls whose fore end rounds into a bow of windows round the door, leaded casements in wooden frames
+// with awning shutters propped out above and drop shutters hung below, posts and knee braces under a planked roof; a
+// short mast stepped on the roof aft with its sail furled on the yard, sweeps stowed on the roof, a steering oar over
+// the stern, lanterns, bitts, barrels and fenders. Bow toward +z. Decks are at y = 0. The deckhouse is solid, or with
+// `interior` the saloon is a room with an open door.
 export const riverboat = defineBuilder(
   z
     .object({
@@ -127,7 +131,7 @@ export const riverboat = defineBuilder(
       beam: size(12).default(3.6),
       draft: size(4).default(1.1),
       sheer: num(0, 3).default(0.9),
-      // The cabin's share of the length and of the beam, and the share of its length at the fore end that is the lit saloon.
+      // The deckhouse's share of the length and of the beam, and the share of its length at the fore end that is the lit saloon.
       cabin: num(0.3, 0.8).default(0.55),
       width: num(0.4, 0.9).default(0.72),
       saloon: num(0, 1).default(0.4),
@@ -139,14 +143,27 @@ export const riverboat = defineBuilder(
       // With `interior`, every other side window has its shutters closed. Without, every window stands open, so one on
       // the bank can see and shoot into the saloon through any of them.
       shutters: z.boolean().default(true),
+      // A mast on the roof aft with its sail furled on the yard, and sweeps stowed on the roof.
+      mast: z.boolean().default(true),
     })
     .strict(),
   (ctx, p) => {
-    const { b, M } = ctx
+    const { b, M, rand } = ctx
     const L = p.length
     const B = p.beam
     const band = -0.32
     const at = (t: number) => station(t, L, B, p.draft, p.sheer)
+    const F = new Frame(b, M4())
+    // A plank from a to c, `w` wide along `across` and `d` thick: the long axis carries the grain.
+    const slab = (mat: THREE.Material, a: THREE.Vector3, c: THREE.Vector3, across: THREE.Vector3, w: number, d: number) => {
+      const zAx = c.clone().sub(a)
+      const len = zAx.length()
+      zAx.normalize()
+      const xAx = across.clone().sub(zAx.clone().multiplyScalar(across.dot(zAx))).normalize()
+      const yAx = zAx.clone().cross(xAx)
+      const m = new THREE.Matrix4().makeBasis(xAx, yAx, zAx).scale(V(w, d, len)).setPosition(a.clone().add(c).multiplyScalar(0.5))
+      b.add(G("box", () => new THREE.BoxGeometry(1, 1, 1)), mat, m)
+    }
     b.add(
       loft(
         L,
@@ -184,11 +201,11 @@ export const riverboat = defineBuilder(
         true,
         0.97
       ),
-      M.cabin,
+      M.bulwark,
       null,
       { uv: "planar" }
     )
-    // Transom, deck, rub rail and gunwale cap.
+    // Transom, deck, a timber rub rail and gunwale cap.
     const stern = at(0)
     const transom: Vec2[] = []
     for (let j = 0; j <= 8; j++) {
@@ -222,12 +239,79 @@ export const riverboat = defineBuilder(
     )
     for (const side of [-1, 1])
       for (let i = 0; i < n; i++) {
-        beam(b, M.rust, V(rub[i].x * side, rub[i].y, rub[i].z), V(rub[i + 1].x * side, rub[i + 1].y, rub[i + 1].z), 0.045, 5)
-        beam(b, M.rust, V(cap[i].x * side, cap[i].y, cap[i].z), V(cap[i + 1].x * side, cap[i + 1].y, cap[i + 1].z), 0.04, 5)
+        beam(b, M.trim, V(rub[i].x * side, rub[i].y, rub[i].z), V(rub[i + 1].x * side, rub[i + 1].y, rub[i + 1].z), 0.06, 6)
+        beam(b, M.trim, V(cap[i].x * side, cap[i].y, cap[i].z), V(cap[i + 1].x * side, cap[i + 1].y, cap[i + 1].z), 0.055, 6)
       }
-    // The cabin, as in the art: a saloon whose fore end rounds into a bow of lit windows round a glazed door, pale
-    // planking, rust posts between the panes and a rust fascia, small windows aft, and a roof that overhangs as an
-    // upper deck with a rail all round.
+    shape(
+      b,
+      M.trim,
+      [
+        [-stern.w - 0.03, stern.top],
+        [stern.w + 0.03, stern.top],
+        [stern.w + 0.03, stern.top + 0.07],
+        [-stern.w - 0.03, stern.top + 0.07],
+      ],
+      0.14,
+      M4(0, 0, -L / 2 - 0.04)
+    )
+    // The stem rises above the bow and curls over in a carved scroll.
+    const bow = at(1)
+    for (let k = 0; k < 8; k++) {
+      const a0 = (k / 8) * Math.PI * 1.2
+      const a1 = ((k + 1) / 8) * Math.PI * 1.2
+      const r0 = 0.32 - k * 0.022
+      const r1 = 0.32 - (k + 1) * 0.022
+      beam(b, M.trim, V(0, bow.top + 0.5 + Math.sin(a0) * r0, L / 2 - 0.3 + Math.cos(a0) * r0), V(0, bow.top + 0.5 + Math.sin(a1) * r1, L / 2 - 0.3 + Math.cos(a1) * r1), 0.07 - k * 0.004, 6)
+    }
+    beam(b, M.trim, V(0, bow.keel * 0.5, L / 2 + 0.02), V(0, bow.top + 0.5, L / 2 + 0.02), 0.09, 6, 0.08)
+
+    // The rail round the deck's edge: stanchions a pace apart with a cap rail and a mid rail, low where the bow's bulwark
+    // already stands high. A gap to port forward is the gangway. For the rules each length is a low wall one can see and
+    // shoot over and take cover behind.
+    const railTop = (st: ReturnType<typeof station>) => st.top + Math.max(0.3, 0.9 - st.top * 0.55)
+    const gangway = (t: number) => t > 0.76 && t < 0.93
+    const steps = Math.round(L / 1.05)
+    for (const side of [-1, 1]) {
+      let prev: { x: number; z: number; y: number; t: number } | null = null
+      for (let i = 0; i <= steps; i++) {
+        const t = 0.02 + (0.955 * i) / steps
+        const st = at(t)
+        const x = side * (st.w - 0.07)
+        const y = railTop(st)
+        const cur = { x, z: st.z, y, t }
+        const open = side < 0 && gangway(t)
+        if (!open) beam(b, M.trim, V(x, st.top, st.z), V(x, y + 0.03, st.z), 0.045, 4)
+        if (prev && !(side < 0 && (gangway(prev.t) || gangway(t)))) {
+          beam(b, M.trim, V(prev.x, prev.y + 0.04, prev.z), V(x, y + 0.04, st.z), 0.05, 6)
+          const mid = (s: { x: number; z: number; y: number; t: number }) => V(s.x, (at(s.t).top + s.y) / 2, s.z)
+          beam(b, M.trim, mid(prev), mid(cur), 0.03, 5)
+          const len = Math.hypot(x - prev.x, st.z - prev.z)
+          const nx = (st.z - prev.z) / len
+          const nz = -(x - prev.x) / len
+          ctx.footprint((x + prev.x) / 2, (st.z + prev.z) / 2, len / 2, 0.08, Math.atan2(nx, nz), Math.max(y, prev.y) + 0.05, Math.max(y, prev.y) + 0.05)
+        }
+        prev = open ? null : cur
+        // Taller posts either side of the gangway.
+        if (side < 0 && open !== gangway(0.02 + (0.955 * (i + 1)) / steps) && i < steps) {
+          const t2 = open ? 0.02 + (0.955 * (i + 1)) / steps : t
+          const s2 = at(t2)
+          beam(b, M.trim, V(-(s2.w - 0.07), s2.top, s2.z), V(-(s2.w - 0.07), railTop(s2) + 0.3, s2.z), 0.07, 6)
+          F.sphere(M.trim, -(s2.w - 0.07), railTop(s2) + 0.33, s2.z, 0.08, 0.06, 0.08, 8)
+        }
+      }
+    }
+    // Across the stern, between the corners.
+    {
+      const y = railTop(stern)
+      const x = stern.w * 0.8 - 0.05
+      const zz = -L / 2 + 0.12
+      for (const k of [-1, -0.5, 0.5, 1]) beam(b, M.trim, V(k * x, stern.top, zz), V(k * x, y + 0.03, zz), 0.045, 4)
+      beam(b, M.trim, V(-x, y + 0.04, zz), V(x, y + 0.04, zz), 0.05, 6)
+      beam(b, M.trim, V(-x, (stern.top + y) / 2, zz), V(x, (stern.top + y) / 2, zz), 0.03, 5)
+      ctx.footprint(0, zz, x, 0.08, 0, y + 0.05, y + 0.05)
+    }
+
+    // The deckhouse.
     const Wc = B * p.width
     const Hc = p.height
     const Lc = L * p.cabin
@@ -237,99 +321,217 @@ export const riverboat = defineBuilder(
     const zs = z1 - Lc * p.saloon
     const Lr = Wc * 0.42
     const zr = z1 - Lr
-    const F = new Frame(b, M4())
+    const hw = Wc / 2
     const glow = p.lit ? M.window : M.void
-    const helm = p.lit ? M.helm : M.void
-    // The cabin's plan grown by `grow`: straight sides aft and an elliptical bow forward, `n` steps round the bow. A saloon
-    // people stand in has a bow of seven flat panels, one per window, so each window opens in a flat wall.
+    // The deckhouse's plan grown by `grow`: straight sides aft and an elliptical bow forward, `n` steps round the bow. A
+    // saloon people stand in has a bow of seven flat panels, one per window, so each window opens in a flat wall.
     const N = p.interior ? 7 : 16
     const outline = (grow: number, n = N): Vec2[] => {
-      const hw = Wc / 2 + grow
+      const h = hw + grow
       const pts: Vec2[] = [
-        [-hw, z0 - grow],
-        [hw, z0 - grow],
+        [-h, z0 - grow],
+        [h, z0 - grow],
       ]
       for (let i = 0; i <= n; i++) {
         const a = (i / n) * Math.PI
-        pts.push([hw * Math.cos(a), zr + (Lr + grow) * Math.sin(a)])
+        pts.push([h * Math.cos(a), zr + (Lr + grow) * Math.sin(a)])
       }
       return pts
     }
     // A point on the bow at angle a (0 starboard, PI/2 dead ahead) and its outward normal.
     const bowAt = (a: number, grow: number) => {
-      const hw = Wc / 2 + grow
-      const n = V(Math.cos(a) / hw, 0, Math.sin(a) / (Lr + grow)).normalize()
-      return { x: hw * Math.cos(a), z: zr + (Lr + grow) * Math.sin(a), yaw: Math.atan2(n.x, n.z) }
+      const h = hw + grow
+      const nn = V(Math.cos(a) / h, 0, Math.sin(a) / (Lr + grow)).normalize()
+      return { x: h * Math.cos(a), z: zr + (Lr + grow) * Math.sin(a), yaw: Math.atan2(nn.x, nn.z) }
     }
-    // Inside, a window is a deep timber frame on the wall's inner face: jambs, a head and a sill, dark glass with glazing
-    // bars, and on every other window along the sides a pair of closed shutters.
     const T = 0.08
     const L0 = T + 0.024
-    const knob = G("knob", () => new THREE.SphereGeometry(1, 10, 8))
+    const WY = Hc * 0.55
+    const WH = Hc * 0.4
+    const big = Math.max(1, Math.floor((zr - zs) / 0.95))
+    // A point on a wall facing `yaw`: `u` along it, `v` up, `d` out from its face.
+    const onWall = (x: number, y: number, zz: number, yaw: number) => (u: number, v: number, d: number) => V(x + Math.cos(yaw) * u + Math.sin(yaw) * d, y + v, zz - Math.sin(yaw) * u + Math.cos(yaw) * d)
+    // Leaded lights: diamond quarrels of lead over a w x h pane, `d` out from the wall.
+    const lattice = (P: ReturnType<typeof onWall>, w: number, h: number, d: number) => {
+      const s = 0.13
+      const k = 0.62
+      for (const dir of [-1, 1])
+        for (let c = -w / 2 - h * k; c <= w / 2 + h * k; c += s) {
+          // u = c + dir * k * v, clipped to the pane.
+          let v0 = -h / 2
+          let v1 = h / 2
+          const lo = (-w / 2 - c) / (dir * k)
+          const hi = (w / 2 - c) / (dir * k)
+          v0 = Math.max(v0, Math.min(lo, hi))
+          v1 = Math.min(v1, Math.max(lo, hi))
+          if (v1 - v0 < 0.02) continue
+          beam(b, M.iron, P(c + dir * k * v0, v0, d), P(c + dir * k * v1, v1, d), 0.006, 4)
+        }
+    }
+    // A casement seen from outside, centred on (x, y, z) in a wall facing `yaw`: a timber frame with a drip cap and a sill,
+    // a mullion and transom, leaded glass, and shutters. `glass` is a real pane in an opening, or a lit or dark panel set
+    // on a solid wall. Shutters: "drop" hangs an awning leaf from the head, propped out, and a drop leaf from the sill,
+    // or with `shut` closes both over the window; "side" folds two leaves back flat against the wall, or closes them.
+    const casement = (x: number, y: number, zz: number, yaw: number, w: number, h: number, glass: THREE.Material, opts: { pane?: boolean; shut?: boolean; shutters?: "drop" | "side" | "none" } = {}) => {
+      const P = onWall(x, y, zz, yaw)
+      const e = V(Math.cos(yaw), 0, -Math.sin(yaw))
+      const out = V(Math.sin(yaw), 0, Math.cos(yaw))
+      const fw = 0.08
+      const box = (u: number, v: number, d: number, bw: number, bh: number, bd: number, mat = M.trim) => {
+        const c = P(u, v, d)
+        F.box(mat, c.x, c.y, c.z, bw, bh, bd, yaw)
+      }
+      for (const o of [-1, 1]) box(o * (w / 2 + fw / 2), 0, 0.025, fw, h + 2 * fw, 0.05)
+      box(0, h / 2 + fw / 2, 0.03, w + 2 * fw + 0.04, fw, 0.06)
+      box(0, h / 2 + fw + 0.02, 0.06, w + 2 * fw + 0.14, 0.045, 0.12)
+      box(0, -h / 2 - 0.03, 0.06, w + 2 * fw + 0.1, 0.055, 0.14)
+      if (opts.pane) {
+        const c = P(0, 0, -0.012)
+        b.add(G("pane", () => new THREE.PlaneGeometry(1, 1)), glass, M4(c.x, c.y, c.z, yaw, w, h, 1), { uv: "keep" })
+      } else box(0, 0, -0.004, w, h, 0.02, glass)
+      lattice(P, w, h, 0.004)
+      box(0, 0, 0.012, 0.045, h, 0.03)
+      box(0, h * 0.22, 0.012, w, 0.04, 0.03)
+      for (const o of [-1, 1]) box(o * (w / 2 - 0.015), 0, 0.012, 0.03, h, 0.03)
+      box(0, h / 2 - 0.015, 0.012, w, 0.03, 0.03)
+      box(0, -h / 2 + 0.015, 0.012, w, 0.03, 0.03)
+      const kind = opts.shutters ?? "none"
+      if (kind === "drop") {
+        const lw = w + 0.08
+        const hs = h / 2 + 0.03
+        const top = P(0, h / 2 + fw, 0.09)
+        const down = V(0, -1, 0)
+        // The awning leaf: out and down from the head; shut, it hangs flat over the upper half.
+        const th = opts.shut ? 0 : (62 * Math.PI) / 180
+        const tip = top.clone().add(out.clone().multiplyScalar(Math.sin(th) * hs)).add(down.clone().multiplyScalar(Math.cos(th) * hs))
+        slab(M.shutter, top, tip, e, lw, 0.035)
+        const inward = out.clone().multiplyScalar(-Math.sin(th - Math.PI / 2) * 0.025)
+        for (const o of [-0.32, 0.32]) slab(M.iron, top.clone().add(e.clone().multiplyScalar(o * lw)).add(inward), tip.clone().add(e.clone().multiplyScalar(o * lw)).add(inward), e, 0.04, 0.012)
+        for (const f of [0.3, 0.85]) {
+          const c = top.clone().lerp(tip, f).add(out.clone().multiplyScalar(-Math.cos(th) * 0.0).add(V(0, 0.02 * Math.sin(th), 0)))
+          slab(M.trim, c.clone().add(e.clone().multiplyScalar(-lw / 2 + 0.03)), c.clone().add(e.clone().multiplyScalar(lw / 2 - 0.03)), V(0, 1, 0).applyAxisAngle(e, 0), 0.06, 0.04)
+        }
+        if (!opts.shut)
+          for (const o of [-1, 1]) beam(b, M.trim, P(o * (w / 2 + 0.02), -h / 2, 0.12), tip.clone().add(e.clone().multiplyScalar(o * (lw / 2 - 0.06))).add(V(0, -0.02, 0)), 0.014, 4)
+        // The drop leaf: hung from below the sill flat against the wall; shut, it stands up over the lower half.
+        const foot = P(0, -h / 2 - 0.06, opts.shut ? 0.16 : 0.03)
+        const end = opts.shut ? foot.clone().add(V(0, hs, 0)) : foot.clone().add(V(0, -hs, 0))
+        slab(M.shutter, foot, end, e, lw, 0.035)
+        for (const o of [-0.32, 0.32]) slab(M.iron, foot.clone().add(e.clone().multiplyScalar(o * lw)).add(out.clone().multiplyScalar(0.02)), end.clone().add(e.clone().multiplyScalar(o * lw)).add(out.clone().multiplyScalar(0.02)), e, 0.04, 0.012)
+      } else if (kind === "side") {
+        const lw = w / 2 + 0.02
+        for (const o of [-1, 1]) {
+          const u = opts.shut ? (o * lw) / 2 : o * (w / 2 + fw + lw / 2 + 0.01)
+          const d = opts.shut ? 0.08 : 0.03
+          box(u, 0, d, lw - 0.01, h + 0.06, 0.035, M.shutter)
+          for (const v of [-h * 0.3, h * 0.3]) box(u, v, d + 0.02, lw - 0.05, 0.05, 0.012, M.iron)
+          box(u, 0, d + 0.02, 0.05, h * 0.62, 0.012, M.trim)
+        }
+      }
+    }
+    // Board-and-batten: upright boards on a grid along a wall, each a little proud or sunk, and battens over the seams.
+    // `P` is the wall's frame from its start, `len` its length; boards fill u0..u1 and v0..v1, T deep.
+    const BW = 0.3
+    const boards = (P: ReturnType<typeof onWall>, len: number, u0: number, u1: number, v0: number, v1: number, yaw: number) => {
+      if (u1 - u0 < 0.005 || v1 - v0 < 0.005) return
+      for (let k = Math.floor((u0 + len / 2) / BW); k * BW - len / 2 < u1; k++) {
+        const a = Math.max(u0, k * BW - len / 2)
+        const c = Math.min(u1, (k + 1) * BW - len / 2)
+        if (c - a < 0.004) continue
+        const m = P((a + c) / 2, (v0 + v1) / 2, -T / 2 + rand(-0.004, 0.004))
+        F.box(M.wall, m.x, m.y, m.z, c - a - 0.004, v1 - v0, T, yaw)
+        const s = k * BW - len / 2
+        if (s > u0 + 0.03 && s < u1 - 0.03) {
+          const q = P(s, (v0 + v1) / 2, 0.012)
+          F.box(M.trim, q.x, q.y, q.z, 0.055, v1 - v0, 0.025, yaw)
+        }
+      }
+    }
+    // A wall from (ax, az) to (cx, cz), its outer face on that line and facing out to the right of the way it runs.
+    const wallFrame = (ax: number, az: number, cx: number, cz: number) => {
+      const len = Math.hypot(cx - ax, cz - az)
+      const nx = (cz - az) / len
+      const nz = -(cx - ax) / len
+      const yaw = Math.atan2(nx, nz)
+      const mx = (ax + cx) / 2
+      const mz = (az + cz) / 2
+      return { len, yaw, mx, mz, P: onWall(mx, 0, mz, yaw) }
+    }
+    // Inside, a window is a deep timber frame on the wall's inner face: jambs, a head and a sill, dark glass with leaded
+    // lights, and on every other window along the sides a pair of closed shutters.
     const inner = (x: number, y: number, zz: number, yaw: number, w: number, h: number, shut = false) => {
-      const at = (d: number, o = 0) => [x - Math.sin(yaw) * d + Math.cos(yaw) * o, zz - Math.cos(yaw) * d - Math.sin(yaw) * o] as const
-      for (const o of [-1, 1]) F.box(M.post, ...pick3(at(L0 + 0.05, o * (w / 2 + 0.05)), y), 0.1, h + 0.2, 0.1, yaw)
-      F.box(M.post, ...pick3(at(L0 + 0.05), y + h / 2 + 0.05), w + 0.2, 0.1, 0.1, yaw)
-      F.box(M.post, ...pick3(at(L0 + 0.08), y - h / 2 - 0.04), w + 0.34, 0.06, 0.16, yaw)
+      const ins = (d: number, o = 0) => [x - Math.sin(yaw) * d + Math.cos(yaw) * o, zz - Math.cos(yaw) * d - Math.sin(yaw) * o] as const
+      for (const o of [-1, 1]) F.box(M.post, ...pick3(ins(L0 + 0.05, o * (w / 2 + 0.05)), y), 0.1, h + 0.2, 0.1, yaw)
+      F.box(M.post, ...pick3(ins(L0 + 0.05), y + h / 2 + 0.05), w + 0.2, 0.1, 0.1, yaw)
+      F.box(M.post, ...pick3(ins(L0 + 0.08), y - h / 2 - 0.04), w + 0.34, 0.06, 0.16, yaw)
       // The glass's inner face, faint, facing into the room.
       b.add(
         G("pane", () => new THREE.PlaneGeometry(1, 1)),
         M.night,
-        M4(...pick3(at(T * 0.5), y), yaw + Math.PI, w, h, 1),
+        M4(...pick3(ins(T * 0.5), y), yaw + Math.PI, w, h, 1),
         { uv: "keep" }
       )
       if (shut) {
-        for (const o of [-1, 1]) F.box(M.panel, ...pick3(at(L0 + 0.06, (o * w) / 4), y), w / 2 - 0.01, h, 0.03, yaw)
-        for (const o of [-1, 1]) for (const dy of [-0.3, 0.3]) F.box(M.iron, ...pick3(at(L0 + 0.08, (o * w) / 4), y + dy * h), w / 2 - 0.06, 0.04, 0.01, yaw)
+        for (const o of [-1, 1]) F.box(M.panel, ...pick3(ins(L0 + 0.06, (o * w) / 4), y), w / 2 - 0.01, h, 0.03, yaw)
+        for (const o of [-1, 1]) for (const dy of [-0.3, 0.3]) F.box(M.iron, ...pick3(ins(L0 + 0.08, (o * w) / 4), y + dy * h), w / 2 - 0.06, 0.04, 0.01, yaw)
         return
       }
-      F.box(M.post, ...pick3(at(L0 + 0.025), y), 0.035, h, 0.02, yaw)
-      for (const dy of [-1, 1]) F.box(M.post, ...pick3(at(L0 + 0.025), y + (dy * h) / 6), w, 0.03, 0.02, yaw)
+      lattice(onWall(x, y, zz, yaw), w, h, -T - 0.004)
+      F.box(M.post, ...pick3(ins(T + 0.02), y), 0.04, h, 0.03, yaw)
+      F.box(M.post, ...pick3(ins(T + 0.02), y + h * 0.22), w, 0.035, 0.03, yaw)
     }
-    // Outside, an open window: a rust frame and sill proud of the wall, a mullion and two transoms, and the glass.
-    const opening = (x: number, y: number, zz: number, yaw: number, w: number, h: number) => {
-      const out = (d: number, o = 0) => [x + Math.sin(yaw) * d + Math.cos(yaw) * o, zz + Math.cos(yaw) * d - Math.sin(yaw) * o] as const
-      for (const o of [-1, 1]) F.box(M.rust, ...pick3(out(0.015, o * (w / 2 + 0.03)), y), 0.06, h + 0.12, 0.04, yaw)
-      F.box(M.rust, ...pick3(out(0.015), y + h / 2 + 0.03), w + 0.12, 0.06, 0.04, yaw)
-      F.box(M.rust, ...pick3(out(0.03), y - h / 2 - 0.03), w + 0.18, 0.06, 0.08, yaw)
-      F.box(M.rust, ...pick3(out(0), y), 0.035, h, 0.03, yaw)
-      for (const dy of [-1, 1]) F.box(M.rust, ...pick3(out(0), y + (dy * h) / 6), w, 0.03, 0.03, yaw)
-      b.add(
-        G("pane", () => new THREE.PlaneGeometry(1, 1)),
-        M.pane,
-        M4(...pick3(out(-0.012), y), yaw, w, h, 1),
-        { uv: "keep" }
-      )
-    }
-    if (!p.interior) plan(b, M.cabin, outline(0), 0, Hc)
+
+    // The aft cabin is solid: a dark core clad in boards on its three outer faces.
+    const aft = p.interior ? zs : zr
+    if (!p.interior) plan(b, M.void, outline(-T), 0, Hc)
     else {
-      // The aft cabin stays solid. The saloon's walls follow the outline round the bow, leaving a doorway dead ahead. Inside
-      // they are lined with upright boards, and ribs, a rail and a skirting run along the sides as in a ship's hold.
-      const hw = Wc / 2
       plan(
         b,
-        M.cabin,
+        M.void,
         [
-          [-hw, z0],
-          [hw, z0],
-          [hw, zs],
-          [-hw, zs],
+          [-hw + T, z0 + T],
+          [hw - T, z0 + T],
+          [hw - T, zs],
+          [-hw + T, zs],
         ],
         0,
         Hc
       )
       ctx.footprint(0, (z0 + zs) / 2, hw, (zs - z0) / 2, 0, undefined, Hc)
-      // Upright boards: a lining in panels narrower than they are tall, so the grain runs up the wall.
+    }
+    for (const [ax, az, cx, cz] of [
+      [hw, z0, hw, aft],
+      [-hw, aft, -hw, z0],
+      [-hw, z0, hw, z0],
+    ]) {
+      const f = wallFrame(ax, az, cx, cz)
+      boards(f.P, f.len, -f.len / 2, f.len / 2, 0, Hc, f.yaw)
+    }
+    if (!p.interior) {
+      // Without a room, the bow is clad over the core and the windows set on as lit panels, a closed door dead ahead.
+      const pts = outline(0)
+      for (let i = 2; i < pts.length - 1; i++) {
+        const f = wallFrame(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])
+        boards(f.P, f.len, -f.len / 2, f.len / 2, 0, Hc, f.yaw)
+      }
+      for (const side of [-1, 1]) for (let i = 0; i < big; i++) casement(side * hw, WY, zs + ((i + 0.5) * (zr - zs)) / big, (side * Math.PI) / 2, 0.72, WH, glow, { shutters: "drop" })
+      for (let k = 0; k < 7; k++) {
+        const w = bowAt((Math.PI * (k + 0.5)) / 7, 0)
+        if (k === 3) F.box(M.door, w.x, 1.0, w.z, 0.8, 2.0, 0.06, w.yaw)
+        else casement(w.x, WY, w.z, w.yaw, 0.5, WH, glow, { shutters: "drop" })
+      }
+      ctx.footprint(0, zc, Wc / 2, Lc / 2, 0, undefined, Hc)
+    } else {
+      // The saloon's aft bulkhead, lined with upright boards, and the doorway to the owner's cabin to port in it: a timber
+      // frame, and the planked door standing open flat against the bulkhead, strap hinges and a ring pull.
       const lining = (cx: number, cz: number, yaw: number, len: number, y0 = 0, y1 = Hc) => {
-        const n = Math.max(1, Math.ceil(len / 0.9))
-        for (let j = 0; j < n; j++) {
-          const o = -len / 2 + ((j + 0.5) * len) / n
-          F.box(M.panel, cx + Math.cos(yaw) * o, (y0 + y1) / 2, cz - Math.sin(yaw) * o, len / n - 0.006, y1 - y0, 0.024, yaw)
+        const k = Math.max(1, Math.ceil(len / 0.9))
+        for (let j = 0; j < k; j++) {
+          const o = -len / 2 + ((j + 0.5) * len) / k
+          F.box(M.panel, cx + Math.cos(yaw) * o, (y0 + y1) / 2, cz - Math.sin(yaw) * o, len / k - 0.006, y1 - y0, 0.024, yaw)
         }
       }
       lining(0, zs + 0.012, 0, Wc - 2 * T)
-      // The doorway to the owner's cabin, to port in the aft bulkhead: a timber frame, and the planked door standing open
-      // flat against the bulkhead, strap hinges and a ring pull.
       const dx = -Wc * 0.27
       F.box(M.void, dx, 0.98, zs + 0.03, 0.8, 1.96, 0.02)
       for (const side of [-1, 1]) F.box(M.post, dx + side * 0.46, 1.04, zs + 0.06, 0.12, 2.08, 0.1)
@@ -343,23 +545,16 @@ export const riverboat = defineBuilder(
         { uv: "keep" }
       )
       // The walls, with real openings: the windows along the sides and one in each bow panel, and the doorway dead ahead.
-      // A window has a rust frame and glazing bars outside, a timber frame inside, and glass that glows warm from
-      // outside while the room shows through it. Every other side window has its shutters closed inside.
-      const WY = Hc * 0.55
-      const WH = Hc * 0.4
-      const big = Math.max(1, Math.floor((zr - zs) / 0.95))
+      // Every other side window has its shutters closed.
       const walls: Vec2[] = [[hw, zs], ...outline(0).slice(2), [-hw, zs]]
       for (let i = 0; i < walls.length - 1; i++) {
         const [ax, az] = walls[i]
         const [cx, cz] = walls[i + 1]
-        const len = Math.hypot(cx - ax, cz - az)
-        const nx = (cz - az) / len
-        const nz = -(cx - ax) / len
-        const yaw = Math.atan2(nx, nz)
+        const { len, yaw, mx, mz, P } = wallFrame(ax, az, cx, cz)
+        const nx = Math.sin(yaw)
+        const nz = Math.cos(yaw)
         const ex = Math.cos(yaw)
         const ez = -Math.sin(yaw)
-        const mx = (ax + cx) / 2
-        const mz = (az + cz) / 2
         const side = i === 0 || i === walls.length - 2
         const opens = side
           ? Array.from({ length: big }, (_, j) => ({ o: (zs + ((j + 0.5) * (zr - zs)) / big - mz) * ez, w: 0.72, y0: WY - WH / 2, y1: WY + WH / 2, shut: p.shutters && j % 2 === 1, door: false }))
@@ -368,12 +563,11 @@ export const riverboat = defineBuilder(
             : [{ o: 0, w: 0.62, y0: WY - WH / 2, y1: WY + WH / 2, shut: false, door: false }]
         opens.sort((a, c) => a.o - c.o)
         const cuts = [-len / 2 - 0.02, ...opens.flatMap((q) => [q.o - q.w / 2, q.o + q.w / 2]), len / 2 + 0.02]
-        const at = (u: number, d: number) => [mx + ex * u - nx * d, mz + ez * u - nz * d] as const
+        const inAt = (u: number, d: number) => [mx + ex * u - nx * d, mz + ez * u - nz * d] as const
         const piece = (u0: number, u1: number, v0: number, v1: number) => {
           if (u1 - u0 < 0.005 || v1 - v0 < 0.005) return
-          const uc = (u0 + u1) / 2
-          F.box(M.cabin, ...pick3(at(uc, T / 2), (v0 + v1) / 2), u1 - u0, v1 - v0, T, yaw)
-          lining(...at(uc, T + 0.012), yaw, u1 - u0, v0, v1)
+          boards(P, len, u0, u1, v0, v1, yaw)
+          lining(...inAt((u0 + u1) / 2, T + 0.012), yaw, u1 - u0, v0, v1)
         }
         for (let j = 0; j < cuts.length - 1; j++) {
           const q = j % 2 === 1 ? opens[(j - 1) / 2] : null
@@ -383,12 +577,12 @@ export const riverboat = defineBuilder(
           } else piece(cuts[j], cuts[j + 1], 0, Hc)
           // An open window stands only as high as its sill for the rules, so one on the bank can shoot or cast through
           // it from cover. A shuttered one is wall.
-          if (!q?.door) ctx.footprint(...at((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw, undefined, q && !q.shut ? q.y0 : Hc)
+          if (!q?.door) ctx.footprint(...inAt((cuts[j] + cuts[j + 1]) / 2, T / 2), (cuts[j + 1] - cuts[j]) / 2, T / 2 + 0.03, yaw, undefined, q && !q.shut ? q.y0 : Hc)
         }
         for (const q of opens) {
           if (q.door) continue
-          const [wx, wz] = at(q.o, 0)
-          opening(wx, WY, wz, yaw, q.w, WH)
+          const [wx, wz] = inAt(q.o, 0)
+          casement(wx, WY, wz, yaw, q.w, WH, M.pane, { pane: true, shut: q.shut, shutters: "drop" })
           inner(wx, WY, wz, yaw, q.w, WH, q.shut)
         }
       }
@@ -401,15 +595,15 @@ export const riverboat = defineBuilder(
       }
       // The ceiling: dark boards, two fore-and-aft carlins, and deep beams across with knee braces down to the ribs.
       const inside = (zz: number) => (zz <= zr ? hw - L0 : hw * Math.sqrt(Math.max(0, 1 - ((zz - zr) / Lr) ** 2)) - L0 - 0.05)
-      const deck: Vec2[] = [
+      const room: Vec2[] = [
         [hw - L0, zs],
         ...outline(-L0)
           .slice(2)
           .filter(([, zz]) => zz >= zr),
         [-hw + L0, zs],
       ]
-      plan(b, M.ceiling, deck, Hc - 0.035, 0.03)
-      plan(b, M.floor, deck, 0, 0.006)
+      plan(b, M.ceiling, room, Hc - 0.035, 0.03)
+      plan(b, M.floor, room, 0, 0.006)
       for (const side of [-1, 1]) F.box(M.post, side * Wc * 0.25, Hc - 0.12, (zs + zr) / 2, 0.16, 0.18, zr - zs)
       const beams = Math.round((z1 - 0.6 - zs) / 1.1)
       for (let k = 1; k <= beams; k++) {
@@ -418,181 +612,237 @@ export const riverboat = defineBuilder(
         F.box(M.post, 0, Hc - 0.17, zz, half * 2, 0.26, 0.2)
         if (zz < zr) for (const side of [-1, 1]) F.box(M.post, side * (half - 0.2), Hc - 0.48, zz, 0.11, 0.48, 0.14, 0, 0, (side * Math.PI) / 4)
       }
-      // The door stands open on its port hinge: planks with iron studs, strap hinges, a brass porthole ringed with rivets,
-      // and a round brass knob.
-      const hinge = bowAt((Math.PI * 9) / 16, 0)
+      // The door stands open on its port hinge in a heavy timber frame under a carved lintel: planks with iron studs, strap
+      // hinges, a small barred grille, and an iron ring pull.
+      const hingeAt = bowAt((Math.PI * 9) / 16, 0)
       for (const a of [(Math.PI * 7) / 16, (Math.PI * 9) / 16]) {
         const post = bowAt(a, 0)
-        F.box(M.rust, post.x, 1.02, post.z, 0.1, 2.06, 0.14, post.yaw)
+        F.box(M.trim, post.x, 1.04, post.z, 0.14, 2.1, 0.16, post.yaw)
         F.box(M.post, post.x - Math.sin(post.yaw) * 0.11, 1.04, post.z - Math.cos(post.yaw) * 0.11, 0.12, 2.08, 0.06, post.yaw)
       }
-      F.box(M.rust, 0, 2.08, z1 + 0.02, 0.9, 0.08, 0.14)
+      F.box(M.trim, 0, 2.12, z1 + 0.03, 1.08, 0.14, 0.16)
+      F.box(M.trim, 0, 2.24, z1 + 0.06, 1.24, 0.08, 0.2)
       F.box(M.post, 0, 2.12, z1 - 0.09, 1.0, 0.14, 0.06)
-      const lx = hinge.x - 0.05
-      const lz = hinge.z + 0.4
+      const lx = hingeAt.x - 0.05
+      const lz = hingeAt.z + 0.4
       F.box(M.door, lx, 1.0, lz, 0.05, 1.96, 0.76)
-      b.add(
-        G("portglass", () => new THREE.CylinderGeometry(0.13, 0.13, 0.06, 20).rotateZ(Math.PI / 2)),
-        glow,
-        M4(lx, 1.45, lz),
-        { uv: "keep" }
-      )
-      b.add(
-        G("porthole", () => new THREE.TorusGeometry(0.15, 0.04, 8, 24)),
-        M.brass,
-        M4(lx, 1.45, lz, Math.PI / 2),
-        { uv: "keep" }
-      )
+      F.box(glow, lx, 1.5, lz, 0.056, 0.2, 0.24)
       for (const side of [-1, 1]) {
         const fx = lx + side * 0.03
-        for (let k = 0; k < 10; k++) {
-          const a = (k / 10) * Math.PI * 2
-          b.add(knob, M.brass, M4(fx + side * 0.012, 1.45 + Math.sin(a) * 0.15, lz + Math.cos(a) * 0.15, 0, 0.012, 0.012, 0.012), { uv: "keep" })
-        }
+        for (const zo of [-0.06, 0, 0.06]) F.box(M.iron, fx, 1.5, lz + zo, 0.012, 0.22, 0.014)
+        F.box(M.iron, fx, 1.5, lz, 0.012, 0.014, 0.26)
         for (const y of [0.3, 1.0, 1.75]) F.box(M.iron, fx, y, lz - 0.15, 0.01, 0.06, 0.48)
-        for (const y of [0.55, 0.8, 1.15, 1.75])
-          for (const zo of [-0.28, 0.28]) if (Math.abs(y - 1.45) > 0.25 || Math.abs(zo) > 0.2) b.add(knob, M.iron, M4(fx + side * 0.008, y, lz + zo, 0, 0.014, 0.014, 0.014), { uv: "keep" })
-        b.add(knob, M.brass, M4(fx + side * 0.04, 1.0, lz + 0.3, 0, 0.05, 0.05, 0.05), { uv: "keep" })
+        for (const y of [0.55, 0.8, 1.15, 1.75]) for (const zo of [-0.28, 0.28]) F.sphere(M.iron, fx + side * 0.008, y, lz + zo, 0.014, 0.014, 0.014, 6)
+        b.add(G("ring", () => new THREE.TorusGeometry(0.24, 0.055, 8, 20)), M.iron, M4(fx + side * 0.01, 0.95, lz + 0.3, Math.PI / 2, 0.28, 0.28, 0.28), { uv: "keep" })
       }
       ctx.footprint(lx, lz, 0.05, 0.38, 0, undefined, 1.98)
       // The way in and out, for walks: a step inside the doorway and a step outside it.
       ctx.anchor("door", 0, 0, z1 - 0.6)
       ctx.anchor("door", 0, 0, z1 + 0.6)
     }
-    const ring = (grow: number, y: number, r: number) => {
+    // Small casements along the aft cabin, lit but for one in three shuttered, and on its aft face a window and a door.
+    for (const side of [-1, 1]) {
+      const small = Math.max(1, Math.floor((zs - z0) / 0.85))
+      for (let i = 0; i < small; i++) {
+        const shut = i % 3 === 1
+        casement(side * hw, Hc * 0.6, z0 + ((i + 0.5) * (zs - z0)) / small, (side * Math.PI) / 2, 0.38, 0.5, shut ? M.void : glow, { shut, shutters: "side" })
+      }
+    }
+    casement(Wc * 0.22, Hc * 0.6, z0, Math.PI, 0.38, 0.5, glow, { shutters: "side" })
+    F.box(M.door, -Wc * 0.2, 0.95, z0 - 0.03, 0.72, 1.86, 0.04)
+    for (const y of [0.4, 1.5]) F.box(M.iron, -Wc * 0.2 + 0.1, y, z0 - 0.055, 0.5, 0.05, 0.01)
+    for (const o of [-1, 1]) F.box(M.trim, -Wc * 0.2 + o * 0.42, 1.0, z0 - 0.04, 0.1, 2.0, 0.07)
+    F.box(M.trim, -Wc * 0.2, 1.98, z0 - 0.05, 0.98, 0.1, 0.1)
+    // Posts at the corners and down the sides between the windows, and round the bow between its panels; a sill plate at
+    // the foot and a wall plate under the eaves.
+    for (const side of [-1, 1]) {
+      const x = side * (hw + 0.03)
+      for (const zz of [z0, zs]) F.box(M.trim, x, Hc / 2, zz, 0.16, Hc, 0.16)
+      for (let i = 1; i <= big; i++) F.box(M.trim, x, Hc / 2, zs + (i * (zr - zs)) / big, 0.1, Hc, 0.12)
+    }
+    for (let k = 1; k < 7; k++) {
+      const post = bowAt((Math.PI * k) / 7, 0.03)
+      if (p.interior && (k === 3 || k === 4)) continue
+      F.box(M.trim, post.x, Hc / 2, post.z, 0.11, Hc, 0.11, post.yaw)
+    }
+    const ring = (grow: number, y: number, h: number, d: number) => {
       const pts = outline(grow)
       for (let i = 0; i < pts.length; i++) {
         const [ax, az] = pts[i]
         const [cx, cz] = pts[(i + 1) % pts.length]
-        beam(b, M.rust, [ax, y, az], [cx, y, cz], r, 5)
+        const len = Math.hypot(cx - ax, cz - az)
+        if (len < 0.01) continue
+        F.box(M.trim, (ax + cx) / 2, y, (az + cz) / 2, len + d, h, d, Math.atan2(cx - ax, cz - az) + Math.PI / 2)
       }
     }
-    ring(0.02, Hc - 0.08, 0.075)
-    ring(0.02, 0.09, 0.085)
-    plan(b, M.roof, outline(0.38), Hc, 0.12)
-    // A framed pane facing out along `yaw`: rust frame, glass, a mullion and a transom.
-    const pane = (x: number, y: number, zz: number, yaw: number, w: number, h: number, lit: boolean) => {
-      const out = (d: number) => [x + Math.sin(yaw) * d, zz + Math.cos(yaw) * d] as const
-      const [fx, fz] = out(0.005)
-      F.box(M.rust, fx, y, fz, w + 0.12, h + 0.12, 0.03, yaw)
-      const [gx, gz] = out(0.02)
-      F.box(lit ? glow : M.void, gx, y, gz, w, h, 0.02, yaw)
-      const [mx, mz] = out(0.035)
-      F.box(M.rust, mx, y, mz, 0.045, h, 0.02, yaw)
-      F.box(M.rust, mx, y + h * 0.12, mz, w, 0.04, 0.02, yaw)
-    }
-    for (const side of [-1, 1]) {
-      const x = side * (Wc / 2)
-      const yaw = (side * Math.PI) / 2
-      const big = Math.max(1, Math.floor((zr - zs) / 0.95))
-      if (!p.interior) for (let i = 0; i < big; i++) pane(x, Hc * 0.55, zs + ((i + 0.5) * (zr - zs)) / big, yaw, 0.72, Hc * 0.4, true)
-      const small = Math.max(1, Math.floor((zs - z0) / 0.85))
-      for (let i = 0; i < small; i++) pane(x, Hc * 0.62, z0 + ((i + 0.5) * (zs - z0)) / small, yaw, 0.38, 0.48, i % 3 !== 1)
-      for (const zz of [z0, zs, zr]) F.box(M.rust, x + side * 0.04, Hc / 2, zz, 0.1, Hc, 0.1)
-    }
-    // Round the bow: windows either side of a glazed door dead ahead, with posts between them.
-    const m = 7
-    for (let k = 0; k < m; k++) {
-      const a = (Math.PI * (k + 0.5)) / m
-      const { x, z: zz, yaw } = bowAt(a, 0)
-      // A saloon's bow windows open in its flat panels, drawn with the walls.
-      if (!p.interior) {
-        if (k !== (m - 1) / 2) pane(x, Hc * 0.55, zz, yaw, 0.62, Hc * 0.4, true)
-        else pane(x, Math.min(1.0, Hc * 0.4), zz, yaw, 0.74, Math.min(1.8, Hc * 0.68), true)
+    ring(0.03, Hc - 0.1, 0.2, 0.07)
+    // The roof: planks on a frame, overhanging as eaves with a fascia board, and knee braces under the eaves.
+    plan(b, M.roof, outline(0.4), Hc, 0.1)
+    ring(0.42, Hc + 0.02, 0.2, 0.05)
+    for (const side of [-1, 1])
+      for (let i = 0; i <= big + 2; i++) {
+        const zz = i <= big ? zs + (i * (zr - zs)) / big : i === big + 1 ? z0 + 0.08 : (z0 + zs) / 2
+        beam(b, M.trim, V(side * (hw + 0.05), Hc - 0.62, zz), V(side * (hw + 0.36), Hc - 0.02, zz), 0.035, 4)
       }
-      const post = bowAt((Math.PI * k) / m, 0.03)
-      if (k > 0) F.box(M.rust, post.x, Hc / 2, post.z, 0.09, Hc, 0.09, post.yaw)
+    // A lantern on an iron bracket over the door, and one on a pole at the stern.
+    const lantern = (x: number, y: number, zz: number) => {
+      F.box(M.iron, x, y + 0.3, zz, 0.2, 0.03, 0.2)
+      F.cyl(M.iron, x, y + 0.31, zz, 0.15, 0.03, 0.12, 4)
+      F.box(M.iron, x, y, zz, 0.18, 0.03, 0.18)
+      F.box(M.lamp, x, y + 0.15, zz, 0.13, 0.26, 0.13)
+      for (const [dx, dz] of [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ])
+        F.box(M.iron, x + dx * 0.075, y + 0.15, zz + dz * 0.075, 0.018, 0.29, 0.018)
+      b.add(G("ring", () => new THREE.TorusGeometry(0.24, 0.055, 8, 20)), M.iron, M4(x, y + 0.48, zz, 0, 0.18, 0.18, 0.18), { uv: "keep" })
     }
-    // The aft face: a door, unless the saloon is the way in, and a small window.
-    if (!p.interior) F.box(M.void, -Wc * 0.2, 0.95, z0 - 0.015, 0.7, 1.8, 0.03)
-    pane(Wc * 0.22, Hc * 0.62, z0, Math.PI, 0.38, 0.48, true)
-    // The pilothouse on the upper deck, just aft of the bow's curve, with a rounded roof.
-    const Lp = Math.min(2.6, Lc * 0.38)
-    const Wp = Wc * 0.7
-    const Hp = Hc * 0.74
-    const pz = zr - Lp / 2 + 0.2
-    const py = Hc + 0.12
-    F.box(M.cabin, 0, py + Hp * 0.22, pz, Wp, Hp * 0.44, Lp)
-    for (const [x, zz] of [
-      [-1, -1],
-      [1, -1],
-      [-1, 1],
-      [1, 1],
+    if (p.interior) {
+      beam(b, M.iron, V(0, 2.62, z1 + 0.08), V(0, 2.62, z1 + 0.42), 0.018, 5)
+      beam(b, M.iron, V(0, 2.4, z1 + 0.08), V(0, 2.62, z1 + 0.3), 0.012, 4)
+      lantern(0, 1.98, z1 + 0.4)
+    }
+    beam(b, M.trim, V(-stern.w * 0.62, stern.top, -L / 2 + 0.3), V(-stern.w * 0.62, 2.1, -L / 2 + 0.3), 0.05, 6)
+    beam(b, M.iron, V(-stern.w * 0.62, 2.05, -L / 2 + 0.3), V(-stern.w * 0.62 + 0.3, 2.05, -L / 2 + 0.3), 0.015, 4)
+    lantern(-stern.w * 0.62 + 0.3, 1.45, -L / 2 + 0.3)
+    // The bow lantern, hung from the stem's scroll.
+    beam(b, M.iron, V(0, bow.top + 0.55, L / 2 - 0.25), V(0, bow.top + 0.15, L / 2 - 0.25), 0.01, 4)
+    lantern(0, bow.top - 0.4, L / 2 - 0.25)
+
+    // The steering oar on the starboard quarter: its loom pivots in a crutch on a post at the transom, runs forward over
+    // the aft deck to a grip, and back and out to a broad blade in the water.
+    const sx = stern.w * 0.55
+    const pivot = V(sx, stern.top + 0.95, -L / 2 - 0.05)
+    beam(b, M.trim, V(sx, stern.keel * 0.5, -L / 2 - 0.1), V(sx, pivot.y - 0.05, -L / 2 - 0.1), 0.1, 6, 0.08)
+    for (const o of [-1, 1]) beam(b, M.trim, V(sx + o * 0.08, pivot.y - 0.1, -L / 2 - 0.1), V(sx + o * 0.11, pivot.y + 0.16, -L / 2 - 0.1), 0.03, 4)
+    const grip = V(sx - 0.55, stern.top + 0.75, -L / 2 + 1.75)
+    const dir = pivot.clone().sub(grip).normalize()
+    const end = pivot.clone().add(dir.clone().multiplyScalar(2.2))
+    end.y = -1.15
+    beam(b, M.mast, grip, pivot, 0.055, 6)
+    beam(b, M.mast, pivot, end, 0.055, 6, 0.06)
+    const along = end.clone().sub(pivot).normalize()
+    slab(M.trim, end.clone().sub(along.clone().multiplyScalar(0.3)), end.clone().add(along.clone().multiplyScalar(1.3)), V(0, 1, 0).cross(along), 0.4, 0.05)
+    beam(b, M.mast, grip.clone().add(V(-0.12, 0, -0.04)), grip.clone().add(V(0.12, 0, 0.04)), 0.03, 5)
+
+    // Timber bitts fore and aft with rope turned round them, coils on deck, and rope fenders over both sides amidships.
+    const bitts = (x: number, zz: number) => {
+      for (const o of [-0.16, 0.16]) beam(b, M.trim, V(x + o, 0, zz), V(x + o, 0.5, zz), 0.07, 6)
+      F.box(M.trim, x, 0.38, zz, 0.5, 0.07, 0.08)
+      b.add(G("coil", () => new THREE.TorusGeometry(0.1, 0.025, 6, 14)), M.rope, M4(x - 0.16, 0.22, zz, 0, 1, 1, 1, Math.PI / 2), { uv: "keep" })
+    }
+    bitts(0, at(0.9).z)
+    bitts(-0.45, -L / 2 + 0.55)
+    for (const [x, zz, r] of [
+      [-0.55, at(0.86).z, 0.24],
+      [0.15, -L / 2 + 0.95, 0.22],
     ])
-      F.box(M.rust, (x * Wp) / 2, py + Hp / 2, pz + (zz * Lp) / 2, 0.1, Hp, 0.1)
-    for (const side of [-1, 1]) {
-      F.box(helm, (side * Wp) / 2, py + Hp * 0.7, pz, 0.03, Hp * 0.5, Lp - 0.12)
-      for (const k of [-1, 0, 1]) F.box(M.rust, side * (Wp / 2 + 0.02), py + Hp * 0.7, pz + (k * Lp) / 3, 0.03, Hp * 0.5, 0.05)
-      F.box(helm, 0, py + Hp * 0.7, pz + (side * Lp) / 2, Wp - 0.12, Hp * 0.5, 0.03)
-      for (const k of [-1, 0, 1]) F.box(M.rust, (k * Wp) / 3, py + Hp * 0.7, pz + side * (Lp / 2 + 0.02), 0.05, Hp * 0.5, 0.03)
-    }
-    F.box(M.rust, 0, py + Hp * 0.96, pz, Wp + 0.04, 0.1, Lp + 0.04)
-    const R = Lp / 2 + 0.18
-    // A half cylinder across the beam, arched up and flattened.
-    b.add(
-      G(`barrel${R.toFixed(2)}-${(Wp + 0.3).toFixed(2)}`, () => new THREE.CylinderGeometry(R, R, Wp + 0.3, 18, 1, false, -Math.PI / 2, Math.PI).rotateZ(Math.PI / 2).rotateX(-Math.PI / 2)),
-      M.roof,
-      M4(0, py + Hp, pz, 0, 1, 0.32, 1),
-      { uv: "keep" }
-    )
-    // The stack behind the pilothouse and a gooseneck vent aft.
-    const sz = pz - Lp / 2 - 0.3
-    F.cyl(M.iron, Wp * 0.18, py, sz, 0.14, 0.13, 3.1, 12)
-    F.cyl(M.iron, Wp * 0.18, py + 3.1, sz, 0.18, 0.17, 0.14, 12)
-    beam(b, M.iron, [-Wc * 0.25, py, z0 + 0.6], [-Wc * 0.25, py + 1.5, z0 + 0.6], 0.05, 6)
-    beam(b, M.iron, [-Wc * 0.25, py + 1.5, z0 + 0.6], [-Wc * 0.25, py + 1.75, z0 + 0.35], 0.05, 6)
-    // A rail round the upper deck's edge.
-    railing(b, M.rust, outline(0.32, p.interior ? N : 12), py, 0.85, true)
-    // Rope fenders hanging over both sides amidships.
+      for (let k = 0; k < 3; k++) b.add(G(`coilr${(r - k * 0.04).toFixed(2)}`, () => new THREE.TorusGeometry(r - k * 0.04, 0.045, 6, 18)), M.rope, M4(x, 0.05 + k * 0.08, zz, 0, 1, 1, 1, Math.PI / 2), { uv: "keep" })
     for (const side of [-1, 1])
       for (const t of [0.3, 0.42, 0.54, 0.66]) {
         const st = at(t)
         F.cyl(M.rope, side * (sideAt(st, -0.25) + 0.13), -0.62, st.z, 0.12, 0.12, 0.45, 8)
         beam(b, M.rope, V(side * (sideAt(st, -0.25) + 0.13), -0.17, st.z), V(side * (st.w - 0.05), st.top + 0.03, st.z), 0.012, 4)
       }
-    // Life rings on the cabin sides, bitts fore and aft.
-    for (const side of [-1, 1])
-      b.add(
-        G("ring", () => new THREE.TorusGeometry(0.24, 0.055, 8, 20)),
-        M.ring,
-        M4(side * (Wc / 2 + 0.07), Hc * 0.4, z0 + 0.5, Math.PI / 2),
-        { uv: "keep" }
-      )
-    for (const [bx, bz] of [
-      [0.5, at(0.88).z],
-      [-0.5, at(0.88).z],
-      [0.6, -L / 2 + 0.5],
-      [-0.6, -L / 2 + 0.5],
-    ])
-      b.add(
-        G("bitt8", () => new THREE.CylinderGeometry(0.1, 0.12, 1, 8)),
-        M.iron,
-        M4(bx, 0.22, bz, 0, 1, 0.44, 1),
-        { uv: "keep" }
-      )
-    if (!p.interior) ctx.footprint(0, zc, Wc / 2, Lc / 2, 0, undefined, Hc)
+    // Two barrels lashed on the foredeck to starboard.
+    {
+      const st = at(0.8)
+      const bx = st.w - 0.62
+      barrel(b, M, bx, 0, st.z - 0.35, 0.3, 0.82)
+      barrel(b, M, bx - 0.1, 0, st.z + 0.32, 0.27, 0.75)
+      ctx.circle(bx, st.z - 0.35, 0.32, 0.82)
+      ctx.circle(bx - 0.1, st.z + 0.32, 0.29, 0.75)
+      beam(b, M.rope, V(bx + 0.3, 0.5, st.z - 0.7), V(bx + 0.27, 0.5, st.z + 0.7), 0.014, 4)
+    }
+
+    // On the roof: cargo forward under a lashed tarpaulin, two sweeps on chocks along the sides, and the mast aft.
+    const ry = Hc + 0.1
+    if (p.mast) {
+      for (const side of [-1, 1]) {
+        const x = side * (hw - 0.2)
+        for (const zz of [z0 + 0.6, zs + 0.5, zr - 0.6]) F.box(M.trim, x, ry + 0.05, zz, 0.18, 0.1, 0.12)
+        const a = V(x, ry + 0.16, z0 + 0.1)
+        const c = V(x, ry + 0.16, zr + 0.4)
+        beam(b, M.mast, a, c, 0.05, 6)
+        slab(M.mast, V(x, ry + 0.16, zr + 0.2), V(x, ry + 0.16, zr + 1.3), V(1, 0, 0), 0.24, 0.03)
+      }
+      // The mast in a tabernacle: two cheeks and a pin, a cap at the head with a sheave, and a yard lowered with the sail
+      // furled along it, lashed with gaskets. Shrouds to the gunwales, a forestay to the stem and a backstay to the stern.
+      const mz = (z0 + zs) / 2
+      const mh = 6.2
+      for (const o of [-1, 1]) F.box(M.trim, o * 0.15, ry + 0.55, mz, 0.08, 1.1, 0.34)
+      F.cyl(M.iron, -0.22, ry + 0.85, mz, 0.03, 0.03, 0.44, 6, 0, Math.PI / 2)
+      beam(b, M.mast, V(0, ry, mz), V(0, ry + mh, mz), 0.13, 10, 0.08)
+      F.cyl(M.trim, 0, ry + mh, mz, 0.11, 0.09, 0.12, 10)
+      F.sphere(M.trim, 0, ry + mh + 0.16, mz, 0.07, 0.07, 0.07, 8)
+      const yy = ry + mh * 0.6
+      const yh = B * 0.48
+      beam(b, M.mast, V(-yh, yy, mz + 0.16), V(0, yy, mz + 0.16), 0.045, 8, 0.075)
+      beam(b, M.mast, V(0, yy, mz + 0.16), V(yh, yy, mz + 0.16), 0.075, 8, 0.045)
+      const parts = 14
+      for (let k = 0; k < parts; k++) {
+        const u0 = -yh * 0.92 + (k * 2 * yh * 0.92) / parts
+        const u1 = u0 + (2 * yh * 0.92) / parts
+        const fat = 0.15 + 0.11 * Math.sin(((k + 0.5) / parts) * Math.PI) ** 0.6 + rand(-0.012, 0.012)
+        b.add(
+          G("sph10", () => new THREE.SphereGeometry(1, 10, 7)),
+          M.sail,
+          M4((u0 + u1) / 2, yy - fat * 0.8, mz + 0.2, rand(-0.06, 0.06), (u1 - u0) * 0.95, fat, fat * 0.85),
+          { uv: "keep" }
+        )
+        if (k > 0 && k % 2 === 0) b.add(G("gasket", () => new THREE.TorusGeometry(0.17, 0.012, 4, 14)), M.rope, M4(u0, yy - fat * 0.8, mz + 0.2, Math.PI / 2, (fat * 0.9) / 0.17, (fat * 1.04) / 0.17, 1), { uv: "keep" })
+      }
+      beam(b, M.rope, V(0.04, ry + mh - 0.05, mz + 0.1), V(0.04, yy + 0.05, mz + 0.16), 0.012, 4)
+      const head = V(0, ry + mh - 0.15, mz)
+      for (const side of [-1, 1])
+        for (const dz of [-0.9, 0.5]) {
+          const st = at((mz + dz + L / 2) / L)
+          const foot = V(side * (st.w + 0.04), st.top + 0.02, mz + dz)
+          const dead = foot.clone().lerp(head, 0.12)
+          beam(b, M.rope, head, dead, 0.014, 4)
+          beam(b, M.rope, dead, foot, 0.01, 4)
+          F.sphere(M.trim, dead.x, dead.y, dead.z, 0.06, 0.07, 0.06, 8)
+        }
+      beam(b, M.rope, head, V(0, bow.top + 0.5, L / 2 - 0.1), 0.014, 4)
+      beam(b, M.rope, head, V(sx, pivot.y + 0.1, -L / 2 - 0.1), 0.014, 4)
+      // Cargo forward on the roof: a crate and kegs under a tarpaulin, roped down.
+      const cz = zr - 0.4
+      crate(b, M, -0.55, ry, cz, 0.6, 0.1)
+      barrel(b, M, 0.35, ry, cz - 0.15, 0.24, 0.62)
+      barrel(b, M, 0.4, ry, cz + 0.4, 0.22, 0.58)
+      b.add(G("sph10", () => new THREE.SphereGeometry(1, 10, 7)), M.sail, M4(-0.1, ry + 0.25, cz - 1.0, 0.3, 0.6, 0.3, 0.45), { uv: "keep" })
+      b.add(G("sph10", () => new THREE.SphereGeometry(1, 10, 7)), M.sail, M4(0.55, ry + 0.2, cz - 1.1, -0.4, 0.4, 0.22, 0.35), { uv: "keep" })
+      for (const o of [-0.25, 0.1]) beam(b, M.rope, V(-0.9, ry + 0.02, cz + o), V(0.7, ry + 0.02, cz + o + 0.1), 0.012, 4)
+    }
   },
   {
     hull: "hull",
     strake: "strake",
     deck: "deck",
-    rust: "rust",
-    cabin: "cabin",
+    bulwark: "plank",
+    wall: "siding",
+    trim: "boatTrim",
     roof: "roof",
     window: "window",
-    helm: "window",
+    lamp: "window",
     void: "void",
     iron: "iron",
-    ring: "rust",
     rope: "rope",
     panel: "roof",
     post: "roof",
     night: "void",
-    door: "cabin",
-    brass: "rust",
+    door: "door",
+    shutter: "door",
     floor: "deck",
     ceiling: "roof",
     pane: "window",
+    mast: "pole",
+    sail: "sail",
+    barrel: "barrel",
+    crate: "crate",
+    crateDark: "crateDark",
   }
 )
 

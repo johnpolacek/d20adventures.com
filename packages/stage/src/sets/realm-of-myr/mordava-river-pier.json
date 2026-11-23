@@ -437,21 +437,6 @@
       "relief": 0.08,
       "grime": 1.4
     },
-    "rust": {
-      "type": "painted",
-      "map": "/stage/textures/boat-paint.jpg",
-      "tint": "#b04c36",
-      "plank": [
-        0,
-        40
-      ],
-      "size": [
-        0.5,
-        1.5
-      ],
-      "relief": 0.08,
-      "grime": 1
-    },
     "deck": {
       "type": "painted",
       "map": "/stage/textures/boards-weathered.jpg",
@@ -467,21 +452,6 @@
       "relief": 0.08,
       "grime": 1,
       "nails": 0.7
-    },
-    "cabin": {
-      "type": "painted",
-      "map": "/stage/textures/boat-paint.jpg",
-      "tint": "#b4c6d0",
-      "plank": [
-        0.14,
-        40
-      ],
-      "size": [
-        0.8,
-        2.2
-      ],
-      "relief": 0.08,
-      "grime": 1.5
     },
     "roof": {
       "type": "painted",
@@ -504,13 +474,6 @@
       "roughness": 1,
       "emissive": "#ff7410",
       "emissiveIntensity": 0.8
-    },
-    "helmGlass": {
-      "type": "plain",
-      "color": "#0a0808",
-      "roughness": 0.4,
-      "emissive": "#7a3410",
-      "emissiveIntensity": 0.14
     },
     "void": {
       "type": "plain",
@@ -652,11 +615,6 @@
       "color": "#a8823e",
       "roughness": 0.35,
       "metalness": 0.85
-    },
-    "gauge": {
-      "type": "plain",
-      "color": "#1e1c18",
-      "roughness": 0.6
     },
     "lamp": {
       "type": "plain",
@@ -807,6 +765,43 @@
       "color": "#2e2824",
       "roughness": 0.75,
       "metalness": 0.5
+    },
+    "siding": {
+      "type": "painted",
+      "map": "/stage/textures/boards-weathered.jpg",
+      "tint": "#9a8c7c",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.3,
+        2.4
+      ],
+      "relief": 0.12,
+      "grime": 1.4,
+      "nails": 0.6,
+      "variance": 0.5
+    },
+    "boatTrim": {
+      "type": "painted",
+      "map": "/stage/textures/timber-hold.jpg",
+      "tint": "#8c7a68",
+      "plank": [
+        0,
+        40
+      ],
+      "size": [
+        0.5,
+        1.8
+      ],
+      "relief": 0.1,
+      "grime": 1.3,
+      "variance": 0.3
+    },
+    "sail": {
+      "type": "burlap",
+      "color": "#9a8a72"
     }
   },
   "objects": [
@@ -1923,12 +1918,10 @@
       "interior": true,
       "shutters": false,
       "materials": {
-        "helm": "helmGlass",
         "panel": "panel",
         "post": "timber",
         "night": "night",
         "door": "door",
-        "brass": "brass",
         "floor": "saloonFloor",
         "ceiling": "ceiling",
         "pane": "windowGlass"
@@ -3374,82 +3367,58 @@
       "material": "flame"
     },
     {
-      "type": "cylinder",
-      "at": [
-        6.5,
-        1.85,
-        -4.41
-      ],
-      "radius": 0.125,
-      "height": 0.06,
-      "pitch": 90,
-      "material": "brass"
-    },
-    {
-      "type": "cylinder",
-      "at": [
-        6.5,
-        1.85,
-        -4.35
-      ],
-      "radius": 0.1,
-      "height": 0.01,
-      "pitch": 90,
-      "material": "gauge"
-    },
-    {
       "type": "box",
       "at": [
-        6.5,
-        1.85,
-        -4.335
+        6.62,
+        1.72,
+        -4.4
       ],
       "size": [
-        0.014,
-        0.085,
+        0.62,
+        0.46,
         0.01
       ],
-      "roll": 30,
-      "material": "brass"
+      "material": "parchment"
     },
     {
-      "type": "cylinder",
+      "type": "sphere",
       "at": [
-        6.92,
-        1.85,
-        -4.41
+        6.35,
+        1.92,
+        -4.39
       ],
-      "radius": 0.155,
-      "height": 0.06,
-      "pitch": 90,
-      "material": "brass"
+      "radius": 0.014,
+      "material": "iron"
     },
     {
-      "type": "cylinder",
+      "type": "sphere",
       "at": [
-        6.92,
-        1.85,
-        -4.35
+        6.89,
+        1.92,
+        -4.39
       ],
-      "radius": 0.13,
-      "height": 0.01,
-      "pitch": 90,
-      "material": "gauge"
+      "radius": 0.014,
+      "material": "iron"
     },
     {
-      "type": "box",
+      "type": "sphere",
       "at": [
-        6.92,
-        1.85,
-        -4.335
+        6.35,
+        1.52,
+        -4.39
       ],
-      "size": [
-        0.014,
-        0.1105,
-        0.01
+      "radius": 0.014,
+      "material": "iron"
+    },
+    {
+      "type": "sphere",
+      "at": [
+        6.89,
+        1.52,
+        -4.39
       ],
-      "roll": -50,
-      "material": "brass"
+      "radius": 0.014,
+      "material": "iron"
     },
     {
       "type": "crate",
