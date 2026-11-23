@@ -435,6 +435,15 @@ Substages, spells:
 
 Told by design, needing only S1: information, long rituals, illusions, travel, Time Stop, Wish, Clone, Contingency. S1 and what of S2 and S6 the six classes need go with the owner's first step. The rest go with the fourth.
 
+### 10. What stage 9 left
+
+Started 2026-11-23. Four substages, each built in its own orb at the same time, so each keeps to its own files and adds only its own lines to shared ones. Each writes its own note here when it is done.
+
+- T1. Told spells of levels 0 to 3 that change a fight. Of the 79 told at these levels, run or partly run the ones whose effect the engine already has a home for: True Strike, Resistance, Divine Favor, Hellish Rebuke, Sanctuary, Goodberry, Expeditious Retreat, Longstrider, Jump, Enlarge/Reduce, Dragon's Breath, Gust of Wind, Spider Climb, Calm Emotions, Fly, Blink if a round allows it, Glyph of Warding, Animate Dead. Information, travel and illusion stay told.
+- T2. Sight and light. An encounter says how it is lit, and sight tells Darkness from fog: Devil's Sight, One with Shadows, Witch Sight, Darkvision as a spell, See Invisibility, Daylight, Sunlight Sensitivity, and the Darkness spell.
+- T3. Monster blocks the engine does not read yet: the 90 of 146 save, area, Recharge and uses-a-day actions, the 55 of 82 Legendary options that cast or force a save, the Bonus Actions that carry a save, an attack or damage, and the 23 hit riders with words left over. Blocks in the four adventures first.
+- T4. The class pieces left: a smite on an Extra Attack, Wild Companion, Gift of the Protectors, and the swap of a known Wild Shape form on a Long Rest, asked on both hosts' rests.
+
 ## Unknowns
 
 - No machine-readable SRD 5.2 source is verified yet. A third-party JSON API exists, unchecked.
