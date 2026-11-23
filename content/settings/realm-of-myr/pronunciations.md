@@ -15,3 +15,10 @@ One name to a line. A sound-alike spelling in quotes, or the sounds themselves b
 - Davos: /dˈɑːvɒs/ /dˈɑːvoʊs/
 - Beric: /bˈɛɹɪk/
 - Valkara: /vˈalkəɹə/ /vˈælkəɹə/
+- Eamon: /ˈeɪmən/
+- Mikhail: /mɪkˈaɪl/
+- Karim: /kəɹˈiːm/
+- Veles: /vˈɛlɛs/
+- Vellis: /vˈɛlɪs/
+- Marros: /mˈaɹɒs/ /mˈæɹoʊs/
+- Zephyra: /zˈɛfɪɹə/

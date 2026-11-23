@@ -10,7 +10,8 @@
 //
 // A name may be several words. It is matched in any case, and with a possessive 's.
 
-export type Pronunciation = { like: string } | { ipa: string; us?: string }
+// `exact`: matched only as written, for a name that is also a word ("Will", "Rose").
+export type Pronunciation = ({ like: string } | { ipa: string; us?: string }) & { exact?: boolean }
 export type Pronunciations = Record<string, Pronunciation>
 
 const LINE = /^\s*[-*]\s+(.+?)\s*:\s*(.+?)\s*$/
@@ -45,4 +46,19 @@ export function namesPattern(names: string[]): RegExp | null {
 export function entryFor(list: Pronunciations, matched: string): string | undefined {
   const want = matched.replace(/\s+/g, " ").toLowerCase()
   return Object.keys(list).find((n) => n.replace(/\s+/g, " ").toLowerCase() === want)
+}
+
+/**
+ * The list, with each word of the characters' names added where it is not listed: said as it sounds alone, so a hero
+ * the player named is at least said the same way in every sentence. Matched only as written.
+ */
+export function withCharacters(list: Pronunciations, names: string[]): Pronunciations {
+  const out: Pronunciations = {}
+  const listed = new Set(Object.keys(list).map((n) => n.toLowerCase()))
+  for (const name of names)
+    for (const word of name.match(/\p{Lu}[\p{L}\p{M}'’-]{2,}/gu) ?? []) {
+      const w = word.replace(/['’]s$/, "")
+      if (!listed.has(w.toLowerCase()) && !out[w]) out[w] = { like: w, exact: true }
+    }
+  return { ...out, ...list }
 }

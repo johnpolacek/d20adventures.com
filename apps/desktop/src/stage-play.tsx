@@ -18,6 +18,7 @@ import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
 import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorNames, setNarratorVoice } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
+import { withCharacters } from "@d20/ui/sound/pronunciations"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
 import { useStageSound } from "@d20/ui/sound/use-stage-sound"
 import { EndingRating, FeedbackButton, FeedbackPanel, type FeedbackStart } from "@d20/ui/stage/feedback"
@@ -422,10 +423,12 @@ export function StagePlay(props: {
   // The narrator reads the words in the panel. A roll or a class feature shows its own card, so it is not read.
   const narratorVoice = useNarratorVoice()
   // The adventure's names, said as its setting lists them (stage/pronunciations.json).
+  // A character's name that is not listed is said as it sounds alone, the same in every sentence.
   const plan = save?.adventure.planId
+  const characterNames = (turn?.characters ?? []).map((c) => c.name).sort().join("|")
   useEffect(() => {
-    if (plan) void loadPronunciations(plan).then(setNarratorNames)
-  }, [plan])
+    if (plan) void loadPronunciations(plan).then((list) => setNarratorNames(withCharacters(list, characterNames.split("|"))))
+  }, [plan, characterNames])
   const nextWords = paragraphs[paragraph + 1]?.roll || paragraphs[paragraph + 1]?.feature ? undefined : text[paragraph + 1]
   const voiced = useNarrator({
     key: `${turn?._id}:${paragraph}`,

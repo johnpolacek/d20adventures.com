@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync, realpathSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { test } from "node:test"
-import { parsePronunciations } from "@d20/ui/sound/pronunciations"
+import { parsePronunciations, withCharacters } from "@d20/ui/sound/pronunciations"
 import { phonemize as espeak } from "phonemizer"
 import { phonemize } from "./phonemize"
 
@@ -61,4 +61,13 @@ test("the words around a name sound as they do beside any name", async () => {
   assert.equal(await phonemize("the Valkarr woods", "b", names), "ðə vˈælkɑːɹ wˈʊdz")
   // A word that only starts like a name is left to eSpeak.
   assert.equal(await phonemize("Myrtle smiled.", "b", names), await theirs("Myrtle smiled.", "b"))
+})
+
+test("a character's name is said as it sounds alone, and one that is also a word matches only capitalized", async () => {
+  const list = withCharacters(names, ["Will Thornquist", "Kordavos Guard", "Rose"])
+  assert.deepEqual(list.Will, { like: "Will", exact: true })
+  assert.deepEqual(list.Kordavos, names.Kordavos)
+  const alone = await phonemize("Thornquist", "b", list)
+  assert.ok((await phonemize("The arrow found Thornquist's shield.", "b", list)).includes(`${alone}s`))
+  assert.equal(await phonemize("I will go, and so will you.", "b", list), await theirs("I will go, and so will you.", "b"))
 })

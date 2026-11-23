@@ -154,7 +154,7 @@ async function withNames(text: string, pattern: RegExp, names: Pronunciations, a
   const parts = await Promise.all(
     pieces(text, pattern).map(async ({ match, text }) => {
       const name = match && entryFor(names, match[1])
-      if (!name) return { text, sounds: null }
+      if (!name || (names[name].exact && match[1] !== name)) return { text, sounds: null }
       const sounds = await soundsOf(names[name], accent)
       return { text, sounds: match[2] ? possessive(sounds) : sounds, vowel: opensOnVowel(sounds) }
     })
