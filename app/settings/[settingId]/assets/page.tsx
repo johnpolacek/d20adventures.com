@@ -17,7 +17,7 @@ import { notFound } from "next/navigation"
 import { loadLibrary } from "@/asset-library/load"
 import { AssetLibrary } from "@/asset-library/ui/library"
 
-export const metadata: Metadata = { ...share({ title: "Asset Library · The Realm of Myr", description: "The pictures, 3D figures and sets behind the Realm of Myr adventures." }), robots: { index: false, follow: false } }
+export const metadata: Metadata = { ...share({ title: "Asset Library · The Realm of Myr", description: "The pictures, 3D figures and sets behind the Realm of Myr adventures.", image: { url: "/images/share/asset-library.jpg", width: 2400, height: 1260, alt: "Thirteen 3D figures from D20 Adventures, with the Owlbear at the center" } }), robots: { index: false, follow: false } }
 
 export default async function SettingAssets(props: { params: Promise<{ settingId: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
   const { settingId } = await props.params
