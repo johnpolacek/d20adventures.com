@@ -338,7 +338,7 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `paintover.ts` | Paints over a plate, and scores edge drift. |
 | `animate.ts` | Puts a standee on green, animates it with H3 or Veo, keys and packs it. |
 | `capture.ts` | Captures and records lab views over CDP. |
-| `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. |
+| `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. `target` paints what a build should reach, for the `stage-dream-loop` skill. |
 | `marble.ts` | World Labs: credits, depth to panorama, panorama to splat world. |
 | `character.ts` | A standee redrawn as an A-pose sheet, then a rigged 3D model from Meshy on fal. |
 | `cards.ts` | The cast's cards repainted as photographs through the Codex CLI, and cut out. |

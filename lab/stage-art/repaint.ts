@@ -1,7 +1,7 @@
 // Environment spike, painted track: GPT Image 2 repaints a clean plate of a shot, in a named style, keeping every edge in
 // place. The lab projects the result from that shot's camera (?project=<plate>-<style>).
 //
-//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/repaint.ts <plate> painterly|photoreal [size]
+//   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/repaint.ts <plate> painterly|photoreal|target [size]
 //   node --env-file=.env --env-file=.env.local --import tsx lab/stage-art/repaint.ts pano <name> painterly|photoreal
 //
 // `pano` repaints the 360 colour panorama raw/captures/<name>-rgb.png (capture.ts --pano) into raw/<name>-<style>-pano-in.jpg,
@@ -36,6 +36,16 @@ ${KEEP}
 
 DETAIL Shot on a 24 mm lens, deep focus, fine film grain. A photograph, not a painting, not a 3D render.`,
   },
+  // What the build should reach, for the dream loop (.agents/skills/stage-dream-loop). A film still asks for more than the
+  // engine draws, so this one asks for the game's own frame.
+  target: {
+    art: false,
+    prompt: `The image is an unfinished render from a 3D game: PLACE. Show the same frame as the finished game draws it in real time: a screenshot captured from a current high-end game engine, with finished models, textures and lighting.
+
+${KEEP}
+
+DETAIL A real-time game screenshot, not a film still, not a photograph, not a painting, not concept art. No depth-of-field blur, no film grain, no lens flare.`,
+  },
 } as const
 
 // For a second view of a place: the plate already shows an earlier painting projected onto what that painting covered.
@@ -43,7 +53,7 @@ const FILL = `Parts of this image are already finished at full detail, from an e
 
 const CLEAR = `Every flag, banner, pennant, string of bunting, awning and canopy has been taken down in this picture. Do not put any back: no cloth hangs or flies anywhere in the result. Where one used to be, finish what stood behind it: the bare wall, the pole or frame that held it, the stall beneath it, or open sky.`
 
-// What the photoreal prompt says of the place and of its materials and light, unless --place= and --detail= say otherwise.
+// What the photoreal and target prompts say of the place and of its materials and light, unless --place= and --detail= say otherwise.
 const GATE = {
   place: "the great south gate of a medieval city on a festival morning, seen from the market road",
   detail:
@@ -86,7 +96,7 @@ async function main() {
   // and must stay down.
   const flags = argv.filter((a) => a.startsWith("--"))
   const [plate, style = "painterly", size = "2880x1920"] = argv.filter((a) => !a.startsWith("--"))
-  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal [size] [--cli] [--fill] [--sharpen] [--clear] [--as=name]")
+  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal|target [size] [--cli] [--fill] [--sharpen] [--clear] [--as=name]")
   const s = STYLES[style as keyof typeof STYLES]
   const cli = flags.includes("--cli")
   const prompt = `${worded(s.prompt, flags)}${flags.includes("--fill") ? `\n\n${FILL}` : ""}${flags.includes("--sharpen") ? `\n\n${SHARPEN}` : ""}${flags.includes("--clear") ? `\n\n${CLEAR}` : ""}`
