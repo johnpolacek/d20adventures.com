@@ -129,7 +129,7 @@ const FIGURES: Record<string, Figure> = {
   reinhard: {
     out: "fixtures/covert-cargo/reinhard",
     who: "Reinhard, Human male enforcer",
-    look: "A burly, broad-shouldered man with a square, scarred, scowling face, a heavy brow, close-cropped black hair and a strong jaw. A long dark green-black leather greatcoat with a high turned-up collar and buckles, worn open over a rust-brown tunic, dark trousers and heavy boots. A longsword in his right hand, point down.",
+    look: "A burly, broad-shouldered man with a square, scarred, scowling face, a heavy brow, close-cropped black hair and a strong jaw. A long late-medieval kaftan of dark green-black leather that falls to mid-calf: collarless, with a plain round neck edged in stitched leather, close sleeves to the wrist, fastened from the neck to the waist by a row of horn toggles on braided leather loops, girt with a wide brown leather belt and an iron buckle, its skirts parting below the belt. A rust-brown tunic shows at the neck, dark trousers and heavy buckled boots. A longsword in his right hand, point down. The coat of image 1 is replaced by this kaftan: nothing modern, no lapels, no turned-down collar, no shoulder flap, no pockets, no buttonholes.",
     ref: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/236683b0-4745-4a8c-ad9d-48ed3bbaf908.png",
     head: 0.13,
   },

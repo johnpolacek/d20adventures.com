@@ -7,6 +7,7 @@ import type { EncounterFloor } from "./placement"
 import {
   BASE_REACH,
   between,
+  climbOf,
   heightOf,
   movementBudgetOf,
   moveToward,
@@ -85,6 +86,8 @@ export function takeMove(args: {
   const everyone = [args.mover, ...args.others]
   const floor = floorInPlay(args.floor, everyone)
   const rough = roughGround(floorAreas(everyone))
+  // Over a rail, a sill or a crate no taller than they stand, at climbing's cost.
+  const climb = climbOf(args.mover)
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
   if (args.hide) {
@@ -92,7 +95,7 @@ export function takeMove(args: {
     const enemies = args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : []))
     const areas = floorAreas(everyone)
     // The place named, when the move gets them all the way there and it hides them: the story said they hide there.
-    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough }) : undefined
+    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb }) : undefined
     const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 && hidingCover({ floor, at: rounded(there.at), size, enemies, areas }) ? there : undefined
     const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas })
     return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
@@ -100,11 +103,11 @@ export function takeMove(args: {
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
   let walked: ReturnType<typeof walk> | undefined
-  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough })
+  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough, climb })
   else if (toward?.position) {
     const reach = args.close && args.close.target === toward.id ? args.close.reach : 5
-    walked = walk(floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing, rough })
-  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough })
+    walked = walk(floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing, rough, climb })
+  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb })
   if (!walked || walked.used < 0.5) return undefined
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }

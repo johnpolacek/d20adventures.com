@@ -139,6 +139,16 @@ export function speedOf(character: Roller): number | undefined {
   return blockOf(character)?.speed.walk
 }
 
+/**
+ * How a character climbs: over what is no taller than they stand (`heightOf` their size), and free of climbing's extra
+ * cost with a Climb Speed, from a Beast's shape, their sheet (Roving, an item) or their stat block.
+ */
+export function climbOf(character: Roller & { size?: Size }): Climb {
+  const shape = shapeOf(character)
+  const speed = shape ? shape.speed.climb : character.sheet ? deriveSheet(character.sheet).speeds.climb : character.type === "npc" ? blockOf(character)?.speed.climb : undefined
+  return { height: heightOf(sizeOf(character)), ...(speed ? { speed: true } : {}) }
+}
+
 /** What the Slow mastery takes from a creature's Speed until the start of the attacker's next turn. Hits from several weapons take no more. */
 export const SLOW_FEET = 10
 
@@ -385,24 +395,79 @@ function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number,
 }
 
 /**
+ * How a walker climbs: the tallest thing they will climb over, their own height, and whether they have a Climb Speed,
+ * which spares them climbing's extra cost.
+ */
+export type Climb = { height: number; speed?: boolean }
+
+/** Whether a walker climbs over a solid thing: one with a top no higher than they stand. A wall to the ceiling is never climbed. */
+const climbs = (solid: Solid, climb: Climb | undefined): boolean => !!climb && solid.top !== undefined && solid.top <= climb.height
+
+/**
+ * The feet it costs to climb over a solid thing of a height, crossing so many feet of its top: up, across and down.
+ * Climbing costs 1 extra foot for each foot moved, unless one has a Climb Speed. Over a 3-foot rail half a foot thick:
+ * 3 + 0.5 + 3 = 6.5 feet moved, 13 spent.
+ */
+export const climbCost = (height: number, across: number, climb: Climb): number => (height * 2 + across) * (climb.speed ? 1 : 2)
+
+/**
  * Walk straight toward a point over a floor: no farther than the feet given, and no farther than the first solid thing
  * in the way. With a crate 10 feet ahead, a walk of 30 feet toward a point 20 feet off stops at the crate, having used
  * 10. One who starts on something solid, as on a roof, walks off it freely. Rough ground on the way costs more of the
  * feet given for each foot walked (`rough`): 30 feet across 10 feet of Difficult Terrain walk 20, and `used` is the
- * movement spent.
+ * movement spent. A walker who climbs (`climb`) goes over a thing no taller than they stand at climbing's cost
+ * (`climbCost`), all of it or none: one without the feet to get over stops before it.
  */
-export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet: number, rough: readonly Rough[] = []): { at: Point; used: number; blocked: boolean } {
+export function walkOver(
+  solids: readonly Solid[],
+  from: Point,
+  to: Point,
+  feet: number,
+  rough: readonly Rough[] = [],
+  climb?: Climb
+): { at: Point; used: number; blocked: boolean } {
   const gap = between(from, to)
   const along = (d: number): Point => (gap === 0 ? { ...from } : { x: from.x + ((to.x - from.x) * d) / gap, y: from.y + ((to.y - from.y) * d) / gap })
   let first = Number.POSITIVE_INFINITY
+  const over: { from: number; to: number; height: number }[] = []
   for (const solid of solids) {
     if (onSolid(solid, from)) continue
-    const enter = entersAt(solid, from, to)
-    if (enter !== undefined) first = Math.min(first, enter * gap)
+    const span = spanThrough(solid, from, to)
+    if (!span) continue
+    if (climbs(solid, climb)) over.push({ from: span[0] * gap, to: span[1] * gap, height: solid.top ?? 0 })
+    else first = Math.min(first, span[0] * gap)
   }
   const reach = Math.min(gap, first)
-  const went = roughWalk(rough, from, along(reach), reach, Math.max(0, feet))
-  return { at: along(went.walked), used: went.spent, blocked: first < gap && went.walked >= reach - 1e-9 && went.spent < feet - 1e-9 }
+  const budget = Math.max(0, feet)
+  // Over what stands in the way before the first thing that cannot be climbed, one after another; things that touch
+  // or overlap are climbed as one, at the taller's height.
+  const climbsOver = over
+    .filter((each) => each.from < reach)
+    .sort((x, y) => x.from - y.from)
+    .reduce<{ from: number; to: number; height: number }[]>((joined, each) => {
+      const last = joined[joined.length - 1]
+      if (last && each.from <= last.to + 1e-9) {
+        last.to = Math.max(last.to, each.to)
+        last.height = Math.max(last.height, each.height)
+      } else joined.push({ ...each })
+      return joined
+    }, [])
+  let done = 0
+  let spent = 0
+  for (const each of climbsOver) {
+    const went = roughWalk(rough, along(done), along(each.from), each.from - done, budget - spent)
+    spent += went.spent
+    if (went.walked < each.from - done - 1e-9) return { at: along(done + went.walked), used: spent, blocked: false }
+    const cost = climbCost(each.height, Math.min(each.to, gap) - each.from, climb as Climb)
+    // Without the feet to get all the way over, they stop at its foot.
+    if (spent + cost > budget + 1e-9) return { at: along(each.from), used: spent, blocked: true }
+    spent += cost
+    done = Math.min(each.to, gap)
+  }
+  const went = roughWalk(rough, along(done), along(reach), reach - done, budget - spent)
+  spent += went.spent
+  const walked = done + went.walked
+  return { at: along(walked), used: spent, blocked: first < gap && walked >= reach - 1e-9 && spent < feet - 1e-9 }
 }
 
 // How far off a solid thing's corner a way round it turns: a foot clear of each face.
@@ -434,9 +499,9 @@ const cornersOf = (solid: Solid): Point[] => {
  * walk goes round a deckhouse by the side deck and not the long way by the bank. The points to walk through, ending at
  * the goal. None when no way is clear. From the bank to the boat's saloon it goes by the gangway and the saloon door.
  */
-export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | undefined {
-  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
-  if (clear(from, to)) return [to]
+export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb): Point[] | undefined {
+  // Straight there when nothing at all stands between. Over something climbed, the way round may cost less.
+  if (!walkOver(floor.solids, from, to, Number.POSITIVE_INFINITY).blocked) return [to]
   // The shortest path over the points a way may pass through, the one likeliest to lead there first (its way so far and
   // the straight line on), reading a leg only when it is reached. Besides the doorways and waypoints, a way turns just
   // off the corners of a solid thing that stands in a leg it tries: the corners of what blocks the line on to the goal,
@@ -477,9 +542,21 @@ export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | un
     const found: Solid[] = []
     for (const box of bounds) {
       if (box.x1 < x0 || box.x0 > x1 || box.y1 < y0 || box.y0 > y1) continue
-      if (!onSolid(box.solid, a) && entersAt(box.solid, a, b) !== undefined) found.push(box.solid)
+      if (!climbs(box.solid, climb) && !onSolid(box.solid, a) && entersAt(box.solid, a, b) !== undefined) found.push(box.solid)
     }
     return found
+  }
+  // What a leg costs: its length, and climbing's extra over what it climbs.
+  const climbable = climb ? floor.solids.filter((solid) => climbs(solid, climb)) : []
+  const costOf = (a: Point, b: Point) => {
+    const gap = between(a, b)
+    let cost = gap
+    for (const solid of climbable) {
+      if (onSolid(solid, a)) continue
+      const span = spanThrough(solid, a, b)
+      if (span) cost += climbCost(solid.top ?? 0, (span[1] - span[0]) * gap, climb as Climb) - (span[1] - span[0]) * gap
+    }
+    return cost
   }
   reached[0] = 0
   for (;;) {
@@ -490,13 +567,15 @@ export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | un
     if (at === goal) break
     done[at] = true
     const tried = new Set<number>()
-    let next = [...Array.from({ length: fixed - 1 }, (_, index) => index + 1), ...blocking(nodes[at], to).flatMap(turnsOf)]
+    // What stands on the line on to the goal is gone round: what blocks it, and what it would climb.
+    const onward = [...blocking(nodes[at], to), ...climbable.filter((solid) => !onSolid(solid, nodes[at]) && entersAt(solid, nodes[at], to) !== undefined)]
+    let next = [...Array.from({ length: fixed - 1 }, (_, index) => index + 1), ...onward.flatMap(turnsOf)]
     for (let depth = 0; depth < 3 && next.length; depth++) {
       const deeper: number[] = []
       for (const index of next) {
         if (tried.has(index) || done[index]) continue
         tried.add(index)
-        const far = reached[at] + between(nodes[at], nodes[index])
+        const far = reached[at] + costOf(nodes[at], nodes[index])
         if (far >= reached[index]) continue
         const stood = blocking(nodes[at], nodes[index])
         if (!stood.length) {
@@ -514,7 +593,7 @@ export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | un
   let last = from
   for (let index = 0; index < found.length; index++) {
     const after = found[index + 1]
-    if (after && !blocking(last, after).length) continue
+    if (after && !blocking(last, after).length && costOf(last, after) <= costOf(last, found[index]) + costOf(found[index], after) + 1e-6) continue
     way.push(found[index])
     last = found[index]
   }
@@ -541,7 +620,8 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
  * A character's walk over a floor: toward a goal by the way `routeThrough` finds, as far as the feet given, stopping
  * at the first solid thing when no way is clear. `stopShort` halts that many feet short of the goal, for closing with
  * a creature, and `others` are the points where the rest stand, so the walker ends beside them and not on them. Ground
- * that costs more to cross (`rough`: Difficult Terrain) spends more of the feet given. Gives where they end, the feet
+ * that costs more to cross (`rough`: Difficult Terrain) spends more of the feet given, and one who climbs (`climb`)
+ * goes over low things at climbing's cost where that is the shorter way. Gives where they end, the feet
  * used, and the points walked through.
  */
 export function walk(
@@ -549,12 +629,13 @@ export function walk(
   from: Point,
   to: Point,
   feet: number,
-  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[] } = {}
+  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[]; climb?: Climb } = {}
 ): { at: Point; used: number; path: Point[] } {
   const short = options.stopShort ?? 0
   const gap = between(from, to)
   const others = options.others ?? []
-  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
+  const climb = options.climb
+  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY, [], climb).blocked
   const length = (way: readonly Point[]) => way.reduce((sum, point, index) => sum + between(index ? way[index - 1] : from, point), 0)
   // Already within the distance asked, with nothing solid between: no step is taken.
   if (short && gap <= short && clear(from, to)) return { at: { ...from }, used: 0, path: [] }
@@ -562,7 +643,7 @@ export function walk(
   // one: the straight approach where it will do, else the spot round them that is the shortest way to reach. One who
   // stands behind a wall is closed with from their own side of it.
   let goal = standingRoom(floor.solids, others, from, to)
-  let way = routeThrough(floor, from, goal)
+  let way = routeThrough(floor, from, goal, climb)
   if (short) {
     const free = (point: Point) => !solidAt(floor.solids, point) && clear(point, to) && others.every((other) => between(other, to) < 1e-6 || between(other, point) >= BASE_REACH - 1e-6)
     const spots = [
@@ -570,7 +651,7 @@ export function walk(
       ...Array.from({ length: 12 }, (_, index) => ({ x: to.x + Math.sin((index * Math.PI) / 6) * short, y: to.y + Math.cos((index * Math.PI) / 6) * short })),
     ].filter(free)
     const ways = spots.flatMap((spot) => {
-      const found = routeThrough(floor, from, spot)
+      const found = routeThrough(floor, from, spot, climb)
       return found ? [{ spot, found }] : []
     })
     const best = ways.sort((a, b) => length(a.found) - length(b.found))[0]
@@ -581,7 +662,7 @@ export function walk(
   let left = Math.max(0, feet)
   const path: Point[] = []
   for (const point of way ?? [goal]) {
-    const leg = walkOver(floor.solids, at, point, left, options.rough)
+    const leg = walkOver(floor.solids, at, point, left, options.rough, climb)
     if (leg.used > 0) path.push(leg.at)
     left -= leg.used
     at = leg.at

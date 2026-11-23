@@ -1,0 +1,33 @@
+{
+  "id": "reinhard-kaftan",
+  "name": "Reinhard",
+  "role": "Enforcer of the Blackthorn family",
+  "cast": [
+    "npcs-1749163978757"
+  ],
+  "height": 1.92,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/reinhard-front.webp",
+    "back": "/stage/fixtures/covert-cargo/reinhard-back.webp"
+  },
+  "who": "Reinhard, a tall, heavily built human enforcer with short black hair, a heavy brow and a hard scowl, in a long collarless late-medieval kaftan of dark green-black leather to mid-calf, fastened down the chest with horn toggles on braided leather loops and girt with a wide brown belt, a rust-brown tunic at the neck, dark trousers and heavy buckled boots",
+  "stow": "He holds nothing: the sword is left out of the picture entirely, and both hands are empty and open. The kaftan's sleeves are close to the arm and its skirts hang straight down from the belt, so nothing of the coat bridges the gap between an arm and the body.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01",
+    "Sword Idle": "ual1:Sword_Idle",
+    "Block": "ual2:Sword_Block"
+  },
+  "eased": {
+    "Swing": 85
+  }
+}

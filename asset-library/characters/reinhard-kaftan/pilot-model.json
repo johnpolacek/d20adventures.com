@@ -1,0 +1,14 @@
+{
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab3937c/9mEVmYqm9cDIjGGF9Fhta_model.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "model.glb",
+    "file_size": 8551880
+  },
+  "thumbnail": {
+    "url": "https://v3b.fal.media/files/b/0ab3937c/472Aa-qYrKuEKS2HiJkZT_preview.webp",
+    "content_type": "image/webp",
+    "file_name": "preview.webp",
+    "file_size": 16528
+  }
+}

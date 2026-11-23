@@ -39,7 +39,7 @@ const COVERS: Record<string, Cover> = {
   },
   "covert-cargo": {
     scene:
-      "Before dawn on a misty river, on the lantern-lit deck of an old riverboat tied to a rickety pier: Lyra (a young WOMAN scholar with round glasses, brown hair and a green coat, as in her reference) and Poppen (a small curly-haired halfling in a patchwork coat, as in his reference) face Silas, a hooded smuggler, and Reinhard, a scarred swordsman in a dark greatcoat (as in their references), across a heavy iron-banded, chained crate. Blades half drawn, warm lamplight from the cabin windows against blue mist, moss-hung trees along the bank.",
+      "Before dawn on a misty river, on the lantern-lit deck of an old riverboat tied to a rickety pier: Lyra (a young WOMAN scholar with round glasses, brown hair and a green coat, as in her reference) and Poppen (a small curly-haired halfling in a patchwork coat, as in his reference) face Silas, a hooded smuggler, and Reinhard, a scarred swordsman in a long dark leather kaftan (as in their references), across a heavy iron-banded, chained crate. Blades half drawn, warm lamplight from the cabin windows against blue mist, moss-hung trees along the bank.",
     refs: [
       `${CF}/covert-cargo/encounters/the-shipment/dccea2c5-b22d-41e0-9467-95d8ea2301d5.png`,
       `${CF}/covert-cargo/encounters/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png`,

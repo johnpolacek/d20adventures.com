@@ -6,6 +6,7 @@ import type { Sheet } from "../../src/sheet/sheet"
 import {
   attackReach,
   caughtIn,
+  climbCost,
   coverBetween,
   coverBonus,
   distance,
@@ -309,6 +310,40 @@ test("a walk stops at the first solid thing, and goes round by a doorway", () =>
   assert.equal(round.path.length, 2)
   // With no way round, the walker goes as far as the wall.
   assert.deepEqual(walk({ solids: box, doors: [] }, o, at(30, 0), 60).at, at(24.5, 0))
+})
+
+test("a walker climbs over what is no taller than they stand, each foot climbed costing 1 more", () => {
+  // A rail 3 feet high and half a foot thick runs north to south at x = 10. Over it is 3 up, half a foot across and
+  // 3 down: 6.5 feet climbed, 13 spent. With a Climb Speed the extra is spared: 6.5.
+  const rail: Solid = { kind: "rect", x: 10, y: 0, halfWidth: 0.25, halfDepth: 20, turn: 0, top: 3 }
+  const medium = { height: 6 }
+  assert.equal(climbCost(3, 0.5, medium), 13)
+  assert.equal(climbCost(3, 0.5, { height: 6, speed: true }), 6.5)
+  // To (20, 0): 9.75 feet to the rail, 13 over it, 9.75 on: 32.5 spent.
+  const over = walkOver([rail], o, at(20, 0), 60, [], medium)
+  assert.deepEqual([over.at, over.blocked], [at(20, 0), false])
+  close(over.used, 32.5)
+  // With 20 feet there is not enough to get over after the 9.75 to it: they stop at its foot.
+  const short = walkOver([rail], o, at(20, 0), 20, [], medium)
+  assert.deepEqual([short.at, short.blocked], [at(9.75, 0), true])
+  close(short.used, 9.75)
+  // One who does not climb, and one shorter than the rail (a Tiny one 2 feet tall), stop at it as at a wall.
+  assert.equal(walkOver([rail], o, at(20, 0), 60).blocked, true)
+  assert.equal(walkOver([rail], o, at(20, 0), 60, [], { height: 2 }).blocked, true)
+  // A wall to the ceiling is never climbed.
+  assert.equal(walkOver([{ ...rail, top: undefined }], o, at(20, 0), 60, [], medium).blocked, true)
+  // The way: over the rail, 32.5, is shorter than round its end at y = 20, about 2 × √(10² + 21²) = 46.5. A rail 100
+  // feet long has no way round in reach, and one 2 feet long is walked round, √(9.75² + 2²) × 2 or so, not climbed.
+  assert.deepEqual(routeThrough({ solids: [rail], doors: [] }, o, at(20, 0), medium), [at(20, 0)])
+  const post: Solid = { ...rail, halfDepth: 1 }
+  const round = routeThrough({ solids: [post], doors: [] }, o, at(20, 0), medium) ?? []
+  assert.equal(round.length, 2)
+  assert.ok(Math.abs(round[0].y) > 1, "round the post's end")
+  // A walk with climbing goes over: from the reeds at (0, 0) to the deck at (20, 0) with 30 feet, 9.75 + 13 = 22.75 to
+  // the far side of the rail and 7.25 on.
+  const boarded = walk({ solids: [rail], doors: [] }, o, at(20, 0), 30, { climb: medium })
+  close(boarded.at.x, 10.25 + 7.25)
+  close(boarded.used, 30)
 })
 
 test("a walker closes to reach of a creature, and stands beside whoever is there", () => {
