@@ -1037,54 +1037,16 @@ function Tiles({ list }: { list: Tile[] }) {
   )
 }
 
-/**
- * /ui, in three tabs. Game is the dark stage's components. Ledger turns the page itself to parchment, header and all,
- * so the header's switch shows it light or dark: a reading page in both looks side by side, then the desk. Shared is
- * what both looks use.
- */
-export function Showcase() {
-  const [look, setLook] = useLook()
-  const about = LOOKS.find((l) => l.look === look)?.note
-
-  if (look === "ledger") {
-    return (
-      <LedgerShell>
-        <div className="up-desk">
-          <div className="up-desk-main">
-            <header className="up-desk-head !border-b-0 !pb-0 !mb-0">
-              <div>
-                <h1>D20 / UI</h1>
-                <p className="up-meta">{about}</p>
-              </div>
-            </header>
-            <div className="up-tabs" role="tablist" aria-label="Look">
-              {LOOKS.map((l) => (
-                <button key={l.look} type="button" role="tab" aria-selected={look === l.look} onClick={() => setLook(l.look)}>
-                  {l.name}
-                </button>
-              ))}
-            </div>
-            <p className="up-label" id="reading">
-              01 Reading
-            </p>
-            <LedgerDemo />
-            <p className="up-label !mt-16" id="desk">
-              02 Desk
-            </p>
-            <DeskSample />
-          </div>
-        </div>
-      </LedgerShell>
-    )
-  }
-
+// The page's head is the same box in every tab, set in sizes of its own rather than either look's, so the title and
+// tabs hold still as the look changes under them. Only the ink changes.
+function Head({ look, setLook, ledger }: { look: Look; setLook: (look: Look) => void; ledger: boolean }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-24 pb-12">
-      <Heading variant="h2" as="h1">
+    <div className="pt-24">
+      <h1 className={cn("m-0 font-display text-[36px] leading-[44px]", ledger ? "font-normal text-[var(--up-strong)]" : "font-bold text-accent-300")} style={{ margin: 0, fontSize: 36, lineHeight: "44px" }}>
         D20 / UI
-      </Heading>
-      <p className="mt-2 text-sm text-white/55">{about}</p>
-      <div role="tablist" aria-label="Look" className="mt-6 flex gap-6 border-b border-white/10">
+      </h1>
+      <p className={cn("mt-2 font-sans text-sm leading-6", ledger ? "text-[var(--up-muted)]" : "text-white/55")}>{LOOKS.find((l) => l.look === look)?.note}</p>
+      <div role="tablist" aria-label="Look" className={cn("mt-6 flex gap-6 border-b", ledger ? "border-[var(--up-line)]" : "border-white/10")}>
         {LOOKS.map((l) => (
           <button
             key={l.look}
@@ -1092,12 +1054,48 @@ export function Showcase() {
             role="tab"
             aria-selected={look === l.look}
             onClick={() => setLook(l.look)}
-            className="-mb-px border-b-2 border-transparent py-2.5 font-mono text-2xs uppercase tracking-label text-white/55 transition-colors hover:text-white aria-selected:border-accent aria-selected:text-white"
+            className={cn(
+              "-mb-px border-b-2 border-transparent py-2.5 font-sans text-sm leading-5 font-medium transition-colors",
+              ledger ? "text-[var(--up-muted)] hover:text-[var(--up-strong)] aria-selected:border-[var(--up-accent)] aria-selected:text-[var(--up-strong)]" : "text-white/55 hover:text-white aria-selected:border-accent aria-selected:text-white"
+            )}
           >
             {l.name}
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+/**
+ * /ui, in three tabs. Game is the dark stage's components. Ledger turns the page itself to parchment, header and all,
+ * so the header's switch shows it light or dark: a reading page in both looks side by side, then the desk. Shared is
+ * what both looks use.
+ */
+export function Showcase() {
+  const [look, setLook] = useLook()
+
+  if (look === "ledger") {
+    return (
+      <LedgerShell className="!pt-0">
+        <div className="mx-auto max-w-6xl px-4 pb-12">
+          <Head look={look} setLook={setLook} ledger />
+          <p className="up-label !mt-8" id="reading">
+            01 Reading
+          </p>
+          <LedgerDemo />
+          <p className="up-label !mt-16" id="desk">
+            02 Desk
+          </p>
+          <DeskSample />
+        </div>
+      </LedgerShell>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 pb-12">
+      <Head look={look} setLook={setLook} ledger={false} />
       <Tiles list={tiles.filter((tile) => (look === "shared") === SHARED.has(tile.name))} />
     </div>
   )

@@ -12,8 +12,8 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-update-mono"
  * This puts a page in Ledger. The site header and footer follow whatever page wears it (the `body:has(.updates-page)`
  * rules in app/updates/updates.css, where its classes begin `up-`).
  */
-export function LedgerShell({ children }: { children: ReactNode }) {
-  return <div className={`updates-page ${mono.variable}`}>{children}</div>
+export function LedgerShell({ className, children }: { className?: string; children: ReactNode }) {
+  return <div className={`updates-page ${mono.variable}${className ? ` ${className}` : ""}`}>{children}</div>
 }
 
 /** A plain page in Ledger: its title, an optional line under it, then its content in one column. `aside` sits beside the column on a wide window. */
