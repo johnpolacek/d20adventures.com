@@ -268,6 +268,14 @@ Portraits, the same day. The turn order and the character card showed the painte
 - The app (`portraitFor` in `apps/desktop/src/scenes.ts`) shows the photograph's portrait when the scene's set is painted, and the painted one on a built set, so the face in the turn order is the one on the stage. With no scene to go by, the scene the portrait was found in decides.
 - The app reads the list of photographed cards from `apps/desktop/src/photoreal.json`, a copy `publish` writes beside `public/stage/photoreal.json`: a website deploy leaves `public/stage` out, and the site type checks the app's files.
 
+The Midnight Summons audited as played, 2026-11-23. Every shot and speaker's view of six stagings captured with the cast (`capture.ts --heroes`), scored by fresh judges on shape, materials, light, fit and close up, as in the dream loop but with no target. Owner: no heavy beams of light from above, no unrealistic tree limbs.
+
+- Round 0: 4.6 to 7.2. Seven of the trail's paintings carry beams of light, most likely painted from the set's two `lightShaft`s in their plates.
+- The trail's light shafts are gone from the set. `trail`, `clearing`, `oak` and the cottage's `porch` were retouched in place (`repaint.ts <painting-as-plate> retouch --cli`, edges within 8 px 97 to 99%): no beams, natural limbs, the bow on the sill strung, the lantern unlit by day.
+- Flat teal bands along the cottage's far woods were the set's backdrop, which takes no paint and showed through gaps between painted trees. A painted set now hides its backdrops once the paintings are up.
+- The night sets' cards are graded cooler: `light` `#8a9cc2` on the trail, `#8fa2c6` at the stones.
+- Not yet retouched, the image tool at its limit: `fallen`, `standoff`, `fight` and `druid` (lighter beams), and `home` and `home-2` (the hoop and the lit lantern).
+
 Known limits:
 
 - A view lies inside one painting. It cannot straddle two.
@@ -338,7 +346,7 @@ Toggles in the panel switch each spike. `?clip=thalbern-h3-idle` plays the H3 lo
 | `paintover.ts` | Paints over a plate, and scores edge drift. |
 | `animate.ts` | Puts a standee on green, animates it with H3 or Veo, keys and packs it. |
 | `capture.ts` | Captures and records lab views over CDP. |
-| `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. `target` paints what a build should reach, for the `stage-dream-loop` skill. |
+| `repaint.ts` | Repaints a shot's plate or a 360 panorama with GPT Image 2, painterly or photoreal. `target` paints what a build should reach, for the `stage-dream-loop` skill. `retouch` changes only what `--detail` names in a published painting. |
 | `marble.ts` | World Labs: credits, depth to panorama, panorama to splat world. |
 | `character.ts` | A standee redrawn as an A-pose sheet, then a rigged 3D model from Meshy on fal. |
 | `cards.ts` | The cast's cards repainted as photographs through the Codex CLI, and cut out. |

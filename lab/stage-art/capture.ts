@@ -144,8 +144,13 @@ async function main() {
     }
     console.log(`${name}-${clip} x${count}`)
   }
-  for (const shot of shots) {
-    await ev(`window.__stage.shot(${JSON.stringify(shot)}, { instant: true })`)
+  // --heroes: each cast member's speaker view as well, framed as stage:check's HERO_SHOT, as <name>-on-<id>.png.
+  const views: [string, unknown][] = shots.map((s) => [s, s])
+  if (process.argv.includes("--heroes"))
+    for (const c of await ev<string[]>("window.__stage.cast.map(c => c.id)"))
+      views.push([`on-${c.split("/").pop()}`, { subject: c, distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 }])
+  for (const [shot, which] of views) {
+    await ev(`window.__stage.shot(${JSON.stringify(which)}, { instant: true })`)
     await delay(1500)
     // --do=<expression>: run in the page once the shot is up, before it is captured. For a hand on the camera.
     if (arg("do")) {

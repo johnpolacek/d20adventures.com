@@ -36,6 +36,13 @@ ${KEEP}
 
 DETAIL Shot on a 24 mm lens, deep focus, fine film grain. A photograph, not a painting, not a 3D render.`,
   },
+  // A published painting retouched in place: the plate is the painting itself, and DETAIL says the only things to change.
+  retouch: {
+    art: false,
+    prompt: `The image is a finished photorealistic still of PLACE, from a big-budget fantasy film. Retouch it. Change only this: DETAIL
+
+Everything else stays exactly as it is: the composition, the framing, the light's direction and colour, and every tree, rock, building and object in the same place, at the same size, with the same outline, so the result lines up with the original pixel for pixel. Do not add people or animals. No text. A photograph, not a painting, not a 3D render.`,
+  },
   // What the build should reach, for the dream loop (.agents/skills/stage-dream-loop). A film still asks for more than the
   // engine draws, so this one asks for the game's own frame.
   target: {
@@ -96,7 +103,7 @@ async function main() {
   // and must stay down.
   const flags = argv.filter((a) => a.startsWith("--"))
   const [plate, style = "painterly", size = "2880x1920"] = argv.filter((a) => !a.startsWith("--"))
-  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal|target [size] [--cli] [--fill] [--sharpen] [--clear] [--as=name]")
+  if (!plate || !(style in STYLES)) return console.log("usage: repaint.ts <plate> painterly|photoreal|target|retouch [size] [--cli] [--fill] [--sharpen] [--clear] [--as=name]")
   const s = STYLES[style as keyof typeof STYLES]
   const cli = flags.includes("--cli")
   const prompt = `${worded(s.prompt, flags)}${flags.includes("--fill") ? `\n\n${FILL}` : ""}${flags.includes("--sharpen") ? `\n\n${SHARPEN}` : ""}${flags.includes("--clear") ? `\n\n${CLEAR}` : ""}`
@@ -115,7 +122,7 @@ async function main() {
     .resize(w, Math.round((w * height) / width), { fit: "fill" })
     .png()
     .toFile(`${out}.png`)
-  await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`)
+  if (style !== "retouch") await copyFile(`${RAW}/captures/${plate}.json`, `${out}.json`)
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${name}.jpg`)
   const m = await sharp(png).metadata()
   console.log(`${out}.png from ${m.width}x${m.height}`)

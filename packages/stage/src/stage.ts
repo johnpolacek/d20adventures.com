@@ -548,6 +548,9 @@ export class Stage {
     if (this.painted && painted) {
       const plate = new Set(this.plate)
       this.painted.bake(this.scene, [...this.world.children.filter((c) => !plate.has(c)), this.sky])
+      // The paintings' sky holds the painter's own far hills. The built backdrop, which takes no paint, would show
+      // through every gap between painted trees as a band of flat colour.
+      for (const c of this.world.children) if (c.name === "backdrop") c.visible = false
       // The brush filter is for the engine's own shading. A painting is finished art.
       this.applyTier()
       if (this.o.controls !== false)

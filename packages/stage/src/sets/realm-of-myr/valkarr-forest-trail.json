@@ -128,11 +128,6 @@
       "lichenAmount": 0.45,
       "relief": 0.6
     },
-    "moonbeam": {
-      "type": "glow",
-      "color": "#8fa8c8",
-      "opacity": 0.14
-    },
     "mist": {
       "type": "mist",
       "color": "#2c3c52",
@@ -288,24 +283,6 @@
       "height": 6,
       "layers": 2,
       "spacing": 8
-    },
-    {
-      "type": "lightShaft",
-      "id": "clearing-shaft",
-      "at": [8, -8.5],
-      "height": 18,
-      "top": 0.6,
-      "bottom": 2.2,
-      "tilt": 4
-    },
-    {
-      "type": "lightShaft",
-      "id": "oak-shaft",
-      "at": [-4.2, -1.4],
-      "height": 17,
-      "top": 0.6,
-      "bottom": 2,
-      "tilt": 4
     },
     {
       "type": "scatter",
@@ -1109,7 +1086,7 @@
   },
   "painted": {
     "shadows": 0.4,
-    "light": "#aebfdc",
+    "light": "#8a9cc2",
     "points": {
       "trail": {
         "position": [2.2, 2, 21.5],

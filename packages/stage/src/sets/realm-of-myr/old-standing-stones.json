@@ -1953,7 +1953,7 @@
   },
   "painted": {
     "shadows": 0.4,
-    "light": "#b4c4dc",
+    "light": "#8fa2c6",
     "points": {
       "stones": {
         "position": [0, 1.6, 10.5],
