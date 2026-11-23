@@ -11,28 +11,28 @@
 
 body:has(.updates-page),
 .up-surface {
-  --up-bg: #fbf7ee;
-  --up-raise: #f2ebda;
-  --up-code: #f7f2e5;
-  --up-bar: #f6f0e2;
-  --up-bar-line: #e2d7bf;
-  --up-line: #e2d7bf;
-  --up-line-strong: #cdbfa3;
-  --up-text: #3a2f24;
-  --up-strong: #22180f;
-  --up-muted: #65553f;
-  --up-faint: #6f5f49;
+  --up-bg: #fff7eb;
+  --up-raise: #fdead3;
+  --up-code: #fff2e0;
+  --up-bar: #ffefdd;
+  --up-bar-line: #f1d4b5;
+  --up-line: #f1d4b5;
+  --up-line-strong: #dfbb96;
+  --up-text: #4a2800;
+  --up-strong: #2f1000;
+  --up-muted: #7d4b00;
+  --up-faint: #875600;
   --up-accent: #2b4a7e;
   --up-accent-strong: #213a65;
   --up-accent-line: rgb(43 74 126 / 0.42);
   --up-slot: rgb(43 74 126 / 0.09);
   --up-slot-text: #233c69;
-  --up-on-accent: #fbf7ee;
-  --up-btn: #fefcf6;
+  --up-on-accent: #fff7eb;
+  --up-btn: #fffdf5;
   --up-good: #2f6b3f;
   --up-warn: #8a5a12;
   --up-bad: #9a3324;
-  --up-grain: 0.22;
+  --up-grain: 0.5;
   --up-grain-blend: multiply;
   --up-glow: none;
   --up-shadow: 0 1px 2px rgb(58 40 20 / 0.05);
