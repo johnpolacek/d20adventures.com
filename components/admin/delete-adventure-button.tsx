@@ -33,13 +33,13 @@ export function DeleteAdventureButton({ adventureId, title }: { adventureId: str
 
   return (
     <div ref={root} className="flex flex-col items-start gap-1">
-      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
+      <Button variant="plain" className="up-btn is-xs is-bad" onClick={handleDelete} disabled={isDeleting}>
         <Swap id={isDeleting ? "busy" : "idle"} as="span">
           {isDeleting ? "Deleting..." : "Delete"}
         </Swap>
       </Button>
       <Presence show={Boolean(error)} motion="drop" asChild>
-        {error && <span className="text-xs text-red-400">{error}</span>}
+        {error && <span className="up-small up-bad !text-xs">{error}</span>}
       </Presence>
     </div>
   )

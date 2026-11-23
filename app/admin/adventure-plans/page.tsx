@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import type { CSSProperties } from "react"
 import Link from "next/link"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { Heading } from "@d20/ui/typography/heading"
 import { Button } from "@d20/ui/button"
+import { LedgerHead } from "@/components/layout/ledger-page"
 import { Tip } from "@d20/ui/tooltip"
 import NativeImage from "@d20/ui/native-image"
 import { requireAdmin } from "@/lib/auth-utils"
@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 
 const sourceLabel = {
   s3: {
-    label: "S3 source",
+    label: "S3 Source",
     title: "Compiled from the edited copy in S3. Edits made here are already the live source of truth.",
   },
   local: {
-    label: "Repo source",
+    label: "Repo Source",
     title:
       "Compiled from the markdown in this repo (content/settings/…). Either S3 has no copy yet, its copy is incomplete, or it is byte-identical to the repo. The next save here writes a canonical copy to S3.",
   },
@@ -31,7 +31,7 @@ export default async function AdminAdventurePlansPage() {
 
   if (requiresSetup) {
     return (
-      <div className="container max-w-2xl py-8 md:py-12">
+      <div className="max-w-2xl py-12">
         <AdminConfigMessage />
       </div>
     )
@@ -39,65 +39,50 @@ export default async function AdminAdventurePlansPage() {
 
   if (!isAdmin) {
     return (
-      <div className="container py-8 md:py-12">
-        <div className="mx-auto max-w-2xl text-center">
-          <Heading variant="h1" className="mb-4">
-            Access Denied
-          </Heading>
-          <p className="text-white/60 text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
-        </div>
-      </div>
+      <>
+        <LedgerHead title="Access Denied" />
+        <p>You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
+      </>
     )
   }
 
   const adventures = await listAdminWikiAdventures()
   return (
-    <div className="min-h-screen bg-[#08071a]">
-      <div className="container py-8 md:py-12">
-        <div className="mx-auto max-w-6xl">
-          <Heading variant="h3" as="h1" className="mb-2">
-            Adventure Plans
-          </Heading>
-          <p className="mb-8 text-white/60">Chat with migrated wiki adventures and apply improvements directly to S3 source.</p>
-          <div className="grid gap-6 md:grid-cols-2">
+    <>
+      <LedgerHead title="Adventure Plans" subtitle="Chat with migrated wiki adventures and apply improvements directly to S3 source" />
+          <div className="up-cards !grid-cols-[repeat(auto-fill,minmax(340px,1fr))]">
             {adventures.map((adventure, index) => {
               const source = sourceLabel[adventure.source]
               const href = `/admin/adventure-plans/${adventure.settingId}/${adventure.planId}`
               return (
                 <article
                   key={`${adventure.settingId}/${adventure.planId}`}
-                  className="enter-rise overflow-hidden rounded-md border border-lime-900/50 bg-black text-zinc-100"
+                  className="up-card enter-rise"
                   style={{ "--i": Math.min(index, 8) } as CSSProperties}
                 >
-                  <Link href={href} className="group relative block aspect-[16/7] overflow-hidden bg-black">
-                    {adventure.image ? (
-                      <NativeImage src={adventure.image} alt="" fill className="object-cover opacity-90 transition-opacity duration-150 ease-snap group-hover:opacity-100" loading="eager" />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-lime-950 to-black" />
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12">
-                      <Heading variant="h3" as="h2">{adventure.title}</Heading>
-                      <p className="mt-1 font-mono text-xs text-zinc-400">
+                  <Link href={href} className="up-card-art group !aspect-[16/7]">
+                    {adventure.image && <NativeImage src={adventure.image} alt="" fill className="object-cover transition-opacity duration-150 ease-snap group-hover:opacity-90" loading="eager" />}
+                    <span className="up-pill is-accent absolute right-3 top-3 capitalize" style={{ background: "var(--up-bg)" }}>{adventure.status}</span>
+                  </Link>
+                  <div className="up-card-body flex flex-wrap items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3>{adventure.title}</h3>
+                      <p className="font-mono">
                         {adventure.settingId}/{adventure.planId}
                       </p>
+                      <p>
+                        {adventure.fileCount} files · {adventure.encounterCount} encounters ·{" "}
+                        <Tip label={source.title}>
+                          <span className="cursor-help underline decoration-dotted underline-offset-4">{source.label}</span>
+                        </Tip>
+                      </p>
                     </div>
-                    <span className="absolute right-3 top-3 rounded border border-accent-700 bg-accent-950/80 px-2 py-1 font-mono text-4xs uppercase text-accent-200">{adventure.status}</span>
-                  </Link>
-                  <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-                    <div className="text-sm text-zinc-400">
-                      {adventure.fileCount} files · {adventure.encounterCount} encounters ·{" "}
-                      <Tip label={source.title}>
-                        <span className="cursor-help underline decoration-dotted underline-offset-4">{source.label}</span>
-                      </Tip>
-                    </div>
-                    <Button variant="epic" size="sm" className="px-5 py-1.5 text-xs" render={<Link href={href} />}>Open Chat Editor</Button>
+                    <Button variant="plain" className="up-btn is-primary is-xs" render={<Link href={href} />}>Open Chat Editor</Button>
                   </div>
                 </article>
               )
             })}
           </div>
-        </div>
-      </div>
-    </div>
+    </>
   )
 }

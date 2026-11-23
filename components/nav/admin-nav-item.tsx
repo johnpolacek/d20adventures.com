@@ -53,6 +53,7 @@ export function AdminNavItem() {
           return (
             <Link
               key={item.href}
+              data-site-nav
               href={item.href}
               className={cn(
                 "text-xs sm:text-sm font-bold font-display transition-[color,opacity] duration-150 hover:text-accent-950 active:opacity-70 flex items-center gap-1",

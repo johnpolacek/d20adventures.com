@@ -161,11 +161,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-editor-ink-925 pt-10 text-stone-100">
-      <header className="shrink-0 border-b border-editor-ink-750 bg-editor-ink-925 px-6 pt-4 pb-3 shadow-[0_18px_60px_rgba(0,0,0,.22)]">
+    <div className="up-plan-editor sticky top-[59px] flex h-[calc(100dvh-59px)] flex-col overflow-hidden border-x border-(--up-line) bg-(--up-bg) text-(--up-text)">
+      <header className="shrink-0 border-b border-(--up-line) bg-(--up-bg) px-6 pt-4 pb-3">
         <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="min-w-0 max-w-full truncate font-display text-2xl font-bold leading-none tracking-normal text-editor-gold-150 md:text-3xl">{state.manifest.title}</h1>
+            <h1 className="min-w-0 max-w-full truncate !m-0 !text-2xl leading-none md:!text-3xl">{state.manifest.title}</h1>
             <div className="flex shrink-0 items-center gap-1.5">
               <HeaderCountBadge value={sectionCount} label="sections" />
               <HeaderCountBadge value={encounterCount} label="encounters" />
@@ -175,14 +175,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <Link
               href="/admin"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-editor-ink-650 bg-editor-ink-850 px-3 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-225 hover:text-editor-gold-125 active:scale-[0.96]"
+              className="up-btn is-xs"
             >
               <ShieldCheck className="size-3.5" />
               Admin
             </Link>
             <Link
               href="/admin/adventure-plans"
-              className="inline-flex h-8 items-center gap-1.5 rounded border border-editor-ink-650 bg-editor-ink-850 px-3 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-200 transition-[color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-225 hover:text-editor-gold-125 active:scale-[0.96]"
+              className="up-btn is-xs"
             >
               <ClipboardList className="size-3.5" />
               Plans
@@ -194,7 +194,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
       {/* The columns follow the sidebar being in the page, so they hold while it leaves. */}
       <main className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_400px] xl:has-[>[data-sections-sidebar]]:grid-cols-[320px_minmax(0,1fr)_400px]">
         <Presence show={sectionsSidebarOpen} motion="left" initial={false} asChild>
-          <aside data-sections-sidebar className="min-h-0 overflow-hidden border-b border-editor-ink-750 bg-editor-ink-925 xl:border-r xl:border-b-0">
+          <aside data-sections-sidebar className="min-h-0 overflow-hidden border-b border-(--up-line) bg-(--up-bg) xl:border-r xl:border-b-0">
             <WikiNavigator
               wiki={wiki}
               selectedPath={selectedPath}
@@ -208,7 +208,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </aside>
         </Presence>
 
-        <section className="min-h-0 min-w-0 overflow-hidden border-b border-editor-ink-750 bg-editor-ink-850 xl:border-r xl:border-b-0">
+        <section className="min-h-0 min-w-0 overflow-hidden border-b border-(--up-line) bg-(--up-raise) xl:border-r xl:border-b-0">
           <div className="grid h-full min-h-0 grid-rows-[auto_1fr]">
             <div key={paneKey} className="enter-fade">
               {selectedPage?.kind === "encounter" && selectedScene ? (
@@ -217,7 +217,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                 <WikiPageHeader page={selectedPage} sectionsSidebarOpen={sectionsSidebarOpen} onRestoreSectionsSidebar={() => setSectionsSidebarOpen(true)} />
               )}
             </div>
-            <div className="min-h-0 overflow-y-auto">
+            <div className="@container min-h-0 overflow-y-auto">
               <div key={paneKey} className="enter-fade">
                 {selectedScene && selectedPage?.kind === "encounter" ? (
                   <SceneEncounterEditor
@@ -238,11 +238,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
           </div>
         </section>
 
-        <aside className="relative min-h-0 overflow-hidden bg-[radial-gradient(circle_at_25%_0%,color-mix(in_srgb,var(--color-editor-gold-550)_18%,transparent),transparent_34%),linear-gradient(180deg,var(--color-editor-ink-925)_0%,var(--color-editor-ink-950)_58%,var(--color-editor-ink-950)_100%)]">
+        <aside className="relative min-h-0 overflow-hidden bg-(--up-bg)">
           <div className="flex h-full min-h-0 flex-col">
-            <div className="flex h-10 shrink-0 items-center gap-2 bg-editor-ink-925/80 px-5">
-              <MessageSquare className="size-3.5 text-editor-gold-125" />
-              <h2 className="font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-125">Chat</h2>
+            <div className="flex h-10 shrink-0 items-center gap-2 border-b border-(--up-line) bg-(--up-raise) px-5">
+              <MessageSquare className="size-3.5 text-(--up-strong)" />
+              <h2 className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-strong)">Chat</h2>
             </div>
 
             {hasChatStarted && (
@@ -251,7 +251,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   <div key={index} className={message.role === "admin" ? "enter-rise flex justify-end" : "enter-rise flex justify-start"}>
                     <div
                       className={`max-w-[94%] whitespace-pre-wrap text-pretty text-base leading-7 ${
-                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-primary-800/90 px-5 py-4 text-sky-50 shadow-[0_10px_28px_rgba(0,0,0,.16)]" : "font-serif text-editor-ink-50"
+                        message.role === "admin" ? "rounded-[1.35rem] rounded-br-none bg-(--up-accent) px-5 py-4 text-(--up-on-accent)" : "font-serif text-(--up-strong)"
                       }`}
                     >
                       {message.content}
@@ -267,7 +267,7 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             <div className={hasChatStarted ? "shrink-0 px-5 pb-4" : "flex min-h-0 flex-1 items-center px-5 py-8"}>
               <div className={hasChatStarted ? "enter-drop w-full" : "w-full"}>
                 {!hasChatStarted && (
-                  <p className="mb-4 text-center font-serif text-xl leading-7 text-editor-ink-50" style={{ textWrap: "balance" }}>
+                  <p className="mb-4 text-center font-serif text-xl leading-7 text-(--up-strong)" style={{ textWrap: "balance" }}>
                     Begin a chat session to update this adventure plan
                   </p>
                 )}
@@ -278,14 +278,14 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
                   placeholder="Tighten the opening scene, add a stronger clue, and flag any transition risks..."
                   rows={5}
                   disabled={busy}
-                  className="min-h-32 resize-none rounded-md border-editor-ink-550 bg-editor-ink-925 px-4 py-3 font-serif text-base leading-6 text-editor-ink-50 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] placeholder:text-stone-500 focus-visible:border-editor-gold-225 focus-visible:ring-editor-gold-225/35"
+                  plain
+                  className="up-field !min-h-32 resize-none !font-serif !leading-6 placeholder:text-(--up-faint)"
                 />
                 <Button
                   variant="plain"
                   onClick={sendMessage}
                   disabled={busy || !prompt.trim()}
-                  className="mt-3 h-11 w-full gap-2 rounded-md border border-primary-100/35 bg-primary-700/80 px-4 py-0 font-mono text-3xs font-bold uppercase tracking-label text-primary-50 shadow-[inset_0_1px_0_rgba(255,255,255,.18),0_12px_30px_rgba(0,0,0,.24)] transition-[background-color,opacity,scale] duration-150 ease-snap hover:scale-[1.01] hover:bg-primary-600 active:scale-[0.96] disabled:border-primary-100/20 disabled:bg-primary-800/65 disabled:text-primary-50/70 disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-primary-800/65 disabled:active:scale-100"
-                  style={{ textShadow: "0 2px 2px rgba(0,0,0,.75)" }}
+                  className="up-btn is-primary is-lg mt-3 w-full"
                 >
                   <Wand2 className="size-4" />
                   <Swap id={busy ? "busy" : "idle"} as="span">
@@ -296,24 +296,24 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
             </div>
 
             <Drawer side="bottom">
-              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between bg-editor-ink-950/95 px-5 text-left shadow-[0_-14px_34px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,255,255,.06)] transition-[background-color] duration-150 ease-snap hover:bg-editor-ink-925 active:bg-editor-ink-925 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-editor-gold-225/45">
-                <span className="flex items-center gap-2 font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-225">
+              <DrawerTrigger className="flex h-12 shrink-0 items-center justify-between border-t border-(--up-line) bg-(--up-raise) px-5 text-left transition-[background-color] duration-150 ease-snap hover:bg-(--up-bg) active:bg-(--up-bg) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--up-accent-line)">
+                <span className="flex items-center gap-2 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-accent)">
                   <Clock3 className="size-3.5" />
                   Revision Log
                 </span>
-                <Swap id={state.revisions.length} as="span" className="font-mono text-4xs uppercase tracking-label text-stone-500">
+                <Swap id={state.revisions.length} as="span" className="font-sans text-2xs uppercase tracking-[0.08em] text-(--up-muted)">
                   {state.revisions.length} revisions
                 </Swap>
               </DrawerTrigger>
               {/* The sheet sits over the right column on wide screens, where the trigger lives. */}
-              <DrawerContent className="max-h-[62vh] overflow-hidden bg-editor-ink-950/98 data-[side=bottom]:rounded-none data-[side=bottom]:border-t-0 shadow-[0_-24px_60px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.08)] xl:ml-auto xl:w-[400px]">
+              <DrawerContent className="max-h-[62vh] overflow-hidden border-t border-(--up-line) bg-(--up-bg) text-(--up-text) data-[side=bottom]:rounded-none xl:ml-auto xl:w-[400px]">
                 <div className="flex h-12 shrink-0 items-center justify-between px-5">
                   <div>
-                    <DrawerTitle className="font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-225">Revision Log</DrawerTitle>
-                    <DrawerDescription className="font-mono text-4xs uppercase tracking-label text-stone-600">{state.revisions.length} saved revisions</DrawerDescription>
+                    <DrawerTitle className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-accent)">Revision Log</DrawerTitle>
+                    <DrawerDescription className="font-sans text-2xs uppercase tracking-[0.08em] text-(--up-faint)">{state.revisions.length} saved revisions</DrawerDescription>
                   </div>
-                  <DrawerClose className="h-10 px-3 font-mono text-4xs font-bold uppercase tracking-label text-stone-500 transition-[color,scale] duration-150 ease-snap hover:text-editor-ink-50 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-editor-gold-225/45">
-                    close
+                  <DrawerClose className="h-10 px-3 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted) transition-[color,scale] duration-150 ease-snap hover:text-(--up-strong) active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--up-accent-line)">
+                    Close
                   </DrawerClose>
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto px-5 pb-5">
@@ -331,11 +331,11 @@ export function AdminWikiAdventureEditor({ initialState }: { initialState: Edito
 function TypingIndicator() {
   return (
     <output className="flex justify-start" aria-label="Response is being processed">
-      <div className="inline-flex items-center gap-1.5 rounded-[1.35rem] rounded-bl-none bg-editor-ink-925 px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,.16)]">
+      <div className="inline-flex items-center gap-1.5 rounded-[1.35rem] rounded-bl-none bg-(--up-raise) px-4 py-3">
         {[0, 1, 2].map((index) => (
           <span
             key={index}
-            className="size-2 rounded-full bg-editor-gold-225 motion-safe:animate-bounce"
+            className="size-2 rounded-full bg-(--up-accent) motion-safe:animate-bounce"
             style={{
               animationDelay: `${index * 140}ms`,
               animationDuration: "820ms",
@@ -392,7 +392,7 @@ function SceneEncounterEditor({
       {scene.pages.map((page) => {
         const file = files.find((item) => item.path === page.path)
         return (
-          <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-editor-gold-225/45 ring-offset-4 ring-offset-editor-ink-850" : "scroll-mt-6"}>
+          <div key={page.path} id={encounterDomId(page.path)} className={selectedPath === page.path ? "scroll-mt-6 ring-2 ring-(--up-accent-line) ring-offset-4 ring-offset-(--up-raise)" : "scroll-mt-6"}>
             <ModulePageEditor file={file} files={files} manifest={manifest} encounters={encounters} page={page} disabled={disabled} hideEncounterContext onSave={onSave} />
           </div>
         )
@@ -403,12 +403,12 @@ function SceneEncounterEditor({
 
 function ScenePageHeader({ scene, sectionsSidebarOpen, onRestoreSectionsSidebar }: { scene: ModuleSection["scenes"][number]; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   return (
-    <header className="bg-editor-ink-925 px-6 py-5">
+    <header className="bg-(--up-bg) px-6 py-5">
       <div className="flex items-start gap-4">
         <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
         <div className="min-w-0 flex-1">
-          <span className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-1 font-mono text-4xs uppercase text-stone-300">Scene</span>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-editor-gold-150">{scene.title}</h2>
+          <span className="rounded border border-(--up-line) bg-(--up-raise) px-2 py-1 font-sans text-2xs uppercase text-(--up-text)">Scene</span>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-(--up-strong)">{scene.title}</h2>
         </div>
       </div>
     </header>
@@ -424,7 +424,7 @@ function ShowSectionsButton({ show, onClick }: { show: boolean; onClick: () => v
           variant="plain"
           type="button"
           onClick={onClick}
-          className="grid size-7 place-items-center rounded-md border border-editor-ink-700 bg-editor-ink-950 p-px text-editor-gold-225 shadow-[0_8px_20px_rgba(0,0,0,.2)] transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-editor-gold-300 hover:bg-editor-ink-850 active:scale-[0.96]"
+          className="grid size-7 place-items-center rounded-md border border-(--up-line) bg-(--up-bg) p-px text-(--up-accent) transition-[background-color,border-color,scale] duration-150 ease-snap hover:border-(--up-line) hover:bg-(--up-raise) active:scale-[0.96]"
           aria-label="Show adventure sections sidebar"
         >
           <Menu className="size-4" strokeWidth={1.35} />
@@ -436,8 +436,8 @@ function ShowSectionsButton({ show, onClick }: { show: boolean; onClick: () => v
 
 function HeaderCountBadge({ value, label }: { value: number; label: string }) {
   return (
-    <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-editor-ink-700 bg-editor-ink-850 px-2 font-mono text-4xs font-bold uppercase tracking-label text-stone-300">
-      <Swap id={value} as="span" className="text-xs text-editor-gold-225">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded border border-(--up-line) bg-(--up-raise) px-2 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-text)">
+      <Swap id={value} as="span" className="text-xs text-(--up-accent)">
         {value}
       </Swap>
       {label}
@@ -457,7 +457,7 @@ function RevisionHistory({
   onRestore: (revisionId: string, path?: string) => void
 }) {
   if (revisions.length === 0) {
-    return <div className="py-4 text-xs leading-5 text-stone-500">Revision history will appear here after chat or prose edits auto-save.</div>
+    return <div className="py-4 text-xs leading-5 text-(--up-muted)">Revision history will appear here after chat or prose edits auto-save.</div>
   }
   return (
     <div className="space-y-5 pb-3">
@@ -467,26 +467,25 @@ function RevisionHistory({
           <div key={revision.id} className="enter-rise" style={{ "--i": index } as React.CSSProperties}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="truncate font-serif text-xl font-semibold leading-tight text-editor-ink-50 text-balance">{revision.summary}</div>
-                <div className="mt-2 font-mono text-4xs uppercase tracking-label text-stone-600">
+                <div className="truncate font-serif text-xl font-semibold leading-tight text-(--up-strong) text-balance">{revision.summary}</div>
+                <div className="mt-2 font-sans text-2xs uppercase tracking-[0.08em] text-(--up-faint)">
                   {revision.source} · {new Date(revision.createdAt).toLocaleString()}
                 </div>
               </div>
-              <div className="rounded bg-editor-ink-925 px-1.5 py-0.5 font-mono text-4xs uppercase text-stone-500 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-editor-gold-225)_18%,transparent)]">{revision.validation.status}</div>
+              <div className="up-tag">{revision.validation.status}</div>
             </div>
-            <div className="mt-2 line-clamp-2 break-all font-mono text-4xs text-stone-600">{revision.changedPaths.join(", ")}</div>
+            <div className="mt-2 line-clamp-2 break-all font-sans text-2xs text-(--up-faint)">{revision.changedPaths.join(", ")}</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => onRestore(revision.id)} disabled={disabled} className="h-10 gap-1 px-3 font-mono text-4xs lowercase active:scale-[0.96]">
-                <RotateCcw className="size-3" /> restore draft
+              <Button variant="plain" onClick={() => onRestore(revision.id)} disabled={disabled} className="up-btn is-xs">
+                <RotateCcw className="size-3" /> Restore Draft
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant="plain"
                 onClick={() => onRestore(revision.id, selectedPath)}
                 disabled={disabled || !includesSelectedPath}
-                className="h-10 gap-1 px-3 font-mono text-4xs lowercase active:scale-[0.96]"
+                className="up-btn is-xs"
               >
-                <RotateCcw className="size-3" /> restore file
+                <RotateCcw className="size-3" /> Restore File
               </Button>
             </div>
           </div>
@@ -565,9 +564,9 @@ function ModulePageEditor({
     return (
       <div className="mx-auto max-w-6xl">
         <article
-          className={hideEncounterContext ? "overflow-hidden text-editor-ink-900" : "overflow-hidden rounded-md bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_var(--color-editor-gold-300)]"}
+          className={hideEncounterContext ? "overflow-hidden text-(--up-strong)" : "overflow-hidden rounded-md border border-(--up-line) bg-(--up-bg) text-(--up-strong)"}
         >
-          <div className="relative bg-editor-ink-850">
+          <div className="relative bg-(--up-raise)">
             <ImageUpload
               id={`wiki-image-${file.path}`}
               value={image}
@@ -576,30 +575,31 @@ function ModulePageEditor({
               folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
               className="aspect-[21/9] rounded-none border-0"
             />
-            <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 font-mono text-4xs uppercase tracking-label text-stone-100">
+            <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 text-2xs font-semibold uppercase tracking-[0.08em] text-white">
               <ImageIcon className="mr-1 inline size-3" />
               Module Art
             </div>
           </div>
 
-          <div className={hideEncounterContext ? "bg-editor-gold-175 px-7 py-7" : "px-7 py-7 lg:px-10 lg:py-9"}>
-            <div className="font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">Encounter {encounter?.id ?? ""}</div>
+          <div className={hideEncounterContext ? "bg-(--up-bg) px-7 py-7" : "px-7 py-7 @3xl:px-10 @3xl:py-9"}>
+            <div className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">Encounter {encounter?.id ?? ""}</div>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               disabled={disabled}
-              className="mt-3 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900 shadow-[0_3px_10px_color-mix(in_srgb,var(--color-editor-gold-800)_8%,transparent)]"
+              plain
+              className="up-field mt-3 !font-serif !text-3xl !font-semibold"
             />
 
             {!hideEncounterContext && (
-              <div className="mt-5 grid gap-x-10 gap-y-3 md:grid-cols-2">
+              <div className="mt-5 grid gap-x-10 gap-y-3 @xl:grid-cols-2">
                 <ReadonlyField label="Section" value={fields.sectionTitle || "Encounter graph"} />
                 <ReadonlyField label="Scene" value={fields.sceneTitle || "Encounter file"} />
               </div>
             )}
 
             <Presence show={Boolean(page?.summary)} motion="fade" asChild>
-              {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-editor-gold-750">{page.summary}</p>}
+              {page?.summary && <p className="mt-5 text-pretty text-lg leading-8 text-(--up-muted)">{page.summary}</p>}
             </Presence>
 
             <div className="mt-8 space-y-8">
@@ -627,8 +627,8 @@ function ModulePageEditor({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="overflow-hidden bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.24),inset_0_0_0_1px_var(--color-editor-gold-300)]">
-        <div className="relative bg-editor-ink-850">
+      <div className="overflow-hidden border-b border-(--up-line) bg-(--up-bg) text-(--up-strong)">
+        <div className="relative bg-(--up-raise)">
           <ImageUpload
             id={`wiki-image-${file.path}`}
             value={image}
@@ -637,19 +637,19 @@ function ModulePageEditor({
             folder={`images/settings/${manifest.settingId}/${manifest.planId}`}
             className="aspect-[21/9] rounded-none border-0"
           />
-          <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 font-mono text-4xs uppercase tracking-label text-stone-100">
+          <div className="absolute left-4 top-4 rounded bg-black/65 px-2 py-1 text-2xs font-semibold uppercase tracking-[0.08em] text-white">
             <ImageIcon className="mr-1 inline size-3" />
             Module Art
           </div>
         </div>
         <div className="p-6">
-          <div className="font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">Adventure {manifest.planId}</div>
-          <Input value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="mt-2 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900" />
-          <p className="mt-4 text-sm leading-6 text-editor-gold-750">{page?.summary || file.path}</p>
+          <div className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">Adventure {manifest.planId}</div>
+          <Input plain value={title} onChange={(event) => setTitle(event.target.value)} disabled={disabled} className="up-field mt-2 !font-serif !text-3xl !font-semibold" />
+          <p className="mt-4 text-sm leading-6 text-(--up-muted)">{page?.summary || file.path}</p>
         </div>
       </div>
 
-      <div className="rounded-md bg-editor-gold-175 p-6 text-editor-ink-900 shadow-[0_18px_60px_rgba(0,0,0,.18),inset_0_0_0_1px_var(--color-editor-gold-300)]">
+      <div className="bg-(--up-bg) p-6 text-(--up-strong)">
         <Block label="Summary" value={summary} onChange={setSummary} disabled={disabled} rows={5} tone="paper" />
       </div>
     </div>
@@ -700,10 +700,10 @@ function CharacterProfileEditor({
   useDebouncedAutoSave(file.path, nextContent, file.content, disabled, onSave)
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="overflow-hidden rounded-md border border-editor-gold-300 bg-editor-gold-175 text-editor-ink-900 shadow-[0_24px_80px_rgba(0,0,0,.22)]">
-        <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="bg-editor-ink-900 p-5 lg:border-r lg:border-editor-gold-300">
-            <div className="overflow-hidden rounded-md border border-editor-gold-300 bg-editor-ink-925 shadow-[0_16px_48px_rgba(0,0,0,.28)]">
+      <div className="overflow-hidden rounded-md border border-(--up-line) bg-(--up-bg) text-(--up-strong)">
+        <div className="grid gap-0 @3xl:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="bg-(--up-raise) p-5 @3xl:border-r @3xl:border-(--up-line)">
+            <div className="overflow-hidden rounded-md border border-(--up-line) bg-(--up-bg)">
               <ImageUpload
                 id={`wiki-character-image-${file.path}`}
                 value={image}
@@ -716,17 +716,17 @@ function CharacterProfileEditor({
             {sheet.attributes && <AttributeGrid attributes={sheet.attributes} />}
           </div>
 
-          <div className="p-6 lg:p-7">
+          <div className="p-6 @3xl:p-7">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded border border-editor-gold-400 bg-editor-gold-100 px-2 py-1 font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-650">Character</span>
+              <span className="rounded border border-(--up-line-strong) bg-(--up-btn) px-2 py-1 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">Character</span>
             </div>
 
-            <Input value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="mt-3 border-editor-gold-300 bg-editor-gold-100 text-3xl font-bold text-editor-ink-900" />
+            <Input plain value={title} onChange={(event) => onTitleChange(event.target.value)} disabled={disabled} className="up-field mt-3 !font-serif !text-3xl !font-semibold" />
 
             {(details.length > 0 || abilities.length > 0) && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {[...details, ...abilities].map((detail) => (
-                  <span key={detail} className="rounded border border-editor-gold-300 bg-editor-gold-100 px-2.5 py-1 font-mono text-3xs uppercase tracking-label text-editor-gold-650">
+                  <span key={detail} className="rounded border border-(--up-line) bg-(--up-btn) px-2.5 py-1 font-sans text-2xs uppercase tracking-[0.08em] text-(--up-muted)">
                     {detail}
                   </span>
                 ))}
@@ -737,13 +737,13 @@ function CharacterProfileEditor({
               <Block label="Summary" value={summary} onChange={onSummaryChange} disabled={disabled} rows={8} tone="paper" />
             </div>
 
-            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+            <div className="mt-6 grid gap-4 @4xl:grid-cols-2">
               {characterDetails.map((detail) => (
                 <CharacterDetail key={detail.title} title={detail.title} value={detail.value} />
               ))}
             </div>
 
-            <div className="mt-6 grid gap-4 xl:grid-cols-2">
+            <div className="mt-6 grid gap-4 @4xl:grid-cols-2">
               <CharacterList title="Skills" values={sheet.skills} />
               <CharacterObjectList title="Equipment" values={sheet.equipment} />
               <CharacterObjectList title="Spells" values={sheet.spells} />
@@ -760,13 +760,13 @@ function AttributeGrid({ attributes }: { attributes: Record<string, unknown> }) 
   const entries = Object.entries(attributes).filter(([, value]) => typeof value === "number" || typeof value === "string")
   if (entries.length === 0) return null
   return (
-    <div className="mt-4 rounded-md border border-editor-ink-700 bg-editor-ink-925 p-3">
-      <div className="mb-3 font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-225">Attributes</div>
+    <div className="mt-4 rounded-md border border-(--up-line) bg-(--up-bg) p-3">
+      <div className="mb-3 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-accent)">Attributes</div>
       <div className="grid grid-cols-3 gap-2">
         {entries.map(([key, value]) => (
-          <div key={key} className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-2 text-center">
-            <div className="font-serif text-2xl font-bold leading-none text-editor-gold-100">{String(value)}</div>
-            <div className="mt-1 truncate font-mono text-4xs uppercase tracking-label text-stone-500">{key.slice(0, 3)}</div>
+          <div key={key} className="rounded border border-(--up-line) bg-(--up-raise) px-2 py-2 text-center">
+            <div className="font-serif text-2xl font-semibold leading-none text-(--up-strong)">{String(value)}</div>
+            <div className="mt-1 truncate font-sans text-2xs uppercase tracking-[0.08em] text-(--up-muted)">{key.slice(0, 3)}</div>
           </div>
         ))}
       </div>
@@ -777,9 +777,9 @@ function AttributeGrid({ attributes }: { attributes: Record<string, unknown> }) 
 function CharacterDetail({ title, value }: { title: string; value: unknown }) {
   if (typeof value !== "string" || !value.trim()) return null
   return (
-    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
-      <h3 className="mb-2 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">{title}</h3>
-      <p className="text-base leading-7 text-editor-gold-800">{value}</p>
+    <section className="rounded border border-(--up-line) bg-(--up-btn) p-4">
+      <h3 className="mb-2 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">{title}</h3>
+      <p className="text-base leading-7 text-(--up-text)">{value}</p>
     </section>
   )
 }
@@ -787,11 +787,11 @@ function CharacterDetail({ title, value }: { title: string; value: unknown }) {
 function CharacterList({ title, values }: { title: string; values: string[] }) {
   if (values.length === 0) return null
   return (
-    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
-      <h3 className="mb-3 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">{title}</h3>
+    <section className="rounded border border-(--up-line) bg-(--up-btn) p-4">
+      <h3 className="mb-3 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">{title}</h3>
       <div className="flex flex-wrap gap-2">
         {values.map((value) => (
-          <span key={value} className="rounded border border-editor-gold-300 bg-editor-gold-100 px-2.5 py-1 text-sm text-editor-gold-800">
+          <span key={value} className="rounded border border-(--up-line) bg-(--up-btn) px-2.5 py-1 text-sm text-(--up-text)">
             {value}
           </span>
         ))}
@@ -803,13 +803,13 @@ function CharacterList({ title, values }: { title: string; values: string[] }) {
 function CharacterObjectList({ title, values }: { title: string; values: Array<{ name?: unknown; description?: unknown }> }) {
   if (values.length === 0) return null
   return (
-    <section className="rounded border border-editor-gold-300 bg-editor-gold-100 p-4">
-      <h3 className="mb-3 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">{title}</h3>
+    <section className="rounded border border-(--up-line) bg-(--up-btn) p-4">
+      <h3 className="mb-3 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">{title}</h3>
       <div className="space-y-3">
         {values.map((value, index) => (
           <div key={`${String(value.name ?? title)}-${index}`} className="pb-2 last:pb-0">
-            <div className="font-serif text-lg font-bold leading-tight text-editor-ink-900">{String(value.name ?? "Untitled")}</div>
-            {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-editor-gold-750">{value.description}</p>}
+            <div className="font-serif text-lg font-bold leading-tight text-(--up-strong)">{String(value.name ?? "Untitled")}</div>
+            {typeof value.description === "string" && value.description.trim() && <p className="mt-1 text-sm leading-6 text-(--up-muted)">{value.description}</p>}
           </div>
         ))}
       </div>
@@ -832,39 +832,39 @@ function CharacterMixedList({ title, values }: { title: string; values: Array<st
 function EncounterNpcEditor({ refs, npcLookup }: { refs: EditableNpcRef[]; npcLookup: Map<string, NpcLookupRecord> }) {
   return (
     <div className="space-y-4">
-      {refs.length === 0 && <p className="text-sm text-editor-gold-650">No NPCs assigned to this encounter. Ask the authoring chat to add or connect an NPC.</p>}
+      {refs.length === 0 && <p className="text-sm text-(--up-muted)">No NPCs assigned to this encounter. Ask the authoring chat to add or connect an NPC.</p>}
       {refs.map((ref, index) => {
         const npc = npcLookup.get(ref.id)
         const image = npcImageUrl(npc?.image ?? "")
         const details = [npc?.gender, npc?.race, npc?.archetype].filter(Boolean).join(" ")
         return (
-          <div key={index} className="rounded-md border border-editor-gold-325 bg-editor-gold-100 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.42)]">
-            <div className="grid gap-5 sm:grid-cols-[176px_minmax(0,1fr)]">
-              <div className="size-[176px] overflow-hidden rounded border border-editor-gold-400 bg-editor-gold-175 shadow-sm">
+          <div key={index} className="rounded-md border border-(--up-line) bg-(--up-btn) p-4">
+            <div className="grid gap-5 @lg:grid-cols-[176px_minmax(0,1fr)]">
+              <div className="size-[176px] overflow-hidden rounded border border-(--up-line-strong) bg-(--up-bg) shadow-sm">
                 {image ? (
                   <Image src={image} alt={npc?.name ?? "NPC"} width={176} height={176} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-editor-gold-175 font-mono text-3xl font-bold uppercase text-editor-gold-600">{initials(npc?.name ?? "NPC")}</div>
+                  <div className="flex h-full w-full items-center justify-center bg-(--up-bg) font-sans text-3xl font-semibold uppercase text-(--up-faint)">{initials(npc?.name ?? "NPC")}</div>
                 )}
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h4 className="truncate font-serif text-2xl font-bold leading-tight text-editor-ink-900">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
-                    <p className="mt-1 font-mono text-3xs uppercase tracking-label text-editor-gold-600">{details || "NPC reference"}</p>
+                    <h4 className="truncate font-serif text-2xl font-semibold leading-tight text-(--up-strong)">{npc?.name ?? titleFromId(ref.id || "Unknown NPC")}</h4>
+                    <p className="mt-1 font-sans text-2xs uppercase tracking-[0.08em] text-(--up-faint)">{details || "NPC reference"}</p>
                   </div>
                 </div>
                 {npc?.summary ? (
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-editor-gold-750">{npc.summary}</p>
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-(--up-muted)">{npc.summary}</p>
                 ) : (
-                  <p className="mt-3 text-sm italic text-editor-gold-600">No NPC sheet details found for this reference.</p>
+                  <p className="mt-3 text-sm italic text-(--up-faint)">No NPC sheet details found for this reference.</p>
                 )}
               </div>
             </div>
-            <div className="mt-4 rounded border border-editor-gold-250 bg-editor-gold-100 p-3">
-              <div className="font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-600">Encounter Role</div>
-              <p className="mt-2 text-sm leading-6 text-editor-gold-750">{ref.behavior || "No behavior note yet. Ask the authoring chat to revise this NPC's role in the encounter."}</p>
-              {ref.initialInitiative && <p className="mt-2 font-mono text-4xs uppercase tracking-label text-editor-gold-500">Initial initiative: {ref.initialInitiative}</p>}
+            <div className="mt-4 rounded border border-(--up-line) bg-(--up-btn) p-3">
+              <div className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-faint)">Encounter Role</div>
+              <p className="mt-2 text-sm leading-6 text-(--up-muted)">{ref.behavior || "No behavior note yet. Ask the authoring chat to revise this NPC's role in the encounter."}</p>
+              {ref.initialInitiative && <p className="mt-2 font-sans text-2xs uppercase tracking-[0.08em] text-(--up-faint)">Initial initiative: {ref.initialInitiative}</p>}
             </div>
           </div>
         )
@@ -889,7 +889,7 @@ function JsonKeyFieldEditor({ file, disabled, onSave }: { file: SourceFile; disa
   useDebouncedAutoSave(file.path, nextContent, file.content, disabled, onSave)
   return (
     <div className="space-y-4">
-      <h2 className="break-all font-mono text-sm font-bold text-stone-100">{file.path}</h2>
+      <h2 className="break-all [font-family:var(--up-mono)] text-sm font-bold text-(--up-strong)">{file.path}</h2>
       <Field label="Name" value={name} onChange={setName} disabled={disabled} />
       <Field label="Race" value={race} onChange={setRace} disabled={disabled} />
       <Field label="Archetype" value={archetype} onChange={setArchetype} disabled={disabled} />
@@ -954,9 +954,9 @@ function WikiNavigator({
   const [query, setQuery] = React.useState("")
   const normalizedQuery = query.trim().toLowerCase()
   return (
-    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-[linear-gradient(180deg,var(--color-editor-ink-925)_0%,var(--color-editor-ink-950)_100%)]">
-      <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] border-b border-editor-ink-800 bg-editor-ink-950/92 shadow-[0_10px_24px_rgba(0,0,0,.2)]">
-        <div className="grid place-items-center text-editor-ink-400">
+    <div className="grid h-full min-h-0 grid-rows-[auto_1fr] bg-(--up-bg)">
+      <div className="grid h-11 grid-cols-[38px_minmax(0,1fr)_42px] border-b border-(--up-line) bg-(--up-raise)">
+        <div className="grid place-items-center text-(--up-faint)">
           <Search className="size-4" />
         </div>
         <Input
@@ -964,14 +964,14 @@ function WikiNavigator({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Find Encounter"
-          className="min-w-0 border-x border-editor-ink-800 bg-transparent px-3 text-sm text-stone-200 outline-none placeholder:text-stone-600 focus:bg-editor-ink-925"
+          className="min-w-0 border-x border-(--up-line) bg-transparent px-3 text-sm text-(--up-strong) outline-none placeholder:text-(--up-faint) focus:bg-(--up-bg)"
         />
         <Tip label="Hide sections">
           <Button
             variant="plain"
             type="button"
             onClick={onCollapse}
-            className="hidden place-items-center bg-transparent px-2 py-0.5 text-editor-gold-225 transition-[background-color,color,scale] duration-150 ease-snap hover:bg-editor-ink-900 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-editor-gold-225/45 xl:grid"
+            className="hidden place-items-center bg-transparent px-2 py-0.5 text-(--up-accent) transition-[background-color,color,scale] duration-150 ease-snap hover:bg-(--up-raise) active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--up-accent-line) xl:grid"
             aria-label="Hide adventure sections sidebar"
           >
             <PanelLeftClose className="size-full" strokeWidth={0.75} />
@@ -992,7 +992,7 @@ function WikiNavigator({
                 <PageGroup title="Adventure" pages={wiki.groups.find((group) => group.key === "adventure")!.pages} selectedPath={selectedPath} onSelect={onSelect} />
               )}
               <section className="mb-4">
-                <h3 className="mb-1.5 px-2 font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-325">Module Outline</h3>
+                <h3 className="mb-1.5 px-2 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-faint)">Module Outline</h3>
                 <div className="space-y-3">
                   {wiki.moduleSections.map((section, sectionIndex) => (
                     <div key={section.title}>
@@ -1045,11 +1045,11 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
       type="button"
       onClick={onClick}
       className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        active ? "bg-editor-ink-850 text-editor-gold-50 shadow-[inset_1px_0_0_color-mix(in_srgb,var(--color-editor-gold-225)_72%,transparent),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-editor-ink-900 hover:text-editor-gold-100"
+        active ? "bg-(--up-raise) font-semibold text-(--up-strong) shadow-[inset_2px_0_0_var(--up-accent)]" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
       } ${level === "section" ? "min-h-10" : "min-h-8"}`}
     >
-      <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-bold" : "font-mono text-4xs font-bold uppercase tracking-label"}`}>{label}</span>
-      <span className="shrink-0 font-mono text-4xs uppercase tracking-label text-stone-600">{meta}</span>
+      <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-semibold" : "font-sans text-2xs font-semibold uppercase tracking-[0.08em]"}`}>{label}</span>
+      <span className="shrink-0 font-sans text-2xs uppercase tracking-[0.08em] text-(--up-faint)">{meta}</span>
     </Button>
   )
 }
@@ -1057,7 +1057,7 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
 function PageGroup({ title, pages, selectedPath, onSelect }: { title: string; pages: WikiPage[]; selectedPath: string; onSelect: (path: string) => void }) {
   return (
     <section className="mb-4">
-      <h3 className="mb-1.5 px-2 font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-325">{title}</h3>
+      <h3 className="mb-1.5 px-2 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-faint)">{title}</h3>
       <div className="space-y-0.5">
         {pages.map((page) => (
           <PageButton key={page.path} page={page} selectedPath={selectedPath} onSelect={onSelect} />
@@ -1076,13 +1076,13 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
       type="button"
       onClick={() => onSelect(page.path)}
       className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        isSelected ? "bg-editor-ink-850 text-editor-gold-50 shadow-[inset_1px_0_0_color-mix(in_srgb,var(--color-editor-gold-225)_72%,transparent),0_8px_18px_rgba(0,0,0,.12)]" : "text-stone-300 hover:bg-editor-ink-900 hover:text-editor-gold-100"
+        isSelected ? "bg-(--up-raise) font-semibold text-(--up-strong) shadow-[inset_2px_0_0_var(--up-accent)]" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
       } ${level === "encounter" ? "min-h-8" : "min-h-9"}`}
     >
       <span className="min-w-0">
         <span className={`block truncate ${isEncounter ? "text-xs leading-5" : "text-sm leading-5"}`}>{page.title}</span>
         {!isEncounter && page.kind !== "adventure" && (
-          <span className="block truncate font-mono text-4xs leading-4 text-stone-600">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
+          <span className="block truncate font-sans text-2xs leading-4 text-(--up-faint)">{page.kind === "npc" || page.kind === "character" || page.kind === "sheet" ? "character" : page.id}</span>
         )}
       </span>
     </Button>
@@ -1092,16 +1092,16 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
 function WikiPageHeader({ page, sectionsSidebarOpen, onRestoreSectionsSidebar }: { page?: WikiPage; sectionsSidebarOpen: boolean; onRestoreSectionsSidebar: () => void }) {
   if (!page) return null
   return (
-    <header className="bg-editor-ink-925 px-6 py-5">
+    <header className="bg-(--up-bg) px-6 py-5">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <ShowSectionsButton show={!sectionsSidebarOpen} onClick={onRestoreSectionsSidebar} />
-            <span className="rounded border border-editor-ink-750 bg-editor-ink-850 px-2 py-1 font-mono text-4xs uppercase text-stone-300">{pageKindLabel(page)}</span>
-            {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-mono text-3xs text-stone-500">{page.id}</span>}
+            <span className="rounded border border-(--up-line) bg-(--up-raise) px-2 py-1 font-sans text-2xs uppercase text-(--up-text)">{pageKindLabel(page)}</span>
+            {page.kind !== "npc" && page.kind !== "character" && page.kind !== "sheet" && <span className="font-sans text-2xs text-(--up-muted)">{page.id}</span>}
           </div>
-          <h2 className="mt-2 text-2xl font-semibold leading-tight text-editor-gold-150">{page.title}</h2>
-          <p className="mt-1 line-clamp-2 max-w-4xl text-sm text-stone-400">{page.summary || page.path}</p>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight text-(--up-strong)">{page.title}</h2>
+          <p className="mt-1 line-clamp-2 max-w-4xl text-sm text-(--up-muted)">{page.summary || page.path}</p>
         </div>
       </div>
     </header>
@@ -1368,7 +1368,7 @@ function titleFromId(id: string) {
 function ModuleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-3 font-mono text-3xs font-bold uppercase tracking-label text-editor-gold-650">{title}</h3>
+      <h3 className="mb-3 font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-muted)">{title}</h3>
       {children}
     </section>
   )
@@ -1392,8 +1392,8 @@ function useDebouncedAutoSave(path: string, content: string, persistedContent: s
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <div className="font-mono text-4xs font-bold uppercase tracking-label text-editor-gold-600">{label}</div>
-      <div className="mt-1 truncate font-serif text-2xl font-bold leading-tight text-editor-ink-900">{value}</div>
+      <div className="font-sans text-2xs font-semibold uppercase tracking-[0.08em] text-(--up-faint)">{label}</div>
+      <div className="mt-1 truncate font-serif text-2xl font-semibold leading-tight text-(--up-strong)">{value}</div>
     </div>
   )
 }
@@ -1402,8 +1402,8 @@ function Field({ label, value, onChange, disabled, tone = "dark" }: { label: str
   const paper = tone === "paper"
   return (
     <Label plain className="block space-y-1">
-      <span className={`font-mono text-xs uppercase ${paper ? "text-editor-gold-650" : "text-stone-300"}`}>{label}</span>
-      <Input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className={paper ? "border-editor-gold-300 bg-editor-gold-100 text-editor-ink-900" : undefined} />
+      <span className="up-label">{label}</span>
+      <Input plain value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} className="up-field" />
     </Label>
   )
 }
@@ -1428,13 +1428,14 @@ function Block({
   const paper = tone === "paper"
   return (
     <Label plain className="block space-y-1">
-      {!hideLabel && <span className={`font-mono text-xs uppercase ${paper ? "text-editor-gold-650" : "text-stone-300"}`}>{label}</span>}
+      {!hideLabel && <span className="up-label">{label}</span>}
       <Textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
         disabled={disabled}
-        className={paper ? "border-editor-gold-300 bg-editor-gold-100 font-serif text-base leading-7 text-editor-ink-900 shadow-[inset_0_1px_0_rgba(255,255,255,.25),0_2px_8px_color-mix(in_srgb,var(--color-editor-gold-800)_8%,transparent)]" : undefined}
+        plain
+        className={paper ? "up-field !min-h-0 !font-serif !leading-7" : "up-field !min-h-0"}
       />
     </Label>
   )

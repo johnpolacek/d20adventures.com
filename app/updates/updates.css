@@ -29,6 +29,9 @@ body:has(.updates-page),
   --up-slot-text: #233c69;
   --up-on-accent: #fbf7ee;
   --up-btn: #fefcf6;
+  --up-good: #2f6b3f;
+  --up-warn: #8a5a12;
+  --up-bad: #9a3324;
   --up-grain: 0.22;
   --up-grain-blend: multiply;
   --up-glow: none;
@@ -63,6 +66,9 @@ html[data-update-theme="dark"] body:has(.updates-page),
   --up-slot-text: #c6d4ee;
   --up-on-accent: #15110d;
   --up-btn: #241e17;
+  --up-good: #a8d3a4;
+  --up-warn: #e3bf7a;
+  --up-bad: #e79a8a;
   --up-grain: 0.1;
   --up-grain-blend: screen;
   --up-glow: radial-gradient(ellipse 70% 520px at 50% 0, rgb(255 184 104 / 0.06), rgb(255 184 104 / 0) 70%);
@@ -172,10 +178,10 @@ html[data-update-theme="dark"] body:has(.updates-page) [data-site-brand]:focus-v
       opacity 150ms;
   }
 }
-body:has(.updates-page) [data-site-about] {
+body:has(.updates-page) [data-site-nav] {
   color: var(--up-muted);
 }
-body:has(.updates-page) [data-site-about]:hover {
+body:has(.updates-page) [data-site-nav]:hover {
   color: var(--up-strong);
 }
 body:has(.updates-page) [data-site-header] .text-white\/60 {
@@ -643,21 +649,21 @@ body:has(.updates-page) main + footer {
   border: 1px solid var(--up-line);
   border-radius: 8px;
 }
-.up-prose table {
+:is(.up-prose, .up-table) table {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--up-ui);
   font-size: 15px;
   line-height: 1.45;
 }
-.up-prose th,
-.up-prose td {
+:is(.up-prose, .up-table) th,
+:is(.up-prose, .up-table) td {
   padding: 11px 14px;
   border-bottom: 1px solid var(--up-line);
   text-align: left;
   vertical-align: top;
 }
-.up-prose thead th {
+:is(.up-prose, .up-table) thead th {
   background: var(--up-raise);
   font-size: 12px;
   font-weight: 600;
@@ -665,34 +671,34 @@ body:has(.updates-page) main + footer {
   text-transform: uppercase;
   color: var(--up-faint);
 }
-.up-prose tbody tr:last-child td {
+:is(.up-prose, .up-table) tbody tr:last-child td {
   border-bottom: 0;
 }
-.up-prose :is(th, td)[align="right"] {
+:is(.up-prose, .up-table) :is(th, td)[align="right"] {
   text-align: right;
   white-space: nowrap;
 }
-.up-prose td[align="right"] {
+:is(.up-prose, .up-table) td[align="right"] {
   font-family: var(--up-mono);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
   color: var(--up-faint);
 }
-.up-prose td.up-cell-num {
+:is(.up-prose, .up-table) td.up-cell-num {
   width: 2.5em;
   padding-right: 0;
   font-family: var(--up-mono);
   font-size: 13px;
   color: var(--up-faint);
 }
-.up-prose td.up-cell-money {
+:is(.up-prose, .up-table) td.up-cell-money {
   color: var(--up-accent);
 }
-.up-prose tbody tr:last-child:has(strong) td {
+:is(.up-prose, .up-table) tbody tr:last-child:has(strong) td {
   border-top: 1px solid var(--up-line-strong);
   background: var(--up-raise);
 }
-.up-prose td a {
+:is(.up-prose, .up-table) td a {
   text-decoration-color: var(--up-line-strong);
 }
 
@@ -1069,4 +1075,402 @@ html[data-update-theme="dark"] .up-sent-die {
     padding: 14px;
     font-size: 12.5px;
   }
+}
+
+/*
+ * The desk: Ledger at work, for pages that are used rather than read, as Admin and the Asset Library are. A column of
+ * sections down the side, a wide main column, and in it a page head, figures, panels, lists, pills, tabs, chips and
+ * cards, all in the paper's own tones. components/layout/ledger-page.tsx puts a page on it.
+ */
+.up-desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 20px;
+  font-family: var(--up-ui);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.updates-page:has(.up-desk) {
+  padding-top: 59px;
+}
+@media (min-width: 1024px) {
+  .up-desk:has(> .up-side) {
+    grid-template-columns: 200px minmax(0, 1fr);
+    column-gap: 48px;
+  }
+}
+.up-desk-main {
+  min-width: 0;
+  padding-bottom: 24px;
+}
+
+/* The side: a column of sections, each a label over its links. On a narrow window it is one row that scrolls. */
+.up-side nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin: 0 -20px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--up-line);
+}
+.up-side .up-label {
+  display: none;
+}
+.up-side a {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  color: var(--up-muted);
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.up-side a:hover {
+  color: var(--up-strong);
+}
+.up-side a[aria-current="page"] {
+  background: var(--up-raise);
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-side a svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+@media (min-width: 1024px) {
+  .up-side nav {
+    position: sticky;
+    top: 59px;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    margin: 0;
+    padding: 40px 0;
+    border: 0;
+  }
+  .up-side .up-label {
+    display: block;
+    margin: 24px 10px 6px;
+  }
+  .up-side .up-label:first-child {
+    margin-top: 0;
+  }
+}
+
+/* A page's head on the desk: its title, a line under it, and its actions at the right. */
+.up-desk-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-bottom: 28px;
+  padding: 40px 0 20px;
+  border-bottom: 1px solid var(--up-line);
+}
+.up-desk-head h1 {
+  margin: 0 0 4px;
+  font-size: clamp(28px, 3.6vw, 36px);
+}
+.up-desk-head .up-meta {
+  font-size: 14px;
+}
+.up-desk-head > :last-child:not(:first-child) {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Figures at a glance: a label, a number in the mono, and a line under it. One that links lifts its ink. */
+.up-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (min-width: 900px) {
+  .up-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.up-stat {
+  display: block;
+  padding: 16px 18px;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+  background: var(--up-bg);
+  box-shadow: var(--up-shadow);
+  transition: border-color 120ms;
+}
+a.up-stat:hover {
+  border-color: var(--up-line-strong);
+}
+.up-stat .up-label {
+  margin: 0;
+}
+.up-stat-value {
+  margin: 6px 0 2px;
+  font-family: var(--up-mono);
+  font-size: 30px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--up-strong);
+}
+.up-stat-sub {
+  font-size: 13px;
+  color: var(--up-faint);
+}
+.up-meter {
+  height: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--up-raise);
+}
+.up-meter > div {
+  height: 100%;
+  background: var(--up-accent);
+}
+
+/* A panel: a framed section with its name and a link in its head. A table, a list or a note sits in its body. */
+.up-panel {
+  overflow: hidden;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+  background: var(--up-bg);
+  box-shadow: var(--up-shadow);
+}
+.up-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--up-line);
+  background: var(--up-raise);
+}
+.up-panel-head h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--up-faint);
+}
+.up-panel-head a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--up-accent);
+}
+.up-panel-head a:hover {
+  color: var(--up-accent-strong);
+}
+.up-panel-body {
+  padding: 16px 18px;
+}
+.up-panel .up-table {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.up-panel .up-table thead th {
+  background: transparent;
+}
+.up-panel .up-table :is(th, td):first-child {
+  padding-left: 18px;
+}
+.up-panel .up-table :is(th, td):last-child {
+  padding-right: 18px;
+}
+.up-empty {
+  padding: 20px 18px;
+  font-size: 14px;
+  color: var(--up-faint);
+}
+
+/* A list of rows, each a line ruled from the next. A row that links lifts on hover. */
+.up-list > li {
+  border-top: 1px solid var(--up-line);
+}
+.up-list > li:first-child {
+  border-top: 0;
+}
+.up-list > li > :is(a, div) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+.up-list > li > a {
+  transition: background-color 120ms;
+}
+.up-list > li > a:hover {
+  background: var(--up-raise);
+}
+.up-small {
+  font-size: 13px;
+  color: var(--up-faint);
+}
+
+/* A pill: a word of state. Plain by default, and in the paper's accent, green, amber or red. */
+.up-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--up-line);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--up-muted);
+}
+.up-pill.is-accent {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+  color: var(--up-accent);
+}
+.up-pill.is-good {
+  border-color: color-mix(in srgb, var(--up-good) 40%, transparent);
+  background: color-mix(in srgb, var(--up-good) 10%, transparent);
+  color: var(--up-good);
+}
+.up-pill.is-warn {
+  border-color: color-mix(in srgb, var(--up-warn) 40%, transparent);
+  background: color-mix(in srgb, var(--up-warn) 10%, transparent);
+  color: var(--up-warn);
+}
+.up-pill.is-bad {
+  border-color: color-mix(in srgb, var(--up-bad) 40%, transparent);
+  background: color-mix(in srgb, var(--up-bad) 10%, transparent);
+  color: var(--up-bad);
+}
+.up-good {
+  color: var(--up-good);
+}
+.up-bad {
+  color: var(--up-bad);
+}
+
+/* Tabs: words in a row over a rule, the current one underlined in the accent. */
+.up-tabs {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--up-line);
+}
+.up-tabs > :is(a, button) {
+  margin-bottom: -1px;
+  padding: 10px 0;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--up-muted);
+  transition:
+    color 120ms,
+    border-color 120ms;
+}
+.up-tabs > :is(a, button):hover {
+  color: var(--up-strong);
+}
+.up-tabs > [aria-current="page"],
+.up-tabs > [aria-selected="true"] {
+  border-bottom-color: var(--up-accent);
+  color: var(--up-strong);
+}
+.up-tabs .up-count {
+  margin-left: 6px;
+  font-family: var(--up-mono);
+  font-size: 12px;
+  color: var(--up-faint);
+}
+
+/* Chips: the filters of a list, each one on or off. */
+.up-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.up-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--up-line);
+  border-radius: 99px;
+  background: var(--up-bg);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--up-muted);
+  cursor: pointer;
+  transition:
+    color 120ms,
+    border-color 120ms,
+    background-color 120ms;
+}
+.up-chip:hover {
+  border-color: var(--up-line-strong);
+  color: var(--up-strong);
+}
+.up-chip[aria-pressed="true"],
+.up-chip[aria-current="page"] {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+  color: var(--up-slot-text);
+}
+
+/* Cards in a grid: a picture over its name and a line of small facts. */
+.up-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+.up-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--up-line);
+  border-radius: 8px;
+  background: var(--up-bg);
+  box-shadow: var(--up-shadow);
+  transition:
+    border-color 120ms,
+    transform 160ms var(--ease-snap, ease);
+}
+a.up-card:hover,
+button.up-card:hover {
+  border-color: var(--up-line-strong);
+}
+.up-card-art {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--up-raise);
+}
+.up-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.up-card-body {
+  padding: 10px 12px 12px;
+}
+.up-card-body h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--up-strong);
+}
+.up-card-body p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--up-faint);
 }

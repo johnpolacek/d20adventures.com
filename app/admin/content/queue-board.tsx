@@ -1,7 +1,6 @@
 "use client"
 
-import { Button, Option } from "@d20/ui/button"
-import { fieldClass } from "@d20/ui/input"
+import { Button } from "@d20/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { cn } from "@d20/ui/utils"
 import { createPortal } from "react-dom"
@@ -29,13 +28,17 @@ function days(count: number): string[] {
   return Array.from({ length: count }, (_, i) => new Date(start.getTime() + i * 86_400_000).toISOString().slice(0, 10))
 }
 
+// A status as a tag on the paper (app/admin/admin.css).
 const statusTone: Record<string, string> = {
-  idea: "bg-white/10 text-white/70",
-  draft: "bg-sky-900/60 text-sky-200",
-  scheduled: "bg-violet-900/60 text-violet-200",
-  posted: "bg-emerald-700/60 text-white",
-  shelved: "bg-white/5 text-white/40",
+  idea: "",
+  draft: "is-warn",
+  scheduled: "is-accent",
+  posted: "is-good",
+  shelved: "is-faint",
 }
+
+// A field in a tight row, in the paper's tones.
+const field = "up-field is-sm"
 
 function section(item: QueueItem, name: string): string {
   return item.sections.find((s) => s.name === name)?.body ?? ""
@@ -87,21 +90,20 @@ export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; post
   }
 
   return (
-    <div className="font-sans">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto font-display text-2xl text-white">Content Queue</h1>
+    <div>
+      <div className="up-chips mb-4 items-center">
         {(["live", "parked", "all"] as Filter[]).map((f) => (
-          <Option key={f} size="xs" active={filter === f} onClick={() => setFilter(f)}>
+          <Button key={f} variant="plain" className="up-chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
             {f === "live" ? "Live" : f === "parked" ? "Shelved" : "All"}
-          </Option>
+          </Button>
         ))}
-        <span className="mx-1 h-5 w-px bg-white/15" />
-        <Option size="xs" active={sort === "rank"} onClick={() => setSort("rank")}>Rank</Option>
-        <Option size="xs" active={sort === "score"} onClick={() => setSort("score")}>Score</Option>
-        <span className="mx-1 h-5 w-px bg-white/15" />
-        <Option size="xs" active={showSchedule} onClick={() => setShowSchedule((v) => !v)}>Schedule</Option>
-        <Button variant="outline" size="xs" disabled={pending} onClick={sync}>Sync</Button>
-        {syncNote && <span className="text-xs text-white/50">{syncNote}</span>}
+        <span className="mx-1 h-5 w-px" style={{ background: "var(--up-line)" }} />
+        <Button variant="plain" className="up-chip" aria-pressed={sort === "rank"} onClick={() => setSort("rank")}>Rank</Button>
+        <Button variant="plain" className="up-chip" aria-pressed={sort === "score"} onClick={() => setSort("score")}>Score</Button>
+        <span className="mx-1 h-5 w-px" style={{ background: "var(--up-line)" }} />
+        <Button variant="plain" className="up-chip" aria-pressed={showSchedule} onClick={() => setShowSchedule((v) => !v)}>Schedule</Button>
+        <Button variant="plain" className="up-btn is-xs ml-auto" disabled={pending} onClick={sync}>Sync</Button>
+        {syncNote && <span className="up-small">{syncNote}</span>}
       </div>
 
       {showSchedule && (
@@ -126,32 +128,32 @@ export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; post
               onDragOver={(e) => canDrag && e.preventDefault()}
               onDrop={() => drop(item.slug)}
               onDragEnd={() => setDragging(null)}
+              aria-current={item.slug === selected || undefined}
               className={cn(
-                "flex min-w-0 cursor-pointer items-start gap-3 rounded-md border px-3 py-2 transition-[background-color,border-color,opacity] duration-150",
-                item.slug === selected ? "border-primary-400/70 bg-primary-950/40" : "border-white/10 bg-white/5 hover:border-white/25",
+                "up-pick flex min-w-0 cursor-pointer items-start gap-3 px-3 py-2",
                 dragging === item.slug && "opacity-40",
                 canDrag && "cursor-grab active:cursor-grabbing"
               )}
               onClick={() => setSelected(item.slug)}
             >
-              <span className="w-6 shrink-0 pt-0.5 text-right font-mono text-xs text-white/40">{item.rank < 90 ? item.rank : "·"}</span>
+              <span className="up-small w-6 shrink-0 pt-0.5 text-right font-mono">{item.rank < 90 ? item.rank : "·"}</span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-white">{item.title}</div>
+                <div className="truncate text-sm" style={{ color: "var(--up-strong)" }}>{item.title}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-                  <span className={cn("rounded px-1.5 py-px", item.tier === 1 ? "bg-accent-500/25 text-accent-200" : "bg-white/10 text-white/60")}>T{item.tier}</span>
-                  <span className="font-mono text-white/50" title="Hook, Payoff, Spread">
+                  <span className={cn("up-tag", item.tier === 1 && "is-warn")}>T{item.tier}</span>
+                  <span className="up-small font-mono !text-[11px]" title="Hook, Payoff, Spread">
                     {item.scores.hook}/{item.scores.payoff}/{item.scores.spread} = {item.score}
                   </span>
-                  <span className={cn("rounded px-1.5 py-px capitalize", statusTone[item.status])}>{item.status}</span>
-                  {item.audience && <span className="text-white/40">{item.audience}</span>}
+                  <span className={cn("up-tag capitalize", statusTone[item.status])}>{item.status}</span>
+                  {item.audience && <span className="up-small !text-[11px]">{item.audience}</span>}
                 </div>
               </div>
               {canDrag && item.slug === selected && (
                 <span className="flex shrink-0 flex-col">
-                  <button type="button" aria-label="Move Up" className="px-1 text-xs leading-none text-white/50 hover:text-white" onClick={(e) => (e.stopPropagation(), nudge(item.slug, -1))}>
+                  <button type="button" aria-label="Move Up" className="up-small px-1 text-xs leading-none" onClick={(e) => (e.stopPropagation(), nudge(item.slug, -1))}>
                     ▲
                   </button>
-                  <button type="button" aria-label="Move Down" className="px-1 text-xs leading-none text-white/50 hover:text-white" onClick={(e) => (e.stopPropagation(), nudge(item.slug, 1))}>
+                  <button type="button" aria-label="Move Down" className="up-small px-1 text-xs leading-none" onClick={(e) => (e.stopPropagation(), nudge(item.slug, 1))}>
                     ▼
                   </button>
                 </span>
@@ -228,10 +230,10 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
   }
 
   return (
-    <div className="grid content-start gap-4 rounded-lg border border-white/15 bg-white/5 p-4">
+    <div className="up-panel up-panel-body grid content-start gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <input
-          className={cn(fieldClass, "h-9 flex-1 text-lg")}
+          className="up-field !w-auto flex-1 !py-1.5 !text-lg"
           value={title}
           onChange={(e) => {
             setTitle(e.target.value)
@@ -245,7 +247,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             setDirty(true)
           }}
         >
-          <SelectTrigger className="w-32 text-sm">
+          <SelectTrigger className={cn(field, "!w-32")}>
             <SelectValue>{status[0].toUpperCase() + status.slice(1)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -256,13 +258,13 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
             ))}
           </SelectContent>
         </Select>
-        <Button size="sm" disabled={!dirty || pending} onClick={save}>
+        <Button variant="plain" className="up-btn is-primary" disabled={!dirty || pending} onClick={save}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
         </Button>
       </div>
       <Field label="Long Title">
         <textarea
-          className={cn(fieldClass, "field-sizing-content min-h-9 py-1.5 text-sm")}
+          className={cn(field, "is-auto")}
           value={longTitle}
           onChange={(e) => {
             setLongTitle(e.target.value)
@@ -270,7 +272,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           }}
         />
       </Field>
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && <p className="up-small up-bad">{error}</p>}
       {/* The next prompt to paste into Claude: the /updates post first, then its thread and Reddit post. Gone once both exist. */}
       {(!item.post || !bodies["X"]?.trim()) && (
         <Prompt key={item.post ? "thread" : "post"} label={item.post ? "Thread Prompt" : "Post Prompt"} text={item.post ? socialBriefFor(item) : briefFor({ ...item, title, longTitle })} />
@@ -279,9 +281,9 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
         {item.post && (
           <>
-            <dt className="text-white/40">Post</dt>
+            <dt className="up-small !text-xs">Post</dt>
             <dd>
-              <a href={`/updates/${item.post}`} target="_blank" rel="noopener noreferrer" className="text-action-300 hover:text-action-200">
+              <a href={`/updates/${item.post}`} target="_blank" rel="noopener noreferrer" className="up-link">
                 {item.post}
               </a>
             </dd>
@@ -289,27 +291,27 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         )}
         {item.into && (
           <>
-            <dt className="text-white/40">Into</dt>
-            <dd className="text-white/80">{item.into}</dd>
+            <dt className="up-small !text-xs">Into</dt>
+            <dd>{item.into}</dd>
           </>
         )}
-        <dt className="text-white/40">Asset</dt>
-        <dd className="text-white/80">{item.asset || "None"}</dd>
-        <dt className="text-white/40">Formats</dt>
-        <dd className="text-white/80">{item.formats.join(", ")}</dd>
-        <dt className="text-white/40">Commits</dt>
+        <dt className="up-small !text-xs">Asset</dt>
+        <dd>{item.asset || "None"}</dd>
+        <dt className="up-small !text-xs">Formats</dt>
+        <dd>{item.formats.join(", ")}</dd>
+        <dt className="up-small !text-xs">Commits</dt>
         <dd className="flex flex-wrap gap-x-2">
           {item.commits.map((c) => (
-            <a key={c} href={REPO + c} target="_blank" rel="noopener noreferrer" className="font-mono text-action-300 hover:text-action-200">
+            <a key={c} href={REPO + c} target="_blank" rel="noopener noreferrer" className="up-link font-mono">
               {c}
             </a>
           ))}
         </dd>
-        <dt className="text-white/40">Sessions</dt>
-        <dd className="font-mono text-white/60">{item.sessions.join(", ")}</dd>
+        <dt className="up-small !text-xs">Sessions</dt>
+        <dd className="up-small font-mono !text-xs">{item.sessions.join(", ")}</dd>
       </dl>
 
-      <div className="grid gap-4 border-t border-white/10 pt-4">
+      <div className="grid gap-4 border-t pt-4" style={{ borderColor: "var(--up-line)" }}>
         {PLATFORMS.map(({ name, limit }) => {
           return (
             <Field
@@ -317,7 +319,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
               label={name}
               extra={
                 !limit && (
-                  <Button variant="ghost" size="xs" disabled={!bodies[name]} onClick={() => copy(name)}>
+                  <Button variant="plain" className="up-btn is-ghost is-xs" disabled={!bodies[name]} onClick={() => copy(name)}>
                     {copied === name ? "Copied" : "Copy"}
                   </Button>
                 )
@@ -327,7 +329,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
                 <Thread value={bodies[name] ?? ""} limit={limit} onChange={(value) => edit(name, value)} />
               ) : (
                 <textarea
-                  className={cn(fieldClass, "field-sizing-content min-h-40 py-2 text-sm")}
+                  className={cn(field, "is-auto min-h-40")}
                   value={bodies[name] ?? ""}
                   onChange={(e) => edit(name, e.target.value)}
                 />
@@ -336,7 +338,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
                 <input
                   type="date"
                   aria-label={`${name} Day`}
-                  className={cn(fieldClass, "h-8 w-36 text-xs [color-scheme:dark]")}
+                  className={cn(field, "!w-36")}
                   value={schedule[name.toLowerCase()] ?? ""}
                   onChange={(e) => {
                     setSchedule((d) => ({ ...d, [name.toLowerCase()]: e.target.value }))
@@ -344,7 +346,7 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
                   }}
                 />
                 <input
-                  className={cn(fieldClass, "h-8 flex-1 text-xs")}
+                  className={cn(field, "flex-1")}
                   placeholder="Posted URL"
                   value={posted[name.toLowerCase()] ?? ""}
                   onChange={(e) => {
@@ -359,12 +361,12 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
       </div>
 
       {/* What the miner reasoned and gathered: for drafting, not for editing. */}
-      <details className="border-t border-white/10 pt-3">
-        <summary className="cursor-pointer text-xs font-medium text-white/50 hover:text-white/80">Notes</summary>
+      <details className="border-t pt-3" style={{ borderColor: "var(--up-line)" }}>
+        <summary className="up-label cursor-pointer">Notes</summary>
         <div className="mt-3 grid gap-4">
           {NOTES.filter((name) => section(item, name)).map((name) => (
             <Field key={name} label={name}>
-              <div className="whitespace-pre-wrap text-sm text-white/70">{section(item, name)}</div>
+              <div className="whitespace-pre-wrap text-sm">{section(item, name)}</div>
             </Field>
           ))}
         </div>
@@ -392,11 +394,11 @@ function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; po
         const x = slots.filter((s) => s.platform === "x").length
         const reddit = slots.some((s) => s.platform === "reddit")
         return (
-          <div key={day} className={cn("min-h-24 rounded-md border p-1.5 text-[11px]", day === today ? "border-primary-400/60 bg-primary-950/30" : "border-white/10 bg-white/5")}>
-            <div className="mb-1 flex items-baseline gap-1 text-white/50">
-              <span className="font-medium text-white/80">{date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}</span>
+          <div key={day} aria-current={day === today ? "date" : undefined} className="up-well min-h-24 p-1.5 text-[11px]">
+            <div className="up-small mb-1 flex items-baseline gap-1 !text-[11px]">
+              <span className="font-medium" style={{ color: "var(--up-strong)" }}>{date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}</span>
               <span>{date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", timeZone: "UTC" })}</span>
-              {weekday === 6 && <span className="ml-auto text-accent-300" title="#ScreenshotSaturday">SS</span>}
+              {weekday === 6 && <span className="ml-auto" style={{ color: "var(--up-warn)" }} title="#ScreenshotSaturday">SS</span>}
             </div>
             <div className="grid gap-1">
               {updates.map((p) => (
@@ -405,7 +407,7 @@ function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; po
                   href={`/updates/${p.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate rounded bg-amber-900/50 px-1 py-px text-amber-100 hover:bg-amber-800/60"
+                  className="up-tag is-warn truncate !text-left"
                   title={p.title}
                 >
                   Post{p.draft ? " (Draft)" : ""}: {p.title}
@@ -417,17 +419,13 @@ function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; po
                   type="button"
                   title={item.title}
                   onClick={() => onSelect(item.slug)}
-                  className={cn(
-                    "truncate rounded px-1 py-px text-left",
-                    done ? "bg-emerald-800/50 text-emerald-100" : "bg-sky-900/60 text-sky-100",
-                    item.slug === selected && "ring-1 ring-primary-300"
-                  )}
+                  className={cn("up-tag truncate !text-left", done ? "is-good" : "is-accent", item.slug === selected && "outline outline-1 outline-[var(--up-accent)]")}
                 >
                   {platform === "x" ? "X" : "Reddit"}: {item.title}
                 </button>
               ))}
-              {x === 0 && <span className="rounded border border-dashed border-white/15 px-1 py-px text-white/30">X</span>}
-              {weekday === 3 && !reddit && <span className="rounded border border-dashed border-white/15 px-1 py-px text-white/30">Reddit</span>}
+              {x === 0 && <span className="up-tag is-empty">X</span>}
+              {weekday === 3 && !reddit && <span className="up-tag is-empty">Reddit</span>}
             </div>
           </div>
         )
@@ -446,8 +444,8 @@ function Prompt({ label, text }: { label: string; text: string }) {
       label={label}
       extra={
         <Button
-          variant="ghost"
-          size="xs"
+          variant="plain"
+          className="up-btn is-ghost is-xs"
           onClick={async () => {
             await navigator.clipboard.writeText(value)
             setCopied(true)
@@ -458,7 +456,7 @@ function Prompt({ label, text }: { label: string; text: string }) {
         </Button>
       }
     >
-      <textarea className={cn(fieldClass, "h-48 resize-y py-2 font-mono text-xs")} value={value} onChange={(e) => setValue(e.target.value)} />
+      <textarea className={cn(field, "h-48 resize-y font-mono !text-xs")} value={value} onChange={(e) => setValue(e.target.value)} />
     </Field>
   )
 }
@@ -467,7 +465,7 @@ function Field({ label, extra, children }: { label: string; extra?: ReactNode; c
   return (
     <div>
       <div className="mb-1 flex items-center gap-2 text-xs">
-        <span className="font-medium text-white/60">{label}</span>
+        <span className="up-label !mb-0">{label}</span>
         <span className="ml-auto flex items-center gap-2">{extra}</span>
       </div>
       {children}
@@ -545,15 +543,15 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
       {posts.map((post, i) => {
         const length = postLength(post.text)
         return (
-          <div key={i} className="grid gap-2 rounded-md border border-white/10 bg-black/20 p-3">
+          <div key={i} className="up-well grid gap-2 p-3">
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-mono text-white/40">{i + 1}</span>
-              <span className={cn("ml-auto font-mono", length > limit ? "text-red-300" : "text-white/40")}>
+              <span className="up-small font-mono !text-xs">{i + 1}</span>
+              <span className={cn("up-small ml-auto font-mono !text-xs", length > limit && "up-bad")}>
                 {length}/{limit}
               </span>
               <Button
-                variant="ghost"
-                size="xs"
+                variant="plain"
+                className="up-btn is-ghost is-xs"
                 disabled={!post.text}
                 onClick={async () => {
                   await navigator.clipboard.writeText(post.text)
@@ -565,8 +563,8 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
               </Button>
               {post.image && (
                 <Button
-                  variant="ghost"
-                  size="xs"
+                  variant="plain"
+                  className="up-btn is-ghost is-xs"
                   onClick={async () => {
                     await copyImage(post.image)
                     setCopied(i + 1000)
@@ -577,16 +575,16 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
                 </Button>
               )}
               {posts.length > 1 && (
-                <Button variant="ghost" size="xs" onClick={() => remove(i)}>
+                <Button variant="plain" className="up-btn is-ghost is-xs" onClick={() => remove(i)}>
                   Remove
                 </Button>
               )}
             </div>
-            <textarea className={cn(fieldClass, "field-sizing-content min-h-16 py-2 text-sm")} value={post.text} onChange={(e) => set(i, { text: e.target.value })} />
+            <textarea className={cn(field, "is-auto min-h-16")} value={post.text} onChange={(e) => set(i, { text: e.target.value })} />
             {missingHandles(post.text).length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 {missingHandles(post.text).map((h) => (
-                  <Button key={h.name} variant="outline" size="xs" title={`Checked: ${h.source}`} onClick={() => set(i, { text: tagHandle(post.text, h) })}>
+                  <Button key={h.name} variant="plain" className="up-btn is-xs" title={`Checked: ${h.source}`} onClick={() => set(i, { text: tagHandle(post.text, h) })}>
                     {h.name} → {h.as}
                   </Button>
                 ))}
@@ -594,12 +592,12 @@ function Thread({ value, limit, onChange }: { value: string; limit: number; onCh
             )}
             {post.image && (
               <button type="button" aria-label="View Full Size" className="cursor-zoom-in self-start" onClick={() => setZoom(post)}>
-                <img src={post.image} alt={post.alt} className="max-h-72 w-auto rounded border border-white/10 object-contain transition-opacity duration-150 hover:opacity-85" />
+                <img src={post.image} alt={post.alt} className="max-h-72 w-auto rounded border object-contain transition-opacity duration-150 hover:opacity-85" style={{ borderColor: "var(--up-line)" }} />
               </button>
             )}
-            <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Image URL" value={post.image} onChange={(e) => set(i, { image: e.target.value })} />
-            {post.image && <input className={cn(fieldClass, "h-8 text-xs")} placeholder="Alt Text" value={post.alt} onChange={(e) => set(i, { alt: e.target.value })} />}
-            <Button variant="ghost" size="xs" className="justify-self-start" onClick={() => add(i)}>
+            <input className={field} placeholder="Image URL" value={post.image} onChange={(e) => set(i, { image: e.target.value })} />
+            {post.image && <input className={field} placeholder="Alt Text" value={post.alt} onChange={(e) => set(i, { alt: e.target.value })} />}
+            <Button variant="plain" className="up-btn is-ghost is-xs justify-self-start" onClick={() => add(i)}>
               Add Post Below
             </Button>
           </div>

@@ -6,12 +6,10 @@ import { toast } from "@d20/ui/toast"
 import { banUser } from "@/app/_actions/ban-user"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@d20/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
-import { Badge } from "@d20/ui/badge"
 import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
 import { Label } from "@d20/ui/label"
 import { Swap } from "@d20/ui/presence"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
 
 interface User {
   id: string
@@ -89,59 +87,59 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30px]" />
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <section className="up-panel">
+        <div className="up-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Email</th>
+              <th>Username</th>
+              <th>Joined</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
             {users.map((user, index) => (
               <React.Fragment key={user.id}>
-                <TableRow className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as React.CSSProperties}>
-                  <TableCell>{/* Placeholder for user action button */}</TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
+                <tr className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as React.CSSProperties}>
+                  <td>
+                    <div className="flex items-center gap-2">
+                    <Avatar className="h-7 w-7">
                       <AvatarImage src={user.imageUrl} alt={user.username || ""} />
                       <AvatarFallback>
                         {user.firstName?.[0]}
                         {user.lastName?.[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <span>
-                      {user.firstName} {user.lastName}
-                    </span>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>
+                    <span>{[user.firstName, user.lastName].filter(Boolean).join(" ") || user.username}</span>
+                    </div>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>{user.username}</td>
+                  <td className="whitespace-nowrap">{formatDate(user.createdAt)}</td>
+                  <td>
                     <Swap id={user.isAdmin ? "admin" : user.banned ? "banned" : "user"} motion="pop" asChild>
-                      {user.isAdmin ? <Badge>Admin</Badge> : user.banned ? <Badge variant="destructive">Banned</Badge> : <Badge variant="secondary">User</Badge>}
+                      {user.isAdmin ? <span className="up-pill is-accent">Admin</span> : user.banned ? <span className="up-pill is-bad">Banned</span> : <span className="up-pill">Player</span>}
                     </Swap>
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td align="right">
                     {!user.isAdmin && (
-                      <Button variant={user.banned ? "outline" : "destructive"} size="sm" onClick={() => handleBanClick(user)} disabled={isLoading}>
+                      <Button variant="plain" className={user.banned ? "up-btn is-xs" : "up-btn is-xs is-bad"} onClick={() => handleBanClick(user)} disabled={isLoading}>
                         <Swap id={user.banned ? "unban" : "ban"} as="span">
                           {user.banned ? "Unban User" : "Ban User"}
                         </Swap>
                       </Button>
                     )}
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               </React.Fragment>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </tbody>
+        </table>
+        </div>
+      </section>
 
       <AlertDialog open={showBanDialog} onOpenChange={setShowBanDialog}>
         <AlertDialogContent>
@@ -161,8 +159,8 @@ export function AdminUserList({ initialUsers }: AdminUserListProps) {
           </AlertDialogHeader>
           {!selectedUser?.banned && (
             <div className="py-4">
-              <Label htmlFor="reason">Reason for ban (optional)</Label>
-              <Input id="reason" value={banReason} onChange={(e) => setBanReason(e.target.value)} placeholder="Enter reason for ban" />
+              <Label htmlFor="reason">Reason for Ban (Optional)</Label>
+              <Input id="reason" value={banReason} onChange={(e) => setBanReason(e.target.value)} placeholder="Why they are banned" />
             </div>
           )}
           <AlertDialogFooter>

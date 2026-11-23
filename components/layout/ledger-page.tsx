@@ -33,3 +33,31 @@ export function LedgerPage({ title, subtitle, aside, children }: { title: string
     </LedgerShell>
   )
 }
+
+/**
+ * A page on the desk: Ledger at work, for pages that are used rather than read, as Admin and the Asset Library are.
+ * `side` is the column of sections down the left on a wide window, and a row along the top on a narrow one.
+ */
+export function LedgerDesk({ side, children }: { side?: ReactNode; children: ReactNode }) {
+  return (
+    <LedgerShell>
+      <div className="up-desk">
+        {side && <aside className="up-side">{side}</aside>}
+        <div className="up-desk-main">{children}</div>
+      </div>
+    </LedgerShell>
+  )
+}
+
+/** A desk page's head: its title, a line under it, and its actions at the right. */
+export function LedgerHead({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+  return (
+    <header className="up-desk-head">
+      <div>
+        <h1>{title}</h1>
+        {subtitle && <p className="up-meta">{subtitle}</p>}
+      </div>
+      {actions && <div>{actions}</div>}
+    </header>
+  )
+}

@@ -1,13 +1,12 @@
 "use client"
 
-import { Heading } from "@d20/ui/typography/heading"
 import { useUser } from "@clerk/nextjs"
 import { Copy, ShieldUser } from "lucide-react"
 import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
-import { Card } from "@d20/ui/card"
 import { Swap } from "@d20/ui/presence"
 
+// Shown in Admin's place until ADMIN_USER_IDS is set: the signed-in user's id, ready to copy into .env.
 export function AdminConfigMessage() {
   const { user } = useUser()
 
@@ -19,42 +18,40 @@ export function AdminConfigMessage() {
   }
 
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
-        <div className="flex justify-center mb-4">
-          <div className="p-2 rounded-full bg-accent-500/10">
-            <ShieldUser className="w-8 h-8 text-accent-600" />
-          </div>
-        </div>
-        <Heading variant="h4" as="h3" className="text-center">Configure Admin Access</Heading>
-        <p className="text-sm text-white/60 text-center text-balance">
-          To access admin features, you need to add your Clerk User ID to the <code className="px-1.5 py-0.5 rounded-md bg-zinc-800">ADMIN_USER_IDS</code> environment variable.
-        </p>
-        <div className="p-4 rounded-lg bg-zinc-800 space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Your Clerk User ID:</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 px-3 py-2 rounded bg-black">
-                <Swap id={user?.id || "none"} as="span">
-                  {user?.id || "Not signed in"}
-                </Swap>
-              </code>
-              <Button size="icon" variant="outline" onClick={handleCopyId} disabled={!user?.id}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Add to your .env file:</p>
-            <code className="block px-3 py-2 rounded bg-black text-sm">
+    <section className="up-panel up-panel-body space-y-4">
+      <div className="flex justify-center" style={{ color: "var(--up-accent)" }}>
+        <ShieldUser className="h-8 w-8" />
+      </div>
+      <h2 className="text-center text-xl font-semibold" style={{ color: "var(--up-strong)" }}>
+        Configure Admin Access
+      </h2>
+      <p className="text-balance text-center text-sm" style={{ color: "var(--up-muted)" }}>
+        To access admin features, you need to add your Clerk User ID to the <code className="up-code">ADMIN_USER_IDS</code> environment variable.
+      </p>
+      <div className="up-well space-y-4 p-4">
+        <div className="space-y-2">
+          <p className="up-label !mb-0">Your Clerk User ID</p>
+          <div className="flex items-center gap-2">
+            <code className="up-code flex-1 !px-3 !py-2">
               <Swap id={user?.id || "none"} as="span">
-                ADMIN_USER_IDS={user?.id || "your_user_id"}
+                {user?.id || "Not signed in"}
               </Swap>
             </code>
+            <Button variant="plain" className="up-btn" aria-label="Copy User ID" onClick={handleCopyId} disabled={!user?.id}>
+              <Copy />
+            </Button>
           </div>
         </div>
-        <p className="text-xs text-white/60 text-center">After updating your .env file, restart your development server for changes to take effect.</p>
+        <div className="space-y-2">
+          <p className="up-label !mb-0">Add to Your .env File</p>
+          <code className="up-code block !px-3 !py-2 text-sm">
+            <Swap id={user?.id || "none"} as="span">
+              ADMIN_USER_IDS={user?.id || "your_user_id"}
+            </Swap>
+          </code>
+        </div>
       </div>
-    </Card>
+      <p className="up-small text-center">After updating your .env file, restart your development server for changes to take effect.</p>
+    </section>
   )
 }

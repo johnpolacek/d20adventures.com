@@ -1,8 +1,7 @@
-import { Heading } from "@d20/ui/typography/heading"
 import type { User } from "@clerk/nextjs/server"
 import { clerkClient } from "@clerk/nextjs/server"
 import { AdminUserList } from "@/components/admin/user-list"
-import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
+import { LedgerHead } from "@/components/layout/ledger-page"
 import { requireAdmin } from "@/lib/auth-utils"
 
 async function getInitialUsers() {
@@ -32,15 +31,9 @@ export default async function AdminUsersPage() {
   const initialUsers = await getInitialUsers()
 
   return (
-    <div className="container py-8">
-      <AdminBreadcrumb items={[{ label: "Users" }]} />
-
-      <div className="mb-8">
-        <Heading variant="h1">Users</Heading>
-        <p className="text-white/60">Manage and view user information</p>
-      </div>
-
+    <>
+      <LedgerHead title="Players" subtitle={`${initialUsers.length} signed up`} />
       <AdminUserList initialUsers={initialUsers} />
-    </div>
+    </>
   )
 }

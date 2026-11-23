@@ -1,7 +1,7 @@
 "use client"
 
 import type { CSSProperties, ReactNode } from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@d20/ui/alert"
 import {
   AlertDialog,
@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
 import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName, type ButtonSize, type ButtonVariant, Option } from "@d20/ui/button"
 import { Pill } from "@d20/ui/stage/hud"
-import { XIcon } from "lucide-react"
+import { Gamepad2Icon, HomeIcon, UsersIcon, XIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cardVariants } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
@@ -42,6 +42,7 @@ import { Heading } from "@d20/ui/typography/heading"
 import { Ornament } from "@d20/ui/typography/ornament"
 import { dropCap, textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { cn } from "@/lib/utils"
+import { LedgerShell } from "@/components/layout/ledger-page"
 
 // The type the site sets: four families, the heading scale and the shadows that lift text off art.
 const families = [
@@ -530,10 +531,205 @@ function SwitchDemo() {
   )
 }
 
+
+// Ledger at work: the desk that Admin and the Asset Library sit on, in the look the header's switch sets.
+function DeskSample() {
+  const [tab, setTab] = useState("Places")
+  const [chip, setChip] = useState("All")
+  return (
+    <div className="up-desk !px-0">
+      <aside className="up-side">
+        <nav aria-label="Sample">
+          <a href="#desk" aria-current="page">
+            <HomeIcon />
+            Overview
+          </a>
+          <p className="up-label">Play</p>
+          <a href="#desk">
+            <Gamepad2Icon />
+            Games
+          </a>
+          <a href="#desk">
+            <UsersIcon />
+            Players
+          </a>
+        </nav>
+      </aside>
+      <div className="up-desk-main">
+        <header className="up-desk-head">
+          <div>
+            <h1>Overview</h1>
+            <p className="up-meta">Monday, November 23</p>
+          </div>
+          <div>
+            <Button variant="plain" className="up-btn">
+              Export
+            </Button>
+            <Button variant="plain" className="up-btn is-primary">
+              New Game
+            </Button>
+          </div>
+        </header>
+        <div className="up-stats">
+          <div className="up-stat">
+            <p className="up-label">Games This Week</p>
+            <p className="up-stat-value">12</p>
+            <p className="up-stat-sub">
+              <span className="up-good">+3</span> vs last week
+            </p>
+          </div>
+          <div className="up-stat">
+            <p className="up-label">Players</p>
+            <p className="up-stat-value">48</p>
+            <p className="up-stat-sub">
+              <span className="up-bad">-2</span> this week
+            </p>
+          </div>
+          <div className="up-stat">
+            <p className="up-label">Avg Rating</p>
+            <p className="up-stat-value">4.6</p>
+            <p className="up-stat-sub">from 31 ratings</p>
+          </div>
+          <div className="up-stat">
+            <p className="up-label">AI Spend Today</p>
+            <p className="up-stat-value">$0.62</p>
+            <div className="up-meter">
+              <div style={{ width: "62%" }} />
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <section className="up-panel">
+            <div className="up-panel-head">
+              <h2>Recent Games</h2>
+              <a href="#desk">View All</a>
+            </div>
+            <div className="up-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Adventure</th>
+                    <th>Status</th>
+                    <th align="right">Started</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>The Road to Kordavos</td>
+                    <td>
+                      <span className="up-pill is-accent">Active</span>
+                    </td>
+                    <td align="right">2h</td>
+                  </tr>
+                  <tr>
+                    <td>Covert Cargo</td>
+                    <td>
+                      <span className="up-pill is-good">Completed</span>
+                    </td>
+                    <td align="right">1d</td>
+                  </tr>
+                  <tr>
+                    <td>The Midnight Summons</td>
+                    <td>
+                      <span className="up-pill">Waiting</span>
+                    </td>
+                    <td align="right">3d</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section className="up-panel">
+            <div className="up-panel-head">
+              <h2>Queue</h2>
+              <a href="#desk">Open</a>
+            </div>
+            <ul className="up-list">
+              <li>
+                <a href="#desk">
+                  <span className="min-w-0 flex-1 truncate">A Camera That Directs Itself</span>
+                  <span className="up-pill is-good">Scheduled</span>
+                </a>
+              </li>
+              <li>
+                <a href="#desk">
+                  <span className="min-w-0 flex-1 truncate">Rigged Figures from Hi3D</span>
+                  <span className="up-pill is-warn">Draft</span>
+                </a>
+              </li>
+              <li>
+                <a href="#desk">
+                  <span className="min-w-0 flex-1 truncate">Lost Saves</span>
+                  <span className="up-pill is-bad">Blocked</span>
+                </a>
+              </li>
+            </ul>
+            <p className="up-empty">Nothing else waiting</p>
+          </section>
+        </div>
+        <div className="mt-10">
+          <div className="up-tabs" role="tablist">
+            {["Places", "Characters", "Sounds"].map((name, i) => (
+              <button key={name} type="button" role="tab" aria-selected={tab === name} onClick={() => setTab(name)}>
+                {name}
+                <span className="up-count">{[34, 149, 39][i]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="up-chips mb-5">
+            {["All", "Welcome to Kordavos", "Covert Cargo"].map((name) => (
+              <button key={name} type="button" className="up-chip" aria-pressed={chip === name} onClick={() => setChip(name)}>
+                {name}
+              </button>
+            ))}
+          </div>
+          <div className="up-cards">
+            {["The Gates of Kordavos", "The Harvest Festival", "The Dragonbone Inn"].map((name) => (
+              <a key={name} href="#desk" className="up-card">
+                <div className="up-card-art">
+                  <img src="/images/app/backgrounds/black-paper.png" alt="" />
+                </div>
+                <div className="up-card-body">
+                  <h3>{name}</h3>
+                  <p>2 Scenes · Painted</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// The faces both looks set. Ledger reads in the serif with its forms in the sans, and the game sets its labels in Syne Mono where Ledger's prompts take JetBrains Mono.
+const faces = [
+  { name: "Display", note: "Cinzel Decorative · game titles and buttons, Ledger titles", className: "font-display text-2xl" },
+  { name: "Serif", note: "Literata · narration, and Ledger's reading text", className: "font-serif text-lg" },
+  { name: "Sans", note: "Rethink Sans · forms, tables, and all of Ledger's desk", className: "font-sans text-lg" },
+]
+
+function FacesDemo() {
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {faces.map((face) => (
+        <div key={face.name} className="flex flex-col gap-1">
+          <span className={siteLabel}>{face.name}</span>
+          <span className={face.className}>The Sealed Door</span>
+          <span className="text-xs text-white/50">{face.note}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Which tab each tile is under. A popup opens over either look, so it is shared. Everything else is the game's.
+const SHARED = new Set(["Faces", "Dialog", "Alert Dialog", "Hover Card", "Toast", "Tooltip", "Menu"])
+
 const tiles: Tile[] = [
+  { name: "Faces", full: true, demo: <FacesDemo /> },
   { name: "Typography", full: true, demo: <TypographyDemo /> },
   { name: "Narration", full: true, demo: <NarrationDemo /> },
-  { name: "Ledger", full: true, demo: <LedgerDemo /> },
   { name: "Colors", full: true, demo: <ColorsDemo /> },
   { name: "Button", full: true, demo: <ButtonDemo /> },
   {
@@ -797,25 +993,112 @@ const tiles: Tile[] = [
   },
 ]
 
+type Look = "game" | "ledger" | "shared"
+const LOOKS: { look: Look; name: string; note: string }[] = [
+  { look: "game", name: "Game", note: "The dark stage: play, the desktop app, and every screen that is played." },
+  { look: "ledger", name: "Ledger", note: "Parchment, for pages that are read (Updates, About, Terms) and used (Admin, the Asset Library)." },
+  { look: "shared", name: "Shared", note: "Faces and popups that both looks use." },
+]
+
+// The tab is kept in the address, as /ui?look=ledger, so a link opens on it.
+function useLook(): [Look, (look: Look) => void] {
+  const [look, setLook] = useState<Look>("game")
+  useEffect(() => {
+    const given = new URLSearchParams(window.location.search).get("look")
+    if (given === "ledger" || given === "shared") setLook(given)
+  }, [])
+  const choose = (next: Look) => {
+    setLook(next)
+    const url = new URL(window.location.href)
+    if (next === "game") url.searchParams.delete("look")
+    else url.searchParams.set("look", next)
+    window.history.replaceState(null, "", url)
+  }
+  return [look, choose]
+}
+
+function Tiles({ list }: { list: Tile[] }) {
+  return (
+    <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {list.map((tile, i) => (
+        <section
+          key={tile.name}
+          id={tile.name.toLowerCase().replace(/\s+/g, "-")}
+          className={cn(cardVariants({ variant: "quiet" }), "enter-rise relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
+          style={{ "--i": Math.min(i, 8) } as CSSProperties}
+        >
+          <h2 className={siteLabel}>
+            {String(i + 1).padStart(2, "0")} {tile.name}
+          </h2>
+          <div className="flex-1">{tile.demo}</div>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * /ui, in three tabs. Game is the dark stage's components. Ledger turns the page itself to parchment, header and all,
+ * so the header's switch shows it light or dark: a reading page in both looks side by side, then the desk. Shared is
+ * what both looks use.
+ */
 export function Showcase() {
+  const [look, setLook] = useLook()
+  const about = LOOKS.find((l) => l.look === look)?.note
+
+  if (look === "ledger") {
+    return (
+      <LedgerShell>
+        <div className="up-desk">
+          <div className="up-desk-main">
+            <header className="up-desk-head !border-b-0 !pb-0 !mb-0">
+              <div>
+                <h1>D20 / UI</h1>
+                <p className="up-meta">{about}</p>
+              </div>
+            </header>
+            <div className="up-tabs" role="tablist" aria-label="Look">
+              {LOOKS.map((l) => (
+                <button key={l.look} type="button" role="tab" aria-selected={look === l.look} onClick={() => setLook(l.look)}>
+                  {l.name}
+                </button>
+              ))}
+            </div>
+            <p className="up-label" id="reading">
+              01 Reading
+            </p>
+            <LedgerDemo />
+            <p className="up-label !mt-16" id="desk">
+              02 Desk
+            </p>
+            <DeskSample />
+          </div>
+        </div>
+      </LedgerShell>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 pt-24 pb-12">
-      <Heading variant="h2" as="h1">D20 / UI</Heading>
-      <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {tiles.map((tile, i) => (
-          <section
-            key={tile.name}
-            id={tile.name.toLowerCase().replace(/\s+/g, "-")}
-            className={cn(cardVariants({ variant: "quiet" }), "enter-rise relative flex min-w-0 flex-col gap-4 overflow-hidden p-4", tile.wide && "md:col-span-2", tile.full && "md:col-span-2 lg:col-span-4")}
-            style={{ "--i": Math.min(i, 8) } as CSSProperties}
+      <Heading variant="h2" as="h1">
+        D20 / UI
+      </Heading>
+      <p className="mt-2 text-sm text-white/55">{about}</p>
+      <div role="tablist" aria-label="Look" className="mt-6 flex gap-6 border-b border-white/10">
+        {LOOKS.map((l) => (
+          <button
+            key={l.look}
+            type="button"
+            role="tab"
+            aria-selected={look === l.look}
+            onClick={() => setLook(l.look)}
+            className="-mb-px border-b-2 border-transparent py-2.5 font-mono text-2xs uppercase tracking-label text-white/55 transition-colors hover:text-white aria-selected:border-accent aria-selected:text-white"
           >
-            <h2 className={siteLabel}>
-              {String(i + 1).padStart(2, "0")} {tile.name}
-            </h2>
-            <div className="flex-1">{tile.demo}</div>
-          </section>
+            {l.name}
+          </button>
         ))}
       </div>
+      <Tiles list={tiles.filter((tile) => (look === "shared") === SHARED.has(tile.name))} />
     </div>
   )
 }

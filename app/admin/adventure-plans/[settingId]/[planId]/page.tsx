@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { Heading } from "@d20/ui/typography/heading"
+import { LedgerHead } from "@/components/layout/ledger-page"
 import { AdminWikiAdventureEditor } from "@/components/wiki-adventures/admin-wiki-adventure-editor"
 import { requireAdmin } from "@/lib/auth-utils"
 import { loadAdminWikiAdventureState } from "@/lib/wiki-adventures/admin-authoring"
@@ -15,7 +15,7 @@ export default async function AdminWikiAdventureDetailPage(props: { params: Prom
 
   if (requiresSetup) {
     return (
-      <div className="container max-w-2xl py-8 md:py-12">
+      <div className="max-w-2xl py-12">
         <AdminConfigMessage />
       </div>
     )
@@ -23,9 +23,7 @@ export default async function AdminWikiAdventureDetailPage(props: { params: Prom
 
   if (!isAdmin) {
     return (
-      <div className="container py-8 md:py-12">
-        <Heading variant="h1">Access Denied</Heading>
-      </div>
+      <LedgerHead title="Access Denied" />
     )
   }
 

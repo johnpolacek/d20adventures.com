@@ -31,25 +31,25 @@ export function AiBudget({ usd, calls, limit }: { usd: number; calls: number; li
       }}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <p className="font-mono text-2xl text-white">
+        <p className="up-stat-value">
           {dollars(usd)}
-          <span className="text-sm text-white/50"> / {dollars(limit)}</span>
+          <span className="up-small"> / {dollars(limit)}</span>
         </p>
-        <p className="font-mono text-xs text-white/50">
+        <p className="up-small">
           {calls} {calls === 1 ? "call" : "calls"}
         </p>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/10" role="meter" aria-label="AI Budget Used" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={usd}>
-        <div className={usd >= limit ? "h-full bg-red-400" : usd >= limit * 0.8 ? "h-full bg-amber-400" : "h-full bg-primary-400"} style={{ width: `${limit > 0 ? Math.min(100, (usd / limit) * 100) : 100}%` }} />
+      <div className="up-meter" role="meter" aria-label="AI Budget Used" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={usd}>
+        <div style={{ width: `${limit > 0 ? Math.min(100, (usd / limit) * 100) : 100}%`, background: usd >= limit ? "var(--up-bad)" : usd >= limit * 0.8 ? "var(--up-warn)" : undefined }} />
       </div>
       <div className="flex items-center gap-2 pt-1">
-        <span className="text-sm text-white/60">$</span>
-        <Input aria-label="Daily Limit in US Dollars" type="number" min="0" step="0.01" inputMode="decimal" value={value} onChange={(event) => setValue(event.target.value)} className="w-28" />
-        <Button type="submit" variant="outline" size="sm" disabled={!valid || saving || next === limit}>
+        <span className="up-small">$</span>
+        <Input plain aria-label="Daily Limit in US Dollars" type="number" min="0" step="0.01" inputMode="decimal" value={value} onChange={(event) => setValue(event.target.value)} className="up-field !w-28 !py-1.5 !text-sm" />
+        <Button type="submit" variant="plain" className="up-btn is-xs" disabled={!valid || saving || next === limit}>
           Save
         </Button>
       </div>
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && <p className="up-small up-bad">{error}</p>}
     </form>
   )
 }

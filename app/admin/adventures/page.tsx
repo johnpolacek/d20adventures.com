@@ -1,13 +1,13 @@
-import { Heading } from "@d20/ui/typography/heading"
 import type { User } from "@clerk/nextjs/server"
 import type { CSSProperties } from "react"
 import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { DeleteAdventureButton } from "@/components/admin/delete-adventure-button"
-import { AdminBreadcrumb } from "@/components/nav/admin-breadcrumb"
-import { Button } from "@d20/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@d20/ui/table"
+import { LedgerHead } from "@/components/layout/ledger-page"
 import type { Doc } from "@/convex/_generated/dataModel"
+
+// A person by name, else by username or email, since a Clerk account may have no name.
+const nameOf = (user: User | undefined) => (user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || user.emailAddresses[0]?.emailAddress || user.id : "Unknown")
 
 export default async function AdminAdventuresPage() {
   const adventures: Doc<"adventures">[] = await getAllAdventuresAdmin()
@@ -24,26 +24,22 @@ export default async function AdminAdventuresPage() {
   const userMap = new Map(users.map((user: User) => [user.id, user]))
 
   return (
-    <div className="container py-8">
-      <AdminBreadcrumb items={[{ label: "Games" }]} />
-      <div className="mb-8">
-        <Heading variant="h1">Games</Heading>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Adventure ID</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Owner ID</TableHead>
-            <TableHead>Owner Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Players</TableHead>
-            <TableHead>Created At</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <>
+      <LedgerHead title="Games" subtitle={`${adventures.length} ${adventures.length === 1 ? "game" : "games"}, newest first`} />
+      <section className="up-panel">
+      <div className="up-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Players</th>
+            <th>Created</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
           {adventures.map((adventure, index) => {
             const user = userMap.get(adventure.ownerId)
             const players = (adventure.players || []).map((p) => {
@@ -51,63 +47,55 @@ export default async function AdminAdventuresPage() {
               return {
                 userId: p.userId,
                 aiControlled: p.controlledBy === "ai",
-                name: playerUser ? `${playerUser.firstName} ${playerUser.lastName}` : "Unknown",
+                name: nameOf(playerUser),
                 email: playerUser ? playerUser.emailAddresses[0]?.emailAddress : "Unknown",
               }
             })
             return (
-              <TableRow key={adventure._id} className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as CSSProperties}>
-                <TableCell>{adventure._id}</TableCell>
-                <TableCell>{adventure.title}</TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1 text-xs">
-                    <span>{adventure.status ?? "active"}</span>
-                    {(adventure.runType ?? "campaign") === "practice" && <span className="text-primary-50">practice</span>}
-                    {players.some((p) => p.aiControlled) && <span className="text-sky-300">{players.filter((p) => p.aiControlled).length} AI</span>}
+              <tr key={adventure._id} className={index < 40 ? "enter-fade" : undefined} style={{ "--i": Math.min(index, 8) } as CSSProperties}>
+                <td>
+                  <div>{adventure.title}</div>
+                  <div className="up-small font-mono !text-xs">{adventure._id}</div>
+                </td>
+                <td>
+                  <div className="flex flex-wrap gap-1">
+                    <span className={`up-pill ${adventure.status === "completed" ? "is-good" : (adventure.status ?? "active") === "active" ? "is-accent" : ""}`}>{(adventure.status ?? "active") === "waitingForPlayers" ? "Waiting" : (adventure.status ?? "active")[0].toUpperCase() + (adventure.status ?? "active").slice(1)}</span>
+                    {(adventure.runType ?? "campaign") === "practice" && <span className="up-pill is-warn">Practice</span>}
+                    {players.some((p) => p.aiControlled) && <span className="up-pill">{players.filter((p) => p.aiControlled).length} AI</span>}
                   </div>
-                </TableCell>
-                <TableCell>{adventure.ownerId}</TableCell>
-                <TableCell>{user ? `${user.firstName} ${user.lastName}` : "Unknown"}</TableCell>
-                <TableCell>{user ? user.emailAddresses[0]?.emailAddress : "Unknown"}</TableCell>
-                <TableCell>
+                </td>
+                <td>
+                  <div className="whitespace-nowrap">{nameOf(user)}</div>
+                </td>
+                <td>
                   {players.length === 0 ? (
-                    <span className="text-white/60">No players</span>
+                    <span className="up-small">No players</span>
                   ) : (
                     <ul className="space-y-1">
                       {players.map((p, index) => (
                         <li key={`${p.userId}-${index}`} className="text-xs">
-                          {p.aiControlled ? (
-                            <span className="text-sky-300 font-mono">AI companion</span>
-                          ) : (
-                            <>
-                              <span className="font-mono">{p.userId}</span>
-                              <br />
-                              <span>{p.name}</span>
-                              <br />
-                              <span className="text-white/60">{p.email}</span>
-                            </>
-                          )}
+                          {p.aiControlled ? <span className="up-small !text-xs">AI Companion</span> : <span title={p.email}>{p.name}</span>}
                         </li>
                       ))}
                     </ul>
                   )}
-                </TableCell>
-                <TableCell>{new Date(adventure.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <a href={`/settings/${adventure.settingId}/${adventure.planId}/${adventure._id}`} target="_blank" rel="noopener noreferrer">
-                      <Button className="text-xs" variant="outline" size="sm">
-                        View
-                      </Button>
+                </td>
+                <td className="whitespace-nowrap">{new Date(adventure.createdAt).toLocaleDateString()}</td>
+                <td align="right">
+                  <div className="flex items-center justify-end gap-2">
+                    <a className="up-btn is-xs" href={`/settings/${adventure.settingId}/${adventure.planId}/${adventure._id}`} target="_blank" rel="noopener noreferrer">
+                      View
                     </a>
                     <DeleteAdventureButton adventureId={adventure._id} title={adventure.title} />
                   </div>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             )
           })}
-        </TableBody>
-      </Table>
-    </div>
+        </tbody>
+      </table>
+      </div>
+      </section>
+    </>
   )
 }

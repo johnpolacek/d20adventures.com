@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { clerkClient } from "@clerk/nextjs/server"
 import { getAllAdventuresAdmin } from "@/app/_actions/admin/get-all-adventures"
 import { listQueue } from "@/lib/content-queue/store"
 import { listFeedback } from "@/lib/feedback/store"
 import { AdminConfigMessage } from "@/components/admin/admin-config-message"
-import { Heading } from "@d20/ui/typography/heading"
+import { LedgerHead } from "@/components/layout/ledger-page"
 import { requireAdmin } from "@/lib/auth-utils"
 import { AiBudget } from "@/components/admin/ai-budget"
 import { budgetToday } from "@/lib/gm-server/budget"
@@ -48,59 +48,46 @@ async function userStats() {
   return { count, week: newest.data.filter((u) => u.createdAt > Date.now() - 7 * DAY).length }
 }
 
-type Tone = "blue" | "green" | "gold" | "red" | "plain"
-const tones: Record<Tone, string> = {
-  blue: "bg-sky-400/10 text-sky-300",
-  green: "bg-emerald-400/10 text-emerald-300",
-  gold: "bg-amber-400/10 text-amber-300",
-  red: "bg-red-400/10 text-red-300",
-  plain: "bg-white/5 text-white/60",
-}
+type Tone = "accent" | "good" | "warn" | "plain"
 function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
-  return <span className={cn("inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs", tones[tone])}>{children}</span>
+  return <span className={cn("up-pill", tone !== "plain" && `is-${tone}`)}>{children}</span>
 }
 
-function Panel({ title, href, action, i, className, children }: { title: string; href?: string; action?: string; i: number; className?: string; children: ReactNode }) {
+function Panel({ title, href, action, id, className, children }: { title: string; href?: string; action?: string; id?: string; className?: string; children: ReactNode }) {
   return (
-    <section className={cn("enter-rise overflow-hidden rounded-xl border border-white/10 bg-black/40", className)} style={{ "--i": i } as CSSProperties}>
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {href && (
-          <Link href={href} className="text-sm text-primary-300 transition-colors hover:text-primary-200">
-            {action ?? "View All"}
-          </Link>
-        )}
+    <section id={id} className={cn("up-panel scroll-mt-20", className)}>
+      <div className="up-panel-head">
+        <h2>{title}</h2>
+        {href && <Link href={href}>{action ?? "View All"}</Link>}
       </div>
       {children}
     </section>
   )
 }
 
-function Stat({ label, value, sub, href, i, children }: { label: string; value: string | number; sub?: ReactNode; href: string; i: number; children?: ReactNode }) {
+function Stat({ label, value, sub, href, children }: { label: string; value: string | number; sub?: ReactNode; href: string; children?: ReactNode }) {
   return (
-    <Link href={href} className="enter-rise rounded-xl border border-white/10 bg-black/40 px-5 py-4 transition-colors hover:border-white/25" style={{ "--i": i } as CSSProperties}>
-      <p className="text-sm text-white/60">{label}</p>
-      <p className="mt-1.5 mb-1 font-mono text-3xl text-white">{value}</p>
-      {sub && <p className="text-xs text-white/45">{sub}</p>}
+    <Link href={href} className="up-stat">
+      <p className="up-label">{label}</p>
+      <p className="up-stat-value">{value}</p>
+      {sub && <p className="up-stat-sub">{sub}</p>}
       {children}
     </Link>
   )
 }
 
-const Empty = ({ children }: { children: ReactNode }) => <p className="px-5 py-6 text-sm text-white/45">{children}</p>
+const Empty = ({ children }: { children: ReactNode }) => <p className="up-empty">{children}</p>
 const Unavailable = () => <Empty>Unavailable</Empty>
 
-const statusTone = { active: "blue", completed: "green", waitingForPlayers: "plain" } as const
+const statusTone = { active: "accent", completed: "good", waitingForPlayers: "plain" } as const
 const statusLabel = { active: "Active", completed: "Completed", waitingForPlayers: "Waiting" } as const
-const th = "px-5 pt-3 pb-2 text-left text-xs font-medium text-white/40"
-const td = "border-t border-white/10 px-5 py-2.5"
 
 export default async function AdminPage() {
   const { isAdmin, requiresSetup } = await requireAdmin()
 
   if (requiresSetup) {
     return (
-      <div className="container max-w-2xl py-8 md:py-12">
+      <div className="max-w-2xl py-12">
         <AdminConfigMessage />
       </div>
     )
@@ -108,13 +95,9 @@ export default async function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="container py-8 md:py-12">
-        <div className="mx-auto max-w-2xl text-center">
-          <Heading variant="h1" className="mb-4">
-            Access Denied
-          </Heading>
-          <p className="text-white/60 text-balance mb-8">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
-        </div>
+      <div className="up-main py-16">
+        <LedgerHead title="Access Denied" />
+        <p className="up-prose">You don&apos;t have permission to access this page. Please contact an administrator if you believe this is an error.</p>
       </div>
     )
   }
@@ -150,95 +133,89 @@ export default async function AdminPage() {
   const weekday = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", day: "numeric" })
 
   return (
-    <div className="px-4 py-8 md:px-8 md:py-10">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6">
-          <Heading variant="h3">Overview</Heading>
-          <p className="text-sm text-white/45">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Chicago" })}</p>
-        </div>
+    <>
+      <LedgerHead title="Overview" subtitle={new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Chicago" })} />
 
-        <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat
-            i={0}
-            href="/admin/adventures"
-            label="Games This Week"
-            value={games ? thisWeek : "–"}
-            sub={games && (thisWeek >= lastWeek ? <><span className="text-emerald-300">+{thisWeek - lastWeek}</span> vs last week</> : <><span className="text-red-300">{thisWeek - lastWeek}</span> vs last week</>)}
-          />
-          <Stat i={1} href="/admin/users" label="Players" value={users?.count ?? "–"} sub={users && <><span className="text-emerald-300">+{users.week}</span> this week</>} />
-          <Stat i={2} href="/admin/feedback" label="Avg Rating" value={feedback ? average : "–"} sub={feedback && `from ${rated.length} ratings`} />
-          <Stat i={3} href="#budget" label="AI Spend Today" value={budget ? `$${budget.usd.toFixed(2)}` : "–"}>
-            {budget && (
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full bg-primary-400" style={{ width: `${budget.limit > 0 ? Math.min(100, (budget.usd / budget.limit) * 100) : 100}%` }} />
-              </div>
-            )}
-          </Stat>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          {local && (
-            <Panel i={4} title="Content Queue" href="/admin/content" action="Open Queue" className="lg:order-1">
-              {queue.length === 0 ? (
-                <Empty>Nothing in the queue</Empty>
-              ) : (
-                <ul>
-                  {queue.slice(0, 8).map(({ item, next }) => (
-                    <li key={item.slug} className="border-t border-white/10 first:border-t-0">
-                      <Link href="/admin/content" className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-5 py-2.5 text-sm transition-colors hover:bg-white/5">
-                        <span className="min-w-0 truncate">{item.title}</span>
-                        <span className="font-mono text-xs text-white/50">{next ? `${next[0]} ${weekday(next[1])}` : ""}</span>
-                        <Pill tone={item.status === "scheduled" ? "green" : item.status === "draft" ? "gold" : "plain"}>{item.status[0].toUpperCase() + item.status.slice(1)}</Pill>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
+      <div className="up-stats">
+        <Stat
+          href="/admin/adventures"
+          label="Games This Week"
+          value={games ? thisWeek : "–"}
+          sub={games && (thisWeek >= lastWeek ? <><span className="up-good">+{thisWeek - lastWeek}</span> vs last week</> : <><span className="up-bad">{thisWeek - lastWeek}</span> vs last week</>)}
+        />
+        <Stat href="/admin/users" label="Players" value={users?.count ?? "–"} sub={users && <><span className="up-good">+{users.week}</span> this week</>} />
+        <Stat href="/admin/feedback" label="Avg Rating" value={feedback ? average : "–"} sub={feedback && `from ${rated.length} ratings`} />
+        <Stat href="#budget" label="AI Spend Today" value={budget ? `$${budget.usd.toFixed(2)}` : "–"}>
+          {budget && (
+            <div className="up-meter">
+              <div style={{ width: `${budget.limit > 0 ? Math.min(100, (budget.usd / budget.limit) * 100) : 100}%` }} />
+            </div>
           )}
-          <div className="grid content-start gap-4 lg:order-2">
-            <Panel i={5} title="Latest Feedback" href="/admin/feedback">
-              {!feedback ? (
-                <Unavailable />
-              ) : notes.length === 0 ? (
-                <Empty>No feedback yet</Empty>
-              ) : (
-                <ul>
-                  {notes.slice(0, 3).map((note) => (
-                    <li key={note.id} className="border-t border-white/10 px-5 py-3 first:border-t-0">
-                      <p className="text-xs text-white/45">
-                        {note.rating !== undefined && <span className="mr-1.5 tracking-wider text-amber-300">{"★".repeat(note.rating) + "☆".repeat(Math.max(0, 5 - note.rating))}</span>}
+        </Stat>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        {local && (
+          <Panel title="Content Queue" href="/admin/content" action="Open Queue" className="lg:order-1">
+            {queue.length === 0 ? (
+              <Empty>Nothing in the queue</Empty>
+            ) : (
+              <ul className="up-list">
+                {queue.slice(0, 8).map(({ item, next }) => (
+                  <li key={item.slug}>
+                    <Link href="/admin/content">
+                      <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                      <span className="up-small font-mono">{next ? `${next[0]} ${weekday(next[1])}` : ""}</span>
+                      <Pill tone={item.status === "scheduled" ? "good" : item.status === "draft" ? "warn" : "plain"}>{item.status[0].toUpperCase() + item.status.slice(1)}</Pill>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+        )}
+        <div className="grid content-start gap-4 lg:order-2">
+          <Panel title="Latest Feedback" href="/admin/feedback">
+            {!feedback ? (
+              <Unavailable />
+            ) : notes.length === 0 ? (
+              <Empty>No feedback yet</Empty>
+            ) : (
+              <ul className="up-list">
+                {notes.slice(0, 3).map((note) => (
+                  <li key={note.id}>
+                    <div className="!block">
+                      <p className="up-small">
+                        {note.rating !== undefined && <span className="mr-1.5 tracking-wider" style={{ color: "var(--up-warn)" }}>{"★".repeat(note.rating) + "☆".repeat(Math.max(0, 5 - note.rating))}</span>}
                         {note.context.plan ? titleOf(note.context.plan) : note.kind === "ending" ? "Ending" : "General"} · {ago(note.createdAt)}
                       </p>
-                      <p className="mt-1 line-clamp-2 text-sm text-white/85">{note.message}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
+                      <p className="mt-1 line-clamp-2">{note.message}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
 
-            <section id="budget" className="enter-rise scroll-mt-20 rounded-xl border border-white/10 bg-black/40" style={{ "--i": 6 } as CSSProperties}>
-              <div className="flex items-baseline justify-between border-b border-white/10 px-5 py-3.5">
-                <h2 className="text-sm font-semibold">AI Budget</h2>
-                <span className="text-xs uppercase tracking-wider text-white/40">Today</span>
-              </div>
-              <div className="px-5 py-4">{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="text-sm text-white/45">Unavailable</p>}</div>
-            </section>
-          </div>
+          <Panel id="budget" title="AI Budget Today">
+            <div className="up-panel-body">{budget ? <AiBudget usd={budget.usd} calls={budget.calls} limit={budget.limit} /> : <p className="up-small">Unavailable</p>}</div>
+          </Panel>
+        </div>
 
-          <Panel i={local ? 7 : 4} title="Recent Games" href="/admin/adventures" className={local ? "lg:order-3 lg:col-span-2" : "lg:order-1"}>
-            {!games ? (
-              <Unavailable />
-            ) : games.length === 0 ? (
-              <Empty>No games yet</Empty>
-            ) : (
-              <table className="w-full text-sm">
+        <Panel title="Recent Games" href="/admin/adventures" className={local ? "lg:order-3 lg:col-span-2" : "lg:order-1"}>
+          {!games ? (
+            <Unavailable />
+          ) : games.length === 0 ? (
+            <Empty>No games yet</Empty>
+          ) : (
+            <div className="up-table">
+              <table>
                 <thead>
                   <tr>
-                    <th className={th}>Adventure</th>
-                    <th className={th}>Players</th>
-                    <th className={th}>Status</th>
-                    <th className={cn(th, "text-right")}>Started</th>
+                    <th>Adventure</th>
+                    <th>Players</th>
+                    <th>Status</th>
+                    <th align="right">Started</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -251,25 +228,24 @@ export default async function AdminPage() {
                       const status = game.status ?? "active"
                       return (
                         <tr key={game._id}>
-                          <td className={td}>{titleOf(game.planId)}</td>
-                          <td className={cn(td, "text-white/70")}>
+                          <td>{titleOf(game.planId)}</td>
+                          <td>
                             {people}
-                            {ai > 0 && <span className="text-white/40"> + {ai} AI</span>}
+                            {ai > 0 && <span className="up-small"> + {ai} AI</span>}
                           </td>
-                          <td className={td}>
+                          <td>
                             <Pill tone={statusTone[status]}>{statusLabel[status]}</Pill>
                           </td>
-                          <td className={cn(td, "text-right font-mono text-white/70")}>{ago(game.startedAt)}</td>
+                          <td align="right">{ago(game.startedAt)}</td>
                         </tr>
                       )
                     })}
                 </tbody>
               </table>
-            )}
-          </Panel>
-
-        </div>
+            </div>
+          )}
+        </Panel>
       </div>
-    </div>
+    </>
   )
 }

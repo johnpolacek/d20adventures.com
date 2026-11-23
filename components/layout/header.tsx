@@ -53,6 +53,7 @@ export default function Header() {
         <Presence show={Boolean(settingSlug)} initial={false} asChild motion="left">
           {settingSlug && (
             <Link
+              data-site-nav
               href={`/settings/${settingSlug}`}
               className="text-sm -ml-2 font-display hidden sm:block text-accent-950/80 hover:text-accent-950/90 active:opacity-70 font-bold tracking-wide transition-[color,opacity] duration-150"
             >
@@ -65,7 +66,7 @@ export default function Header() {
         {/* Shown only on a page in Ledger, which also draws this header as a quiet strip (app/updates/updates.css). */}
         <UpdateThemeToggle />
         <Link
-          data-site-about
+          data-site-nav
           href="/about"
           className={cn(
             "text-xs sm:text-sm font-bold font-display tracking-wide transition-[color,opacity] duration-150 hover:text-accent-950 active:opacity-70",

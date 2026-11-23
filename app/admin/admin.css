@@ -1,0 +1,133 @@
+/*
+ * Admin's own pieces on Ledger's desk (app/updates/updates.css holds the desk itself). Every color is one of the
+ * paper's --up-* tones, so the light and dark looks both hold.
+ */
+
+/* A field in a tight row: a toolbar, a schedule, a thread's card. */
+.up-field.is-sm {
+  padding: 5px 9px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.up-field[type="date"] {
+  color-scheme: inherit;
+}
+textarea.up-field.is-auto {
+  min-height: 0;
+  field-sizing: content;
+}
+
+/* A tag: a short square word, as a tier, a status or a kind. Tones as the pill's. */
+.up-tag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--up-raise);
+  font-family: var(--up-ui);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--up-muted);
+}
+.up-tag.is-accent {
+  background: var(--up-slot);
+  color: var(--up-slot-text);
+}
+.up-tag.is-good {
+  background: color-mix(in srgb, var(--up-good) 14%, transparent);
+  color: var(--up-good);
+}
+.up-tag.is-warn {
+  background: color-mix(in srgb, var(--up-warn) 14%, transparent);
+  color: var(--up-warn);
+}
+.up-tag.is-bad {
+  background: color-mix(in srgb, var(--up-bad) 14%, transparent);
+  color: var(--up-bad);
+}
+.up-tag.is-faint {
+  background: transparent;
+  color: var(--up-faint);
+}
+.up-tag.is-empty {
+  border: 1px dashed var(--up-line-strong);
+  background: transparent;
+  color: var(--up-faint);
+}
+
+/* A row to pick, as a queue item: framed, and marked in the accent when it is the one open. */
+.up-pick {
+  border: 1px solid var(--up-line);
+  border-radius: 6px;
+  background: var(--up-bg);
+  transition:
+    border-color 120ms,
+    background-color 120ms,
+    opacity 120ms;
+}
+.up-pick:hover {
+  border-color: var(--up-line-strong);
+}
+.up-pick[aria-current="true"] {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+}
+
+/* A box inside a panel: a day of the schedule, a post of a thread. */
+.up-well {
+  border: 1px solid var(--up-line);
+  border-radius: 6px;
+  background: var(--up-raise);
+}
+.up-well[aria-current="date"] {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+}
+
+/* A link in the desk's own text, in the accent. */
+.up-link {
+  color: var(--up-accent);
+}
+.up-link:hover {
+  color: var(--up-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Inline code in a panel. */
+.up-code {
+  padding: 1px 5px;
+  border: 1px solid var(--up-line);
+  border-radius: 4px;
+  background: var(--up-code);
+  font-family: var(--up-mono);
+  font-size: 0.85em;
+  color: var(--up-strong);
+}
+
+/* A destructive button: the paper's red, for delete and ban. */
+.up-btn.is-bad {
+  border-color: color-mix(in srgb, var(--up-bad) 45%, transparent);
+  color: var(--up-bad);
+}
+.up-btn.is-bad:hover {
+  border-color: var(--up-bad);
+  background: color-mix(in srgb, var(--up-bad) 8%, transparent);
+  color: var(--up-bad);
+}
+
+/*
+ * The Adventure Plan editor: a tool that fills the window under the header, beside the admin sections. It takes the
+ * desk's whole width, since its three columns need it, and the page under it does not scroll.
+ */
+.up-desk:has(.up-plan-editor) {
+  max-width: none;
+}
+.up-desk-main:has(> .up-plan-editor),
+.updates-page:has(.up-plan-editor) {
+  padding-bottom: 0;
+}
+.up-plan-editor .up-label {
+  margin-bottom: 6px;
+}
