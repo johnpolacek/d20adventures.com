@@ -405,38 +405,119 @@ export function walkOver(solids: readonly Solid[], from: Point, to: Point, feet:
   return { at: along(went.walked), used: went.spent, blocked: first < gap && went.walked >= reach - 1e-9 && went.spent < feet - 1e-9 }
 }
 
+// How far off a solid thing's corner a way round it turns: a foot clear of each face.
+const ROUND = 1
+
+/** The points just off a solid thing's corners that a way round it turns at: four for a box, eight round a pillar. */
+const cornersOf = (solid: Solid): Point[] => {
+  if (solid.kind === "circle") {
+    const r = (solid.radius + ROUND) / Math.cos(Math.PI / 8)
+    return Array.from({ length: 8 }, (_, index) => ({ x: solid.x + Math.cos((index * Math.PI) / 4) * r, y: solid.y + Math.sin((index * Math.PI) / 4) * r }))
+  }
+  const cos = Math.cos(solid.turn)
+  const sin = Math.sin(solid.turn)
+  return [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ].map(([u, v]) => {
+    const across = u * (solid.halfWidth + ROUND)
+    const deep = v * (solid.halfDepth + ROUND)
+    return { x: solid.x + across * cos + deep * sin, y: solid.y - across * sin + deep * cos }
+  })
+}
+
 /**
- * The way from one point to another: straight when nothing solid is between them, else the shortest way round by the
- * floor's doorways and waypoints, each leg of it clear. The points to walk through, ending at the goal. None when no
- * way is clear. From the bank to the boat's saloon it goes by the gangway and the saloon door.
+ * The way from one point to another: straight when nothing solid is between them, else the shortest way round, each
+ * leg of it clear. It turns at the floor's doorways and waypoints and just off the corners of its solid things, so a
+ * walk goes round a deckhouse by the side deck and not the long way by the bank. The points to walk through, ending at
+ * the goal. None when no way is clear. From the bank to the boat's saloon it goes by the gangway and the saloon door.
  */
 export function routeThrough(floor: Floor, from: Point, to: Point): Point[] | undefined {
   const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY).blocked
   if (clear(from, to)) return [to]
-  // The shortest path over the points a way may pass through, tried nearest first, reading a leg only when it is reached.
+  // The shortest path over the points a way may pass through, the one likeliest to lead there first (its way so far and
+  // the straight line on), reading a leg only when it is reached. Besides the doorways and waypoints, a way turns just
+  // off the corners of a solid thing that stands in a leg it tries: the corners of what blocks the line on to the goal,
+  // and of what blocks the way to one of those, a few deep. A corner inside another solid thing is no way through.
   const nodes: Point[] = [from, ...floor.doors.flat(), ...(floor.waypoints ?? []), to]
-  const goal = nodes.length - 1
-  const reached = nodes.map(() => Number.POSITIVE_INFINITY)
-  const came = nodes.map(() => -1)
-  const done = nodes.map(() => false)
+  const fixed = nodes.length
+  const goal = fixed - 1
+  const reached: number[] = nodes.map(() => Number.POSITIVE_INFINITY)
+  const came: number[] = nodes.map(() => -1)
+  const done: boolean[] = nodes.map(() => false)
+  const cornersAt = new Map<Solid, number[]>()
+  const turnsOf = (solid: Solid): number[] => {
+    let found = cornersAt.get(solid)
+    if (!found) {
+      found = []
+      for (const point of cornersOf(solid)) {
+        if (solidAt(floor.solids, point)) continue
+        found.push(nodes.length)
+        nodes.push(point)
+        reached.push(Number.POSITIVE_INFINITY)
+        came.push(-1)
+        done.push(false)
+      }
+      cornersAt.set(solid, found)
+    }
+    return found
+  }
+  // Each solid thing's bounds, so a leg nowhere near it is passed over without the exact test.
+  const bounds = floor.solids.map((solid) => {
+    const r = solid.kind === "circle" ? solid.radius : Math.hypot(solid.halfWidth, solid.halfDepth)
+    return { solid, x0: solid.x - r, x1: solid.x + r, y0: solid.y - r, y1: solid.y + r }
+  })
+  const blocking = (a: Point, b: Point) => {
+    const x0 = Math.min(a.x, b.x)
+    const x1 = Math.max(a.x, b.x)
+    const y0 = Math.min(a.y, b.y)
+    const y1 = Math.max(a.y, b.y)
+    const found: Solid[] = []
+    for (const box of bounds) {
+      if (box.x1 < x0 || box.x0 > x1 || box.y1 < y0 || box.y0 > y1) continue
+      if (!onSolid(box.solid, a) && entersAt(box.solid, a, b) !== undefined) found.push(box.solid)
+    }
+    return found
+  }
   reached[0] = 0
   for (;;) {
     let at = -1
-    for (let index = 0; index < nodes.length; index++) if (!done[index] && reached[index] < Number.POSITIVE_INFINITY && (at < 0 || reached[index] < reached[at])) at = index
+    for (let index = 0; index < nodes.length; index++)
+      if (!done[index] && reached[index] < Number.POSITIVE_INFINITY && (at < 0 || reached[index] + between(nodes[index], to) < reached[at] + between(nodes[at], to))) at = index
     if (at < 0) return undefined
     if (at === goal) break
     done[at] = true
-    for (let next = 1; next < nodes.length; next++) {
-      if (done[next]) continue
-      const far = reached[at] + between(nodes[at], nodes[next])
-      if (far < reached[next] && clear(nodes[at], nodes[next])) {
-        reached[next] = far
-        came[next] = at
+    const tried = new Set<number>()
+    let next = [...Array.from({ length: fixed - 1 }, (_, index) => index + 1), ...blocking(nodes[at], to).flatMap(turnsOf)]
+    for (let depth = 0; depth < 3 && next.length; depth++) {
+      const deeper: number[] = []
+      for (const index of next) {
+        if (tried.has(index) || done[index]) continue
+        tried.add(index)
+        const far = reached[at] + between(nodes[at], nodes[index])
+        if (far >= reached[index]) continue
+        const stood = blocking(nodes[at], nodes[index])
+        if (!stood.length) {
+          reached[index] = far
+          came[index] = at
+        } else if (index >= fixed) deeper.push(...stood.flatMap(turnsOf))
       }
+      next = deeper
     }
   }
+  const found: Point[] = []
+  for (let at = goal; at > 0; at = came[at]) found.unshift(nodes[at])
+  // Drawn tight: a turn the walk can cut straight past, nothing solid between, is left out.
   const way: Point[] = []
-  for (let at = goal; at > 0; at = came[at]) way.unshift(nodes[at])
+  let last = from
+  for (let index = 0; index < found.length; index++) {
+    const after = found[index + 1]
+    if (after && !blocking(last, after).length) continue
+    way.push(found[index])
+    last = found[index]
+  }
   return way
 }
 

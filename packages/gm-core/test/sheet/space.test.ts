@@ -270,8 +270,9 @@ test("a walk stops at the first solid thing, and goes round by a doorway", () =>
   assert.deepEqual([stopped.at, stopped.used, stopped.blocked], [at(19.5, 0), 19.5, true])
   // With nothing in the way the feet run out first: 10 of the 15 to (0, 15).
   assert.deepEqual(walkOver(room.solids, o, at(0, 15), 10), { at: at(0, 10), used: 10, blocked: false })
-  // The way round: to the inside of the doorway, through it, and on.
-  assert.deepEqual(routeThrough(room, o, at(30, 10)), [at(15, 25), at(25, 25), at(30, 10)])
+  // The way round: the wall ends at y = 20, so the walk turns a foot clear of its two north corners and goes on. The
+  // doorway's points lie farther round, so the way does not pass by them.
+  assert.deepEqual(routeThrough(room, o, at(30, 10)), [at(18.5, 21), at(21.5, 21), at(30, 10)])
   assert.deepEqual(routeThrough(room, o, at(10, 10)), [at(10, 10)])
   // A wall thinner than any step is still a wall: one 0.2 feet thick, turned 45°, across the way from the origin to
   // (10, 10), stops the walk at its face, √50 less 0.1 along, and is total cover.
@@ -282,22 +283,32 @@ test("a walk stops at the first solid thing, and goes round by a doorway", () =>
   assert.equal(coverBetween([thin], { at: o }, { at: at(10, 10) }), "total")
   // It runs from the north-east to the south-west of (5, 5). Walking along beside it, 1.4 feet off, touches nothing.
   assert.equal(walkOver([thin], at(0, 8), at(8, 0), 60).blocked, false)
-  // A way round may take several legs. A second wall, from x = 10 to 40 at y = 30, closes the doorway's far side:
-  // the way goes on east by the waypoint at (45, 25) and back by the one at (45, 35), then west to the goal. The
-  // doorway's far point lies on the straight leg east, so it is not a stop of its own.
+  // A way round takes the shortest of the turns open to it. A second wall, from x = 10 to 40 at y = 30, closes the
+  // doorway's far side: the way passes the waypoints by and turns once, a foot off the second wall's west end.
   const shut: Solid = { kind: "rect", x: 25, y: 30, halfWidth: 15, halfDepth: 0.5, turn: 0 }
   const maze: Floor = { solids: [wall, shut], doors: [[at(15, 25), at(25, 25)]], waypoints: [at(45, 25), at(45, 35)] }
-  assert.deepEqual(routeThrough(maze, o, at(30, 40)), [at(15, 25), at(45, 25), at(45, 35), at(30, 40)])
-  assert.equal(routeThrough({ ...maze, waypoints: [] }, o, at(30, 40)), undefined)
-  assert.equal(routeThrough({ solids: [wall], doors: [] }, o, at(30, 0)), undefined)
-  // 30 feet of that way: √(15² + 25²) = 29.155 to the doorway, and the 0.845 left over of the 10 through it.
+  assert.deepEqual(routeThrough(maze, o, at(30, 40)), [at(9, 31.5), at(30, 40)])
+  // Round a deckhouse: one walking from astern to its forward door goes up the side deck past it, not the long way by
+  // the doorway and waypoints off its far end.
+  const house: Solid = { kind: "rect", x: 0, y: 0, halfWidth: 7, halfDepth: 10, turn: 0 }
+  const boat: Floor = { solids: [house], doors: [[at(0, 11), at(0, 14)]], waypoints: [at(-40, 0), at(-40, 30)] }
+  assert.deepEqual(routeThrough(boat, at(0, -14), at(0, 14)), [at(8, -11), at(8, 11), at(0, 14)])
+  // A goal shut in on every side has no way to it.
+  const box: Solid[] = [
+    { kind: "rect", x: 30, y: 5, halfWidth: 5, halfDepth: 0.5, turn: 0 },
+    { kind: "rect", x: 30, y: -5, halfWidth: 5, halfDepth: 0.5, turn: 0 },
+    { kind: "rect", x: 25, y: 0, halfWidth: 0.5, halfDepth: 5, turn: 0 },
+    { kind: "rect", x: 35, y: 0, halfWidth: 0.5, halfDepth: 5, turn: 0 },
+  ]
+  assert.equal(routeThrough({ solids: box, doors: [] }, o, at(30, 0)), undefined)
+  // 30 feet of the way round the wall: √(18.5² + 21²) = 27.99 to its first corner, and 2.01 on toward the second.
   const round = walk(room, o, at(30, 10), 30)
   close(round.used, 30)
-  close(round.at.x, 15 + (30 - Math.hypot(15, 25)))
-  assert.equal(round.at.y, 25)
+  close(round.at.x, 18.5 + (30 - Math.hypot(18.5, 21)))
+  assert.equal(round.at.y, 21)
   assert.equal(round.path.length, 2)
   // With no way round, the walker goes as far as the wall.
-  assert.deepEqual(walk({ solids: [wall], doors: [] }, o, at(30, 0), 60).at, at(19.5, 0))
+  assert.deepEqual(walk({ solids: box, doors: [] }, o, at(30, 0), 60).at, at(24.5, 0))
 })
 
 test("a walker closes to reach of a creature, and stands beside whoever is there", () => {
