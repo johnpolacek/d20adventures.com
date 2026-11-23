@@ -6,7 +6,7 @@ image: /stage/realm/realm-of-myr/realm.jpg
 
 D20 Adventures is a fantasy 5E-rules-based RPG, inspired by Baldur's Gate 3. It is open source, self-hosted and free. 
 
-Beyond that, I created it to be a platform for people to create their own adventures. Anyone can send a prompt their own agent to build an adventure plan, populated with characters, settings, encounters, maps and 3D assets.
+Beyond that, I want it to be a platform for people to create their own adventures. Anyone can send a prompt their own agent to build an adventure plan, populated with characters, settings, encounters, maps and 3D assets.
 
 ![The Realm of Myr, the setting of D20 Adventures: a river town and its cathedral at sunrise, below the mountains.](/stage/realm/realm-of-myr/realm.jpg)
 
