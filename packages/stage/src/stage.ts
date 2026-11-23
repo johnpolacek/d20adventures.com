@@ -725,7 +725,9 @@ export class Stage {
     // toward what it looks at. Draw the target in along the same line instead: the framing is unchanged.
     const reach = this.set.camera.maxDistance - 0.1
     if (to.pos.distanceTo(to.target) > reach) to.target.sub(to.pos).setLength(reach).add(to.pos)
-    if (instant || !this.motion) {
+    // A glide runs straight, so one that would pass through someone standing between here and there cuts instead: the
+    // lens went through the Owlbear on its way round Thalbern.
+    if (instant || !this.motion || this.throughSomeone(this.camera.position, to.pos)) {
       this.camera.position.copy(to.pos)
       this.controls?.target.copy(to.target)
       if (!this.controls) this.camera.lookAt(to.target)
@@ -741,6 +743,19 @@ export class Stage {
       this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration, ease }
     }
     return true
+  }
+  // Whether the straight line from `from` to `to` passes through anyone on stage standing: inside the round of their
+  // body, below the top of their head. Its two ends are left out, which the shot itself answers for.
+  private throughSomeone(from: THREE.Vector3, to: THREE.Vector3) {
+    const people = this.cast.filter((m) => this.isOnStage(m.id) && !this.isDown(m.id))
+    for (let i = 1; i < 12; i++) {
+      const t = i / 12
+      const x = from.x + (to.x - from.x) * t
+      const y = from.y + (to.y - from.y) * t
+      const z = from.z + (to.z - from.z) * t
+      for (const m of people) if (y < (m.y ?? 0) + m.height && Math.hypot(x - m.x, z - m.z) < 0.25 + m.height * 0.18) return true
+    }
+    return false
   }
   // A view of the cast, taken from where nothing solid hides anyone it is on (see spec/view.ts). `ids` are the shot's
   // own subjects and then whoever else it is to keep in the picture. Solid is the set as built (spec/sight.ts), not its

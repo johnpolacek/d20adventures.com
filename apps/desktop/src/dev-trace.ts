@@ -4,6 +4,7 @@ import { bus, current, type Bus } from "@d20/ui/sound/engine"
 // window goes to apps/desktop/.logs/window.log beside its errors. Each half second, the AudioContext's state and which
 // buses are sounding, with their peak in dB, written only when that changes. Each two seconds, the frame rate and the
 // longest frame.
+export const traceLine = (text: string) => void (import.meta.env.DEV && import.meta.env.VITE_D20_TRACE && send(text))
 const send = (text: string) => void fetch("/__d20-log", { method: "POST", body: `${new Date().toISOString()} trace ${text}\n` }).catch(() => undefined)
 
 const BUSES: Bus[] = ["ui", "dice", "fx", "ambience", "voice"]

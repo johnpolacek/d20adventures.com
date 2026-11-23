@@ -6,7 +6,7 @@ import { metres } from "@d20/gm-core/sheet/space"
 import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
-import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
+import { findCurrentActor, hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import type { SoundCue, Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import { compose, planTakes, speakerShot, type Take } from "@d20/stage/director"
@@ -44,6 +44,7 @@ import { cityMapTrail } from "@/lib/citymap"
 import type { FeedbackDraft } from "@d20/ui/feedback-rules"
 import type { Save } from "../runtime/store"
 import { logShot, useAutopilot } from "./autopilot"
+import { traceLine } from "./dev-trace"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { storyMoments } from "./moments"
@@ -752,6 +753,31 @@ export function StagePlay(props: {
     }
     return () => falls.forEach(clearTimeout)
   }, [stage, exits, spots, reading, paragraph, started, exitsHeard])
+  // A hero dying or Stable lies where they fell, and stays on the stage. One dropped in this turn stands until the last
+  // paragraph that hurt them, and falls once its words begin, as Thalbern under the Owlbear's claws. One already down
+  // when the turn opens is down from the start, and one back on their feet stands.
+  useEffect(() => {
+    if (!stage || !shown) return
+    const falls: ReturnType<typeof setTimeout>[] = []
+    for (const c of shown.characters) {
+      const id = c.type === "pc" ? castIdFor(stage.cast, c) : undefined
+      if (!id || exits.has(id) || !stage.isOnStage(id)) continue
+      if (!isDown(c) || isDead(c)) {
+        if (stage.isDown(id)) stage.setDown(id, false)
+        continue
+      }
+      const at = paragraphs.findLastIndex((p) =>
+        p.beats.some((b) => (b.kind === "roll" && (b.attack?.target === c.id || b.harm?.some((h) => h.target === c.id && h.kind === "damage"))) || (b.kind === "feature" && b.harm?.some((h) => h.target === c.id && h.kind === "damage")))
+      )
+      if (at >= 0 && toCome(at, 0)) {
+        if (stage.isDown(id)) stage.setDown(id, false)
+      } else if (!stage.isDown(id)) {
+        if (at >= 0 && reached(at, 0)) falls.push(setTimeout(() => stage.setDown(id, true), FALL_DELAY))
+        else stage.setDown(id, true, true)
+      }
+    }
+    return () => falls.forEach(clearTimeout)
+  }, [stage, shown, exits, paragraphs, reading, paragraph, started])
   // Walks the scene ties to the narration for someone already on stage, such as Thalbern on his way through the woods as
   // the story opens. They stand where the walk starts until its paragraph, then walk to where the engine has them. This
   // comes before the opening view, which frames them where the walk starts.
@@ -968,6 +994,7 @@ export function StagePlay(props: {
     const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, 4).short }) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => (
       logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut),
+      traceShot(stage, paragraph, which, t, cast),
       stage.shot(which, { instant: cut || !!t?.cut, follow, duration: t?.duration, ease: t?.ease, move: t?.move, impact: t?.impact, take: t?.label }))
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
@@ -1661,6 +1688,20 @@ export function StagePlay(props: {
       {props.children}
     </StageHud>
   )
+}
+
+// Development only, with VITE_D20_TRACE: each shot, where the cast stands for it, and where the camera has got to once
+// it settles, with the nearest of them, so a lens inside someone shows in the log.
+function traceShot(stage: Stage, paragraph: number, which: unknown, take: Take | null, cast: readonly { id: string; x: number; z: number; height: number }[]) {
+  if (!import.meta.env.DEV || !import.meta.env.VITE_D20_TRACE) return
+  const r = (n: number) => Math.round(n * 100) / 100
+  const who = cast.map((c) => `${c.id}@${r(c.x)},${r(c.z)} h${r(c.height)}${stage.isDown(c.id) ? " down" : ""}`).join("; ")
+  traceLine(`shot p${paragraph} ${take?.label ?? (typeof which === "string" ? which : "view")} ${JSON.stringify(take?.shot ?? which)} | ${who}`)
+  setTimeout(() => {
+    const p = stage.camera.position
+    const near = cast.map((c) => ({ id: c.id, d: Math.hypot(c.x - p.x, c.z - p.z) })).sort((a, b) => a.d - b.d)[0]
+    traceLine(`camera p${paragraph} at ${r(p.x)},${r(p.y)},${r(p.z)} nearest ${near?.id} ${near ? r(near.d) : "-"}m`)
+  }, 2500)
 }
 
 // While a scene's files download: a quiet pulse, and a bar once the wait looks longer than a few seconds.

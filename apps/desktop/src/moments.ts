@@ -92,8 +92,10 @@ export function storyMoments(paragraphs: readonly { beats: StoryBeat[] }[], ctx:
         return { kind: "action", actor: who, target: ctx.castOf(first.target) }
       }
       if (act?.kind === "action" && actor) return { kind: "action", actor, target: ctx.castOf(act.target) }
-      // An encounter's opening words, before anyone does anything: the place, with the party in it.
-      if (i === 0 && first?.by.step === "intro" && ctx.party.length) return { kind: "establish", party: ctx.party }
+      // An encounter's opening words, before anyone does anything: the place, with the party in it. A turn that opens
+      // a new encounter tells the end of the last one first, so its opening is the first intro paragraph, not the first.
+      const opening = first?.by.step === "intro" && !paragraphs.slice(0, i).some((p) => p.beats[0]?.by.step === "intro")
+      if (opening && ctx.party.length) return { kind: "establish", party: ctx.party }
       return null
     })()
     for (const b of beats) if (b.kind === "roll") lastRoll = b
