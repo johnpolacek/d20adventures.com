@@ -7,102 +7,120 @@ D20 Adventures is a fantasy 5E-rules-based RPG, inspired by Baldur's Gate 3. It 
 
 Beyond that, I created it to be a platform for people to create their own adventures. Anyone can send a prompt their own agent to build an adventure plan, populated with characters, settings, encounters, maps and 3D assets.
 
+![The Realm of Myr, the setting of D20 Adventures: a river town and its cathedral at sunrise, below the mountains.](/stage/realm/realm-of-myr/realm.jpg)
+
 I started working on D20 Adventures in January 2024. The original concept was a narrative-based rpg for play-by-post adventures with light rules (just roll a D20). I actually finished it and had a completely working version. It was a fun project but it wasn't super fun to play when compared to something like Baldur's Gate 3.
 
-That's what we really want right? Baldur's Gate 3 as a platform. Maybe someday a giant game studio might be able to create something like that for us.
+![The narrative version: City of Shadows, with the party in turn order and a halfling who needs to roll.](/stage/gates/narrative.webp)
 
-Then Anthropic release Fable, and everything changed. 
+### What do we really want? 
 
-I saw indie devs one-shotting games with gorgeous 3D graphics. I started spinning up my own graphics tests.
+As a creator, I want to be able to craft my own adventures then play them out with a group of friends and family, like Baldur's Gate 3 as a platform. Maybe someday a huge game studio will be able to create something like that for us.
 
-## How It Plays
+Then Anthropic released Fable, and everything changed. 
 
-- Make a hero and step into a written adventure.
-- Type what you do. The Game Master calls for rolls and tells you what happens.
-- Fights and scenes play out on a painted 3D stage with a floor plan.
-- The rules follow the SRD 5.2.1.
+I saw indie devs one-shotting games with gorgeous 3D graphics. I tried my own graphics tests for the opening scene of my main adventure, the Gates of Kordavos.
 
-## Where To Play
+![The reference painting for every test: the great gate of Kordavos, its towers above a crowded market.](/stage/gates/reference.webp)
 
-- On this website, signed in with your account.
-- In the desktop app, with games saved on your computer.
+### Early Attempts
 
-## Open Source
+**A Tabletop Gate.** March 11, 2026. GPT-5.4.
 
-The code and the adventures are on [GitHub](https://github.com/johnpolacek/d20adventures.com). You can run it yourself or write your own adventure.
+![Two stone towers on a tabletop, with market stalls and pawns for the crowd.](/stage/gates/tabletop.webp)
 
-## Early Days
+**A Gate of Real Models.** August 27, 2026. Fable 5.
 
-The game is in alpha. [Become a playtester](/playtest), follow the [updates](/updates), or [get in touch](/contact).
+![A stone gate arch in a city wall, timber houses, and a queue of figures waiting.](/stage/gates/models.webp)
 
-## Where It Started
+### The Fable Difference
 
-Before the game had a 3D stage, there were six tries at one scene, the Gates of Kordavos, each built as a single web page with Three.js. All six still run. Drag to look around, scroll to zoom, and move with W, A, S and D.
-
-### The First Try
-
-September 1, 2026. Made with Claude Fable 5.1 in Claude Code.
+September 1, 2026. Made with Fable 5.1. Drag to look around, scroll to zoom, and move with W-A-S-D. [Explore the 3D Environment](/stage/gates/1.html)
 
 ![The first try: a warm, close gate with a queue, a covered wagon and the checkpoint.](/stage/gates/1.webp)
 
-One prompt and a reference painting. A queue, wagons and a checkpoint under a torchlit arch.
+### Then Came Astra
 
-[Explore the First Try](/stage/gates/1.html)
-
-### The Gates of Kordavos
-
-September 4, 2026. Made with Codex.
-
-![A granite gatehouse in early autumn, with banners and a wagon on the road in.](/stage/gates/2.webp)
-
-The same prompt. A granite gatehouse in early autumn, with banners that move in the wind. About 17 MB, so give it a moment.
-
-[Explore the Gates of Kordavos](/stage/gates/2.html)
-
-### Before the Gates
-
-September 5, 2026. Made with Codex.
+September 5, 2026. Made with Codex, running GPT-6 Astra. [Explore the 3D Environment](/stage/gates/3.html)
 
 ![The forecourt: a roped queue, wagons and horses before the closed gate.](/stage/gates/3.webp)
 
-The forecourt outside. A roped queue, ten wagons, fourteen horses, and Garlan Ironfist beckoning the next traveler. About 17 MB.
+### Finally Opus 5.5
 
-[Explore Before the Gates](/stage/gates/3.html)
-
-### The Great Gate
-
-September 26, 2026. Made with Claude Opus 5.5.
-
-![The great gate, towering over a market crowd, painted in oil.](/stage/gates/4.webp)
-
-A new take, matched to the painting. A gate 38 meters tall, about 1,700 people, and a filter that paints every frame in oil.
-
-[Explore the Great Gate](/stage/gates/4.html)
-
-### Arrival at the Gates
-
-September 26, 2026. The tool that made it is not on record.
-
-![The great gate dressed for the Harvest Festival, with the line waiting.](/stage/gates/5.webp)
-
-The encounter from the adventure, staged on that gate. The party waits in line while Garlan asks each traveler their business.
-
-[Explore Arrival at the Gates](/stage/gates/5.html)
-
-### Close-Ups
-
-September 29, 2026. Made with Claude Opus 5.5.
+September 29, 2026. Made with Claude Opus 5.5. [Explore the 3D Environment](/stage/gates/6.html?closeup=standee)
 
 ![The same gate, with painted cards for the heroes and the crowd.](/stage/gates/6.webp)
 
-Painted cards for the heroes and the crowd. This one became the prototype for the stage in the game. About 9 MB.
+Painted cards for the heroes and the crowd. This one became the prototype for the stage in the game.
 
-[Explore the Close-Ups](/stage/gates/6.html?closeup=standee)
+### Where We Are Now
 
-### Getting Around
+That Opus prototype grew into the stage the game plays on today. The camera picks a shot for each turn, a narrator reads the story aloud, and the heroes and monsters are turning into rigged 3D figures. There’s sound too, footsteps that match the floor and an Owlbear that growls.
 
-Drag to look around and scroll to zoom. Move with W, A, S and D. The number keys jump between views.
+The rules are real 5E now, with attacks, spells, conditions and hiding all work by the book, and the GM has to follow them.
 
-The code for all but the first try is on [GitHub](https://github.com/johnpolacek/d20-graphics-test-2).
+There are four adventures so far, all set in the Realm of Myr. Welcome to Kordavos is the big one, 49 encounters. The other three are short intro adventures, each one leading into the next and on to Kordavos.
 
-The code for all but the first try is on [GitHub](https://github.com/johnpolacek/d20-graphics-test-2).
+**The Midnight Summons.** A short solo intro. A ranger heads into the Valkarr forest to answer a druid’s call. Fully ready.
+
+![The Owlbear looms out of the dark of the Valkarr forest.](/stage/art/the-midnight-summons/owlbear-confrontation.webp)
+
+**Covert Cargo.** A short intro for three players. A secret shipment on a river boat bound for Kordavos. Every character is in 3D, and it’s next up for testing.
+
+![A river boat with lit windows moored at a pier on a quiet fork of the Mordava.](/stage/art/covert-cargo/the-shipment.webp)
+
+**The Road to Kordavos.** A short intro where you make your own hero and meet travelers on the road. This one waits on the hero creator, which is being rebuilt on the new rules.
+
+![A traveler with a white beard rides a horse through the pines, a pack horse behind.](/stage/art/the-road-to-kordavos/well-met.webp)
+
+**Welcome to Kordavos.** The main adventure, for three to five players. The party arrives at the Gates of Kordavos during the Harvest Festival, and the city pulls them in from there. Every scene is built, but most of its 111 characters are still painted standees.
+
+![The great gate of Kordavos over a crowded market of bright awnings.](/stage/art/welcome-to-kordavos/the-gates-of-kordavos.webp)
+
+You can play [The Midnight Summons](/), a short demo solo adventure without having to download anything. The other adventures run in the [desktop app](https://github.com/johnpolacek/d20adventures.com/releases/latest), where the Game Master is Claude or Codex running on your own machine. The host sends an invite link, and friends join from their browser with a premade hero or one of their own.
+
+The easiest way to set up the desktop app is to let your AI do it. Paste one of these into Claude Code or Codex.
+
+To play an adventure yourself:
+
+```prompt Play
+Help me install D20 Adventures on this computer and play an adventure myself, with no friends joining.
+
+Follow https://d20adventures.com/host.md, with me as the only player. Fetch the raw file so you read all of it.
+```
+
+To host a game for friends, who join from their browser:
+
+```prompt Host
+Help me host a game in D20 Adventures on this computer, with friends joining from the web.
+
+Follow https://d20adventures.com/host.md. Fetch the raw file so you read all of it.
+```
+
+
+### The 3D Asset Pipeline
+
+Until this month, every character was a flat painted standee. Now they come out of a pipeline. A short brief, a painted pose sheet front and back, a model from Hi3D, a rig from Hyper3D, free animation clips, then a cleanup pass in headless Blender. About $2.30 and fifteen minutes a figure, most of it waiting.
+
+I wrote up the whole thing, every prompt included: [Turn Your Character Art into Animated 3D Figures with Hi3D and Blender](/updates/turn-your-character-art-into-animated-3d-figures-with-hi3d-and-blender).
+
+Every character, place and 3D figure lives in the [asset library](/settings/realm-of-myr/assets). Each figure has one card with every version of it, and you can open any place and fly around it.
+
+![The asset library’s character cards marked 3D, grouped by adventure.](https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/figures.webp)
+
+### Making Your Own Adventures
+
+That’s the real goal, and it isn’t there yet. Right now an adventure is a folder of markdown files in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), its story, encounters, characters and maps. Making one means working in the code.
+
+Still to come: making it easy to create your own adventures, then publishing it to the site for others to play, running the asset pipeline on your own machine with your own keys.
+
+If you want to try it anyway, this prompt points your agent at the code and the notes:
+
+```prompt Create
+Help me make my own adventure for D20 Adventures.
+
+Clone https://github.com/johnpolacek/d20adventures.com and read AGENTS.md, plans/adventure-packages.md and the adventures in content/settings/realm-of-myr/adventures. Start from a copy of The Midnight Summons under a new id, help me rewrite its story, then build it into a creator package and play it in the desktop app.
+```
+
+
+Still in alpha, with plenty to build and fix. Check out the latest [gameplay clips](/updates), or [become a playtester](/playtest) and try it yourself!

@@ -7,7 +7,7 @@ const page = () => readPage("about.md")
 
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await page()
-  return { title: `${title} | D20 Adventures`, description }
+  return { title: `${title} | D20 Adventures`, description: description || "A fantasy 5E RPG with an AI Game Master, open source, self-hosted and free." }
 }
 
 export default async function AboutPage() {
