@@ -1,6 +1,6 @@
 # Host a D20 Adventures Game
 
-This guide is for an AI coding agent helping someone host a game. The host runs the game in the desktop app on their own computer, and friends join in a browser. You do the terminal work. The person does the clicking, so give them one step at a time and wait for them to say what they see.
+This guide is for an AI coding agent helping someone host a game. The host runs the game in the desktop app on their own computer, and friends join in a browser. To play solo, follow the same steps with no friends: leave every hero on You or AI, click **Play**, and skip step 6. You do the terminal work. The person does the clicking, so give them one step at a time and wait for them to say what they see.
 
 ## 1. Agree on the game
 

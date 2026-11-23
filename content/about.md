@@ -80,22 +80,22 @@ There are four adventures so far, all set in the Realm of Myr. Welcome to Kordav
 
 You can play [The Midnight Summons](/), a short demo solo adventure without having to download anything. The other adventures run in the [desktop app](https://github.com/johnpolacek/d20adventures.com/releases/latest), where the Game Master is Claude or Codex running on your own machine. The host sends an invite link, and friends join from their browser with a premade hero or one of their own.
 
-The easiest way to set up the desktop app is to let your AI do it. Paste one of these into Claude Code or Codex.
+The easiest way to get started is to let your AI help. Paste these into Claude Code or Codex.
 
-To play an adventure yourself:
+To learn what D20 Adventures is and how it works:
 
-```prompt Play
-Help me install D20 Adventures on this computer and play an adventure myself, with no friends joining.
+```prompt Learn
+Tell me about D20 Adventures and explain how it works.
 
-Follow https://d20adventures.com/host.md, with me as the only player. Fetch the raw file so you read all of it.
+Read https://d20adventures.com/about and the README at https://github.com/johnpolacek/d20adventures.com. Explain what the game is, how the AI Game Master runs it, what adventures there are, and how playing solo differs from playing with friends. Then answer my questions.
 ```
 
-To host a game for friends, who join from their browser:
+To run an adventure on your own computer, solo or with friends:
 
-```prompt Host
-Help me host a game in D20 Adventures on this computer, with friends joining from the web.
+```prompt Play
+Help me run an adventure in D20 Adventures on this computer.
 
-Follow https://d20adventures.com/host.md. Fetch the raw file so you read all of it.
+Follow https://d20adventures.com/host.md. Fetch the raw file so you read all of it. First ask whether I want to play solo or host friends who join from their browser.
 ```
 
 
@@ -111,17 +111,8 @@ Every character, place and 3D figure lives in the [asset library](/settings/real
 
 ### Making Your Own Adventures
 
-That’s the real goal, and it isn’t there yet. Right now an adventure is a folder of markdown files in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), its story, encounters, characters and maps. Making one means working in the code.
+We're not quite there yet. Right now an adventure is a folder of markdown files in the [repo on Github](https://github.com/johnpolacek/d20adventures.com), its story, encounters, characters and maps. 
 
-Still to come: making it easy to create your own adventures, then publishing it to the site for others to play, running the asset pipeline on your own machine with your own keys.
-
-If you want to try it anyway, this prompt points your agent at the code and the notes:
-
-```prompt Create
-Help me make my own adventure for D20 Adventures.
-
-Clone https://github.com/johnpolacek/d20adventures.com and read AGENTS.md, plans/adventure-packages.md and the adventures in content/settings/realm-of-myr/adventures. Start from a copy of The Midnight Summons under a new id, help me rewrite its story, then build it into a creator package and play it in the desktop app.
-```
-
+The way I am creating the adventure data and assets is still changing. Once I have a functioning big adventure, with roleplaying, combat, spells and a fully realized plot, I'll be able to set up a process so other people can do the same, then publish to the site for others to play.
 
 Still in alpha, with plenty to build and fix. Check out the latest [gameplay clips](/updates), or [become a playtester](/playtest) and try it yourself!
