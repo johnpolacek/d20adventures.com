@@ -430,10 +430,10 @@ fn render_report(app: tauri::AppHandle, report: Value) -> Result<(), String> {
     Ok(())
 }
 // The development autopilot's progress, for the recorder (apps/desktop/scripts/record-playthrough.ts), written to
-// D20_AUTOPILOT_DIR as <name>.json. Shipped builds write nothing.
+// D20_AUTOPILOT_DIR as <name>.json, with each turn a live autopilot asks for. Shipped builds write nothing.
 #[tauri::command]
 fn autopilot_mark(name: String, data: Value) -> Result<(), String> {
-    if !cfg!(debug_assertions) || !(name == "ready" || name == "done") {
+    if !cfg!(debug_assertions) || !(name == "ready" || name == "done" || name == "turn") {
         return Ok(());
     }
     if let Some(dir) = std::env::var_os("D20_AUTOPILOT_DIR") {
@@ -442,6 +442,18 @@ fn autopilot_mark(name: String, data: Value) -> Result<(), String> {
         std::fs::write(dir.join(format!("{name}.json")), data.to_string()).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+// A live autopilot's reply, written to D20_AUTOPILOT_DIR as reply.json by whoever plays the heroes, taken once read.
+#[tauri::command]
+fn autopilot_reply() -> Option<Value> {
+    if !cfg!(debug_assertions) {
+        return None;
+    }
+    let file = PathBuf::from(std::env::var_os("D20_AUTOPILOT_DIR")?).join("reply.json");
+    let text = std::fs::read_to_string(&file).ok()?;
+    let value = serde_json::from_str(&text).ok()?;
+    let _ = std::fs::remove_file(&file);
+    Some(value)
 }
 fn main() {
     tauri::Builder::default()
@@ -475,7 +487,8 @@ fn main() {
             toggle_fullscreen,
             is_fullscreen,
             render_report,
-            autopilot_mark
+            autopilot_mark,
+            autopilot_reply
         ])
         .run(tauri::generate_context!())
         .expect("D20 Adventures failed to start");

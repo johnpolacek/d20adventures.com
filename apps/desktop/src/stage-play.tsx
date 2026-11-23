@@ -1183,6 +1183,8 @@ export function StagePlay(props: {
     held: held?.at ?? null,
     ended: Boolean(ended && !props.busy),
     turn: turn?._id,
+    actor: actor ? { id: actor.id, name: actor.name } : undefined,
+    story: text,
     step: turn?.story.length,
     encounter: turn?.encounterId,
     paragraph: reading ? `${turn?._id}:${paragraph}:${voiced}` : null,

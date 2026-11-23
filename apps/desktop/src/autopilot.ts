@@ -17,6 +17,10 @@ type Play = {
   second: number
   // Replies before the autopilot gives up, so a GM that keeps asking never records forever.
   maxReplies: number
+  // Live: each turn is handed out as turn.json for someone to play, and their reply.json is typed in. `lines` and
+  // `fallback` go unused, and the dice roll in turn from `rolls`.
+  live?: boolean
+  rolls?: number[]
 }
 
 const PLAYS: Record<string, Play> = {
@@ -38,6 +42,17 @@ const PLAYS: Record<string, Play> = {
     second: 12,
     maxReplies: 10,
   },
+  "covert-cargo": {
+    adventure: "covert-cargo",
+    party: ["1749159962941", "1749307435667", "thalbern"],
+    lines: {},
+    fallback: "",
+    roll: 15,
+    second: 9,
+    maxReplies: 60,
+    live: true,
+    rolls: [16, 12, 18, 9, 14, 19, 11, 15, 7, 17, 13, 20, 10, 16, 8, 14],
+  },
 }
 
 export const autopilot = PLAYS[import.meta.env.VITE_D20_AUTOPILOT ?? ""] ?? null
@@ -55,7 +70,7 @@ if (autopilot && typeof document !== "undefined") {
 
 // Tells the recorder how far the playthrough has come: "ready" when the game is about to start, and "done" with the
 // spans spent waiting on the GM, which the recorder cuts.
-export const mark = (name: "ready" | "done", data: unknown) => invoke<void>("autopilot_mark", { name, data }).catch(() => {})
+export const mark = (name: "ready" | "done" | "turn", data: unknown) => invoke<void>("autopilot_mark", { name, data }).catch(() => {})
 
 // Development only, so it reaches apps/desktop/.logs/window.log (src/dev-log.ts).
 const log = (...parts: unknown[]) => console.warn("[autopilot]", ...parts)
@@ -85,6 +100,9 @@ type Seat = {
   held: number | null
   ended: boolean
   turn?: string
+  // The hero whose turn it is, and the story on screen, for a live autopilot.
+  actor?: { id: string; name: string }
+  story?: string[]
   // How many beats the turn's story has, which every action adds to.
   step?: number
   encounter?: string
@@ -107,6 +125,7 @@ export function useAutopilot(seat: Seat) {
   const idleSince = useRef<number | null>(null)
   const spans = useRef<[number, number][]>([])
   const finished = useRef(false)
+  const rolled = useRef(0)
   const [, redraw] = useState(0)
   const s = useRef(seat)
   s.current = seat
@@ -157,15 +176,30 @@ export function useAutopilot(seat: Seat) {
           if (!still()) return log("roll dropped", key)
           acted.current = key
           const two = s.current.mode?.roll?.mode === "advantage" || s.current.mode?.roll?.mode === "disadvantage"
-          log("roll", key)
-          await s.current.roll(two ? [play.roll, play.second] : [play.roll])
+          const next = () => (play.rolls?.length ? play.rolls[rolled.current++ % play.rolls.length] : play.roll)
+          const dice = play.rolls?.length ? (two ? [next(), next()] : [next()]) : two ? [play.roll, play.second] : [play.roll]
+          log("roll", key, dice)
+          await s.current.roll(dice)
           return
         }
         if (replies.current >= play.maxReplies) return void end(["The autopilot ran out of replies."])
         const encounter = s.current.encounter ?? ""
         const lines = play.lines[encounter] ?? []
         const n = said.current[encounter] ?? 0
-        const line = lines.length ? lines[Math.min(n, lines.length - 1)] : play.fallback
+        let line = lines.length ? lines[Math.min(n, lines.length - 1)] : play.fallback
+        if (play.live) {
+          const asked = Date.now()
+          await mark("turn", { key, actor: s.current.actor, encounter, story: s.current.story ?? [], replies: replies.current, at: asked })
+          line = ""
+          while (!line) {
+            await wait(500)
+            if (!still()) return log("turn dropped", key)
+            const got = await invoke<{ key?: string; text?: string } | null>("autopilot_reply").catch(() => null)
+            if (got?.text && (!got.key || got.key === key)) line = got.text.trim()
+          }
+          // The time spent deciding is cut, as a wait on the GM is.
+          spans.current.push([asked, Date.now()])
+        }
         await wait(THINK_MS)
         for (let i = 1; i <= line.length; i++) {
           if (!still()) {

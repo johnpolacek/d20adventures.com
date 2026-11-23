@@ -181,7 +181,7 @@ async function main() {
     const start = await video.started
     // How much later the sound began than the picture, so the two line up.
     const soundLate = audio ? ((await audio.started) - start) / 1000 : 0
-    const done: { spans: [number, number][]; problems: string[] } = await waitFor(join(marks, "done.json"), 45, () => running)
+    const done: { spans: [number, number][]; problems: string[] } = await waitFor(join(marks, "done.json"), 150, () => running)
     await stopRecording()
     stopApp(app)
     restore()
