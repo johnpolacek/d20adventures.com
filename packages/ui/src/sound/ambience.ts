@@ -19,6 +19,9 @@ const BEDS: Record<AmbienceBed, number> = {
   dawn: 0.09,
   dungeon: 0.11,
   drip: 0.1,
+  rain: 0.09,
+  "roof-rain": 0.09,
+  storm: 0.1,
 }
 const url = (bed: AmbienceBed) => `/stage/sounds/ambience/${bed}.mp3`
 const CROSS = 2.5

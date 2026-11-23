@@ -39,6 +39,13 @@ const USES: Record<string, string> = {
   dawn: "Morning outdoors",
   dungeon: "A dungeon's air",
   drip: "Water dripping underground",
+  rain: "Rain falling outdoors",
+  "roof-rain": "Rain on the roof, heard indoors",
+  storm: "Rain with distant thunder",
+  "door-open": "A door opened. Not yet played: the stage has no door event",
+  "door-close": "A door shut. Not yet played: the stage has no door event",
+  "door-creak": "A door creaking on its hinges. Not yet played",
+  chest: "A chest lid opened. Not yet played: the stage has no chest event",
 }
 
 async function credits(dir: string): Promise<Map<string, { name: string; url?: string }>> {

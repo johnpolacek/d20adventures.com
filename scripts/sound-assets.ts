@@ -4,6 +4,7 @@
 // crossfade, so they need no seam of their own.
 //
 //   pnpm tsx scripts/sound-assets.ts ~/Desktop/d20-sound-sources
+//   pnpm tsx scripts/sound-assets.ts ~/Desktop/d20-sound-sources storm rain   # only these cues
 //
 // Then `pnpm stage:sync public/stage/sounds` before pushing.
 
@@ -14,6 +15,9 @@ import { join, resolve } from "node:path"
 
 const from = resolve(process.argv[2] ?? join(homedir(), "Desktop/d20-sound-sources"))
 const out = resolve("public/stage/sounds")
+// Cues named after the folder are the only ones built. None names every one.
+const only = process.argv.slice(3)
+const wanted = (cue: string) => !only.length || only.includes(cue)
 
 // Effects: cue name, source takes. Level is the RMS in dBFS each take is brought to, peaks held under -3. A take
 // written `file#seconds` is cut to that length, where a file holds more than one sound.
@@ -37,6 +41,11 @@ const FX: Record<string, string[]> = {
   step: ["kenney-rpg/OGG/footstep00.ogg", "kenney-rpg/OGG/footstep01.ogg", "kenney-rpg/OGG/footstep02.ogg", "kenney-rpg/OGG/footstep08.ogg", "kenney-rpg/OGG/footstep09.ogg"],
   growl: ["oga-80-rpg/creature_monster_03.ogg", "oga-80-rpg/creature_monster_04.ogg", "oga-80-rpg/creature_roar_02.ogg"],
   hurt: ["oga-80-rpg/creature_hurt_01.ogg", "oga-80-rpg/creature_hurt_02.ogg"],
+  // Made with earshot (SOURCES.md). The chest's own design ends in a sparkle, cut away under 2.8 kHz before it is put here.
+  "door-open": ["earshot/door-open_1.wav", "earshot/door-open_2.wav", "earshot/door-open_3.wav"],
+  "door-close": ["earshot/door-close_1.wav", "earshot/door-close_2.wav", "earshot/door-close_3.wav"],
+  "door-creak": ["earshot/door-creak_1.wav", "earshot/door-creak_2.wav"],
+  chest: ["earshot/chest-open_1.wav", "earshot/chest-open_2.wav"],
 }
 const FX_LEVEL = -24
 
@@ -51,6 +60,11 @@ const BEDS: Record<string, { src: string; start?: number; length: number; filter
   dawn: { src: "oga-ambience/amb_morning.wav", length: 63 },
   dungeon: { src: "oga-ambience/dungeon_ambient_1_0.ogg", length: 60 },
   drip: { src: "oga-ambience/atmosbasement.mp3_.flac", length: 20 },
+  // Made with earshot (SOURCES.md). The storm is its street rain with three takes of distant thunder laid in, kept clear
+  // of the ends so the loop's crossfade never halves a roll.
+  rain: { src: "earshot/rain-leaves.wav", length: 30 },
+  "roof-rain": { src: "earshot/rain-roof.wav", length: 30 },
+  storm: { src: "earshot/storm.wav", length: 40 },
 }
 const BED_LEVEL = -30
 
@@ -80,6 +94,7 @@ mkdirSync(join(out, "ambience"), { recursive: true })
 // Leading silence off, and a few ms of fade so a cut start does not click.
 const TRIM = "silenceremove=start_periods=1:start_threshold=-50dB,afade=t=in:d=0.004"
 for (const [cue, takes] of Object.entries(FX)) {
+  if (!wanted(cue)) continue
   takes.forEach((t, i) => {
     const [file, length] = t.split("#")
     // A cut take fades out over its last 40 ms, so the cut does not click.
@@ -88,6 +103,7 @@ for (const [cue, takes] of Object.entries(FX)) {
   })
 }
 for (const [bed, b] of Object.entries(BEDS)) {
+  if (!wanted(bed)) continue
   const cut = `atrim=start=${b.start ?? 0}:duration=${b.length},asetpts=PTS-STARTPTS${b.filter ? `,${b.filter}` : ""}`
   encode(join(from, b.src), join(out, "ambience", `${bed}.mp3`), cut, BED_LEVEL, 2)
 }

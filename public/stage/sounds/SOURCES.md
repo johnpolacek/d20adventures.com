@@ -22,4 +22,13 @@ the packs below, unpacked into one folder, and sets their levels.
 - `dungeon`: https://opengameart.org/content/loopable-dungeon-ambience
 - `drip`: https://opengameart.org/content/dripping-water-loop
 
+## Made with earshot
+
+- `door-open`, `door-close`, `door-creak`, `chest`, `rain`, `roof-rain`, `storm`: earshot, https://github.com/Leonxlnx/earshot
+
+earshot (MIT) renders each sound in code, many from public domain recordings, and the sounds are ours to use. Made
+2026-11-23 with `earshot make --sound <design>`: `door/open`, `door/close`, `door/creak`, `chest/open` (cut under
+2.8 kHz to take out its sparkle), `rain/leaves`, `rain/roof`, and `rain/street` with three takes of `thunder/distant`
+for the storm. The renders are in `~/Desktop/d20-sound-sources/earshot`.
+
 The `d20-roll` takes predate this list.
