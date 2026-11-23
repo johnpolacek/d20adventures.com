@@ -1,6 +1,7 @@
 ---
 title: About
-description: 
+description: The story of D20 Adventures, an open source 5E RPG with an AI Game Master, and how to play, host or create your own adventures.
+image: /stage/realm/realm-of-myr/realm.jpg
 ---
 
 D20 Adventures is a fantasy 5E-rules-based RPG, inspired by Baldur's Gate 3. It is open source, self-hosted and free. 
