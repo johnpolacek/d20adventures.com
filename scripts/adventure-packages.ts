@@ -16,6 +16,7 @@
  *   stage/portraits.json    card portraits for cast whose cards have none, and each character's painted portrait
  *   stage/looks.json        the played looks of its sets, by set id
  *   stage/figures.json      who stands as which figure (packages/stage/src/stagings/<adventure>/figures.json)
+ *   stage/pronunciations.json  how the narrator says its setting's names (content/settings/<setting>/pronunciations.md)
  *   files/stage/…           every file its story and stage name, at the path the stage asks for it by
  *
  * Figures are not copied. They are named by id with the hash of their figure.json, and fetched from the shelf every
@@ -29,6 +30,7 @@ import { SETS, STAGINGS } from "@d20/stage/sets"
 import { LOOKS } from "@/asset-library/looks"
 import { cityMapFor } from "@/lib/citymap"
 import { CATALOG } from "@/lib/store/catalog"
+import { settingPronunciations } from "@/lib/pronunciations"
 import { loadLocalWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
 const ROOT = process.cwd()
@@ -178,7 +180,8 @@ async function gather(id: string, settingId: string) {
   }
   const source = readFileSync(join(ROOT, "content/settings", settingId, "adventures", id, "adventure.md"), "utf8")
   const title = /^title:\s*"?([^"\n]+)"?\s*$/m.exec(source)?.[1] ?? id
-  const contents = { story: story.version, scenes, portraits, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap }
+  const pronunciations = settingPronunciations(settingId, ROOT)
+  const contents = { story: story.version, scenes, portraits, stagings, sets, looks, plans, cast, figures, files: hashed, cityMap, pronunciations }
   const manifest = {
     format: "d20.adventure",
     formatVersion: 1,
@@ -194,7 +197,7 @@ async function gather(id: string, settingId: string) {
     figureFiles,
     needs,
   }
-  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, portraits, missing }
+  return { manifest, story, cityMap, stagings, sets, looks, plans, cast, scenes, portraits, pronunciations, missing }
 }
 
 function write(dir: string, rel: string, value: unknown) {
@@ -231,6 +234,7 @@ async function main() {
     write(dir, "stage/portraits.json", p.portraits)
     write(dir, "stage/looks.json", p.looks)
     write(dir, "stage/figures.json", p.cast)
+    write(dir, "stage/pronunciations.json", p.pronunciations)
     for (const rel of stageOnly ? [] : Object.keys(p.manifest.files)) {
       mkdirSync(dirname(join(dir, "files", rel)), { recursive: true })
       cpSync(join(PUBLIC, rel), join(dir, "files", rel))

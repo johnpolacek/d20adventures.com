@@ -16,6 +16,7 @@
     "./sound/engine": "./src/sound/engine.ts",
     "./sound/fx": "./src/sound/fx.ts",
     "./sound/narrator": "./src/sound/narrator.ts",
+    "./sound/pronunciations": "./src/sound/pronunciations.ts",
     "./sound/settings": "./src/sound/settings.ts",
     "./sound/use-narrator": "./src/sound/use-narrator.ts",
     "./sound/use-stage-sound": "./src/sound/use-stage-sound.ts",

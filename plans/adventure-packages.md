@@ -21,6 +21,7 @@ One folder, or one archive of it, named by the adventure's id:
     stagings/*.json   where everyone starts, per encounter
     plans/*.json      the generated floor plans
     looks.json        the played looks: which figure stands for which cast member
+    pronunciations.json  how the narrator says the setting's names (content/settings/<setting>/pronunciations.md)
   files/              textures and art the sets name
 ```
 

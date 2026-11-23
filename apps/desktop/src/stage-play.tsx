@@ -16,7 +16,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
-import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorVoice } from "@d20/ui/sound/narrator"
+import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorNames, setNarratorVoice } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
 import { useStageSound } from "@d20/ui/sound/use-stage-sound"
@@ -48,7 +48,7 @@ import type { FigureArt } from "./figures"
 import { storyMoments } from "./moments"
 import { useSceneFiles } from "./files"
 import { adventureOf, castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
-import { loadPlay } from "./stage-data"
+import { loadPlay, loadPronunciations } from "./stage-data"
 
 // The built looks the game plays its sets in, loaded with the stage.
 
@@ -421,6 +421,11 @@ export function StagePlay(props: {
   const feature = useMemo(() => (used && turn ? featureView(used, turn.characters) : undefined), [used, turn?.characters])
   // The narrator reads the words in the panel. A roll or a class feature shows its own card, so it is not read.
   const narratorVoice = useNarratorVoice()
+  // The adventure's names, said as its setting lists them (stage/pronunciations.json).
+  const plan = save?.adventure.planId
+  useEffect(() => {
+    if (plan) void loadPronunciations(plan).then(setNarratorNames)
+  }, [plan])
   const nextWords = paragraphs[paragraph + 1]?.roll || paragraphs[paragraph + 1]?.feature ? undefined : text[paragraph + 1]
   const voiced = useNarrator({
     key: `${turn?._id}:${paragraph}`,

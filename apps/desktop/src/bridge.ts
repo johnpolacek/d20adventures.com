@@ -62,4 +62,7 @@ export const narratorEngine: NarratorEngine = {
     for (let i = 0; i < pcm.length; i++) audio[i] = pcm[i] / 0x8000
     return { audio, rate: r.rate }
   },
+  names: async (names) => {
+    await invoke("narrator_command", { command: { kind: "names", names } })
+  },
 }

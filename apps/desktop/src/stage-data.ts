@@ -5,6 +5,7 @@
 // - `repo`: the stage compiled from packages/stage/src, which the website and its dev pages load (useScenes), and
 //   scripts such as stage-plans.ts. The stage plays the repo's own looks and figures.
 import { useEffect, useState } from "react"
+import type { Pronunciations } from "@d20/ui/sound/pronunciations"
 import type { Look } from "@/asset-library/looks"
 import { appFilesHost } from "./files"
 import { type AdventureStage, addScenes, type SceneEntry, sceneFiles } from "./scenes"
@@ -99,6 +100,15 @@ export async function loadPlay() {
       ) as Promise<Record<string, string>>),
   })
   return play
+}
+
+// How the narrator says an adventure's names, from its package (stage/pronunciations.json). None from the repo.
+const spoken: Record<string, Promise<Pronunciations>> = {}
+export function loadPronunciations(adventure: string): Promise<Pronunciations> {
+  if (source === "repo") return Promise.resolve({})
+  return (spoken[adventure] ??= creatorIds().then(({ address, ids }) =>
+    (ids.includes(adventure) ? get(`${address}/creator/${adventure}/stage/pronunciations.json`) : get(`/adventures/${adventure}/stage/pronunciations.json`)).catch(() => ({}))
+  ) as Promise<Pronunciations>)
 }
 
 /** Whether the scenes have loaded, from the source given. The website's StagePlay waits on it. */

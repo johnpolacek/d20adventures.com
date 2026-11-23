@@ -1,6 +1,7 @@
 "use client"
 
 import { audio, bus } from "./engine"
+import type { Pronunciations } from "./pronunciations"
 import { onSoundSetting } from "./settings"
 
 // The narrator: the player's choice of voice, kept in the browser like the sound setting, and the voice itself, which
@@ -44,7 +45,12 @@ export function onNarratorChange(listener: () => void) {
 // What makes the speech. The desktop app sets one that runs Kokoro in Node beside the game. Without one there is no
 // narrator: in a browser it made speech slower than it plays, and stalled on the play screen.
 export type NarratorClip = { audio: Float32Array; rate: number }
-export type NarratorEngine = { load: () => Promise<void>; say: (text: string, voice: NarratorVoice) => Promise<NarratorClip> }
+export type NarratorEngine = {
+  load: () => Promise<void>
+  say: (text: string, voice: NarratorVoice) => Promise<NarratorClip>
+  // The adventure's pronunciations (pronunciations.ts), for every sentence said after.
+  names?: (list: Pronunciations) => Promise<void>
+}
 
 let engine: NarratorEngine | null = null
 let state: "cold" | "loading" | "ready" | "failed" = "cold"
@@ -76,6 +82,16 @@ export const narratorReady = () => state === "ready"
 
 // Sentences already made, so a replay or a step back is heard at once.
 const clips = new Map<string, Promise<NarratorClip>>()
+
+// The names the playing adventure says its own way. New ones forget the sentences made with the last.
+let namesKey = "{}"
+export function setNarratorNames(list: Pronunciations) {
+  const key = JSON.stringify(list)
+  if (key === namesKey || !engine?.names) return
+  namesKey = key
+  clips.clear()
+  engine.names(list).catch(() => {})
+}
 const KEEP = 80
 function say(text: string, voice: NarratorVoice): Promise<NarratorClip> {
   const key = `${voice}|${text}`

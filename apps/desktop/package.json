@@ -12,6 +12,7 @@
     "scene:judge": "tsx scripts/scene-judge.ts",
     "scene:probe": "tsx scripts/scene-probe.ts",
     "check:probe": "tsx scripts/check-probe.ts",
+    "narrator:names": "tsx scripts/narrator-names.ts",
     "record:playthrough": "tsx scripts/record-playthrough.ts",
     "tauri": "tauri"
   },
@@ -31,6 +32,7 @@
     "jpeg-js": "^0.4.4",
     "kokoro-js": "1.2.1",
     "lucide-react": "^0.577.0",
+    "phonemizer": "1.2.1",
     "pngjs": "^7.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",

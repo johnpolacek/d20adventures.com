@@ -17,7 +17,7 @@ In the beginning of this turn describe the circumstances of the escape, what the
 
 ## Transitions
 
-- To [[encounter:return-to-the-city]] when If the players mention returning, the city or Kordovas
+- To [[encounter:return-to-the-city]] when If the players mention returning, the city or Kordavos
 - To [[encounter:the-end]] when If the players want to go into hidin
 
 ## Migration Context
