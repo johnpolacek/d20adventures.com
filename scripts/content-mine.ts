@@ -312,10 +312,22 @@ export function parseJsonArray<T>(text: string): T[] {
 
 export const CONTEXT = `D20 Adventures (d20adventures.com) is John Polacek's solo-built tabletop RPG where an AI game master runs D&D-style adventures, with a painted 3D encounter stage, a desktop app that runs locally, and adventures authored as markdown. John builds it with AI coding agents. Audiences: tabletop and AI RPG players, and indie and AI-assisted developers.`
 
-// The title lessons live in the voice guide, so what John teaches there reaches every run.
+// A section of a markdown guide, from its `## ` heading to the next one.
+export function section(doc: string, heading: string): string {
+  return doc.match(new RegExp(`## ${heading}\\n[\\s\\S]*?(?=\\n## |$)`))?.[0].trim() ?? ""
+}
+
+// John's voice is one guide shared with johnpolacek.com, read live so what he teaches there reaches every run: his
+// checkout of that site on his Mac, else the copy the site serves.
+const SHARED_VOICE = "/Users/johnpolacek/Projects/johnpolacek-com-nextjs/writing/voice.md"
+export function sharedVoice(): string {
+  if (fs.existsSync(SHARED_VOICE)) return fs.readFileSync(SHARED_VOICE, "utf8")
+  return execFileSync("curl", ["-sf", "https://johnpolacek.com/voice.md"], { encoding: "utf8" })
+}
+
+// The title lessons are this site's own, in docs/writing-voice.md.
 export function titleGuide(): string {
-  const doc = fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8")
-  return doc.match(/\*\*Titles\.\*\*[\s\S]*?(?=\n\*\*Frontmatter\.\*\*)/)?.[0].trim() ?? ""
+  return section(fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8"), "Short and long titles")
 }
 
 const SHAREABLE = `Judge every idea as a stranger scrolling a feed would. Three questions:

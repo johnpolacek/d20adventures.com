@@ -27,7 +27,7 @@ Write it to content/updates/ with draft: true. List the pictures and clips it ne
 export function socialBriefFor(item: QueueItem): string {
   return `Write the social posts for the D20 Adventures post content/updates/${item.post}.md, into the content queue idea content/queue/${item.slug}.md.
 
-Read docs/writing-voice.md first, especially Social threads.
+Read docs/writing-voice.md first, with the shared guide it points to, especially its Social threads, and this site’s Social posts.
 
 X, under “## X”: a thread that follows the post section by section, in order, with each section’s own picture. One post per section, each under 280 characters, the first carrying the whole idea, the last only the link to the post at https://d20adventures.com/updates/${item.post}. Separate posts with a line of ---. Put each picture as [image: url] and its alt text as [alt: text] on the lines after the post’s words, using the post’s own image URLs and alt text. Don’t add @mentions: the queue page suggests them for John to click in. If the post names a tool, product or person missing from lib/content-queue/handles.json, find its X handle on the official site and add it there with where you found it.
 

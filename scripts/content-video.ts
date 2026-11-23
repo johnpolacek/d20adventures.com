@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { syncQueue } from "../lib/content-queue/sync"
-import { CONTEXT, claude, scrub, titleGuide } from "./content-mine"
+import { CONTEXT, claude, scrub, section, sharedVoice, titleGuide } from "./content-mine"
 
 const REPO = path.resolve(__dirname, "..")
 const QUEUE = path.join(REPO, "content/queue")
@@ -63,11 +63,11 @@ function commitsBetween(from: string, to: string): string {
     .join("\n")
 }
 
-// The voice sections a short post needs, from the guide John edits.
+// The voice sections a short post needs, from the shared guide John edits, then this site's own social rules.
 function voiceGuide(): string {
-  const doc = fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8")
-  const section = (h: string) => doc.match(new RegExp(`## ${h}\\n[\\s\\S]*?(?=\\n## )`))?.[0].trim() ?? ""
-  return [section("Voice in a nutshell"), section("Social threads")].filter(Boolean).join("\n\n")
+  const doc = sharedVoice()
+  const site = fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8")
+  return [section(doc, "Voice in a nutshell"), section(doc, "Social threads"), section(site, "Social posts")].filter(Boolean).join("\n\n")
 }
 
 function draftPrompt(video: Video, commits: string): string {
