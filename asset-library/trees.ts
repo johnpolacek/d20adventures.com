@@ -42,6 +42,10 @@ export interface TreeSwap {
   // What follows is asked for by a look and left alone by any other: a close wood at night wants it, a dooryard by day
   // does not.
 
+  // Parts of the set's own trees left in sight under the models, by material slot: `moss` keeps its hanging beards,
+  // which no model carries.
+  keep?: string[]
+
   // Where the game is played, x0,z0,x1,z1: nothing is stood in it but on the set's own trunks.
   play?: number[]
   // How many smaller cards each leaf card is cut into, by weight from heavy to light. A card is a photograph of a twig
@@ -339,7 +343,7 @@ export async function standTrees(stage: Stage, footprints: unknown, set: SetLike
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
   const listed = ((await (await fetch(`${swap.files}/trees.json`)).json()) as { variants: Shape[] }).variants.filter((v) => !swap.without?.includes(v.name))
   stage.world.traverse((m) => {
-    if (m.name.startsWith(`static:${OWN}`)) m.visible = false
+    if (m.name.startsWith(`static:${OWN}`) && !swap.keep?.some((k) => m.name.startsWith(`static:${OWN}${k}`))) m.visible = false
   })
   const away = (t: { x: number; z: number }) => Math.hypot(t.x - swap.near[0], t.z - swap.near[1])
   // A trunk is a round footprint as tall as a tree: a rock or a bush is round and low.

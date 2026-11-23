@@ -248,6 +248,23 @@ export const LOOKS: Record<string, Look> = {
   "realm-of-myr/mordava-river-pier": {
     play: true,
     params: { paint: "0", isobox: "-20,-20,20,20", isowhole: "1", isohaze: "1", figenv: "0.3", bloom: "on" },
+    // A river wood at night: old oaks and ashes over the banks, a few dead among them. Each crown is a dark shape in
+    // the haze with sky between its limbs, where the set's own trees were sheets of leaves.
+    trees: {
+      files: "/stage/trees",
+      near: [4, 3],
+      rings: [10, 24],
+      thin: [34, 0.3],
+      taller: 1,
+      // Fewer shapes, so fewer draws: each shape is drawn at its own cost, however many of it stand.
+      kinds: { oak: 0.6, ash: 0.25, dead: 0.15 },
+      without: ["oak3", "oak5", "ash3", "dead2"],
+      leaves: { aspen: "ash" },
+      tint: { "*": "#3e4850", bark: "#6f6a64" },
+      smooth: true,
+      // The set's grey moss still hangs where its own limbs were: the models carry none.
+      keep: ["moss"],
+    },
     shots: { wide: { iso: "20,25,40,30", isoat: "5,0" } },
   },
   "realm-of-myr/mordava-river-pier-empty": {
