@@ -1100,11 +1100,12 @@ html[data-update-theme="dark"] .up-sent-die {
   display: none;
 }
 .up-side a {
+  position: relative;
   display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
+  padding: 7px 10px 7px 16px;
   border-radius: 6px;
   font-size: 14px;
   white-space: nowrap;
@@ -1116,13 +1117,39 @@ html[data-update-theme="dark"] .up-sent-die {
 .up-side a:hover {
   color: var(--up-strong);
 }
-/* The current section: the raised tone with the accent along its left edge. A chosen row anywhere on the desk is
-   marked the same way, and a blue wash is kept off the paper, where it greys. */
+/* The current section: darker, heavier words with a small diamond drawn in the ink before them, and no fill. `up-marked`
+   puts the same diamond on a current item in any list of sections, as the plan editor's. */
 .up-side a[aria-current="page"] {
-  background: var(--up-raise);
-  box-shadow: inset 2px 0 0 var(--up-accent);
   font-weight: 600;
   color: var(--up-strong);
+}
+.up-side a[aria-current="page"]::before,
+.up-marked::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border: 1.25px solid var(--up-muted);
+  transform: rotate(45deg);
+}
+/* As a section becomes current, its diamond fades in and turns the last quarter of the way onto its point. */
+@media (prefers-reduced-motion: no-preference) {
+  .up-side a[aria-current="page"]::before,
+  .up-marked::before {
+    animation: up-mark-in 320ms var(--ease-snap, cubic-bezier(0.2, 0.8, 0.2, 1)) both;
+  }
+}
+@keyframes up-mark-in {
+  from {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.7);
+  }
+}
+.up-marked {
+  position: relative;
 }
 .up-side a svg {
   width: 16px;

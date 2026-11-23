@@ -69,11 +69,10 @@ textarea.up-field.is-auto {
 .up-pick:hover {
   border-color: var(--up-line-strong);
 }
-/* Chosen, as the side's current section is: the raised tone with the accent along its left edge. */
+/* Chosen: the raised tone, ruled in the accent. */
 .up-pick[aria-current="true"] {
-  border-color: var(--up-line-strong);
+  border-color: var(--up-accent-line);
   background: var(--up-raise);
-  box-shadow: inset 2px 0 0 var(--up-accent);
 }
 
 /* A box inside a panel: a day of the schedule, a post of a thread. It is the paper, ruled round. Today is ruled in

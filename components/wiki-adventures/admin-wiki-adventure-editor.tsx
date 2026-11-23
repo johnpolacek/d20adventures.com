@@ -1044,8 +1044,8 @@ function OutlineButton({ active, label, meta, level, onClick }: { active: boolea
       variant="plain"
       type="button"
       onClick={onClick}
-      className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        active ? "bg-(--up-raise) font-semibold text-(--up-strong) shadow-[inset_2px_0_0_var(--up-accent)]" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
+      className={`group relative flex w-full items-center justify-between gap-3 rounded-r rounded-l-none pr-2.5 pl-4 text-left transition-[background-color,color,scale] duration-150 ease-snap active:scale-[0.96] ${
+        active ? "up-marked font-semibold text-(--up-strong)" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
       } ${level === "section" ? "min-h-10" : "min-h-8"}`}
     >
       <span className={`min-w-0 truncate leading-5 ${level === "section" ? "font-serif text-sm font-semibold" : "font-sans text-2xs font-semibold uppercase tracking-[0.08em]"}`}>{label}</span>
@@ -1075,8 +1075,8 @@ function PageButton({ page, selectedPath, onSelect, level = "root" }: { page: Wi
       variant="plain"
       type="button"
       onClick={() => onSelect(page.path)}
-      className={`group relative flex w-full items-center rounded-r rounded-l-none px-2.5 text-left transition-[background-color,color,box-shadow,scale] duration-150 ease-snap active:scale-[0.96] ${
-        isSelected ? "bg-(--up-raise) font-semibold text-(--up-strong) shadow-[inset_2px_0_0_var(--up-accent)]" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
+      className={`group relative flex w-full items-center rounded-r rounded-l-none pr-2.5 pl-4 text-left transition-[background-color,color,scale] duration-150 ease-snap active:scale-[0.96] ${
+        isSelected ? "up-marked font-semibold text-(--up-strong)" : "text-(--up-muted) hover:bg-(--up-raise) hover:text-(--up-strong)"
       } ${level === "encounter" ? "min-h-8" : "min-h-9"}`}
     >
       <span className="min-w-0">
