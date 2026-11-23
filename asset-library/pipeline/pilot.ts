@@ -953,6 +953,257 @@ function fingersOnly(doc: Document, fist?: "L" | "R", big = 1) {
   return moved
 }
 
+// A sixth finger taken off. Hi3D made Thalbern's hands with five fingers and a thumb, from a sheet that has four and a
+// thumb, and the rigger hung two of them on the ring finger's bones (the owner, 2026-11-23: "somehow thalbern got too
+// many fingers"). The fingers are found where they part: past the knuckles, each is a piece of skin of its own, and
+// the distance past them at which the most pieces stand apart is where they are counted. With four bone lines and
+// five fingers, the finger farthest from the line it lies nearest is the one too many. A hand with four is left be.
+// Two tries that failed: cut where the fingers part, it left a flap 3 cm long, the web it shared with the ring finger;
+// folded flat and hung on the hand, it tore into shards as the fingers closed. What holds is below.
+function sixth(doc: Document) {
+  const skin = doc.getRoot().listSkins()[0]
+  const joints = skin?.listJoints() ?? []
+  const place = (name: string) => joints.findIndex((j) => new RegExp(`(^|:)${name}$`).test(j.getName()))
+  const at = (i: number) => joints[i].getWorldMatrix().slice(12, 15)
+  const sub = (a: number[], b: number[]) => a.map((v, k) => v - b[k])
+  const unit = (a: number[]) => {
+    const l = Math.hypot(...a) || 1
+    return a.map((v) => v / l)
+  }
+  const said: string[] = []
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const [pos, J, W, idx] = [prim.getAttribute("POSITION"), prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0"), prim.getIndices()]
+      if (!pos || !J || !W || !idx) continue
+      for (const side of ["Left", "Right"]) {
+        const [hand, ...knuckles] = [`${side}Hand`, ...["Index", "Middle", "Ring", "Pinky"].map((f) => `${side}Hand${f}1`)].map(place)
+        if (hand < 0 || knuckles.some((k) => k < 0)) continue
+        const bones = new Set(joints.flatMap((j, i) => (new RegExp(`(^|:)${side}Hand(Thumb|Index|Middle|Ring|Pinky)?\\d?$`).test(j.getName()) ? [i] : [])))
+        const thumbs = new Set(joints.flatMap((j, i) => (new RegExp(`(^|:)${side}HandThumb\\d$`).test(j.getName()) ? [i] : [])))
+        const wrist = at(hand)
+        const ks = knuckles.map(at)
+        const mid = [0, 1, 2].map((k) => ks.reduce((s, p) => s + p[k], 0) / ks.length)
+        const h = unit(sub(mid, wrist))
+        const reach = dot(sub(mid, wrist), h)
+        const raw = sub(ks[0], ks[3])
+        const across = unit(sub(raw, h.map((v) => v * dot(raw, h))))
+        const n = [h[1] * across[2] - h[2] * across[1], h[2] * across[0] - h[0] * across[2], h[0] * across[1] - h[1] * across[0]]
+        const span = Math.abs(dot(raw, across))
+        // The finger bones' lines, each from its first joint past its last.
+        const lines = ["Index", "Middle", "Ring", "Pinky"].map((f) => {
+          const ps = [1, 2, 3].map((s) => place(`${side}Hand${f}${s}`)).filter((i) => i >= 0).map(at)
+          const last = ps[ps.length - 1]
+          return [...ps, last.map((v, k) => v + (v - ps[ps.length - 2][k]))]
+        })
+        const toLine = (p: number[], line: number[][]) => {
+          let best = Infinity
+          for (let s = 0; s + 1 < line.length; s++) {
+            const d = sub(line[s + 1], line[s])
+            const t = Math.max(0, Math.min(1, dot(sub(p, line[s]), d) / (dot(d, d) || 1)))
+            best = Math.min(best, Math.hypot(...sub(p, line[s].map((v, k) => v + d[k] * t))))
+          }
+          return best
+        }
+        // The hand's skin: points that hang mostly on this hand and its fingers, near the hand.
+        const count = pos.getCount()
+        const along = new Float64Array(count)
+        const side_ = new Float64Array(count)
+        const inHand = new Uint8Array(count)
+        const onThumb = new Float64Array(count)
+        for (let i = 0; i < count; i++) {
+          const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+          let share = 0
+          for (let k = 0; k < 4; k++) {
+            if (bones.has(j[k])) share += w[k]
+            if (thumbs.has(j[k])) onThumb[i] += w[k]
+          }
+          if (share < 0.5) continue
+          const d = sub(pos.getElement(i, [0, 0, 0]), wrist)
+          along[i] = dot(d, h)
+          side_[i] = dot(d, across)
+          if (along[i] > 0 && Math.abs(dot(d, n)) < reach && Math.abs(side_[i] - dot(sub(mid, wrist), across)) < span * 1.5) inHand[i] = 1
+        }
+        const tris = idx.getArray() as ArrayLike<number>
+        // The pieces of the hand's skin past a distance along it, and which are fingers: long enough, and not the thumb.
+        const pieces = (cut: number) => {
+          const parent = new Int32Array(count).map((_, i) => i)
+          const root = (i: number): number => {
+            while (parent[i] !== i) i = parent[i] = parent[parent[i]]
+            return i
+          }
+          const past = (i: number) => inHand[i] === 1 && along[i] > cut
+          for (let t = 0; t < tris.length; t += 3)
+            for (const [a, b] of [
+              [tris[t], tris[t + 1]],
+              [tris[t + 1], tris[t + 2]],
+              [tris[t + 2], tris[t]],
+            ])
+              if (past(a) && past(b)) parent[root(a)] = root(b)
+          const groups = new Map<number, number[]>()
+          for (let i = 0; i < count; i++) if (past(i)) groups.set(root(i), [...(groups.get(root(i)) ?? []), i])
+          return [...groups.values()].filter((g) => {
+            if (g.length < 30) return false
+            const long = Math.max(...g.map((i) => along[i])) - cut
+            const thumb = g.reduce((s, i) => s + onThumb[i], 0) / g.length
+            return long > reach * 0.1 && thumb < 0.5
+          })
+        }
+        let found: { cut: number; fingers: number[][] } | null = null
+        for (let step = 0; step <= 12; step++) {
+          const cut = reach * (1 + step * 0.04)
+          const fingers = pieces(cut)
+          if (!found || fingers.length > found.fingers.length) found = { cut, fingers }
+        }
+        if (!found || found.fingers.length < 5) continue
+        if (found.fingers.length > 5) {
+          said.push(`${side.toLowerCase()}: ${found.fingers.length} fingers, left as they are`)
+          continue
+        }
+        const middleOf = (g: number[]) => [0, 1, 2].map((k) => g.reduce((s, i) => s + pos.getElement(i, [0, 0, 0])[k], 0) / g.length)
+        const fingers = found.fingers.map((g) => {
+          const c = middleOf(g)
+          const far = lines.map((line) => toLine(c, line))
+          const near = far.indexOf(Math.min(...far))
+          return { g, c, near, far: far[near], side: dot(sub(c, wrist), across) }
+        })
+        const extra = [0, 1, 2, 3]
+          .map((line) => fingers.filter((f) => f.near === line).sort((a, b) => b.far - a.far))
+          .find((on) => on.length > 1)?.[0]
+        if (!extra) {
+          said.push(`${side.toLowerCase()} five fingers, none on a line of another`)
+          continue
+        }
+        // The finger too many taken off down to the knuckles. Each finger's line runs from the knuckles to its middle,
+        // and every point past the knuckles nearer that finger's line than any other's goes, so the skin it shared with
+        // the finger beside it is split down the middle of the web and not left hanging as a flap. The wound is closed
+        // with a fan from its middle, hung on the hand, and the skin about it smoothed. The fingers beside it are then
+        // drawn in across the gap, each kept whole.
+        const at3 = (i: number) => pos.getElement(i, [0, 0, 0])
+        const axes = fingers.map((f) => {
+          const base = wrist.map((v, k) => v + h[k] * reach + across[k] * f.side + n[k] * dot(sub(f.c, wrist), n))
+          return [base, f.c.map((v, k) => v + (v - base[k]))]
+        })
+        const gap = Math.min(...fingers.filter((f) => f !== extra).map((f) => Math.abs(f.side - extra.side)))
+        const c0 = extra.side
+        const which = fingers.indexOf(extra)
+        const gone = new Uint8Array(count)
+        let taken = 0
+        for (let i = 0; i < count; i++) {
+          if (!inHand[i] || along[i] < reach * 0.95 || Math.abs(side_[i] - c0) > gap * 1.6) continue
+          const p = at3(i)
+          const far = axes.map((line) => toLine(p, line))
+          if (far.indexOf(Math.min(...far)) === which) {
+            gone[i] = 1
+            taken++
+          }
+        }
+        // A point is known by its place: where the texture has a seam, two points stand in one place.
+        const placeOf = (i: number) => at3(i).map((v) => Math.round(v * 1e5)).join(",")
+        // A point that shares its place with one taken off goes too, or a seam would be left open.
+        const goneAt = new Set<string>()
+        for (let i = 0; i < count; i++) if (gone[i]) goneAt.add(placeOf(i))
+        for (let i = 0; i < count; i++) if (!gone[i] && inHand[i] && goneAt.has(placeOf(i))) gone[i] = 1
+        const kept: number[] = []
+        const lost = new Set<string>()
+        for (let t = 0; t < tris.length; t += 3) {
+          const tri = [tris[t], tris[t + 1], tris[t + 2]]
+          if (tri.some((i) => gone[i])) for (let e = 0; e < 3; e++) lost.add(`${placeOf(tri[e])}|${placeOf(tri[(e + 1) % 3])}`)
+          else kept.push(...tri)
+        }
+        // A wound's edge is a kept triangle's a→b that a lost one had as b→a.
+        const rimEdges: [number, number][] = []
+        for (let t = 0; t < kept.length; t += 3)
+          for (let e = 0; e < 3; e++) {
+            const [a, b] = [kept[t + e], kept[t + ((e + 1) % 3)]]
+            if (lost.has(`${placeOf(b)}|${placeOf(a)}`)) rimEdges.push([a, b])
+          }
+        const rim = [...new Set(rimEdges.flat())]
+        // The wound is closed with its own points: a copy of each on the rim and one in the middle, all at one place in
+        // the skin's texture, so the plug takes the skin's colour and does not smear the texture across its islands.
+        const centre = count
+        const copies = new Map(rim.map((i, k) => [i, count + 1 + k]))
+        const added = rim.length + 1
+        const uv = prim.getAttribute("TEXCOORD_0")
+        // The skin's colour from the back of the hand, well inside it: a point on the wound's rim may lie on the edge of
+        // its island in the texture, where the texture is clear.
+        const palmMiddle = wrist.map((v, k) => v + h[k] * reach * 0.6)
+        let inside = rim[0]
+        for (let i = 0; i < count; i++)
+          if (inHand[i] && !gone[i] && Math.hypot(...sub(at3(i), palmMiddle)) < Math.hypot(...sub(at3(inside), palmMiddle))) inside = i
+        const skinAt = uv ? uv.getElement(inside, [0, 0]) : null
+        for (const accessor of prim.listAttributes()) {
+          const array = accessor.getArray()!
+          const grown = new (array.constructor as Float32ArrayConstructor)(array.length + accessor.getElementSize() * added)
+          grown.set(array)
+          accessor.setArray(grown)
+          accessor.setElement(centre, accessor.getElement(rim[0], []))
+          for (const [i, c] of copies) accessor.setElement(c, accessor.getElement(i, []))
+        }
+        if (uv && skinAt) for (const c of [centre, ...copies.values()]) uv.setElement(c, skinAt)
+        J.setElement(centre, [hand, 0, 0, 0])
+        W.setElement(centre, [1, 0, 0, 0])
+        const normal = prim.getAttribute("NORMAL")
+        if (normal) normal.setElement(centre, unit([0, 1, 2].map((k) => rim.reduce((s, i) => s + normal.getElement(i, [0, 0, 0])[k], 0))))
+        // The wound is no flat ring, so a fan over it faces both ways in places: it is given both faces, or the hand
+        // would show through where it faced in.
+        for (const [a, b] of rimEdges) kept.push(copies.get(b)!, copies.get(a)!, centre, copies.get(a)!, copies.get(b)!, centre)
+        idx.setArray(new (count + added > 65535 || tris instanceof Uint32Array ? Uint32Array : Uint16Array)(kept))
+        // The fingers beside the gap drawn in, the more the further past the knuckles.
+        const half = gap / 2
+        for (let i = 0; i < count; i++) {
+          if (!inHand[i] || gone[i]) continue
+          const reachIn = eased(along[i], reach * 0.85, reach * 1.05)
+          if (reachIn <= 0) continue
+          const off = side_[i] - c0
+          const move = -Math.sign(off) * half * eased(Math.abs(off), gap * 0.2, gap * 0.6) * reachIn
+          const p = at3(i)
+          pos.setElement(
+            i,
+            p.map((v, k) => v + across[k] * move)
+          )
+        }
+        // The plug's rim goes where the rim went.
+        for (const [i, c] of copies) pos.setElement(c, at3(i))
+        // The rim and two rings about it smoothed, the wound's middle with them. Points that share a place move as one,
+        // with the neighbours of all of them, or the seam between them would open.
+        const group = new Map<string, number[]>()
+        const links = new Map<string, Set<string>>()
+        for (let t = 0; t < kept.length; t += 3)
+          for (let e = 0; e < 3; e++) {
+            const [a, b] = [kept[t + e], kept[t + ((e + 1) % 3)]]
+            const [ka, kb] = [placeOf(a), placeOf(b)]
+            for (const [k, i] of [
+              [ka, a],
+              [kb, b],
+            ] as const) {
+              if (!group.has(k)) group.set(k, [])
+              if (!group.get(k)!.includes(i)) group.get(k)!.push(i)
+              if (!links.has(k)) links.set(k, new Set())
+            }
+            links.get(ka)!.add(kb)
+            links.get(kb)!.add(ka)
+          }
+        let ring = new Set([...rim, centre].map(placeOf))
+        for (let r = 0; r < 2; r++) ring = new Set([...ring, ...[...ring].flatMap((k) => [...(links.get(k) ?? [])])])
+        const where_ = new Map([...group].map(([k, members]) => [k, at3(members[0])]))
+        for (let pass = 0; pass < 6; pass++) {
+          const next = new Map<string, number[]>()
+          for (const k of ring) {
+            const near = [...(links.get(k) ?? [])]
+            if (!near.length) continue
+            const mean = [0, 1, 2].map((d) => near.reduce((s, j) => s + where_.get(j)![d], 0) / near.length)
+            next.set(k, where_.get(k)!.map((v, d) => v + (mean[d] - v) * 0.5))
+          }
+          for (const [k, p] of next) where_.set(k, p)
+        }
+        for (const k of ring) for (const i of group.get(k) ?? []) pos.setElement(i, where_.get(k)!)
+        const where = ["index", "middle", "ring", "little"][extra.near]
+        said.push(`${side.toLowerCase()}: one beside the ${where} finger, ${taken} points taken off, ${(extra.far * 100).toFixed(1)} cm off its line, parting ${((found.cut - reach) * 100).toFixed(1)} cm past the knuckles, the gap ${(gap * 100).toFixed(1)} cm closed`)
+      }
+    }
+  return said
+}
+
 // A beast's head given to its head bone. A rigger looks for a person: on an owlbear, whose head sits in its
 // shoulders with no neck, it shared the head's skin between the chest (38%), the two collarbones (27%) and the head
 // (34%), where a person's head is the head bone's by four fifths. The head then hung with the chest and no turn of
@@ -1929,6 +2180,8 @@ async function rodinHyper(brief: Brief) {
   // The rigger gave Hi3D's model back with three points of its own to every triangle, 600,000 for 105,000 places and
   // 49 MB of them. With one normal to a place, points that are the same in every way are made one again.
   await doc.transform(weld())
+  // `--sixth=off` leaves a hand with a finger too many as the generator made it.
+  if (!args.includes("--sixth=off")) for (const line of sixth(doc)) say("sixth", line)
   // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for
   // a cut: they are taken out, keys and all, and the borrowed ones go by the names the game plays.
   if (Object.keys(brief.borrowed ?? {}).length) {
