@@ -3,9 +3,9 @@ import { PostBody } from "@/components/updates/post-body"
 import type { Update } from "@/lib/updates"
 import { renderPost } from "@/lib/updates"
 
-/** A page whose words are a markdown file in `content/` (`readPage`), set like a post on /updates. */
+/** A page whose words are a markdown file in `content/` (`readPage`), set like a post on /updates, with no numbers on its sections. */
 export function MarkdownPage({ page }: { page: Update }) {
-  const { html } = renderPost(page)
+  const { html } = renderPost(page, { numbered: false })
   return (
     <LedgerShell>
       <div className="up-layout">

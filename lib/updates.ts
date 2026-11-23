@@ -78,7 +78,7 @@ const slugify = (text: string) =>
     .replace(/^-|-$/g, "")
 
 // What one render gathers as it goes: the depth of the post's top headings, and its sections.
-let run: { top: number; sections: PostSection[] } = { top: 2, sections: [] }
+let run: { top: number; sections: PostSection[]; numbered: boolean } = { top: 2, sections: [], numbered: true }
 
 // A prompt longer than this opens folded, behind an Expand button.
 const LONG_PROMPT = 600
@@ -97,7 +97,8 @@ const markdown = new Marked({
       let id = slugify(title)
       while (run.sections.some((section) => section.id === id)) id += "-2"
       run.sections.push({ id, title })
-      return `<h2 id="${id}"><span class="up-num">${String(run.sections.length).padStart(2, "0")}</span>${html}</h2>\n`
+      const num = run.numbered ? `<span class="up-num">${String(run.sections.length).padStart(2, "0")}</span>` : ""
+      return `<h2 id="${id}">${num}${html}</h2>\n`
     },
     code({ text, lang }) {
       const [kind, ...name] = (lang ?? "").split(/\s+/)
@@ -155,10 +156,10 @@ function exploreFigures(html: string): string {
 const READING_SPEED = 200
 
 /** Markdown to HTML, with the post's sections and reading time. A link whose text starts with "Play" is drawn as a button, and one starting "Explore" makes its section's pictures links. */
-export function renderPost(post: Update): RenderedPost {
+export function renderPost(post: Update, { numbered = true }: { numbered?: boolean } = {}): RenderedPost {
   const tokens = markdown.lexer(post.body)
   const depths = tokens.flatMap((token) => (token.type === "heading" ? [token.depth as number] : []))
-  run = { top: depths.length ? Math.min(...depths) : 2, sections: [] }
+  run = { top: depths.length ? Math.min(...depths) : 2, sections: [], numbered }
   const html = exploreFigures(tables(figures(markdown.parser(tokens)))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-btn is-primary is-lg up-play">$2</a>')
   // Tags, link addresses and the lines that open and close a fenced block are not read.
   const words = post.body.replace(/<[^>]+>|\]\([^)]*\)|^```.*$/gm, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
