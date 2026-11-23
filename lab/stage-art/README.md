@@ -277,7 +277,8 @@ The Midnight Summons audited as played, 2026-11-23. Every shot and speaker's vie
 - Scores from one judge to the next moved more than any change did: a second judge scored even untouched views a point or more lower. So round 1 was settled blind, before against after with the sides shuffled: after won 7 of 8 pairs, the eighth a tie.
 - The porch's retouch came back crunchy, over-sharpened stone, and judged a point worse. The porch keeps its first painting. Retouches also lean painterly in bark and leaves, and the clearing's trees came back in rows with matching forks: paint it again.
 - Mist banks drift (`mist` in `materials/surfaces.ts`): their thickness follows a slow cloud noise in world space that moves with time, so fog slides over the still paint. The stones have mist lying on the river and standing along the far bank. Subtle by design: about 0.4% of the river view's pixels change by more than 6 levels in 6 seconds.
-- Not yet retouched, the image tool at its limit: `fallen`, `standoff`, `fight` and `druid` (lighter beams), and `home`, `home-2` and `porch` (the bow lying like a hoop on the sill, the lantern lit by day).
+- Round 2, blind again: `standoff`, `fight` and `druid` retouched, each won clearly. `fallen` lost slightly and keeps its first painting.
+- The cottage keeps all its first paintings. Its retouches came back with crunchy stone and the lantern still lit. Left: the bow lying like a hoop on the sill, the lantern lit by day.
 
 Known limits:
 
