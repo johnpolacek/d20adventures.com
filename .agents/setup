@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Prepares a fresh Amp orb: workspace dependencies and Convex's generated types.
+# Runs again on stale snapshots, so every step must be idempotent and quick when warm.
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+step() {
+  local name="$1"
+  shift
+  echo "==> $name"
+  local start=$SECONDS
+  "$@"
+  echo "<== $name ($((SECONDS - start))s)"
+}
+
+# The root postinstall runs Convex codegen, which needs a deployment, so it runs as its own step below.
+# No dependency is allowed to run build scripts (pnpm-workspace.yaml), so --ignore-scripts skips only that.
+step "pnpm install" pnpm install --frozen-lockfile --ignore-scripts
+
+# convex/_generated is gitignored, and `tsc -p convex` (pnpm test:gm-core) needs it. Without a configured
+# deployment, use Convex's anonymous local backend, which writes .env.local pointing at 127.0.0.1:3210.
+codegen() {
+  if [[ -n "${CONVEX_DEPLOYMENT:-}" ]] || grep -q '^CONVEX_DEPLOYMENT=.' .env.local 2>/dev/null; then
+    npx convex codegen --typecheck disable
+  else
+    CONVEX_AGENT_MODE=anonymous npx convex dev --once --typecheck disable
+  fi
+}
+step "convex codegen" codegen
+
+# The desktop runtime tests read the adventure packs this bundles into apps/desktop/src-tauri/resources (gitignored).
+step "desktop runtime" pnpm --filter @d20/desktop prepare:runtime

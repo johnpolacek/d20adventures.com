@@ -81,3 +81,6 @@ convex/_generated/
 
 # Content queue drafts stay local until we pick a private home (public repo)
 /content/queue/
+
+# Amp orb portals
+.amp/portals/*
