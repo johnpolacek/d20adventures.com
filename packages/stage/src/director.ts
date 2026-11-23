@@ -189,6 +189,21 @@ const high = (c: CastMember, side: number): Subject => ({
   fov: 42,
 })
 
+// Whether anyone but `skip` stands across the line from a camera at `at` to `to`: between the two, and within their
+// own width and a little of it.
+function inTheWay(at: { x: number; z: number }, to: CastMember, skip: string[], cast: readonly CastMember[]) {
+  const lx = to.x - at.x
+  const lz = to.z - at.z
+  const len = Math.hypot(lx, lz)
+  if (len < 0.01) return false
+  return cast.some((c) => {
+    if (skip.includes(c.id)) return false
+    const t = ((c.x - at.x) * lx + (c.z - at.z) * lz) / (len * len)
+    if (t <= 0.05 || t >= 0.95) return false
+    const off = Math.abs((c.x - at.x) * lz - (c.z - at.z) * lx) / len
+    return off < 0.35 + c.height * 0.12
+  })
+}
 // Over `from`'s shoulder toward `to`, framed on `to`'s upper body. Null when something solid stands behind `from`, or
 // `from` is too tall to see past.
 function overShoulder(from: CastMember, to: CastMember, side: number, ctx: ComposeContext, tight = true): StagingShot | null {
@@ -200,6 +215,8 @@ function overShoulder(from: CastMember, to: CastMember, side: number, ctx: Compo
   const off = tight ? 0.55 : 0.85
   const at = { x: from.x - dx * back - dz * off * side, z: from.z - dz * back + dx * off * side }
   if (ctx.clear && !ctx.clear(from, at)) return null
+  // Someone else standing across the look fills the frame instead: Silas a step in front of Reinhard.
+  if (inTheWay(at, to, [from.id, to.id], ctx.cast)) return null
   const fy = from.y ?? 0
   const ty = to.y ?? 0
   const far = d + back
@@ -209,7 +226,9 @@ function overShoulder(from: CastMember, to: CastMember, side: number, ctx: Compo
   return { position: [at.x, fy + from.height * 1.02, at.z], target: [to.x, ty + look, to.z], fov: fovFor(half, far) }
 }
 // Side on to two people, both in the picture: the line between them runs across the frame.
-function profile(a: CastMember, b: CastMember, side: number, lift = 0): StagingShot {
+// Indoors the wide spot can be through a wall: the other side, then nearer with a wider lens, takes the first spot
+// with nothing solid between it and either of them.
+function profile(a: CastMember, b: CastMember, side: number, lift = 0, ctx?: ComposeContext): StagingShot {
   const d = Math.hypot(b.x - a.x, b.z - a.z)
   const mx = (a.x + b.x) / 2
   const mz = (a.z + b.z) / 2
@@ -220,7 +239,15 @@ function profile(a: CastMember, b: CastMember, side: number, lift = 0): StagingS
   // No farther off than a set's camera can usually stand: a lens that has to be wider is wider.
   const off = Math.min(7.5, Math.max(3.2, d * 0.85 + 2.2 + tall * 0.4))
   const half = (d / 2 + 1 + tall * 0.2) / 1.6
-  return { position: [mx - dz * off * side, my + 1.45 + lift, mz + dx * off * side], target: [mx, my + Math.min(1.2, tall * 0.55), mz], fov: fovFor(half, off) }
+  const shot = (s: number, o: number): StagingShot => ({ position: [mx - dz * o * s, my + 1.45 + lift, mz + dx * o * s], target: [mx, my + Math.min(1.2, tall * 0.55), mz], fov: fovFor(half, o) })
+  const clear = ctx?.clear
+  if (!clear) return shot(side, off)
+  const tries = [off, off * 0.7, off * 0.5, Math.min(off, 1.8)].flatMap((o) => [[side, o], [-side, o]] as const)
+  for (const [s, o] of tries) {
+    const at = { x: mx - dz * o * s, z: mz + dx * o * s }
+    if (clear(a, at) && clear(b, at)) return shot(s, o)
+  }
+  return shot(side, off)
 }
 
 const apart = (a: CastMember, b: CastMember) => Math.hypot(b.x - a.x, b.z - a.z)
@@ -230,7 +257,7 @@ function twoShot(actor: CastMember, target: CastMember, side: number, variant: n
   const forward = () => overShoulder(actor, target, side, ctx, tight)
   const reverse = () => overShoulder(target, actor, -side, ctx, false)
   const [first, second] = variant % 2 === 0 ? [forward, reverse] : [reverse, forward]
-  return first() ?? second() ?? (apart(actor, target) < 7 ? profile(actor, target, side) : (on(target, "medium", side) as StagingShot))
+  return first() ?? second() ?? (apart(actor, target) < 7 ? profile(actor, target, side, 0, ctx) : (on(target, "medium", side) as StagingShot))
 }
 
 export function compose(plan: Plan, ctx: ComposeContext): Take | null {
@@ -300,7 +327,7 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
       }
       if (m.outcome === "miss" || m.outcome === "fumble")
         // Side on, so the dodge reads across the frame, when they stand close enough to share it.
-        return take(apart(actor, target) < 7 ? profile(actor, target, s) : twoShot(actor, target, s, 1, ctx, false), m.outcome === "fumble" ? "fumble" : "miss", {
+        return take(apart(actor, target) < 7 ? profile(actor, target, s, 0, ctx) : twoShot(actor, target, s, 1, ctx, false), m.outcome === "fumble" ? "fumble" : "miss", {
           duration: 1100,
           ease: "snap",
           follow,
@@ -321,7 +348,7 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
           move: { push: 0.1, rise: 0.3, seconds: 5 },
           impact: { shake: hard ? 0.8 : 0.45, punch: hard ? 0.5 : 0.2, on: "land" },
         })
-      return take(apart(actor, target) < 7 ? profile(actor, target, s, 0.3) : twoShot(actor, target, s, v, ctx, false), "spell across", {
+      return take(apart(actor, target) < 7 ? profile(actor, target, s, 0.3, ctx) : twoShot(actor, target, s, v, ctx, false), "spell across", {
         duration: 1000,
         ease: "snap",
         follow: [actor.id, target.id],

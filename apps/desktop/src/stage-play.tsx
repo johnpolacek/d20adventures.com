@@ -991,7 +991,8 @@ export function StagePlay(props: {
     framed.current = stage
     const plan = plansRef.current[paragraph]
     const cast = stage.cast.filter((c) => stage.isOnStage(c.id))
-    const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, 4).short }) : null
+    // A spot is clear when nothing solid stands between it and the one it is taken from, however far off it is.
+    const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => (
       logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut),
       traceShot(stage, paragraph, which, t, cast),

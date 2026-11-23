@@ -34,6 +34,11 @@ Quiet under play. Parts are set down like cards and tokens: short, close, and se
   - Fixed: a hero dying or Stable never lay down. They now fall on the paragraph that drops them, and lie there after.
   - Fixed: a turn that opens a new encounter tells the old one's end first, so the new place's opening never got its establishing shot (`moments.ts`).
   - Open: the frame rate drops to 1 to 4 fps for a few seconds while a scene builds, with frames of 1 to 3.5 s. It holds 52 to 60 in play.
+- A second fight in the app, 2026-11-23: Covert Cargo's Battle on the Boat, playing Lyra. Seen working: Magic Missile's darts in flight, Ray of Frost rolled with Disadvantage (both dice, the kept one lit), a miss, a hit turning Silas Hurt on its own paragraph. Still not seen: a Critical Hit, which wants a natural 20 (the autopilot's `roll: 20` can force one), and a level gained. There is no initiative reveal on the stage: the turn order is all the player sees of it.
+  - Fixed: a shot over someone's shoulder ignored anyone standing across the look, so Silas filled the frame meant for Reinhard. It is passed over now (`inTheWay` in `director.ts`).
+  - Fixed: a side-on shot of two people in the saloon stood outside its walls. It tries the other side, then nearer with a wider lens, for a spot with nothing solid between it and them, and the app's test of a spot is no longer cut off at 4 m.
+  - Open: a paragraph with no take of the director's, framed by the staging's view of a pair (Lyra and Poppen), was taken from outside the saloon. So was the two-shot behind Reinhard in its doorway.
+  - Open: the Shipment's opening view of the bank is buried in the reeds' leaves.
 - Narration: the paragraph swap is timers and CSS transitions (`narration.tsx`).
 - The HUD hiding and showing, the turn order's changes and its health bars are CSS transitions.
 - The order parts come in when a stage first appears.

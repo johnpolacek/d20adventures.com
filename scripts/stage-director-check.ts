@@ -81,6 +81,18 @@ check("a quiet word is over the listener's shoulder", () => {
   if ("position" in t.shot) assert.ok(t.shot.position[2] < 0, "behind the hero, looking at the foe")
   assert.equal(t.move?.roll, undefined)
 })
+check("no shot over the shoulder with someone standing in the look", () => {
+  const crowd = [...cast, member("guard", 0, 3, Math.PI)]
+  const [plan] = planTakes([{ kind: "line", speaker: "foe", listener: "hero", tone: "calm" }], "t")
+  const t = compose(plan!, { cast: crowd })
+  assert.notEqual(t?.label, "over the shoulder")
+})
+check("a spell across a cabin keeps the camera inside its walls", () => {
+  // Walls two metres either side of the pair: a spot beyond them is not clear.
+  const [plan] = planTakes([{ kind: "spell", actor: "hero", target: "foe", outcome: "hit" }], "t")
+  const t = compose(plan!, { cast, clear: (_from, at) => Math.abs(at.x) < 2 })
+  assert.ok(t && "position" in t.shot && Math.abs(t.shot.position[0]) < 2)
+})
 check("a tense line and a quiet one look different", () => {
   const a = shoot({ kind: "line", speaker: "foe", listener: "hero", tone: "tense" })
   const b = shoot({ kind: "line", speaker: "foe", listener: "hero", tone: "calm" })
