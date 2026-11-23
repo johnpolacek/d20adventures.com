@@ -37,18 +37,25 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
   // play screen has put the camera where the scene opens.
   const cover = useRef<HTMLCanvasElement | null>(null)
 
+  const lift = (fade: boolean) => {
+    const c = cover.current
+    cover.current = null
+    if (!c) return
+    if (!fade) return void c.remove()
+    c.style.transition = "opacity 350ms ease"
+    c.style.opacity = "0"
+    setTimeout(() => c.remove(), 400)
+  }
+
+  // With nothing to build and nothing to hold for, the old picture comes down. A change of hold alone never rebuilds
+  // the stage.
+  useEffect(() => {
+    if (!opts && !hold) lift(false)
+  }, [opts, hold])
+
   useEffect(() => {
     const el = container.current
-    const lift = (fade: boolean) => {
-      const c = cover.current
-      cover.current = null
-      if (!c) return
-      if (!fade) return void c.remove()
-      c.style.transition = "opacity 350ms ease"
-      c.style.opacity = "0"
-      setTimeout(() => c.remove(), 400)
-    }
-    if (!el || !opts) return void (hold && el ? undefined : lift(false))
+    if (!el || !opts) return
     let cancelled = false
     let created: Stage | null = null
     let undress: (() => void) | null = null
@@ -115,7 +122,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       const w = window as unknown as { __stage?: Stage }
       if (w.__stage === created) delete w.__stage
     }
-  }, [container, opts, hold])
+  }, [container, opts])
 
   return { stage, stageRef, status, error }
 }

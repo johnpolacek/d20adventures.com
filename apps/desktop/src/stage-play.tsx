@@ -383,7 +383,13 @@ export function StagePlay(props: {
   // Every hero's sheet, for their hit points and Armor Class in the turn order and the party row.
   const sheets = useSheetViews(shown?.characters ?? [])
   const specs = useMemo(() => (scene && files.ready ? { set: scene.set, staging: scene.staging, tier: "balanced" as const, play: loadPlay } : null), [scene, files.ready])
-  const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs, Boolean(scene))
+  // The adventure the stage on screen was built for in a game. The title screen's scene belongs to none, so a game's
+  // opening scene loads on black, not over the Gates of Kordavos. Within one adventure the last picture holds.
+  const [builtFor, setBuiltFor] = useState<string | undefined>()
+  const { stage, stageRef, status: loading, error: stageError } = useStage(containerRef, specs, Boolean(scene) && builtFor !== undefined && builtFor === adventureOf(sceneId))
+  useEffect(() => {
+    if (stage) setBuiltFor(save ? adventureOf(sceneId) : undefined)
+  }, [stage])
   // The next scene still on its way: its files downloading, or its set being built. The story waits for it, so the
   // narration of a new place is never read over the last one.
   const sceneWaits = Boolean(scene && !stage && !stageError)
