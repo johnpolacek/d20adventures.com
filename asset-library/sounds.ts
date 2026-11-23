@@ -42,10 +42,15 @@ const USES: Record<string, string> = {
   rain: "Rain falling outdoors",
   "roof-rain": "Rain on the roof, heard indoors",
   storm: "Rain with distant thunder",
-  "door-open": "A door opened. Not yet played: the stage has no door event",
-  "door-close": "A door shut. Not yet played: the stage has no door event",
-  "door-creak": "A door creaking on its hinges. Not yet played",
-  chest: "A chest lid opened. Not yet played: the stage has no chest event",
+  "door-open": "A door opened, when the story says so",
+  "door-close": "A door shut, when the story says so",
+  "door-creak": "A door creaking on its hinges, when the story says so",
+  chest: "A chest lid opened, when the story says so",
+  splash: "Someone going into water, when the story says so",
+  crack: "Wood split or prised open, when the story says so",
+  rope: "A rope cut through, when the story says so",
+  bowstring: "A bow loosed, under the arrow's air as it flies",
+  hull: "Inside a moored boat: creaking timbers and water under the floor",
 }
 
 async function credits(dir: string): Promise<Map<string, { name: string; url?: string }>> {

@@ -26,6 +26,7 @@ const FX = {
   stepGravel: takes("step-gravel", 1),
   growl: takes("growl", 3),
   hurt: takes("hurt", 2),
+  bowstring: takes("bowstring", 3),
 }
 // Sounds the story names (SOUND_CUES in @d20/stage), made with earshot (SOURCES.md): each its takes and how loud
 // against the blows. A body going into the river is the loudest of them, a lid the softest.
@@ -149,7 +150,10 @@ export function effectSound(e: EffectEvent) {
   if (phase === "start") {
     switch (kind) {
       case "arrow":
-        return swish(0.09, 2800, 900, 0.16)
+        // The string let go, then the shaft's air. Its three takes come round in turn, each a little higher or lower
+        // and louder or softer, so no two shots sound the same.
+        void play(FX.bowstring, "fx", { gain: (0.5 + Math.random() * 0.2) * LEVEL, vary: 0.09 })
+        return swish(0.06 + Math.random() * 0.03, 2600 + Math.random() * 500, 900, 0.16)
       case "bolt":
         return swish(0.08, 1400, 500, 0.3)
       case "slash":
