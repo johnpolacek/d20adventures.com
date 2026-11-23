@@ -1,0 +1,215 @@
+/*
+ * The asset library in Ledger (app/updates/updates.css). The page wears the desk's classes for its bar, tabs, chips
+ * and cards. These are the few things only the library has: the bar that stays under the site's header, the panels
+ * laid over a figure or a place, the small toggles in them, and the tags on a card's picture. All of it is in the
+ * paper's own tones, so it follows the header's Light and Dark. A figure's room and a live place keep their own dark
+ * frame, as the game shows them.
+ */
+
+/* The page runs to the header: the library places its own bar under it. Doubled, to outrank the desk's own padding. */
+.updates-page.updates-page:has(.up-lib) {
+  padding: 0;
+}
+
+/* The bar: the library's name, its tabs and a search, then the filters or the way back. */
+.up-lib-bar {
+  border-bottom: 1px solid var(--up-line);
+  background: color-mix(in srgb, var(--up-bg) 94%, transparent);
+  backdrop-filter: blur(6px);
+}
+.up-lib-bar .up-desk {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.up-lib-bar .up-tabs {
+  margin: 0;
+  border-bottom: 0;
+}
+.up-lib-bar .up-tabs > button {
+  padding: 4px 0;
+}
+.up-lib-name {
+  font-family: var(--font-display), var(--up-serif);
+  font-size: 17px;
+  color: var(--up-strong);
+  -webkit-text-stroke: 0.35px currentColor;
+}
+.up-lib-name:hover {
+  color: var(--up-accent);
+}
+.up-lib-bar .up-field {
+  padding: 5px 10px;
+  font-size: 14px;
+}
+.up-lib-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--up-muted);
+}
+.up-lib-crumbs button:not(.up-btn):hover {
+  color: var(--up-strong);
+}
+.up-lib-crumbs strong {
+  font-weight: 600;
+  color: var(--up-strong);
+}
+
+/* An open asset fills the window under the bar. */
+.up-lib-open {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--up-bg);
+}
+.up-lib-dark {
+  background: #100d0a;
+}
+
+/* A panel over a figure, a place or a picture: paper, a little see-through, so it reads over any of them. */
+.up-lib-panel {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--up-line-strong);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--up-bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgb(20 12 4 / 0.18);
+  font-family: var(--up-ui);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--up-text);
+}
+.up-lib-title {
+  font-family: var(--up-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-lib-panel input[type="range"] {
+  accent-color: var(--up-accent);
+}
+
+/* A toggle in a panel: the chip, a size down. */
+.up-lib-pill {
+  padding: 1px 7px;
+  border: 1px solid var(--up-line);
+  border-radius: 99px;
+  background: var(--up-bg);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--up-muted);
+  cursor: pointer;
+  transition:
+    color 120ms,
+    border-color 120ms,
+    background-color 120ms;
+}
+.up-lib-pill:hover {
+  border-color: var(--up-line-strong);
+  color: var(--up-strong);
+}
+.up-lib-pill.is-on {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+  color: var(--up-slot-text);
+}
+
+/* A version of a figure, to pick in the character's panel. */
+.up-lib-version {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--up-line);
+  border-radius: 6px;
+  text-align: left;
+  transition: border-color 120ms;
+}
+.up-lib-version:hover {
+  border-color: var(--up-line-strong);
+}
+.up-lib-version[aria-pressed="true"] {
+  border-color: var(--up-accent-line);
+  background: var(--up-slot);
+}
+
+/* A tag on a card's picture: 3D, Iso, In the Game. It sits on paper so it reads over any picture. */
+.up-card .up-pill.up-lib-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: var(--up-bg);
+}
+
+/* A character's card stands whole in its frame, and a figure on the party's row is a fixed width. */
+.up-card-art.up-lib-portrait {
+  aspect-ratio: 3 / 4;
+}
+.up-card-art.up-lib-portrait img {
+  object-fit: contain;
+}
+.up-lib-figure {
+  flex-shrink: 0;
+  width: 148px;
+}
+.up-lib-figure.is-wide {
+  width: 172px;
+}
+.up-lib-figure .up-card-art {
+  background: transparent;
+}
+
+/* A chapter's name over its places. */
+.up-lib-chapter {
+  margin: 4px 0 10px;
+  font-family: var(--up-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--up-strong);
+}
+.up-lib-chapter span {
+  margin-left: 6px;
+  font-family: var(--up-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--up-faint);
+}
+.up-lib section > .up-label {
+  margin: 28px 0 12px;
+}
+
+/* A card's name and the line under it, inside a card that is a button. */
+.up-lib-card-name {
+  display: block;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--up-strong);
+  transition: color 120ms;
+}
+.up-card:hover .up-lib-card-name {
+  color: var(--up-accent);
+}
+.up-lib-card-sub {
+  display: block;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--up-faint);
+}

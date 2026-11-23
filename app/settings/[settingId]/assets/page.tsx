@@ -9,13 +9,14 @@
 // workspace's own figures. On the site it shows what `pnpm assets:sync` last published to the public bucket under
 // asset-library/: the index, library.json, and the figures. A sync shows there within a minute, with no deploy. A
 // place is assembled in the visitor's browser from the sets and stagings this deploy carries. The page is left out
-// of search.
+// of search. It wears Ledger, light or dark as the header's switch sets it.
 
 import type { Metadata } from "next"
 import { share } from "@/lib/share"
 import { notFound } from "next/navigation"
 import { loadLibrary } from "@/asset-library/load"
 import { AssetLibrary } from "@/asset-library/ui/library"
+import { LedgerShell } from "@/components/layout/ledger-page"
 
 export const metadata: Metadata = { ...share({ title: "Asset Library · The Realm of Myr", description: "The pictures, 3D figures and sets behind the Realm of Myr adventures.", image: { url: "/images/share/asset-library.jpg", width: 2400, height: 1260, alt: "Thirteen 3D figures from D20 Adventures, with the Owlbear at the center" } }), robots: { index: false, follow: false } }
 
@@ -23,5 +24,9 @@ export default async function SettingAssets(props: { params: Promise<{ settingId
   const { settingId } = await props.params
   const library = await loadLibrary()
   if (!library || library.setting !== settingId) notFound()
-  return <AssetLibrary library={library} config={{ home: `/settings/${settingId}/assets`, files: "/asset-library/characters" }} params={await props.searchParams} />
+  return (
+    <LedgerShell>
+      <AssetLibrary library={library} config={{ home: `/settings/${settingId}/assets`, files: "/asset-library/characters" }} params={await props.searchParams} />
+    </LedgerShell>
+  )
 }
