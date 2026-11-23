@@ -8,6 +8,7 @@
 //     (asset-library/clips.ts), and one without shows its card;
 //   - a place is assembled and live (scene.ts): a variant, with one of its encounters as that encounter opens or
 //     empty, as the stage shows it or as an isometric cut-away, with a camera the visitor moves.
+// Sounds open nowhere: each card plays its takes in place, one sound at a time.
 
 import { type Armed, arm } from "@d20/stage/figures/fight"
 import { carry, fingered, wield } from "@d20/stage/figures/hold"
@@ -20,7 +21,7 @@ import { figureClips, isRigged, MOVE_NAMES } from "../clips"
 import { served } from "@d20/stage/served"
 import { holdProps } from "../props"
 import { hasIso } from "../scene"
-import type { Character, Figure, Library, Picture, Place } from "../types"
+import type { Character, Figure, Library, Picture, Place, Sound } from "../types"
 import { type Nav, Scene } from "./scene"
 
 // Where a page of the library lives, and where its figures' files are served from.
@@ -32,9 +33,9 @@ export interface LibraryConfig {
 const Config = createContext<LibraryConfig & { figures: Record<string, string>; setting: string }>({ home: "/settings/realm-of-myr/assets", files: "/asset-library/characters", figures: {}, setting: "realm-of-myr" })
 
 type Params = Record<string, string | undefined>
-type Tab = "characters" | "environments" | "images"
+type Tab = "characters" | "environments" | "images" | "sounds"
 // The tabs in the order they are shown: the library opens on the first.
-const TABS = ["environments", "characters", "images"] as const
+const TABS = ["environments", "characters", "images", "sounds"] as const
 
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 const PANEL = "space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-3xs leading-snug backdrop-blur-sm"
@@ -620,6 +621,65 @@ function PictureView({ picture }: { picture: Picture }) {
   )
 }
 
+// ── A sound, played in place ──
+// One sound plays at a time: pressing another stops the last, and pressing the one playing stops it.
+let playing: { audio: HTMLAudioElement; src: string; card: (src: string | null) => void } | null = null
+function stopPlaying() {
+  if (!playing) return
+  playing.audio.pause()
+  playing.card(null)
+  playing = null
+}
+function SoundCard({ sound }: { sound: Sound }) {
+  const [on, setOn] = useState<string | null>(null)
+  // A card leaving the page stops what it was playing.
+  useEffect(() => () => void (playing?.card === setOn && stopPlaying()), [])
+  const toggle = (src: string) => {
+    const was = playing?.src
+    stopPlaying()
+    if (was === src) return
+    const audio = new Audio(served(src))
+    audio.loop = !!sound.loop
+    audio.volume = 0.8
+    audio.onended = () => {
+      if (playing?.audio === audio) playing = null
+      setOn(null)
+    }
+    playing = { audio, src, card: setOn }
+    setOn(src)
+    void audio.play().catch(() => stopPlaying())
+  }
+  return (
+    <div className="rounded-md border border-[#e6c8961f] bg-[#14100b] px-3 py-2.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="truncate text-xs text-[#f2c97a]">{named(sound.id)}</span>
+        {sound.loop && <span className="font-mono text-4xs opacity-55">Loops</span>}
+      </div>
+      {sound.use && <div className="pt-0.5 text-3xs leading-snug opacity-70">{sound.use}</div>}
+      <div className="flex flex-wrap gap-1 pt-2 text-3xs">
+        {sound.takes.map((src, i) => (
+          <button key={src} type="button" className={pill(on === src)} onClick={() => toggle(src)} aria-label={`${on === src ? "Stop" : "Play"} ${named(sound.id)} ${i + 1}`}>
+            {on === src ? "■" : "▶"} {sound.takes.length > 1 ? i + 1 : "Play"}
+          </button>
+        ))}
+      </div>
+      <div className="truncate pt-2 font-mono text-4xs opacity-55">
+        {sound.source ? (
+          sound.source.url ? (
+            <a href={sound.source.url} target="_blank" rel="noreferrer" className="hover:text-[#f2c97a]">
+              {sound.source.name}
+            </a>
+          ) : (
+            sound.source.name
+          )
+        ) : (
+          "Source not listed"
+        )}
+      </div>
+    </div>
+  )
+}
+
 // How a kind of picture is laid out in the grid: the narrowest a card may be, and its shape.
 const SHAPES: Record<string, [number, string]> = {
   Setting: [280, "aspect-[16/9]"],
@@ -637,6 +697,8 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
   const params = given.env && !given.env.includes("/") ? { ...given, env: `${library.setting}/${given.env}` } : given
   const { characters, places, groups } = library
   const pictures = library.pictures ?? []
+  const sounds = library.sounds ?? []
+  const soundKinds = [...new Set(sounds.map((s) => s.kind))]
   const kinds = library.kinds ?? []
   const [open, setOpen] = useState<{ character: Character } | { place: Place } | { picture: Picture } | null>(() => {
     const picture = params.img ? pictures.find((p) => p.src === params.img) : undefined
@@ -653,7 +715,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
   })
   const [tab, setTab] = useState<Tab>(open ? ("picture" in open ? "images" : "place" in open ? "environments" : "characters") : (TABS.find((t) => t === params.tab) ?? TABS[0]))
   // The filter is an adventure for characters and places, and a kind for pictures.
-  const [group, setGroup] = useState(params.group && [...groups, ...kinds].includes(params.group) ? params.group : "all")
+  const [group, setGroup] = useState(params.group && [...groups, ...kinds, ...soundKinds].includes(params.group) ? params.group : "all")
   // Where the grid was when a card was opened, to come back to.
   const left = useRef(0)
   const back = useRef(0)
@@ -667,6 +729,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
     setOpen(null)
   }, [])
   const show = (t: Tab) => {
+    stopPlaying()
     setTab(t)
     pick("all")
     setOnly(false)
@@ -718,15 +781,20 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
   const shownCharacters = characters.filter((c) => (!only || c.figure) && (!words || `${c.name} ${c.role} ${c.id} ${versionsOf(c).map((f) => `${f.id} ${f.source.generator}`).join(" ")}`.toLowerCase().includes(words)))
   const shownPlaces = places.filter((p) => (!only || p.variants.some((v) => hasIso(v.key, v.room))) && (!words || `${p.title} ${p.variants.map((v) => v.key).join(" ")}`.toLowerCase().includes(words)))
   const shownPictures = pictures.filter((p) => !words || `${p.title} ${p.kind} ${p.of ?? ""}`.toLowerCase().includes(words))
+  const shownSounds = sounds.filter((s) => !words || `${s.id} ${s.kind} ${s.use ?? ""} ${s.source?.name ?? ""}`.toLowerCase().includes(words))
   const inGroup = (g: string) =>
     tab === "characters"
       ? shownCharacters.filter((c) => c.group === g).length
       : tab === "environments"
         ? shownPlaces.filter((p) => p.groups.includes(g)).length
-        : shownPictures.filter((p) => p.kind === g).length
-  const sections = (tab === "images" ? kinds : groups).filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
-  const total = tab === "characters" ? shownCharacters.length : tab === "environments" ? shownPlaces.length : shownPictures.length
-  const groupName = (g: string) => (tab === "images" ? g : g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
+        : tab === "sounds"
+          ? shownSounds.filter((s) => s.kind === g).length
+          : shownPictures.filter((p) => p.kind === g).length
+  // What a tab files its cards under: an adventure for characters and places, a kind for pictures and sounds.
+  const filed = tab === "images" ? kinds : tab === "sounds" ? soundKinds : groups
+  const sections = filed.filter((g) => (group === "all" || group === g) && inGroup(g) > 0)
+  const total = tab === "characters" ? shownCharacters.length : tab === "environments" ? shownPlaces.length : tab === "sounds" ? shownSounds.length : shownPictures.length
+  const groupName = (g: string) => (tab === "images" || tab === "sounds" ? g : g === "heroes" ? "Player Heroes" : g === "unused" ? "Not in a Scene" : named(g))
   // An adventure's places in the order the story reaches them, a run for each chapter.
   const chapters = (g: string) => {
     const first = (p: Place) => p.story?.[g]?.order ?? Number.MAX_SAFE_INTEGER
@@ -809,7 +877,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                       className={`rounded px-2.5 py-1 ${tab === t ? "bg-[#f2c97a26] text-[#f2c97a]" : "opacity-70 hover:opacity-100"}`}
                       onClick={() => (t === tab && open ? close() : show(t))}
                     >
-                      {t === "characters" ? `Characters · ${characters.length}` : t === "environments" ? `Places · ${places.length}` : `Images · ${pictures.length}`}
+                      {t === "characters" ? `Characters · ${characters.length}` : t === "environments" ? `Places · ${places.length}` : t === "sounds" ? `Sounds · ${sounds.length}` : `Images · ${pictures.length}`}
                     </button>
                   ))}
                 </div>
@@ -840,14 +908,14 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                   <button type="button" className={pill(group === "all")} onClick={() => pick("all")}>
                     All · {total}
                   </button>
-                  {(tab === "images" ? kinds : groups)
+                  {filed
                     .filter((g) => inGroup(g) > 0 || g === group)
                     .map((g) => (
                       <button key={g} type="button" className={pill(group === g)} onClick={() => pick(g)}>
                         {groupName(g)} · {inGroup(g)}
                       </button>
                     ))}
-                  {tab !== "images" && (
+                  {(tab === "characters" || tab === "environments") && (
                     <button type="button" className={`ml-3 ${pill(only)}`} onClick={() => setOnly((o) => !o)}>
                       {tab === "characters" ? `3D · ${figured.length}` : `Isometric · ${places.filter((p) => p.variants.some((v) => hasIso(v.key, v.room))).length}`}
                     </button>
@@ -875,6 +943,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
               <h1 className="font-display text-3xl leading-tight tracking-wide text-[#f2c97a] sm:text-4xl">{library.settingName}</h1>
               <div className="mt-3 text-xs opacity-70">
                 {figured.length} Figures in 3D · {characters.length} Characters · {places.length} Places · {pictures.length} Images
+                {sounds.length ? ` · ${sounds.length} Sounds` : ""}
               </div>
             </div>
           )}
@@ -913,6 +982,14 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                         <span className="mt-1.5 block truncate text-2xs group-hover:text-[#f2c97a]">{named(c.name)}</span>
                         <span className="block truncate text-4xs opacity-55">{named(c.role)}</span>
                       </button>
+                    ))}
+                </div>
+              ) : tab === "sounds" ? (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-3">
+                  {shownSounds
+                    .filter((s) => s.kind === g)
+                    .map((s) => (
+                      <SoundCard key={`${s.kind}/${s.id}`} sound={s} />
                     ))}
                 </div>
               ) : tab === "images" ? (

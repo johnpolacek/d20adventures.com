@@ -5,6 +5,7 @@
 // Places are the built sets (packages/stage/src/sets), a place's variants kept together, each placed in its adventure's
 // story by the encounters played there (content/settings/<setting>/adventures).
 // Pictures are the setting's own (named in its data, in the data bucket) and the art under public/stage.
+// Sounds are the cues under public/stage/sounds (sounds.ts).
 //
 // This reads the disk, so it runs on a developer's machine: the dev page calls it on every load, and `pnpm assets:sync`
 // writes what it returns to library.json, which the public page reads.
@@ -16,6 +17,7 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { LOOKS } from "./looks"
 import { castFigures } from "./cast"
+import { gatherSounds } from "./sounds"
 import type { Character, Environment, Figure, Library, Picture, Place } from "./types"
 
 interface SetSpec {
@@ -245,5 +247,5 @@ export async function buildLibrary(root = process.cwd(), leave: string[] = []): 
   const kinds = [...new Set(pictures.map((p) => p.kind))]
 
   const groups = [...adventures, HEROES, UNUSED].filter((g) => characters.some((c) => c.group === g) || places.some((p) => p.groups.includes(g)))
-  return { setting, settingName: "The Realm of Myr", characters, places, groups, pictures, kinds }
+  return { setting, settingName: "The Realm of Myr", characters, places, groups, pictures, kinds, sounds: await gatherSounds(pub) }
 }

@@ -68,6 +68,17 @@ export interface Picture {
   // What it belongs to within its kind: an adventure, a map's region, a set.
   of?: string
 }
+// A sound the game plays: a cue and its takes, one of which the game picks each time it plays.
+export interface Sound {
+  id: string
+  kind: "Dice" | "Effects" | "Ambience"
+  takes: string[]
+  // What the game plays it for, and where the recording came from (public/stage/sounds/SOURCES.md).
+  use?: string
+  source?: { name: string; url?: string }
+  // An ambience bed plays on under a scene.
+  loop?: boolean
+}
 export interface Library {
   setting: string
   settingName: string
@@ -77,4 +88,6 @@ export interface Library {
   pictures: Picture[]
   // The kinds of picture, in the order they are shown.
   kinds: string[]
+  // An index published before sounds were listed has none.
+  sounds?: Sound[]
 }

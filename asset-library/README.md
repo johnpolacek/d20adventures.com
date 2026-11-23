@@ -21,6 +21,7 @@ Written 2026-11-14, brought up to date 2026-11-15, the second time after The Mid
 | A live scene: the cut-away, figures in a stage | `asset-library/scene.ts`, `iso.ts`, `figures.ts` | yes |
 | The stage lab, for captures and spikes | `lab/stage-art/` (`viewer.tsx`, `lab.ts`, `capture.ts`) | yes |
 | Sets and stagings | `packages/stage/src/sets`, `stagings` | yes |
+| The Sounds tab: every cue under `public/stage/sounds`, its takes, its use and its credit from `SOURCES.md` | `asset-library/sounds.ts` | yes |
 
 Models, sheets and check pictures are too heavy for git and are left out by `asset-library/.gitignore`. A character's brief, joints, reports and thumbnail are kept.
 
