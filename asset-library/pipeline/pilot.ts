@@ -1668,7 +1668,8 @@ async function lit(hue: [number, number], strength: number) {
     }
     if (!texels) continue
     // The edge of what is lit is softened by a few texels, and the colour is the model's own.
-    const soft = await sharp(mask, { raw: { width: info.width, height: info.height, channels: 1 } }).blur(2).raw().toBuffer()
+    // sharp hands a blurred one-channel mask back as three: one channel is taken, or a texel reads the mask a third of the way to it.
+    const soft = await sharp(mask, { raw: { width: info.width, height: info.height, channels: 1 } }).blur(2).extractChannel(0).raw().toBuffer()
     const glow = Buffer.alloc(info.width * info.height * 3)
     for (let p = 0; p < soft.length; p++) for (let k = 0; k < 3; k++) glow[p * 3 + k] = Math.round((data[p * info.channels + k] * soft[p]) / 255)
     doc.createExtension(EXTTextureWebP).setRequired(true)
