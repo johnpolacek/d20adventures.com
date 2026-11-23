@@ -79,6 +79,9 @@ convex/_generated/
 /public/stage/gates/3.html
 /public/stage/gates/6.html
 
+# Earlier versions of set paintings, listed in asset-library/paintings.json. The bucket keeps them (pnpm stage:sync).
+/public/stage/paintings/*/earlier/
+
 # Content queue drafts stay local until we pick a private home (public repo)
 /content/queue/
 

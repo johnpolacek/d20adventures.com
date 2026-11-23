@@ -25,6 +25,9 @@ export interface SceneOptions {
   onProgress?: (status: string) => void
   // A cast member was clicked in the scene, and the camera has gone to them.
   onPick?: (shot: string) => void
+  // A painted set as the game plays it, from its painted points: "current", or a day to show the paintings as they
+  // stood then (paintings.ts). Left out, the set is shown as built.
+  painted?: string
 }
 // A place to send the camera: one of the place's own views, or a member of the cast.
 export interface Spot {
@@ -49,7 +52,7 @@ interface SetLike {
   rooms?: { box: number[] }[]
   materials?: Record<string, { type?: string }>
   crowd?: { groups?: { type: string; area?: number[]; count?: number; density?: { rect: number[] }[]; face?: { toward?: number[] } }[] }
-  painted?: unknown
+  painted?: { points: Record<string, { position: Vec; label?: string; paintings: { map: string; clear?: string; quaternion: number[]; fov: number }[] }> }
   camera?: Record<string, unknown>
   atmosphere?: Record<string, unknown>
 }
@@ -151,6 +154,7 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
   const [{ createStage }, { SETS, STAGINGS }] = await Promise.all([import("@d20/stage"), import("@d20/stage/sets")])
   const set = structuredClone(await SETS[o.set]()) as SetLike
   const staging = o.staging && STAGINGS[o.staging] ? (structuredClone(await STAGINGS[o.staging]()) as StagingLike) : null
+  if (o.painted && set.painted) return openPainted(container, o, set, staging, createStage)
   const look = LOOKS[o.set]
   const room = set.rooms?.[0]?.box
   const stops: (() => void)[] = []
@@ -482,4 +486,39 @@ export async function openScene(container: HTMLElement, o: SceneOptions): Promis
       for (const stop of stops.reverse()) stop()
     },
   }
+}
+
+// The way a painting's camera looks: -z turned by its quaternion (v + 2w(q×v) + 2q×(q×v), with v = -z).
+const ahead = ([x, y, z, w]: number[]): Vec => {
+  const [tx, ty] = [-2 * y, 2 * x]
+  return [w * tx - z * ty, w * ty + z * tx, -1 + x * ty - y * tx]
+}
+
+// A painted set as the game plays it: the camera stands on the painted points and turns and zooms there (drag and
+// scroll), and the paintings are those of the day asked for. Its jumps are the points, then the cast, each seen as a
+// speaker is in the game.
+async function openPainted(container: HTMLElement, o: SceneOptions, set: SetLike, staging: StagingLike | null, createStage: typeof import("@d20/stage").createStage): Promise<Scene> {
+  const { paintingsOn } = await import("./paintings")
+  const on = paintingsOn(o.painted === "current" ? null : (o.painted ?? null))
+  const points = set.painted?.points ?? {}
+  for (const p of Object.values(points)) for (const painting of p.paintings) painting.map = on(painting.map)
+  const stage = await createStage({ container, set: set as never, staging: (staging?.set === o.set ? staging : null) as never, tier: "auto", onProgress: o.onProgress })
+  const pointShot = (name: string) => {
+    const p = points[name]
+    const first = p.paintings[0]
+    const d = ahead(first.quaternion)
+    return { position: p.position, target: [p.position[0] + d[0] * 10, p.position[1] + d[1] * 10, p.position[2] + d[2] * 10] as Vec, fov: Math.round(first.fov * 0.8) }
+  }
+  const people: Spot[] = (staging?.cast ?? []).map((c) => ({ key: `cast:${c.id}`, label: short((c as { name?: string }).name ?? title(c.id.split("/").pop() ?? c.id)), cast: true }))
+  const shots: Spot[] = [...Object.entries(points).map(([k, p]) => ({ key: `point:${k}`, label: p.label ?? title(k) })), ...people]
+  const go = (shot: string) => {
+    if (shot.startsWith("point:")) stage.shot(pointShot(shot.slice(6)) as never)
+    else if (shot.startsWith("cast:")) stage.shot({ subject: shot.slice(5), distance: 4, angle: 18, height: 1.6, lookHeight: 1.1, fov: 40 } as never)
+    else stage.shot(shot)
+  }
+  // It opens where the encounter opens, one of the set's views, shown as the first jump. Empty, on the first point.
+  const all: Spot[] = staging?.shot ? [{ key: staging.shot, label: "Opening" }, ...shots] : shots
+  const open = all[0]?.key ?? ""
+  if (open) stage.shot(open.startsWith("point:") ? (pointShot(open.slice(6)) as never) : open, { instant: true })
+  return { stage, shots: all, open, go, view: () => "", stop: () => stage.dispose() }
 }

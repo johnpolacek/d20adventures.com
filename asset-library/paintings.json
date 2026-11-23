@@ -1,0 +1,32 @@
+{
+  "/stage/paintings/valkarr-forest-trail/trail.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no beam of moonlight from above, the near tree's limbs redrawn",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/trail-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  },
+  "/stage/paintings/valkarr-forest-trail/clearing.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no shafts of moonlight from above",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/clearing-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  },
+  "/stage/paintings/valkarr-forest-trail/oak.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no beam of moonlight from above, the oak's limbs grown naturally",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/oak-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  },
+  "/stage/paintings/valkarr-forest-trail/standoff.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no shafts of moonlight from above",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/standoff-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  },
+  "/stage/paintings/valkarr-forest-trail/fight.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no shafts of moonlight from above",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/fight-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  },
+  "/stage/paintings/valkarr-forest-trail/druid.webp": {
+    "made": "2026-11-23",
+    "note": "Retouched: no shafts of moonlight from above",
+    "earlier": [{ "src": "/stage/paintings/valkarr-forest-trail/earlier/druid-2026-11-11.webp", "made": "2026-11-11", "note": "First painting" }]
+  }
+}

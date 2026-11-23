@@ -17,6 +17,7 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { LOOKS } from "./looks"
 import { castFigures } from "./cast"
+import { EARLIER_PAINTINGS } from "./paintings"
 import { gatherSounds } from "./sounds"
 import type { Character, Environment, Figure, Library, Picture, Place } from "./types"
 
@@ -236,12 +237,16 @@ export async function buildLibrary(root = process.cwd(), leave: string[] = []): 
     ...(await under(pub, "stage/art")).map((src) => ({ src, title: words(path.basename(src)), kind: "Scene Art", of: src.split("/")[3] })),
     ...(await under(pub, "stage/maps")).map((src) => ({ src, title: words(path.basename(src)), kind: "Maps", of: src.split("/")[3] })),
     ...(await under(pub, "stage/portraits")).map((src) => ({ src, title: words(path.basename(src)), kind: "Portraits" })),
-    ...(await under(pub, "stage/paintings")).map((src) => ({
-      src,
-      title: `${titles.get(src.split("/")[3]) ?? words(src.split("/")[3])}: ${words(path.basename(src))}`,
-      kind: "Set Paintings",
-      of: src.split("/")[3],
-    })),
+    // A painting's earlier versions sit in an `earlier` folder beside it, listed with it rather than on their own.
+    ...(await under(pub, "stage/paintings"))
+      .filter((src) => !src.includes("/earlier/"))
+      .map((src) => ({
+        src,
+        title: `${titles.get(src.split("/")[3]) ?? words(src.split("/")[3])}: ${words(path.basename(src))}`,
+        kind: "Set Paintings",
+        of: src.split("/")[3],
+        ...(EARLIER_PAINTINGS[src] ?? {}),
+      })),
     ...(await under(pub, "images/app/backgrounds")).map((src) => ({ src, title: words(path.basename(src)), kind: "Backgrounds" })),
   ]
   const kinds = [...new Set(pictures.map((p) => p.kind))]

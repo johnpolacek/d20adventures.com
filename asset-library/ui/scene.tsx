@@ -18,7 +18,7 @@ export function Scene(props: Omit<SceneOptions, "onProgress" | "onPick"> & { onN
   const host = useRef<HTMLDivElement>(null)
   const scene = useRef<Opened | null>(null)
   const [status, setStatus] = useState<string | null>("Loading")
-  const { set, staging, iso, files, figures, onNav, onPick } = props
+  const { set, staging, iso, files, figures, painted, onNav, onPick } = props
 
   useEffect(() => {
     const el = host.current
@@ -27,7 +27,7 @@ export function Scene(props: Omit<SceneOptions, "onProgress" | "onPick"> & { onN
     setStatus("Loading")
     onNav(null)
     import("../scene")
-      .then(({ openScene }) => openScene(el, { set, staging, iso, files, figures, onProgress: setStatus, onPick }))
+      .then(({ openScene }) => openScene(el, { set, staging, iso, files, figures, painted, onProgress: setStatus, onPick }))
       .then(async (opened) => {
         if (gone) return opened.stop()
         scene.current = opened
@@ -50,7 +50,7 @@ export function Scene(props: Omit<SceneOptions, "onProgress" | "onPick"> & { onN
       scene.current = null
       el.replaceChildren()
     }
-  }, [set, staging, iso, files, figures, onNav, onPick])
+  }, [set, staging, iso, files, figures, painted, onNav, onPick])
 
   return (
     <>

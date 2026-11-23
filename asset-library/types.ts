@@ -67,6 +67,11 @@ export interface Picture {
   kind: string
   // What it belongs to within its kind: an adventure, a map's region, a set.
   of?: string
+  // A set painting that has been replaced: when this one was made, what changed, and the ones before it, newest first
+  // (paintings.ts).
+  made?: string
+  note?: string
+  earlier?: { src: string; made: string; note?: string }[]
 }
 // A sound the game plays: a cue and its takes, one of which the game picks each time it plays.
 export interface Sound {

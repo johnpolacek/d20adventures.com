@@ -77,6 +77,16 @@ Read 2026-11-22, since every shipped figure is a public file. Not legal advice: 
   - Stage is the set as built, with the cast where the encounter opens. A painted set's paintings are left out, since they hold the camera to fixed points.
   - Isometric is the set's look (`looks.ts`), or its room cut open. Cast members with a figure in the library stand as figures: at full detail when three or fewer stand in the scene, at the middle level when more do.
   - The sets and stagings come with the deploy, so a new set shows after a push, not after a sync.
+  - Painted, for a set with paintings, is the set as the game plays it: the camera stands on its painted points and turns and zooms there, the jumps are the points and then the cast. A set whose paintings have been replaced also shows Paint: Current, or a day, to see the paintings as they stood then (`&view=painted&paint=2026-11-11`).
+
+### Painting versions
+
+The owner, 2026-11-23: "it would be nice to be able to have the old and new version available to navigate into in the asset library".
+
+- `paintings.json` lists each replaced painting: when the current one was made, what changed, and the earlier ones, newest first. `paintings.ts` reads it.
+- An earlier file sits beside its painting in `public/stage/paintings/<set>/earlier/<name>-<day>.webp`, out of git, and `pnpm stage:sync public/stage/paintings` puts it in the public bucket. No dots inside the name: the set's schema refuses them.
+- Images lists the current painting only, with how many versions it has. Opened, it lists them, and `&v=<day>` opens an earlier one.
+- The Images tab on the site shows versions after the next `pnpm assets:sync`. The Painted view comes with the deploy.
 
 ## One command
 

@@ -20,6 +20,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { figureClips, isRigged, MOVE_NAMES } from "../clips"
 import { served } from "@d20/stage/served"
 import { holdProps } from "../props"
+import { paintedDays } from "../paintings"
 import { hasIso } from "../scene"
 import type { Character, Figure, Library, Picture, Place, Sound } from "../types"
 import { type Nav, Scene } from "./scene"
@@ -509,8 +510,14 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   // It opens on its first encounter, where that encounter opens. "empty" in the address is the set alone.
   const [staging, setStaging] = useState(params.scene === "empty" ? null : params.scene && env.stagings.includes(params.scene) ? params.scene : (env.stagings[0] ?? null))
   const canCut = hasIso(env.key, env.room)
-  const [view, setView] = useState(params.view === "stage" ? "stage" : "iso")
+  // A painted set can also be seen as the game plays it, from its painted points, with its paintings as they are now
+  // or as they stood on a day before one was replaced.
+  const canPaint = env.paintings > 0
+  const [view, setView] = useState(params.view === "stage" || params.view === "painted" ? params.view : "iso")
   const cut = view === "iso" && canCut
+  const painting = view === "painted" && canPaint
+  const days = paintedDays(env.key.split("/")[1] ?? env.key)
+  const [paintDay, setPaintDay] = useState(params.paint && days.includes(params.paint) ? params.paint : "current")
   // Where the camera can jump to in the scene now showing, and where it last went.
   const [nav, setNav] = useState<Nav | null>(null)
   const [at, setAt] = useState("")
@@ -520,11 +527,12 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
   }, [])
   useEffect(() => {
     const short = env.key.startsWith(`${config.setting}/`) ? env.key.slice(config.setting.length + 1) : env.key
-    history.replaceState(null, "", `${config.home}?env=${short}&view=${cut ? "iso" : "stage"}&scene=${staging ?? "empty"}`)
-  }, [env, cut, staging, config.home])
+    const shown = painting ? `painted${paintDay === "current" ? "" : `&paint=${paintDay}`}` : cut ? "iso" : "stage"
+    history.replaceState(null, "", `${config.home}?env=${short}&view=${shown}&scene=${staging ?? "empty"}`)
+  }, [env, cut, painting, paintDay, staging, config.home])
   return (
     <>
-      <Scene set={env.key} staging={staging} iso={cut} files={config.files} figures={config.figures} onNav={onNav} onPick={setAt} />
+      <Scene set={env.key} staging={staging} iso={cut} painted={painting ? paintDay : undefined} files={config.files} figures={config.figures} onNav={onNav} onPick={setAt} />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-sm text-[#f2c97a]">{named(env.title)}</div>
         {place.variants.length > 1 && (
@@ -545,15 +553,35 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
             ))}
           </div>
         )}
-        {canCut && (
+        {(canCut || canPaint) && (
           <div className="flex items-center gap-1">
             <span className="w-12 opacity-60">View</span>
-            <button type="button" className={pill(cut)} onClick={() => setView("iso")}>
-              Isometric
-            </button>
-            <button type="button" className={pill(!cut)} onClick={() => setView("stage")}>
+            {canCut && (
+              <button type="button" className={pill(cut)} onClick={() => setView("iso")}>
+                Isometric
+              </button>
+            )}
+            <button type="button" className={pill(!cut && !painting)} onClick={() => setView("stage")}>
               Stage
             </button>
+            {canPaint && (
+              <button type="button" className={pill(painting)} onClick={() => setView("painted")}>
+                Painted
+              </button>
+            )}
+          </div>
+        )}
+        {painting && days.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="w-12 opacity-60">Paint</span>
+            <button type="button" className={pill(paintDay === "current")} onClick={() => setPaintDay("current")}>
+              Current
+            </button>
+            {days.map((d) => (
+              <button key={d} type="button" className={pill(paintDay === d)} onClick={() => setPaintDay(d)}>
+                {day(d)}
+              </button>
+            ))}
           </div>
         )}
         <div className="flex flex-wrap items-center gap-1">
@@ -592,28 +620,44 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
           {env.objects} parts · {env.shots} shots · {env.paintings} paintings
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
-        <div className="text-4xs opacity-55">Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character</div>
+        <div className="text-4xs opacity-55">
+          {painting ? "Drag to look around · scroll to zoom · the camera stands where the paintings were made" : "Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character"}
+        </div>
       </div>
     </>
   )
 }
 
 // ── A picture, whole ──
-function PictureView({ picture }: { picture: Picture }) {
+// A set painting that has been replaced lists its versions, the current one first: `&v=<day>` opens an earlier one.
+function PictureView({ picture, params }: { picture: Picture; params: Params }) {
   const config = useContext(Config)
+  const versions = [{ src: picture.src, made: picture.made ?? "", note: picture.note, current: true }, ...(picture.earlier ?? []).map((v) => ({ ...v, current: false }))]
+  const [shown, setShown] = useState(() => versions.find((v) => !v.current && v.made === params.v) ?? versions[0])
   useEffect(() => {
-    history.replaceState(null, "", `${config.home}?img=${encodeURIComponent(picture.src)}`)
-  }, [picture, config.home])
+    history.replaceState(null, "", `${config.home}?img=${encodeURIComponent(picture.src)}${shown.current ? "" : `&v=${shown.made}`}`)
+  }, [picture, shown, config.home])
   return (
     <>
-      <img src={picture.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4" />
+      <img src={shown.src} alt="" className="absolute inset-0 h-full w-full object-contain p-4" />
       <div className={`absolute top-3 right-3 max-w-[420px] ${PANEL}`}>
         <div className="text-sm text-[#f2c97a]">{named(picture.title)}</div>
         <div className="opacity-70">
           {picture.kind}
           {picture.of ? ` · ${named(picture.of)}` : ""}
         </div>
-        <a href={picture.src} target="_blank" rel="noreferrer" className={`inline-block ${pill(false)}`}>
+        {versions.length > 1 && (
+          <div className="flex flex-col gap-1">
+            {versions.map((v) => (
+              <button key={v.src} type="button" className={`text-left ${pill(v.src === shown.src)}`} onClick={() => setShown(v)}>
+                {v.current ? "Current" : "Earlier"}
+                {v.made ? ` · ${day(v.made)}` : ""}
+                {v.note ? <span className="block text-4xs opacity-70">{v.note}</span> : null}
+              </button>
+            ))}
+          </div>
+        )}
+        <a href={shown.src} target="_blank" rel="noreferrer" className={`inline-block ${pill(false)}`}>
           Open Original
         </a>
       </div>
@@ -931,7 +975,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
               ) : "place" in open ? (
                 <PlaceView place={open.place} params={asked} />
               ) : (
-                <PictureView picture={open.picture} />
+                <PictureView picture={open.picture} params={params} />
               )}
             </div>
           )}
@@ -1005,7 +1049,9 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
                       >
                         <img src={p.src} alt="" loading="lazy" decoding="async" className={`${(SHAPES[g] ?? [0, "aspect-[3/2]"])[1]} w-full object-cover`} />
                         <span className="block truncate px-2.5 pt-1.5 text-2xs group-hover:text-[#f2c97a]">{named(p.title)}</span>
-                        <span className="block truncate px-2.5 pb-2 text-4xs opacity-55">{p.of ? named(p.of) : g}</span>
+                        <span className="block truncate px-2.5 pb-2 text-4xs opacity-55">{p.of ? named(p.of) : g}
+                          {p.earlier?.length ? ` · ${p.earlier.length + 1} Versions` : ""}
+                        </span>
                       </button>
                     ))}
                 </div>
