@@ -1,6 +1,6 @@
 "use client"
 
-import type { BodyEvent, EffectEvent, Element, PropKind, Surface } from "@d20/stage"
+import type { BodyEvent, EffectEvent, Element, PropKind, SoundCue, Surface } from "@d20/stage"
 import { audio, type PlayOptions, play, preload, thump, whoosh } from "./engine"
 
 // The stage's effects as sound: recorded takes for blades, blows, fire and spells (CC0, see public/stage/sounds/SOURCES.md),
@@ -27,11 +27,22 @@ const FX = {
   growl: takes("growl", 3),
   hurt: takes("hurt", 2),
 }
+// Sounds the story names (SOUND_CUES in @d20/stage), made with earshot (SOURCES.md): each its takes and how loud
+// against the blows. A body going into the river is the loudest of them, a lid the softest.
+const CUES: Record<SoundCue, { takes: string[]; gain: number; muffle?: number }> = {
+  "door-open": { takes: takes("door-open", 3), gain: 0.7 },
+  "door-close": { takes: takes("door-close", 3), gain: 0.7 },
+  "door-creak": { takes: takes("door-creak", 2), gain: 0.6 },
+  chest: { takes: takes("chest", 2), gain: 0.55 },
+  splash: { takes: takes("splash", 3), gain: 0.9 },
+  crack: { takes: takes("crack", 2), gain: 0.75 },
+  rope: { takes: takes("rope", 2), gain: 0.6 },
+}
 // The files are brought to one level (scripts/sound-assets.ts). This sets them under the dice.
 const LEVEL = 0.28
 
 export function preloadFx() {
-  preload(Object.values(FX).flat())
+  preload([...Object.values(FX).flat(), ...Object.values(CUES).flatMap((c) => c.takes)])
 }
 
 // A missed swing, or a missile leaving the hand: air, no strike.
@@ -127,6 +138,13 @@ function bodySound(e: BodyEvent) {
 export function effectSound(e: EffectEvent) {
   if (e.type === "body") return bodySound(e)
   if (e.type === "prop") return void play(PROPS[e.kind] ?? FX.cloth, "fx", { gain: 0.8 * LEVEL })
+  if (e.type === "room") return
+  if (e.type === "sound") {
+    const cue = CUES[e.cue]
+    // From someone far off it is fainter, as their steps are, and never gone.
+    const far = e.near === undefined ? 1 : 0.35 + 0.65 / (1 + (e.near / 9) ** 2)
+    return void play(cue.takes, "fx", { gain: cue.gain * far * LEVEL, vary: 0.05, muffle: cue.muffle })
+  }
   const { kind, phase, struck } = e
   if (phase === "start") {
     switch (kind) {

@@ -119,6 +119,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       if (from) action.enters = { from, ...(out.pace ? { pace: out.pace } : {}) }
       if (out.effect) action.effect = { kind: out.effect, ...(out.element ? { element: out.element } : {}) }
       if (out.object) action.object = { kind: out.object, ...(action.target ? { to: action.target } : {}) }
+      if (out.sound) action.sound = out.sound
       if (out.private) action.private = true
       if (rest && /\w/.test(rest)) beats.push(action)
       for (const words of spoken) line(who, words, to, undefined, out.private)
@@ -132,7 +133,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     // Words in a narration that names one listed character, and no one else, are that character's lines.
     const speaker = QUOTED.test(text) ? soleNamed(scene, text.replace(QUOTE, " ")) : undefined
     const rest = speaker && maySpeak(speaker, by) ? unspoken(text) : text
-    if (rest && /\w/.test(rest)) beats.push(place ? { kind: "narration", by, text: rest, place } : { kind: "narration", by, text: rest })
+    if (rest && /\w/.test(rest)) beats.push({ kind: "narration", by, text: rest, ...(place ? { place } : {}), ...(out.sound ? { sound: out.sound } : {}) })
     if (speaker && rest !== text) for (const m of text.matchAll(QUOTE)) line(speaker, m[1])
   }
   return beats

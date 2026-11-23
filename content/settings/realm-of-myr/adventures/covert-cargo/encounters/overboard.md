@@ -13,9 +13,9 @@ revive: true
 
 ## Intro
 
-{actor: 1749159962941} The river closes over Lyra, black and shockingly cold. For a moment there is no up or down, only her coat dragging at her and water roaring in her ears. Then her head breaks the surface and she drags in a breath.
+{actor: 1749159962941, sound: splash} The river closes over Lyra, black and shockingly cold. For a moment there is no up or down, only her coat dragging at her and water roaring in her ears. Then her head breaks the surface and she drags in a breath.
 
-Above her the tug is already moving. A blade flashes at the bow as the last mooring line parts, and the current carries the boat out into the channel, lamps glowing, the crate aboard, no one at the rail looking back. Then the mist has it, and its light fades downstream toward Kordavos.
+{sound: rope} Above her the tug is already moving. A blade flashes at the bow as the last mooring line parts, and the current carries the boat out into the channel, lamps glowing, the crate aboard, no one at the rail looking back. Then the mist has it, and its light fades downstream toward Kordavos.
 
 {actor: 1749159962941} The bank is close. Lyra's hands find reeds, then mud. She hauls herself out beside the empty gangway, coughing up river water, and stands shivering in her soaked coat.
 

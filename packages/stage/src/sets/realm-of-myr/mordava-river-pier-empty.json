@@ -6,7 +6,7 @@
   "locationId": "mordava-river-pier",
   "title": "The pier after the tug has gone",
   "seed": 4212,
-  "ambience": ["river", "birds"],
+  "ambience": ["river", "night", "wind"],
   "atmosphere": {
     "sun": {
       "direction": [

@@ -3,7 +3,7 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
-import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind } from "./effects"
+import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import { Models } from "./figures/models"
@@ -210,6 +210,8 @@ export class Stage {
   // How far the camera is into a room (0 outside, 1 in), which room, and the room whose light is up.
   private indoors = 0
   private room: SetSpec["rooms"][number] | null = null
+  // The room the camera is in, for its sound.
+  private heard: SetSpec["rooms"][number] | null = null
   private lit: SetSpec["rooms"][number] | null = null
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
@@ -1655,6 +1657,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   private lightRoom(dt: number) {
     const { x, y, z } = this.camera.position
     const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5])
+    // A room with beds of its own is heard from the moment the camera is in it.
+    if ((inside ?? null) !== this.heard) {
+      this.heard = inside ?? null
+      for (const l of this.effectListeners) l({ type: "room", ambience: inside?.ambience })
+    }
     if (inside) this.room = inside
     const want = inside ? 1 : 0
     // Straight from one room into another (the inn's common room to its backroom), the new room's light takes over.
@@ -1821,6 +1828,12 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
     if (!this.motion) return Promise.resolve()
     return this.effects.prop(kind, this.chest(holder), receiver ? this.chest(receiver) : undefined)
+  }
+  // A sound the story names, from where a cast member stands when it is theirs.
+  sound(cue: SoundCue, from?: string) {
+    const c = from ? this.cast.find((m) => m.id === from) : undefined
+    const near = c ? this.camera.position.distanceTo(V(c.x, (c.y ?? 0) + c.height / 2, c.z)) : undefined
+    for (const l of this.effectListeners) l({ type: "sound", cue, near })
   }
   // A flash and a shake on a cast member's card, as when struck.
   hit(id: string, color = "#ff5a3c", strength = 1) {

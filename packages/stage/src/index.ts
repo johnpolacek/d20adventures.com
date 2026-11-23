@@ -1,7 +1,8 @@
 // Stageview: the painted 3D encounter stage..
 
 export { DEFAULT_FLAGS, type Flags, TIER_NAMES, TIERS, type TierName } from "./quality"
-export type { BodyAct, BodyEvent, EffectEvent, EffectKind, Element, PropKind, Voice } from "./effects"
+export type { BodyAct, BodyEvent, EffectEvent, EffectKind, Element, PropKind, SoundCue, Voice } from "./effects"
+export { SOUND_CUES } from "./effects"
 export type { Surface } from "./surface"
 export { buildSetGeometry, parseSet, populateCrowd, SetBuildError } from "./spec/build"
 export { AMBIENCE_BEDS, type AmbienceBed, LIMITS, type SetSpec, type SetSpecInput, setSpecSchema } from "./spec/set"

@@ -7,7 +7,7 @@ import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead } from "@d20/gm-core/utils/turn-actors"
-import type { Stage } from "@d20/stage"
+import type { SoundCue, Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
 import { compose, planTakes, type Take } from "@d20/stage/director"
 import { served } from "@d20/stage/served"
@@ -855,6 +855,18 @@ export function StagePlay(props: {
     }
     return out
   }, [paragraphs, turn?._id, turn?.characters])
+  // Sounds the story names (a door, a lid, a splash), each heard once at the sentence that tells it, from where its
+  // actor stands when it is theirs.
+  const sounded = useMemo(() => {
+    const out = new Map<number, { key: string; cue: SoundCue; actor?: string; s: number }[]>()
+    for (const [at, p] of paragraphs.entries())
+      for (const [j, beat] of p.beats.entries()) {
+        if ((beat.kind !== "action" && beat.kind !== "narration") || !beat.sound) continue
+        const entry = { key: `${turn?._id}:${at}:${j}:sound`, cue: beat.sound, actor: beat.kind === "action" ? beat.actor : undefined, s: sentenceOf(p.text, beat.text) }
+        out.set(at, [...(out.get(at) ?? []), entry])
+      }
+    return out
+  }, [paragraphs, turn?._id])
   // Each paragraph as a moment for the stage's director (packages/stage/src/director.ts): a crit, a death, a threat, a
   // quiet word, a monster coming on. The director plans the turn's takes as one sequence, so every player sees the same.
   const plans = useMemo(() => {
@@ -941,7 +953,12 @@ export function StagePlay(props: {
         else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
       })
     }
-  }, [stage, stageRef, reading, paragraph, heard, staged, turn, castOf])
+    for (const { key, cue, actor, s } of sounded.get(paragraph) ?? []) {
+      if (played.current.has(key) || heard < s) continue
+      played.current.add(key)
+      stage.sound(cue, castOf(actor))
+    }
+  }, [stage, stageRef, reading, paragraph, heard, staged, sounded, turn, castOf])
   useEffect(() => {
     if (!auto || !reading || busy || sceneWaits || !text.length || speaking) return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once

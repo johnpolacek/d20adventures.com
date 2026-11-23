@@ -9,6 +9,7 @@ import { nameOf, type StoryNames } from "./render"
 //   {place: stones} The ancient Standing Stones rise around Thalbern.
 //   {actor: thalbern, private: true} Thalbern kneels unseen in the thicket below the stern.
 //   {hero: branka-stoneveil} A broad dwarf with copper braids stares up at the old sigil over the arch.
+//   {actor: lyra, sound: splash} Lyra goes over the rail into the black water.
 //
 // With `speaker` it is a line, with `actor` an action, and otherwise narration. A paragraph without braces is
 // narration. `hero` is an actor who is one of the heroes: with a `scene`, the paragraph is left out when that hero is
@@ -26,6 +27,7 @@ const KEYS: Record<string, keyof StoryOutput[number]> = {
   effect: "effect",
   element: "element",
   object: "object",
+  sound: "sound",
   delivery: "delivery",
   private: "private",
 }

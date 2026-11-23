@@ -11,6 +11,9 @@ export const PROP_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", "r
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 export type Element = (typeof ELEMENTS)[number]
 export type PropKind = (typeof PROP_KINDS)[number]
+// Sounds a story asks for by name, with nothing seen: a door, a lid, a body into water, wood split, a rope parting.
+export const SOUND_CUES = ["door-open", "door-close", "door-creak", "chest", "splash", "crack", "rope"] as const
+export type SoundCue = (typeof SOUND_CUES)[number]
 
 const COLORS: Record<Element | "steel" | "blood", string> = {
   fire: "#ff7a2e",
@@ -31,10 +34,13 @@ export interface EffectEnd {
   id?: string
 }
 // What the effects do, for a host that sounds them: an effect starting, a missile landing (`struck` when it lands on
-// someone), and an object taken in hand.
+// someone), an object taken in hand, a sound the story names (`near`: how far from the camera, in metres, when it
+// comes from someone), and the camera going into a room or out of one, with the beds that play there.
 export type EffectEvent =
   | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean }
   | { type: "prop"; kind: PropKind; passed: boolean }
+  | { type: "sound"; cue: SoundCue; near?: number }
+  | { type: "room"; ambience?: string[] }
   | BodyEvent
 // What a cast member's own body does, for the same host: a footfall as they are seen to walk, a fall, sinking into
 // cover, walking on, the move of an attack, getting out of one's way, and being struck. `height` in metres says how big

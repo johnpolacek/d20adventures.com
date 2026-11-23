@@ -7,11 +7,15 @@ export const PACES = ["walk", "hurry", "sneak"] as const
 export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
 export const OBJECT_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
+// Sounds a beat can make that nothing on stage shows: a door, a chest's lid, someone going into water, wood split open,
+// a rope cut through. The stage's SOUND_CUES, which gm-core cannot import.
+export const SOUNDS = ["door-open", "door-close", "door-creak", "chest", "splash", "crack", "rope"] as const
 
 export type Pace = (typeof PACES)[number]
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 export type Element = (typeof ELEMENTS)[number]
 export type ObjectKind = (typeof OBJECT_KINDS)[number]
+export type StorySound = (typeof SOUNDS)[number]
 
 // Which step of the game wrote a beat, and for whom: an encounter's intro, a hero's reply, a roll and its outcome, an
 // NPC's turn, or the end of a round.
@@ -36,7 +40,7 @@ export interface StoryObject {
   to?: string
 }
 
-export type NarrationBeat = { kind: "narration"; by: StoryBy; text: string; place?: string }
+export type NarrationBeat = { kind: "narration"; by: StoryBy; text: string; place?: string; sound?: StorySound }
 // A private action or line is seen or heard only by its actor or speaker and whoever it is aimed at, such as a whisper
 // or a hidden watcher moving unseen.
 export type ActionBeat = {
@@ -48,6 +52,7 @@ export type ActionBeat = {
   enters?: StoryEntrance
   effect?: StoryEffect
   object?: StoryObject
+  sound?: StorySound
   private?: true
 }
 // Spoken words only, with no quote marks.
@@ -101,7 +106,7 @@ const harmSchema = z.array(
 )
 // The stored shape, for stores that check what they keep.
 export const storyBeatSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("narration"), by, text: z.string(), place: id.optional() }),
+  z.object({ kind: z.literal("narration"), by, text: z.string(), place: id.optional(), sound: z.enum(SOUNDS).optional() }),
   z.object({
     kind: z.literal("action"),
     by,
@@ -111,6 +116,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     enters: z.object({ from: id, pace: z.enum(PACES).optional() }).optional(),
     effect: z.object({ kind: z.enum(EFFECT_KINDS), element: z.enum(ELEMENTS).optional() }).optional(),
     object: z.object({ kind: z.enum(OBJECT_KINDS), to: id.optional() }).optional(),
+    sound: z.enum(SOUNDS).optional(),
     private: z.literal(true).optional(),
   }),
   z.object({ kind: z.literal("line"), by, text: z.string(), speaker: id, to: id.optional(), delivery: z.string().max(60).optional(), private: z.literal(true).optional() }),
@@ -165,6 +171,7 @@ export const storyOutputSchema = z
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),
+      sound: menu(SOUNDS, "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut"),
       delivery: z.string().optional().describe("line: how it is said, in one or two words, such as quietly or with a growl"),
       private: z.boolean().optional().catch(undefined).describe("action and line: true when only the one acting or speaking and the one it is aimed at can see or hear it"),
     })

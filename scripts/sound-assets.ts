@@ -46,6 +46,12 @@ const FX: Record<string, string[]> = {
   "door-close": ["earshot/door-close_1.wav", "earshot/door-close_2.wav", "earshot/door-close_3.wav"],
   "door-creak": ["earshot/door-creak_1.wav", "earshot/door-creak_2.wav"],
   chest: ["earshot/chest-open_1.wav", "earshot/chest-open_2.wav"],
+  // Covert Cargo's, from earshot recipes laid over its designs, all held under 2.8 kHz. `bowstring` is the loose alone,
+  // with no arrow landing.
+  splash: ["earshot/splash_1.wav", "earshot/splash_2.wav", "earshot/splash_3.wav"],
+  crack: ["earshot/crack_1.wav", "earshot/crack_2.wav"],
+  rope: ["earshot/rope_1.wav", "earshot/rope_2.wav"],
+  bowstring: ["earshot/bowstring_1.wav", "earshot/bowstring_2.wav", "earshot/bowstring_3.wav"],
 }
 const FX_LEVEL = -24
 
@@ -65,6 +71,8 @@ const BEDS: Record<string, { src: string; start?: number; length: number; filter
   rain: { src: "earshot/rain-leaves.wav", length: 30 },
   "roof-rain": { src: "earshot/rain-roof.wav", length: 30 },
   storm: { src: "earshot/storm.wav", length: 40 },
+  // A moored boat's cabin at night: timbers creaking over water lapping at the hull.
+  hull: { src: "earshot/hull.wav", length: 40 },
 }
 const BED_LEVEL = -30
 
