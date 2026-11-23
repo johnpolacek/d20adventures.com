@@ -161,7 +161,7 @@ ${
   args.spatialContext
     ? `Where Everyone Stands:
 ${args.spatialContext}
-These places and distances are the game's own. Tell nothing that disagrees with them, and move no one yourself: the game moves each character on their own turn.
+These places and distances are the game's own. Tell nothing that disagrees with them, and move no one yourself: the game moves each character on their own turn. Describe no view between two who are out of sight of each other: neither sees the other, through a window or otherwise.
 
 `
     : ""

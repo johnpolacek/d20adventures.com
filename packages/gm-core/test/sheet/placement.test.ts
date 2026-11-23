@@ -123,11 +123,20 @@ test("the game master is told where everyone stands, in feet", () => {
     [
       "The riverboat's lamplit saloon.",
       "Named places: the crate, the gangway.",
-      "Where everyone stands, and how many feet each of the others is from them:",
+      "Where everyone stands, and how many feet each of the others is from them. One marked out of sight has something solid wholly between the two: neither can see the other, nor shoot or cast at them:",
       "- Lyra, at the crate: Reinhard 5, Poppen 30.",
       "- Reinhard, at the crate: Lyra 5, Poppen 27.",
       "- Poppen, 20 feet from the gangway: Lyra 30, Reinhard 27.",
     ].join("\n")
   )
   assert.equal(standingWords([{ name: "Silas", type: "npc" }], floor), undefined)
+  // A wall to the ceiling between Lyra and Poppen, at x = 15: each is out of sight of the other. Reinhard, at (3, 4),
+  // sees Lyra, and the wall stands between him and Poppen too.
+  const walled = { ...floor, solids: [{ kind: "rect" as const, x: 15, y: 0, halfWidth: 0.5, halfDepth: 10, turn: 0 }] }
+  const lines = (standingWords([stands("Lyra", 0, 0), stands("Reinhard", 3, 4), stands("Poppen", 30, 0)], walled) ?? "").split("\n").slice(-3)
+  assert.deepEqual(lines, [
+    "- Lyra, at the crate: Reinhard 5, Poppen 30 (out of sight).",
+    "- Reinhard, at the crate: Lyra 5, Poppen 27 (out of sight).",
+    "- Poppen, 20 feet from the gangway: Lyra 30 (out of sight), Reinhard 27 (out of sight).",
+  ])
 })

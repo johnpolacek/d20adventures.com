@@ -1,5 +1,5 @@
 import { hasFled } from "../utils/turn-actors"
-import { BASE_REACH, between, distance, FEET_PER_METRE, type Floor, type Point, placedOf, type Solid, type Standing, standingRoom } from "./space"
+import { BASE_REACH, between, coverBetween, distance, FEET_PER_METRE, type Floor, type Point, placedOf, type Solid, type Standing, standingRoom } from "./space"
 
 /** A named place of the floor, which a character may walk to: "the gangway", "the cabin door". */
 export type Place = {
@@ -148,13 +148,16 @@ export function standingWords(characters: readonly (Standing & { name: string; d
     return feet <= BASE_REACH ? `, at ${nearest.label}` : `, ${Math.round(feet)} feet from ${nearest.label}`
   }
   const lines = here.map((one) => {
-    const others = here.filter((other) => other !== one).map((other) => `${other.name} ${Math.round(distance(one.at, other.at))}`)
+    // Out of sight: something solid stands wholly between the two, so neither sees the other, as the rules read it for an attack.
+    const others = here
+      .filter((other) => other !== one)
+      .map((other) => `${other.name} ${Math.round(distance(one.at, other.at))}${coverBetween(floor.solids, one.at, other.at) === "total" ? " (out of sight)" : ""}`)
     return `- ${one.name}${spot(one.at.at)}${others.length ? `: ${others.join(", ")}` : ""}.`
   })
   return [
     floor.where,
     floor.places.length ? `Named places: ${floor.places.map((place) => place.label).join(", ")}.` : undefined,
-    `Where everyone stands, and how many feet each of the others is from them:\n${lines.join("\n")}`,
+    `Where everyone stands, and how many feet each of the others is from them. One marked out of sight has something solid wholly between the two: neither can see the other, nor shoot or cast at them:\n${lines.join("\n")}`,
   ]
     .filter(Boolean)
     .join("\n")
