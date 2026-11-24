@@ -1,3 +1,4 @@
+import { sizeSchema } from "@d20/srd"
 import { z } from "zod"
 import { conditionEntrySchema } from "../sheet/condition-entry"
 import { sheetSchema } from "../sheet/sheet"
@@ -151,6 +152,9 @@ export const npcSchema = baseCharacterSchema.extend({
   attributes: attributesSchema.partial().optional(),
   // The SRD stat block the NPC uses for hit points and Armor Class: "guard", "owlbear". None means a Commoner.
   statBlock: z.string().optional(),
+  // A size the stat block does not print, for a creature grown from it: the Forest Drake fights as a Green Dragon
+  // Wyrmling, a Medium one, and stands as a Large young drake. It takes that size's space (../sheet/space).
+  size: sizeSchema.optional(),
   // Which side the encounter puts them on: "party" fights beside the heroes, "none" is a bystander. None is a foe.
   // The encounter's mark gives it as the NPC enters, and it holds for that encounter only (../sheet/sides).
   side: z.enum(SIDES).optional(),

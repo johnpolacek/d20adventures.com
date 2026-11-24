@@ -8,5 +8,6 @@
   "gender": "Unknown",
   "appearance": "A massive forest drake with green and brown scales, glowing yellow eyes, powerful wings, and a deep guttural roar.",
   "behavior": "Panicked and dangerous when released from captivity; lashes out at the nearest threats and tries to escape confinement.",
-  "statBlock": "green-dragon-wyrmling"
+  "statBlock": "green-dragon-wyrmling",
+  "size": "Large"
 }

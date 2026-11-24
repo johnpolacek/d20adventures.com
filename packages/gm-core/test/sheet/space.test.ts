@@ -51,6 +51,9 @@ test("a creature's space is its size's, and distance reads as a grid would", () 
   assert.deepEqual([spaceOf("Tiny"), spaceOf("Small"), spaceOf(), spaceOf("Large"), spaceOf("Huge"), spaceOf("Gargantuan")], [2.5, 5, 5, 10, 15, 20])
   assert.equal(sizeOf(thalbern), "Medium")
   assert.equal(sizeOf(owlbear), "Large")
+  // An NPC grown past its stat block takes its own size: a wyrmling's numbers, a Large drake's space.
+  assert.equal(sizeOf({ type: "npc", statBlock: "green-dragon-wyrmling" }), "Medium")
+  assert.equal(sizeOf({ type: "npc", statBlock: "green-dragon-wyrmling", size: "Large" }), "Large")
   // Two Medium creatures 5 feet apart, and 3 across by 4 up.
   assert.equal(distance({ at: o }, { at: at(5, 0) }), 5)
   assert.equal(distance({ at: o }, { at: at(3, 4) }), 5)

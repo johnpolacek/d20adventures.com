@@ -84,7 +84,7 @@
       "id": "forest-drake",
       "name": "The forest drake",
       "role": "Beast",
-      "height": 3.8,
+      "height": 2.4,
       "voice": "beast",
       "art": {
         "front": "/stage/fixtures/welcome-to-kordavos/forest-drake-front.webp",

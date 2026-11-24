@@ -47,7 +47,7 @@ export function sizeOf(character: Roller): Size {
   if (shape) return shape.size[0] ?? "Medium"
   if (character.sheet) return character.sheet.size ?? speciesById.get(character.sheet.species)?.sizes[0]?.size ?? "Medium"
   if (character.type !== "npc") return "Medium"
-  return blockOf(character)?.size[0] ?? "Medium"
+  return character.size ?? blockOf(character)?.size[0] ?? "Medium"
 }
 
 // How far a creature's space reaches past a 5-foot square on each side: 2.5 feet for a Large one, none for a Tiny one.

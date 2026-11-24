@@ -1,4 +1,4 @@
-import { type AbilityId, abilityIdSchema, type SkillId, skillIdSchema } from "@d20/srd"
+import { type AbilityId, abilityIdSchema, type Size, type SkillId, skillIdSchema } from "@d20/srd"
 import { abilities, abilityById } from "@d20/srd/abilities"
 import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
@@ -41,6 +41,8 @@ export type Roller = {
   side?: Side
   sheet?: Sheet
   statBlock?: string
+  /** An NPC's own size, over its stat block's (../types/character). */
+  size?: Size
   conditions?: readonly ConditionEntry[]
   spellEffects?: readonly SpellEffect[]
   shape?: Shape
