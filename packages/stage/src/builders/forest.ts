@@ -316,6 +316,15 @@ function fronds(ctx: BuildCtx, size: number, material: THREE.Material, arch = 0)
     const reach = len * Math.cos(rise)
     const rib = (t: number) => V(out.x * reach * t * (1 + 0.3 * t), Math.max(0.02, len * (Math.sin(rise) * t - droop * t * t)), out.z * reach * t * (1 + 0.3 * t))
     const up = V(0, 1, 0).addScaledVector(out, 0.45)
+    // The bare stalk from the ground to the first leaflets, without which the frond hangs in the air.
+    const foot = rib(0.1)
+    const w = len * 0.012
+    const stalk = [V(-side.x * w, 0, -side.z * w), V(side.x * w, 0, side.z * w), foot.clone().addScaledVector(side, w), foot.clone().addScaledVector(side, -w)]
+    for (const c of [0, 1, 2, 0, 2, 3]) {
+      pos.push(stalk[c].x, stalk[c].y, stalk[c].z)
+      nor.push(up.x, up.y, up.z)
+      uv.push(tone, c < 2 ? 0 : 0.1)
+    }
     for (let k = 0; k < PAIRS; k++) {
       const t0 = 0.1 + (0.9 * k) / PAIRS
       const t1 = 0.1 + (0.9 * (k + 1)) / PAIRS

@@ -15,7 +15,9 @@ const CELL = 0.5
 const WIDE = 4096
 // The most points of one object tested: its lowest first, then a spread of the rest.
 const LOW = 64
-const SPREAD = 256
+const SPREAD = 512
+// A face longer than this is sampled across, not only at its corners.
+const FACE = 0.1
 
 // Higher than this is hung overhead by design, a chandelier, bunting, a ceiling: not checked.
 const OVERHEAD = 2.5
@@ -84,14 +86,39 @@ export function findFloaters(parts: readonly Part[], materials: Record<string, M
     let low = Number.POSITIVE_INFINITY
     for (let i = 0; i < n; i++) low = Math.min(low, points[i * 3 + 1])
     if (low <= GROUND || low > OVERHEAD) return
+    // A broad face touches through its middle as well as its corners: a coffin wider than its bier, a sign on a beam.
+    for (const { geo, material } of part.geos) {
+      if (!solid(material.name)) continue
+      const p = geo.attributes.position.array as ArrayLike<number>
+      for (let i = 0; i + 8 < p.length; i += 9) {
+        const edge = Math.max(Math.hypot(p[i] - p[i + 3], p[i + 1] - p[i + 4], p[i + 2] - p[i + 5]), Math.hypot(p[i] - p[i + 6], p[i + 1] - p[i + 7], p[i + 2] - p[i + 8]))
+        const k = Math.min(12, Math.floor(edge / FACE))
+        for (let a = 1; a < k; a++)
+          for (let b = 1; a + b < k; b++) {
+            const u = a / k
+            const v = b / k
+            for (let c = 0; c < 3; c++) points.push(p[i + c] + u * (p[i + 3 + c] - p[i + c]) + v * (p[i + 6 + c] - p[i + c]))
+          }
+      }
+    }
     const order = [...Array(n).keys()].sort((a, b) => points[a * 3 + 1] - points[b * 3 + 1])
-    const step = Math.max(1, Math.floor(n / SPREAD))
-    const tested = new Set([...order.slice(0, LOW), ...Array.from({ length: Math.ceil(n / step) }, (_, i) => i * step)])
+    const all = points.length / 3
+    const step = Math.max(1, Math.floor(all / SPREAD))
+    const tested = new Set([...order.slice(0, LOW), ...Array.from({ length: Math.ceil(all / step) }, (_, i) => i * step)])
     for (const i of tested) {
       const x = points[i * 3]
       const y = points[i * 3 + 1]
       const z = points[i * 3 + 2]
-      for (const ti of near(x, z)) if (owner[ti] !== pi && distance(tris[ti], x, y, z) <= TOUCH) return
+      // A point sunk in another object, a shelf's end in its wall, rests in it: an odd count of that object's surfaces
+      // above the point.
+      const above = new Map<number, number>()
+      for (const ti of near(x, z)) {
+        if (owner[ti] === pi) continue
+        if (distance(tris[ti], x, y, z) <= TOUCH) return
+        const h = heightAt(tris[ti], x, z)
+        if (h !== null && h > y) above.set(owner[ti], (above.get(owner[ti]) ?? 0) + 1)
+      }
+      for (const count of above.values()) if (count % 2) return
     }
     // Nothing touched: the least drop from one of its lowest points to whatever lies under it, or to the ground.
     let gap = low
