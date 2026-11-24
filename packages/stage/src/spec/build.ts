@@ -27,6 +27,15 @@ export interface BuiltGeometry {
   placed: number
   // What hides someone from a camera: the set's solid geometry, as built (see sight.ts).
   sight: Sight
+  // Each placed object's own geometry, not its children's, kept only when asked for (`parts: true`): the check that
+  // nothing floats (rest.ts) needs it, and the stage must not hold the arrays once they are on the GPU.
+  parts: Part[]
+}
+
+export interface Part {
+  path: string
+  type: string
+  geos: { geo: THREE.BufferGeometry; material: THREE.Material }[]
 }
 
 const ENVELOPE_KEYS = new Set(["type", "id", "at", "yaw", "materials"])
@@ -34,8 +43,9 @@ const ENVELOPE_KEYS = new Set(["type", "id", "at", "yaw", "materials"])
 // Runs every object's builder into one Batch. Each object gets its own random stream (set seed + its path in the spec),
 // its frame (`at`, `yaw`, composed with any layout above it), and a material resolver: a role resolves through the
 // object's `materials` map (inherited by children), then the builder's role defaults, then the role name itself.
-export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): BuiltGeometry {
+export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary, { parts: keepParts = false } = {}): BuiltGeometry {
   const batch = new Batch()
+  const parts: Part[] = []
   const footprints: Footprint[] = []
   const anchors: Anchor[] = []
   const extras: THREE.Object3D[] = []
@@ -77,8 +87,19 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
     }
     const M = new Proxy({} as Record<string, THREE.Material>, { get: (_, role: string) => mat(overrides[role] ?? def.roles[role] ?? role) })
     const worldYaw = yawOf(frame)
+    const framed = batch.framed(frame)
+    const part: Part | null = keepParts ? { path, type: o.type, geos: [] } : null
+    if (part) parts.push(part)
     const ctx: BuildCtx = {
-      b: batch.framed(frame),
+      b: part
+        ? {
+            add: (geo, material, matrix, opts) => {
+              const g = framed.add(geo, material, matrix, opts)
+              part.geos.push({ geo: g, material })
+              return g
+            },
+          }
+        : framed,
       M,
       mat: (name) => mat(overrides[name] ?? name),
       rand,
@@ -127,7 +148,7 @@ export function buildSetGeometry(spec: SetSpec, library: MaterialLibrary): Built
   } finally {
     resetGeometryCache()
   }
-  return { batch, extras, footprints, anchors, placed, sight: buildSight(batch.buckets, spec.materials, castGround(spec)) }
+  return { batch, extras, footprints, anchors, placed, parts, sight: buildSight(batch.buckets, spec.materials, castGround(spec)) }
 }
 
 // Where the cast can stand, with room for a camera about them: round the set's marks and what its own views look at,

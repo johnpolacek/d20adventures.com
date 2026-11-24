@@ -13,6 +13,7 @@ import { createStubLibrary } from "@d20/stage/materials/library"
 import { SETS, STAGINGS } from "@d20/stage/sets"
 import { buildSetGeometry, parseSet, populateCrowd } from "@d20/stage/spec/build"
 import { frameShot, resolveCast, resolveShots } from "@d20/stage/spec/resolve"
+import { findFloaters } from "@d20/stage/spec/rest"
 import { type Sight, viewCost } from "@d20/stage/spec/sight"
 import { type StagingShot, type StagingSpec, stagingSpecSchema } from "@d20/stage/spec/staging"
 import { clearView } from "@d20/stage/spec/view"
@@ -24,7 +25,7 @@ async function checkSet(label: string, raw: unknown) {
   const t0 = performance.now()
   const set = parseSet(raw)
   const lib = createStubLibrary(set.materials)
-  const built = buildSetGeometry(set, lib)
+  const built = buildSetGeometry(set, lib, { parts: true })
   let vertices = 0
   const byMaterial: [string, number][] = []
   for (const [m, geos] of built.batch.buckets) {
@@ -58,6 +59,22 @@ async function checkSet(label: string, raw: unknown) {
   )
   const unused = Object.keys(set.materials).filter((n) => ![...built.batch.buckets.keys()].some((m) => m.name === n))
   if (unused.length) console.log(`  unused materials: ${unused.join(", ")}`)
+  // What touches nothing and stands off the ground (spec/rest.ts). Floaters warn and do not fail yet.
+  const floaters = findFloaters(built.parts, set.materials)
+  console.log(`  rest: ${built.parts.length} objects, ${floaters.length} touching nothing`)
+  // A scatter of the same thing floats for one reason: one line for all of it.
+  const groups = new Map<string, typeof floaters>()
+  for (const f of floaters) {
+    const k = `${/^objects\/[^/]+\//.test(f.path) ? f.path.replace(/\/\d+$/, "/*") : f.path} (${f.type})`
+    groups.set(k, [...(groups.get(k) ?? []), f])
+  }
+  for (const [k, fs] of groups) {
+    const gaps = fs.map((f) => f.gap)
+    const over = [...new Set(fs.map((f) => f.over ?? "the ground"))].join(", ")
+    const gap = fs.length > 1 ? `${fs.length} of them, ${Math.min(...gaps).toFixed(2)} to ${Math.max(...gaps).toFixed(2)} m` : `${gaps[0].toFixed(2)} m`
+    console.log(`  WARN floats ${fs.length > 1 ? k : `${fs[0].path} (${fs[0].type})`}: ${gap} over ${over}`)
+  }
+  built.parts.length = 0
   return { set, footprints: built.footprints, doors: doorways(built.anchors), sight: built.sight }
 }
 
