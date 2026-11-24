@@ -27,7 +27,7 @@ The tug is gone downstream and out of sight in the mist with the crate and whoev
 
 Lyra is out of the water and in no danger of drowning. She is soaked, cold and bruised. If her hands were bound she needs help or a sharp edge to free them.
 
-Poppen and Thalbern each saw her go into the river, each from his own hiding place. A watcher who comes out to help her is plainly seen by her and by the other watcher, with no check needed. This is most likely where the three first meet. They are strangers, with no names until they give them, and each knows only what he saw from where he was. A watcher who stays hidden stays unknown: anyone looking for him needs a Perception check, DC 15.
+Poppen and Thalbern each saw her go into the river, each from his own hiding place. A watcher who comes out to help her is plainly seen by her and by the other watcher, with no check needed. The mist lies on the river, not the bank: those who stand together on the pier see each other plainly. Lyra is out of the water when the scene opens and stays out unless she goes back in. This is most likely where the three first meet. They are strangers, with no names until they give them, and each knows only what he saw from where he was. A watcher who stays hidden stays unknown: anyone looking for him needs a Perception check, DC 15.
 
 Thalbern carries herbs and clean linen. If he tends a wounded hero, it is an easy Medicine check, DC 10, and on a success that hero regains 1d8 hit points.
 
