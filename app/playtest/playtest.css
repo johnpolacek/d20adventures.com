@@ -1,0 +1,23 @@
+/* The playtest card fades in and rises, then its parts follow it in quick steps, each `[data-step]` by its `--i`.
+   It is CSS, so it plays from the first paint on any visit, and a page with no script still reads. */
+@keyframes playtest-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+}
+.playtest-card {
+  --rise: 24px;
+  animation: playtest-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.playtest-card [data-step] {
+  --rise: 10px;
+  animation: playtest-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(200ms + var(--i, 0) * 70ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .playtest-card,
+  .playtest-card [data-step] {
+    animation: none;
+  }
+}
