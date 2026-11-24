@@ -47,10 +47,11 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - The site's own GM starts new games of the demo adventure only: `demo` in `LOCAL_WIKI_ADVENTURES`, checked by `playsOnSite()`. Every other adventure is hosted from the desktop app. Development runs them all.
 - Every AI call the site pays for runs inside a daily budget (`lib/gm-server/budget.ts`, ledger in `convex/aiBudget.ts`): wrap a new one in `paid()`, or ask `budgetOpen()` first and `recordSpend()` after. The owner sets the limit on `/admin`. A new model needs its price added there.
 - A push to `main` does not deploy the site. `pnpm deploy:site` sends what `origin/main` holds to production, since the Hobby plan allows 100 deploys a day. Convex functions reach production only by `pnpm convex:deploy`. Never edit `convex/_generated`, which `npx convex codegen` writes.
-- Auto mode blocks `pnpm convex:deploy`, `pnpm deploy:site`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production.
+- Auto mode blocks `pnpm convex:deploy`, `pnpm deploy:site`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production. It also blocks `pnpm desktop:release`, paid or destructive asset runs (`assets:pilot --pay`, `assets:archive`), `aws s3`, force pushes, and `git checkout` or `git restore` on files you did not change. Ask John instead of trying another way.
 - `proxy.ts` is the Clerk middleware.
 - There is no `wiki/`, `tailwind.config.ts`, Prettier or Biome. Match the formatting of the file you edit.
-- Scratchpad scripts cannot resolve `@d20/*` imports. Import the package's source file by absolute path.
+- Scratchpad scripts cannot resolve `@d20/*` imports, or any other package such as `playwright` or `three`. Import a `@d20` package's source file by absolute path. For others, put the script in the repo root and delete it after.
+- When root `tsc` reports errors in `.next/types`, they name pages that no longer exist. Delete `.next/types` and run it again.
 - Pull with `git pull --rebase --autostash`. Plain `--rebase` fails on unstaged changes.
 - Other sessions edit `main` at the same time. Re-read a file after a pull, before editing it.
 - Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Vercel deploys leave them out and the site serves them from the public bucket.
