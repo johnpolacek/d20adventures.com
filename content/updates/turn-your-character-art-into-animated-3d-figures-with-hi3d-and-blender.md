@@ -160,6 +160,14 @@ And if you just want to look around the code:
 Clone https://github.com/johnpolacek/d20adventures.com and walk me through how asset-library/pipeline/build.ts and pilot.ts make a 3D figure, step by step, with what each step costs.
 ```
 
+**Update 11/23**
+
+Here’s a new gameplay video. This one played itself. The desktop app has an autopilot now that plays an adventure and records the screen.
+
+<iframe src="https://www.youtube-nocookie.com/embed/tUrU0yeH-Bs" title="D20 Adventures gameplay, played by the autopilot" style="width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 0.5rem;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+Hi3D found a few more ways to go wrong after I posted this. Thalbern came back with an extra finger on one hand, so the build now cuts it off at the knuckles. Poppen had heavy lids and dark bags under his eyes, and in the game’s light he looked half asleep. A brief can ask for smooth lids now. Heroes also hold their weapons. When Thalbern readies his bow, it stays in his hand through his walk and his shot.
+
 Other stuff that landed this week:
 
 - Sound, with combat cues and night ambience in the Valkarr woods.
