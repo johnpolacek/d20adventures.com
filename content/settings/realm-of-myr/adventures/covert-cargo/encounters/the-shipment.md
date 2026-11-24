@@ -92,7 +92,7 @@ Legacy runtime flag: skipInitialNpcTurns was true.
 
 - To [[encounter:the-transaction]] when If Lyra verbally confirms the magic properties of the shipment
 - To [[encounter:the-fake]] when Lyra says the shipment is fake or has no magical properties, whether or not it is true. Take this at once: Silas weighs her word in The Fake, not here.
-- To [[encounter:the-disturbance]] when Poppen or Thalbern causes a distraction, anyone aboard notices either of them, or a sentry hears a noise from the bank and turns toward it
+- To [[encounter:the-disturbance]] when Poppen or Thalbern causes a distraction, anyone aboard notices either of them, or a sentry hears a noise from the bank and turns toward it, or Lyra attacks Silas, Reinhard or the elves
 
 ## Migration Context
 

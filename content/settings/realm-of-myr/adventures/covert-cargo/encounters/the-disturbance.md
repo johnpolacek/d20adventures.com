@@ -8,6 +8,7 @@ title: "The Disturbance"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 landmark: "valkarr-woods/forest-pier"
+roundBudget: 3
 npcs:
   - id: "npcs-1749243735467"
     behavior: "Will back up the Fighter, her bow drawn."
@@ -41,7 +42,7 @@ Aelar will order his two elves to investigate. Everyone else will stay with the 
 
 The elves mean to drive a found watcher off, not to kill him. They threaten with blade and bow and strike only if he attacks or rushes the boat. One who goes back into the trees is let go. One who surrenders, or stops to tend someone hurt, is made to leave once he is done.
 
-Silas and Reinhard stay at the pier and wait on the trade. They do not cast off or cut the lines in this scene. Silas still pays only on Lyra's word or once the watcher is gone. The payment is the sealed scrollcase, not coin. Once he means to pay, the scene ends there: the handover and the elves' leaving are told in The Transaction, so do not tell them here.
+Silas and Reinhard stay at the pier and wait on the trade. They do not cast off or cut the lines in this scene. Silas still pays on Lyra's word or once the watcher is gone. He will not wait on her for long: if she has given no word by the end of the second round, he pays anyway, wanting the deal done before the light comes up. The payment is the sealed scrollcase, not coin. Once he means to pay, the scene ends there: the handover and the elves' leaving are told in The Transaction, so do not tell them here.
 
 If Lyra casts Detect Magic on the crate here, she learns what the GM notes of The Shipment give: an ancient, potent enchantment on an object inside, its purpose on an 18 or higher, its name on a 20.
 
@@ -55,6 +56,7 @@ Aelar and his elves are here only to trade the crate. Once Silas hands over the 
 
 - To [[encounter:the-transaction]] when If whoever caused the disturbance successfully hides, then the transaction will proceed as Silas will be eager to have the matter concluded, even if he has to skip Lyra's verification.
 - To [[encounter:the-transaction]] when Lyra confirms the shipment's magic, in words or with a nod to Silas
+- To [[encounter:the-transaction]] when Silas decides to pay Aelar without Lyra's word
 - To [[encounter:the-fake]] when Lyra says the shipment has no magical properties
 - To [[encounter:the-escape]] when If the characters flee
 - To [[encounter:battle-on-the-boat]] when If it turns into a battle

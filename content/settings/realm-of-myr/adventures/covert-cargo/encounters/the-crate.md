@@ -8,6 +8,7 @@ title: "The Crate"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"
 landmark: "valkarr-woods/forest-pier"
+roundBudget: 4
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-crate/a3a863a9-dca9-48da-b3fe-e8c4ad90af3a.png?t=1749674703995"
 ---
 
@@ -19,11 +20,11 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 The crate is sealed tight. They can break it open after concerted effort with equipment lying around the ship. Inside is the large heavy sitting stone. It cannot easily be moved as it weighs about 500 pounds. Though it is a powerful artifact for binding oaths, it is of no immediate use to Lyra or Poppen. Thalbern knows a Valkaran relic when he sees one: this is what Wollandora sent him to find, and it is far too heavy for the three of them to carry off. Any hero who has not yet met the others meets them here, as strangers with no names until they give them. Continue with this encounter until they have resolved what they wish to do.
 
-Suggest they return to the city, which is about 3 miles away.
+It is just before dawn, and the light is coming up over the river, not going. Suggest they return to the city, which is about 3 miles away. The stone stays where it is, whatever they plan for it: once any of them sets out for Kordavos, for help, a cart or the Blackthorns, the scene is done.
 
 ## Transitions
 
-- To [[encounter:return-to-the-city]] when If they decide to go back, return, city or Kordavos.
+- To [[encounter:return-to-the-city]] when If they decide to go back, return, city or Kordavos, or any of them sets out for Kordavos
 - To [[encounter:the-end]] when If they decide to do anything other than go back, return, city or Kordavos.
 
 ## Migration Context
