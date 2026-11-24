@@ -315,6 +315,8 @@ export function StagePlay(props: {
   const [auto, setAuto] = useState(false)
   const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
+  // The turn held by the player: the narrator stops where it is, and nothing moves on until it is played again.
+  const [paused, setPaused] = useState(false)
   // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
   // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
   // `from` is how many beats the turn's story had when the roll was made: the engine's answer comes after them.
@@ -449,7 +451,13 @@ export function StagePlay(props: {
     speaker: speakerOf(paragraph),
     nextSpeaker: speakerOf(paragraph + 1),
     on: reading && !hidden && !props.overlay && !sceneWaits,
+    paused,
   })
+  // A pause lasts until the turn is played again, or the reading ends.
+  useEffect(() => {
+    if (!reading) setPaused(false)
+  }, [reading])
+  useEffect(() => setPaused(false), [turn?._id])
   // What the stage shows keeps time with the narrator. A paragraph read aloud plays nothing until its first words are
   // heard, and a cue tied to a later sentence ("the cabin door opened") waits for that sentence. `heard` is the sentence
   // being heard in the paragraph on screen: -1 before the first, and all of them when nothing is read aloud.
@@ -1051,15 +1059,15 @@ export function StagePlay(props: {
     }
   }, [stage, stageRef, reading, paragraph, heard, staged, sounded, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || sceneWaits || !text.length || speaking) return
+    if (!auto || !reading || busy || sceneWaits || !text.length || speaking || paused) return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
     const seconds = voiced.status === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status])
+  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
-  // A roll waits as it does in auto.
+  // Read aloud, it fills as the words are heard. A roll waits as it does in auto.
   const continueMs = busy || !text.length || speaking ? undefined : voiced.status === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
@@ -1440,6 +1448,9 @@ export function StagePlay(props: {
                 compact={compact}
                 step={!auto}
                 autoMs={continueMs}
+                progress={voiced.status === "off" || busy ? undefined : voiced.progress}
+                paused={paused}
+                onPause={setPaused}
                 onReplay={() => {
                   setParagraph(0)
                   setReading(true)

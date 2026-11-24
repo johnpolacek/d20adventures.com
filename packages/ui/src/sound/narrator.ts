@@ -180,11 +180,16 @@ const LIFT = 1.8
 const LATE_MS = 12_000
 let spokeOnce = false
 
-// Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `done` settles when the last
-// sentence ends, or at once when stopped, with whether any of it was heard. `onSentence` is told as each sentence is
-// heard, by its place in sentences(text), so what the stage shows keeps time with the words. A speaker's gender says
-// their quoted words in the voice for them (voiceFor).
-export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void, speaker?: Spoken): { done: Promise<boolean>; stop: () => void } | null {
+// A paragraph being read aloud: `done` settles when the last sentence ends, or at once when stopped, with whether any of
+// it was heard. `pause` holds the words where they are and `resume` goes on from there. `progress` is how much of the
+// paragraph has been heard, 0 to 1, each piece weighed by its length, so it moves steadily while later ones are still
+// being made.
+export type Speaking = { done: Promise<boolean>; stop: () => void; pause: () => void; resume: () => void; progress: () => number }
+
+// Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `onSentence` is told as each
+// sentence is heard, by its place in sentences(text), so what the stage shows keeps time with the words. A speaker's
+// gender says their quoted words in the voice for them (voiceFor).
+export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void, speaker?: Spoken): Speaking | null {
   const c = audio()
   // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
   if (!c || state !== "ready") return null
@@ -192,37 +197,68 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
   if (!lines.length) return null
   const made = lines.map((p) => say(p.text, p.voice))
   for (const m of made) m.catch(() => {})
+  const total = lines.reduce((n, p) => n + p.text.length, 0)
+  // Each piece's place on the paragraph's own clock, which stands still while paused. `base` is when that clock read
+  // zero on the context's, and `held` is where it stopped.
+  type Piece = { buffer: AudioBuffer; start: number; weight: number; sentence: number; first: boolean; src?: AudioBufferSourceNode }
+  const placed: Piece[] = []
+  let base = c.currentTime + 0.05
+  let held: number | null = null
+  const now = () => held ?? c.currentTime - base
+  let skipped = 0
   let stopped = false
-  let last: AudioBufferSourceNode | null = null
+  let all = false
+  let heardAny = false
   let finish = () => {}
-  // The ambience dips from the first words until the last have ended, and eases back after (engine.ts, DUCK).
-  let unduck = () => {}
-  const playing = new Set<AudioBufferSourceNode>()
+  // The ambience dips while the words are heard, and eases back after (engine.ts, DUCK).
+  let unduck: (() => void) | null = null
   const heard: ReturnType<typeof setTimeout>[] = []
   const gain = c.createGain()
   gain.gain.value = LIFT
   gain.connect(bus("voice"))
+  const silence = (p: Piece) => {
+    if (!p.src) return
+    p.src.onended = null
+    p.src.stop()
+    p.src = undefined
+  }
   const stop = () => {
     if (stopped) return
     stopped = true
     heard.forEach(clearTimeout)
-    for (const s of playing) {
-      s.onended = null
-      s.stop()
-    }
+    placed.forEach(silence)
     gain.disconnect()
-    unduck()
+    unduck?.()
     finish()
+  }
+  // The last piece has ended once they are all made and none is left to play.
+  const ended = () => {
+    if (all && held === null && placed.every((p) => !p.src) && now() >= (placed.at(-1)?.start ?? 0) + (placed.at(-1)?.buffer.duration ?? 0) - 0.01) stop()
+  }
+  const play = (p: Piece) => {
+    const offset = Math.max(0, now() - p.start)
+    if (offset >= p.buffer.duration) return
+    const src = c.createBufferSource()
+    src.buffer = p.buffer
+    src.connect(gain)
+    src.start(Math.max(c.currentTime, base + p.start), offset)
+    src.onended = () => {
+      p.src = undefined
+      ended()
+    }
+    p.src = src
+    if (!unduck) unduck = duck()
+    if (onSentence && p.first && offset === 0) heard.push(setTimeout(() => !stopped && onSentence(p.sentence), Math.max(0, (base + p.start - c.currentTime) * 1000)))
   }
   // Sound turned off mid-sentence holds the context, so the narration would never end: it stops instead.
   const unsound = onSoundSetting((on) => !on && stop())
   const done = new Promise<boolean>((resolve) => {
     finish = () => {
       unsound()
-      resolve(last !== null)
+      resolve(heardAny)
     }
     void (async () => {
-      let at = c.currentTime + 0.05
+      let at = 0
       for (const [i, m] of made.entries()) {
         let timer: ReturnType<typeof setTimeout> | undefined
         const late = new Promise<"late">((r) => (timer = setTimeout(() => r("late"), LATE_MS)))
@@ -236,30 +272,48 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
           }
           break
         }
-        if (!clip) continue
+        if (!clip) {
+          skipped += lines[i].text.length
+          continue
+        }
         spokeOnce = true
-        if (!last) unduck = duck()
+        heardAny = true
         const buffer = c.createBuffer(1, clip.audio.length, clip.rate)
         buffer.copyToChannel(clip.audio as Float32Array<ArrayBuffer>, 0)
-        const src = c.createBufferSource()
-        src.buffer = buffer
-        src.connect(gain)
-        at = Math.max(at, c.currentTime)
-        src.start(at)
-        const sentence = lines[i].sentence
-        if (onSentence && lines[i - 1]?.sentence !== sentence) heard.push(setTimeout(() => !stopped && onSentence(sentence), Math.max(0, (at - c.currentTime) * 1000)))
-        at += buffer.duration
-        playing.add(src)
-        src.onended = () => playing.delete(src)
-        last = src
+        const p: Piece = { buffer, start: Math.max(at, now()), weight: lines[i].text.length, sentence: lines[i].sentence, first: lines[i - 1]?.sentence !== lines[i].sentence }
+        at = p.start + buffer.duration
+        placed[i] = p
+        if (held === null) play(p)
       }
-      const end = last as AudioBufferSourceNode | null
-      if (!end) return stop()
-      end.onended = () => {
-        playing.delete(end)
-        stop()
-      }
+      all = true
+      // Pieces given up leave holes, so the list is closed up before the end is looked for.
+      for (let i = placed.length - 1; i >= 0; i--) if (!placed[i]) placed.splice(i, 1)
+      if (!heardAny) return stop()
+      ended()
     })()
   })
-  return { done, stop }
+  const pause = () => {
+    if (stopped || held !== null) return
+    held = Math.max(0, now())
+    heard.forEach(clearTimeout)
+    heard.length = 0
+    placed.forEach(silence)
+    unduck?.()
+    unduck = null
+  }
+  const resume = () => {
+    if (stopped || held === null) return
+    base = c.currentTime + 0.05 - held
+    held = null
+    for (const p of placed) if (p) play(p)
+    ended()
+  }
+  const progress = () => {
+    if (stopped) return heardAny ? 1 : 0
+    const t = now()
+    let got = skipped
+    for (const p of placed) if (p) got += p.weight * Math.min(1, Math.max(0, (t - p.start) / p.buffer.duration))
+    return total ? Math.min(1, got / total) : 0
+  }
+  return { done, stop, pause, resume, progress }
 }

@@ -4,8 +4,9 @@
 // panel resizes, and the new text fades in. A paragraph that is a dice roll shows the roll itself (see RollResult), and
 // one that is a class feature used shows it as a small entry (see FeatureEntry). Dots mark the paragraph's place in the turn; the controls replay the turn,
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
-// Given a reading time, Continue fills as the time runs and then presses itself. A click on the words holds it, and
-// so does stepping back, until Continue is pressed.
+// Given a reading time, Continue fills as the time runs and then presses itself. Read aloud, it fills as the words are
+// heard instead, and presses itself a moment after they end. Pause holds the turn, the words read aloud and the fill
+// alike, and so does a click on the words. Stepping back holds only Continue, until it is pressed.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, type ButtonProps, epicReducedButtonStyle } from "../button"
@@ -54,6 +55,9 @@ export function Narration({
   step = false,
   onContinue,
   autoMs,
+  progress,
+  paused: pausedProp,
+  onPause,
   className,
   style,
   onAnimationEnd,
@@ -78,6 +82,11 @@ export function Narration({
   onContinue?: () => void
   // Stepping through, Continue presses itself after this long.
   autoMs?: number
+  // How much of the paragraph the narrator has read, 0 to 1, for Continue to fill by. Its time then runs on from there.
+  progress?: () => number
+  // Whether the turn is paused, when the caller holds it.
+  paused?: boolean
+  onPause?: (paused: boolean) => void
 }) {
   const [shown, setShown] = useState(text)
   const [shownRoll, setShownRoll] = useState(roll)
@@ -103,20 +112,44 @@ export function Narration({
     }
   }, [text, roll, rollPace, feature, heading])
 
-  const timed = step && autoMs !== undefined
+  const timed = step && (autoMs !== undefined || progress !== undefined)
   // The time runs only while the words are up, so a paragraph still fading in has not started.
   const running = timed && visible && !hidden
-  const [paused, setPaused] = useState(false)
-  const pausedRef = useRef(paused)
-  pausedRef.current = paused
+  const [ownPause, setOwnPause] = useState(false)
+  const paused = pausedProp ?? ownPause
+  const setPaused = (p: boolean) => {
+    setOwnPause(p)
+    onPause?.(p)
+  }
+  // A step back holds Continue, and the words read aloud go on.
+  const [stayed, setStayed] = useState(false)
+  const pausedRef = useRef(paused || stayed)
+  pausedRef.current = paused || stayed
+  const progressRef = useRef(progress)
+  progressRef.current = progress
   const press = useRef(onContinue)
   press.current = onContinue
   const fill = useRef<HTMLSpanElement>(null)
   const sync = useRef<() => void>(undefined)
   useEffect(() => {
     const el = fill.current
-    if (!running || !el?.animate) return
-    const run = el.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: autoMs, fill: "forwards" })
+    if (!running || !el) return
+    // Read aloud, the fill follows the words until they end.
+    if (autoMs === undefined) {
+      let frame = 0
+      const draw = () => {
+        el.style.transform = `scaleX(${progressRef.current?.() ?? 0})`
+        frame = requestAnimationFrame(draw)
+      }
+      draw()
+      return () => {
+        cancelAnimationFrame(frame)
+        el.style.transform = "scaleX(0)"
+      }
+    }
+    if (!el.animate) return
+    const from = progressRef.current?.() ?? 0
+    const run = el.animate([{ transform: `scaleX(${from})` }, { transform: "scaleX(1)" }], { duration: autoMs, fill: "forwards" })
     run.onfinish = () => press.current?.()
     // A window out of sight holds the time too, so nothing is passed unread.
     const hold = () => {
@@ -133,7 +166,7 @@ export function Narration({
       run.cancel()
     }
   }, [running, autoMs, index, shown])
-  useEffect(() => sync.current?.(), [paused])
+  useEffect(() => sync.current?.(), [paused, stayed])
 
   const inner = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number>()
@@ -161,7 +194,7 @@ export function Narration({
       <div ref={inner} className={compact ? "px-3 pt-2 pb-2" : "px-5 pt-4 pb-3"}>
         <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-accent", compact ? "mb-1" : "mb-2")}>
           {shownHeading}
-          {timed && paused && <span className="ml-auto text-muted-foreground">Paused</span>}
+          {paused && <span className="ml-auto text-muted-foreground">Paused</span>}
         </div>
         {shownRoll ? (
           <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
@@ -177,9 +210,9 @@ export function Narration({
               "font-serif text-foreground transition-opacity duration-150",
               visible ? "opacity-100" : "opacity-0",
               compact ? "text-2xs leading-snug" : "text-sm leading-[1.65]",
-              timed && "cursor-pointer"
+              "cursor-pointer"
             )}
-            onClick={timed ? () => setPaused((p) => !p) : undefined}
+            onClick={() => setPaused(!paused)}
           >
             {shown}
           </p>
@@ -196,6 +229,7 @@ export function Narration({
               label="Replay the turn"
               onClick={() => {
                 setPaused(false)
+                setStayed(false)
                 onReplay()
               }}
             >
@@ -204,10 +238,22 @@ export function Narration({
                 <path d="M2 1.4v2.4h2.4" />
               </svg>
             </Control>
+            <Control label={paused ? "Play" : "Pause"} aria-pressed={paused} onClick={() => setPaused(!paused)}>
+              {paused ? (
+                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+                  <path d="M3.5 2.2v7.6L9.6 6z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+                  <rect x="3" y="2.5" width="2" height="7" rx="0.5" />
+                  <rect x="7" y="2.5" width="2" height="7" rx="0.5" />
+                </svg>
+              )}
+            </Control>
             <Control
               label="Previous paragraph"
               onClick={() => {
-                setPaused(true)
+                setStayed(true)
                 onBack()
               }}
               disabled={index <= 0}
@@ -225,6 +271,7 @@ export function Narration({
                 style={compact ? undefined : epicReducedButtonStyle}
                 onClick={() => {
                   setPaused(false)
+                  setStayed(false)
                   onContinue?.()
                 }}
               >
