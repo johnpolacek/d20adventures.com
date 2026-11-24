@@ -6,7 +6,7 @@ import { DatabaseSync } from "node:sqlite"
 import { fileURLToPath } from "node:url"
 import { gunzipSync } from "node:zlib"
 import type { TurnRecord } from "@d20/gm-core"
-import type { StoryBeat } from "@d20/gm-core/story/beats"
+import { hasText, type StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, type StoryNames, scriptLine } from "@d20/gm-core/story/render"
 import type { RuntimeArtifacts } from "@d20/gm-core/wiki-adventures/types"
 import { z } from "zod"
@@ -119,7 +119,7 @@ export function roundScript(round: Round): string {
         : `${nameOf(names, beat.by.character ?? "")}'s ${beat.by.step === "roll" ? "roll" : "turn"}, ${role(beat.by.character)}:`
   const lines: string[] = []
   let last: StoryBeat | undefined
-  for (const beat of round.story) {
+  for (const beat of round.story.filter(hasText)) {
     if (!last || last.by.step !== beat.by.step || last.by.character !== beat.by.character) lines.push("", head(beat))
     lines.push(scriptLine(beat, names))
     last = beat

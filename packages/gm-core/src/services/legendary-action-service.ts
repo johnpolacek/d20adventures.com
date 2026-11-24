@@ -6,7 +6,7 @@ import { legendaryActionsAfter, legendaryActionsOf } from "../sheet/legendary-ac
 import type { EncounterFloor } from "../sheet/placement"
 import { ordered } from "../sheet/reactions"
 import { settleConcentration } from "../sheet/spell-effects"
-import type { StoryBeat } from "../story/beats"
+import { moveBeats, type StoryBeat } from "../story/beats"
 import { storyNames } from "../story/render"
 import { attackBeat, concentrationBeat } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
@@ -40,6 +40,7 @@ export function legendaryAfterTurn(args: { characters: TurnCharacter[]; endedId:
     if (!legend) return []
     const by = { step: "npc" as const, character: legend.id }
     return [
+      ...moveBeats(by, legend.id, taken.walked ?? [], taken.teleported),
       { kind: "feature", by, character: legend.id, name: `Legendary Action: ${taken.name}`, text: taken.text, ...(taken.target ? { target: taken.target } : {}) },
       ...taken.opportunity.flatMap((made): StoryBeat[] => {
         const attacker = find(made.attacker)

@@ -567,16 +567,36 @@ export function StagePlay(props: {
     const text = beats.flatMap((b) => (b.kind === "line" && b.speaker === line.speaker ? [b.text] : [])).join(" ")
     return { name: c.name, role: c.type === "npc" ? c.archetype || c.race : `${c.race} ${c.archetype}`, portrait: portrait(c), text }
   }, [scene, reading, paragraphs, paragraph, shown])
-  // Where the engine has each character, in the stage's metres, by cast id, with the character it stands for. Ambient
-  // extras, and anyone the engine has not placed, stand where the staging puts them.
+  // The walks the engine made this turn, by character, each at the paragraph it is read in (story/beats `MoveBeat`).
+  const trails = useMemo(() => {
+    const out = new Map<string, { at: number; from: { x: number; y: number }; to: { x: number; y: number }; teleport: boolean }[]>()
+    if (shown !== turn) return out
+    paragraphs.forEach((p, at) => {
+      for (const b of p.beats) {
+        if (b.kind !== "move") continue
+        out.set(b.character, [...(out.get(b.character) ?? []), { at, from: b.path[0], to: b.path[b.path.length - 1], teleport: !!b.teleport }])
+      }
+    })
+    return out
+  }, [shown, turn, paragraphs])
+  // Where the engine has each character, in the stage's metres, by cast id, with the character it stands for, as far as
+  // the story has been read: one the turn walks stands where they started until the paragraph of each walk, so the
+  // Owlbear waits at the tree line while Thalbern shoots and closes on him on its own turn. `walked` marks one whose
+  // spot the story's moves give, `teleport` one whose last move set them down there. Ambient extras, and anyone the
+  // engine has not placed, stand where the staging puts them.
   const spots = useMemo(() => {
-    const out = new Map<string, { character: string; at: [number, number] }>()
+    const out = new Map<string, { character: string; at: [number, number]; walked?: true; teleport?: true }>()
     for (const c of shown?.characters ?? []) {
       const id = stage && c.position && castIdFor(stage.cast, c)
-      if (id && c.position) out.set(id, { character: c.id, at: [metres(c.position.x), metres(c.position.y)] })
+      if (!id || !c.position) continue
+      const moves = trails.get(c.id) ?? []
+      const done = moves.filter((m) => !toCome(m.at, 0))
+      const last = done[done.length - 1]
+      const at = done.length === moves.length ? c.position : (last?.to ?? moves[0].from)
+      out.set(id, { character: c.id, at: [metres(at.x), metres(at.y)], ...(moves.length ? { walked: true as const } : {}), ...(last?.teleport ? { teleport: true as const } : {}) })
     }
     return out
-  }, [stage, shown?.characters])
+  }, [stage, shown?.characters, trails, reading, paragraph, heard])
   // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
   // opened"), then they walk on from the door to where the engine has them. Narration without the phrase finds them
   // in place. An action that brings someone on from a place does the same, at its own paragraph.
@@ -880,7 +900,7 @@ export function StagePlay(props: {
     const fresh = drawn.current?.stage !== stage || drawn.current.encounter !== encounter
     if (fresh) drawn.current = { stage, encounter, at: new Map(), walks: new Map() }
     const d = drawn.current!
-    for (const [id, { character, at: to }] of spots) {
+    for (const [id, { character, at: to, walked, teleport }] of spots) {
       const key = to.join()
       if (d.at.get(id) === key) continue
       const cued = cues.some((e) => e.cast === id && e.here && (toCome(e.at, e.s) || reached(e.at, e.s)))
@@ -891,11 +911,18 @@ export function StagePlay(props: {
         if (stage.isOnStage(id) && !(reading && walks.some((w) => w.cast === id))) stage.placeCast(id, to)
         continue
       }
-      // The first paragraph of the character's latest step in the story on screen.
-      let from = paragraphs.findLastIndex((p) => p.beats[0]?.by.character === character)
+      // One the story walks already waited for the paragraph of the walk. Anyone else waits for the first paragraph of
+      // their latest step in the story on screen.
+      let from = walked ? -1 : paragraphs.findLastIndex((p) => p.beats[0]?.by.character === character)
       while (from > 0 && paragraphs[from - 1].beats[0]?.by.character === character && paragraphs[from - 1].beats[0]?.by.step === paragraphs[from].beats[0]?.by.step) from--
       if (toCome(from, 0)) continue
       d.at.set(id, key)
+      // A teleport walks nothing: they are there.
+      if (teleport) {
+        d.walks.set(id, (d.walks.get(id) ?? 0) + 1)
+        stage.placeCast(id, to)
+        continue
+      }
       strolls.current.on.set(id, 0)
       const walk = (d.walks.get(id) ?? 0) + 1
       d.walks.set(id, walk)

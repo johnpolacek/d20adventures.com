@@ -17,7 +17,7 @@ import { answeredSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rule
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { areasForced } from "../sheet/spell-rounds"
 import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
-import type { StoryBeat, StoryBy, StoryOutput } from "../story/beats"
+import { moveBeats, type StoryBeat, type StoryBy, type StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
 import { attackBeat, castAnswerBeats, castBeats, concentrationBeat, rollBeat, turnScript } from "../story/turn"
@@ -173,6 +173,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         rules: args.rules,
       })
       updatedCharacters = went.characters.map(afterHarm)
+      leaving.push(...moveBeats(npcStep(args.npc), args.npc.id, went.walked, reading.move.teleport))
       for (const made of went.attacks) {
         const attacker = updatedCharacters.find((character) => character.id === made.attacker)
         if (!attacker) continue

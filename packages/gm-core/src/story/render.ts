@@ -1,4 +1,4 @@
-import type { RollBeat, StoryBeat, StoryBy } from "./beats"
+import { hasText, type RollBeat, type StoryBeat, type StoryBy, type TextBeat } from "./beats"
 
 // Names for the ids a story holds. An id the lookup lacks reads as itself, capitalised ("owlbear" is "Owlbear").
 export type StoryNames = Record<string, string | undefined>
@@ -19,21 +19,30 @@ export interface StoryParagraph {
 }
 
 // The story as paragraphs to read: an action and what its actor then says read as one paragraph, as do one speaker's
-// lines in a row. Narration, rolls and replies each stand alone.
+// lines in a row. Narration, rolls and replies each stand alone. A move has no words: it closes the paragraph before
+// it, so the stage walks the character as that paragraph is read, as the Owlbear does as it is told charging. One
+// before any words closes the first paragraph. A paragraph never opens with a move.
 export function storyParagraphs(story: readonly StoryBeat[]): StoryParagraph[] {
   const out: StoryBeat[][] = []
+  let early: StoryBeat[] = []
   for (const beat of story) {
     const last = out[out.length - 1]
+    if (!hasText(beat)) {
+      if (last) last.push(beat)
+      else early.push(beat)
+      continue
+    }
     const prev = last?.[last.length - 1]
     const joins = beat.kind === "line" && prev && (prev.kind === "action" || prev.kind === "line") && who(prev) === beat.speaker && sameBy(prev.by, beat.by)
     if (joins) last.push(beat)
-    else out.push([beat])
+    else out.push([beat, ...early])
+    early = []
   }
-  return out.map((beats) => ({ beats, text: paragraphText(beats) }))
+  return out.map((beats) => ({ beats, text: paragraphText(beats.filter(hasText)) }))
 }
 
 // One speaker's lines in a row read as one quotation, not as quotes set side by side.
-function paragraphText(beats: readonly StoryBeat[]): string {
+function paragraphText(beats: readonly TextBeat[]): string {
   let text = ""
   for (const [i, beat] of beats.entries()) {
     if (beat.kind === "line" && beats[i - 1]?.kind === "line") text = `${text.slice(0, -1)} ${beat.text}"`
@@ -42,18 +51,18 @@ function paragraphText(beats: readonly StoryBeat[]): string {
   return text
 }
 
-function beatText(beat: StoryBeat): string {
+function beatText(beat: TextBeat): string {
   if (beat.kind === "line") return `"${beat.text}"`
   if (beat.kind === "roll") return rollSentence(beat)
   return beat.text
 }
 
 // The story as a script for the GM's prompts: each step's beats together, every spoken line under its speaker's name,
-// rolls and the player's own words in brackets.
+// rolls and the player's own words in brackets. A move is left out: where everyone stands now, the prompt says apart.
 export function storyText(story: readonly StoryBeat[], names: StoryNames = {}): string {
   const blocks: string[][] = []
   let by: StoryBy | undefined
-  for (const beat of story) {
+  for (const beat of story.filter(hasText)) {
     if (!by || !sameBy(by, beat.by)) blocks.push([])
     by = beat.by
     blocks[blocks.length - 1].push(scriptLine(beat, names))
@@ -76,7 +85,7 @@ export const characterStory = (story: readonly StoryBeat[], id: string): StoryBe
   story.filter((beat) => (beat.kind === "reply" ? beat.character === id : (privateTo(beat)?.includes(id) ?? true)))
 
 // One beat as a script line. `marked` notes who a private beat is private to.
-export function scriptLine(beat: StoryBeat, names: StoryNames, marked = true): string {
+export function scriptLine(beat: TextBeat, names: StoryNames, marked = true): string {
   const note = marked ? privateNote(beat, names) : ""
   switch (beat.kind) {
     case "line":

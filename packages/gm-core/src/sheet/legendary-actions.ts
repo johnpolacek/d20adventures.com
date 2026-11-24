@@ -10,7 +10,7 @@ import { afterHarm, type DeathRules } from "./death"
 import { takeMove } from "./moves"
 import type { EncounterFloor } from "./placement"
 import { type Ask, attackWithReactions, moveWithReactions, type OpportunityAttackMade, type ReactionTaken } from "./reactions"
-import { moveToward, sizeOf, solidAt, speedOf, stopShortFor } from "./space"
+import { moveToward, type Point, sizeOf, solidAt, speedOf, stopShortFor } from "./space"
 
 /**
  * Legendary Actions by the SRD 5.2.1 rules (page 257, and each block's section): a Legendary creature has a number of
@@ -146,6 +146,8 @@ export type LegendaryTaken = {
   target?: string
   moved?: number
   teleported?: true
+  // Where it stood, then each point it reached.
+  walked?: Point[]
   opportunity: OpportunityAttackMade[]
   blow?: Strike
   reactions: ReactionTaken[]
@@ -222,6 +224,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
     // What the areas on the floor did to it as it walked (../spell-rounds `areasWalked`).
     const walkedThrough: string[] = []
     let moved: number | undefined
+    let walked: Point[] | undefined
     let teleported: true | undefined
     let fell = false
     if (!now && goal && option.move && args.floor) {
@@ -241,6 +244,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
           opportunity.push(...went.attacks)
           walkedThrough.push(...went.told.map((fact) => fact.text))
           moved = step.feet
+          walked = went.walked
           fell = went.stopped
         }
       } else if (legend.position && goal.position) {
@@ -251,6 +255,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
           characters = went.characters.map((character) => afterHarm(character))
           walkedThrough.push(...went.told.map((fact) => fact.text))
           moved = Math.round(to.used)
+          walked = went.walked
           teleported = true
           fell = went.stopped
         }
@@ -303,6 +308,7 @@ export function legendaryActionsAfter<T extends Legend>(args: {
       ...(attacked || goal ? { target: (attacked?.target ?? goal)?.id } : {}),
       ...(moved ? { moved } : {}),
       ...(teleported ? { teleported } : {}),
+      ...(walked ? { walked } : {}),
       opportunity,
       ...(blow ? { blow } : {}),
       reactions,

@@ -596,15 +596,18 @@ export function moveWithReactions<T extends InPlay>(args: {
   d20: () => number
   roll: (sides: number) => number
   rules?: DeathRules
-}): { characters: T[]; attacks: OpportunityAttackMade[]; stopped: boolean; told: RoundFact[] } {
+}): { characters: T[]; attacks: OpportunityAttackMade[]; stopped: boolean; told: RoundFact[]; walked: Point[] } {
   let characters = [...args.characters]
   const attacks: OpportunityAttackMade[] = []
   const told: RoundFact[] = []
   const moverNow = () => characters.find((character) => character.id === args.moverId) as T
+  // Where the mover stood, then each point it reached: the story's record of the walk (../story/beats `MoveBeat`).
+  const trail: Point[] = []
   for (const to of args.path) {
     const mover = moverNow()
     const from = mover.position
     if (!from) break
+    if (!trail.length) trail.push(from)
     for (const { attacker, weapon } of args.fight === false ? [] : opportunityAttacks({ mover, from, to, everyone: characters, disengaged: args.disengaged, teleport: args.teleport })) {
       const attack = attacksOf(attacker).find((entry) => entry.id === weapon)
       const text = `${mover.name} is leaving ${attacker.name}'s reach. ${attacker.name} may strike with ${attack?.name ?? "an attack"}.`
@@ -625,16 +628,18 @@ export function moveWithReactions<T extends InPlay>(args: {
       })
       characters = made.characters.map((character) => (character.id === attacker.id ? withReaction(character) : character))
       attacks.push({ attacker: attacker.id, blow: made.blow, reactions: made.reactions })
-      if (isDown(made.target)) return { characters, attacks, stopped: true, told }
+      if (isDown(made.target)) return { characters, attacks, stopped: true, told, walked: trail }
     }
     // The step, through the areas that stay on the floor.
     const walked = areasWalked({ characters, moverId: args.moverId, from, to, d20: args.d20, roll: args.roll, rules: args.rules, arrives: args.teleport })
     characters = walked.characters
     told.push(...walked.told)
-    if (isDown(moverNow())) return { characters, attacks, stopped: true, told }
+    const reached = moverNow().position
+    if (reached) trail.push(reached)
+    if (isDown(moverNow())) return { characters, attacks, stopped: true, told, walked: trail }
   }
   // A holder who moves out of its reach lets go of the one it held (./hit-riders).
-  return { characters: releasedHolds(characters).characters, attacks, stopped: false, told }
+  return { characters: releasedHolds(characters).characters, attacks, stopped: false, told, walked: trail }
 }
 
 /**

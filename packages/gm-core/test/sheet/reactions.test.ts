@@ -323,4 +323,7 @@ test("a move draws an Opportunity Attack from each whose reach it leaves, and a 
   const hurt = { ...thalbern, hitPoints: 5 }
   const fell = moveWithReactions({ characters: [hurt, robber], moverId: "thalbern", path, ask: yes, d20: () => 15, roll: () => 4 })
   assert.deepEqual([fell.stopped, find(fell.characters, "thalbern").position, find(fell.characters, "thalbern").hitPoints], [true, { x: 0, y: 0 }, 0])
+  // The walk as the story keeps it: where he stood, then each point reached. Dropped before he left, he went nowhere.
+  assert.deepEqual(went.walked, [{ x: 0, y: 0 }, ...path])
+  assert.deepEqual(fell.walked, [{ x: 0, y: 0 }])
 })

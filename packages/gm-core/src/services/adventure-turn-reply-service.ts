@@ -13,7 +13,7 @@ import type { Sheet } from "../sheet/sheet"
 import { settleConcentration } from "../sheet/spell-effects"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
-import type { StoryBeat } from "../story/beats"
+import { moveBeats, type StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
 import { attackBeat, concentrationBeat, turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
@@ -189,6 +189,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         d20: rollD20,
       })
       characters = kept.characters
+      leaving.push(...moveBeats(by, args.characterId, went.walked, move.teleport))
       for (const made of went.attacks) {
         const attacker = characters.find((character) => character.id === made.attacker)
         if (!attacker || !mover) continue

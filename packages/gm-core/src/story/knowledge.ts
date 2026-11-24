@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { StoryBeat } from "./beats"
+import { hasText, type StoryBeat } from "./beats"
 import { findCharacter, type StoryScene } from "./clean"
 import { nameOf, privateTo, type StoryNames, scriptLine } from "./render"
 
@@ -86,7 +86,7 @@ export function cleanLearned(output: Learned | undefined, scene: StoryScene, kno
 // are one fact even with an open beat between them. `round` keeps the ids apart from other rounds'.
 export function privateFacts(story: readonly StoryBeat[], names: StoryNames, round: number | string): KnownFact[] {
   const facts = new Map<string, KnownFact>()
-  for (const beat of story) {
+  for (const beat of story.filter(hasText)) {
     const knownBy = privateTo(beat)?.filter((k, i, all) => all.indexOf(k) === i)
     if (!knownBy) continue
     const key = [...knownBy].sort().join(" ")

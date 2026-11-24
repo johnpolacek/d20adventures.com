@@ -102,7 +102,19 @@ export type RollBeat = {
 export type FeatureBeat = { kind: "feature"; by: StoryBy; character: string; name: string; text: string; target?: string; harm?: RollBeat["harm"] }
 // The player's own words, before the GM wrote them into the story.
 export type ReplyBeat = { kind: "reply"; by: StoryBy; character: string; text: string }
-export type StoryBeat = NarrationBeat | ActionBeat | LineBeat | RollBeat | ReplyBeat | FeatureBeat
+// A walk the engine made, with no words: where the character stood, then each point of the path to where they
+// stopped, in the engine's feet. The stage walks them at the paragraph it reads in, and sets a teleport down there. The
+// story is read in order, so the stage knows where everyone stood as each paragraph happened.
+export type MoveBeat = { kind: "move"; by: StoryBy; character: string; path: { x: number; y: number }[]; teleport?: true }
+export type StoryBeat = NarrationBeat | ActionBeat | LineBeat | RollBeat | ReplyBeat | FeatureBeat | MoveBeat
+// The beats with words, every kind but a move.
+export type TextBeat = Exclude<StoryBeat, MoveBeat>
+export const hasText = (beat: StoryBeat): beat is TextBeat => beat.kind !== "move"
+// The beat for a walk: where they stood, then each point reached. None for one that went nowhere.
+export const moveBeats = (by: StoryBy, character: string, walked: readonly { x: number; y: number }[], teleport?: boolean): MoveBeat[] =>
+  walked.length > 1 && walked.some((at) => at.x !== walked[0].x || at.y !== walked[0].y)
+    ? [{ kind: "move", by, character, path: walked.map(({ x, y }) => ({ x, y })), ...(teleport ? { teleport: true as const } : {}) }]
+    : []
 
 const id = z.string().min(1).max(80)
 const by = z.object({ step: z.enum(["intro", "reply", "roll", "npc", "round"]), character: id.optional() })
@@ -158,6 +170,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),
   z.object({ kind: z.literal("feature"), by, character: id, name: z.string(), text: z.string(), target: id.optional(), harm: harmSchema.optional() }),
+  z.object({ kind: z.literal("move"), by, character: id, path: z.array(z.object({ x: z.number(), y: z.number() })).min(2), teleport: z.literal(true).optional() }),
 ])
 export const storySchema = z.array(storyBeatSchema)
 
