@@ -13,7 +13,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## GM Notes
 
-In the beginning of this turn describe the circumstances of the escape, what the PCs and NPCs are doing. This encounter happens if the PCs have successfully fled the scene of the river boat.
+In the beginning of this turn describe the circumstances of the escape, what the PCs and NPCs are doing. This encounter happens if the PCs have successfully fled the scene of the river boat. The tug casts off downstream for Kordavos with the crate, and does not come back. A hero who ran alone has not met the others yet: one who follows or finds her in the woods meets her here as a stranger, with no name until it is given.
 
 ## Transitions
 
