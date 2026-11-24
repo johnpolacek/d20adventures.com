@@ -22,7 +22,7 @@ export default async function PlayerPage() {
         <Heading variant="h2" className="text-center mb-8" style={textShadow}>
           Choose a Username
         </Heading>
-        <PlayerSetUsernameForm userId={user.id} />
+        <PlayerSetUsernameForm />
       </div>
     </FullPageImage>
   )

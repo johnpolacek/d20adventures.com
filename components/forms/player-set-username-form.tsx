@@ -5,7 +5,7 @@ import { Button } from "@d20/ui/button"
 import { Input } from "@d20/ui/input"
 import { Presence } from "@d20/ui/presence"
 
-export default function PlayerSetUsernameForm({ userId }: { userId: string }) {
+export default function PlayerSetUsernameForm() {
   const [username, setUsernameState] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -18,7 +18,7 @@ export default function PlayerSetUsernameForm({ userId }: { userId: string }) {
       return
     }
     startTransition(async () => {
-      const res = await setUsername(userId, username.trim())
+      const res = await setUsername(username.trim())
       if (res.success) {
         window.location.href = `/player/${username.trim()}`
       } else {
