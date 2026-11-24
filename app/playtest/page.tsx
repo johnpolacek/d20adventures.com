@@ -7,6 +7,7 @@ import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { CopyBlock } from "@/components/copy-block"
 import { hostPrompt, REPO } from "@/lib/host-prompt"
+import { Arrival } from "./arrival"
 import { Leaving } from "./leaving"
 import { served } from "@/lib/served"
 
@@ -32,7 +33,16 @@ export default async function PlaytestPage() {
       <div className="container pt-28 pb-24">
         <article className="mx-auto max-w-3xl overflow-hidden rounded-lg border border-accent-200/20 bg-black/90 shadow-float transition-[opacity,scale] duration-200 ease-out has-[[data-leaving]]:pointer-events-none has-[[data-leaving]]:scale-[0.98] has-[[data-leaving]]:opacity-0">
           <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
-            <Heading variant="h1" className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text text-transparent drop-shadow-[0_2px_6px_#f59e0b55]">{joined ? "You’re a Playtester" : "Become a Playtester"}</Heading>
+            <Arrival joined={joined} />
+            <Heading data-arrival-heading variant="h1" className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text text-transparent drop-shadow-[0_2px_6px_#f59e0b55]">
+              {joined ? (
+                <>
+                  <span data-arrival-word>You’re</span> a Playtester
+                </>
+              ) : (
+                "Become a Playtester"
+              )}
+            </Heading>
             <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
               Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so your feedback is appreciated while we are in development.
             </p>

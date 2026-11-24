@@ -9,7 +9,8 @@ export default function HomePage() {
   return (
     <>
       <RedirectHandler />
-      <div className="flex min-h-[max(100vh,100vw)] lg:min-h-screen flex-col relative">
+      {/* Fades out while the playtest page it leads to is on its way (Leaving, in the button). */}
+      <div className="flex min-h-[max(100vh,100vw)] lg:min-h-screen flex-col relative transition-opacity duration-300 ease-out has-[[data-leaving]]:pointer-events-none has-[[data-leaving]]:opacity-0">
         <HomeAdventure>
           <h1 className="text-4xl sm:text-6xl font-display text-center w-full mt-20 sm:mt-36 fade-in delay-100 relative z-10" style={textShadowSpreadLight}>
             <span className="sr-only">Experience the Thrill of the D20</span>
