@@ -26,7 +26,7 @@ Read it in full before drafting and run its self-check. The rules below are only
 
 ## Short and long titles
 
-Write a short title and a long title for the content queue. The short one names the outcome and the best-known tools. The long one keeps the short one whole and extends it with the stack and the promise (“Every Prompt Included”). Name the setup plainly and leave the reasons for the post. John picked “…Running Claude Opus Locally and Gemini Flash-Lite on the Web” over “…with Claude Opus as the Best GM and Gemini for the Web Demo”. It never lists incidents. This long title listed bugs and was rejected: “How I Keep an AI Game Master Honest When It Suggests Impossible Spells, Skips Rolls and Narrates Things That Never Happened”.
+Write a short title and a long title for the content queue. The short one names the outcome and the best-known tools. The long one keeps the short one whole and extends it with the stack. Leave off creator-post promises like “Every Prompt Included”, which read as paid content. Name the setup plainly and leave the reasons for the post. John picked “…Running Claude Opus Locally and Gemini Flash-Lite on the Web” over “…with Claude Opus as the Best GM and Gemini for the Web Demo”. It never lists incidents. This long title listed bugs and was rejected: “How I Keep an AI Game Master Honest When It Suggests Impossible Spells, Skips Rolls and Narrates Things That Never Happened”.
 
 The first one, before and after:
 
@@ -34,7 +34,7 @@ The first one, before and after:
 >
 > Short: Turn Your Character Art into Animated 3D Figures with Hi3D and Blender
 >
-> Long: How I Turn Painted Character Art into Rigged, Animated 3D Figures with Hi3D, Hyper3D and Blender, Every Prompt Included
+> Long: How I Turn Painted Character Art into Rigged, Animated 3D Figures with Hi3D, Hyper3D and Blender
 
 ## Social posts
 
