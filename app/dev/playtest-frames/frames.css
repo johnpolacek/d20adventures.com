@@ -1,0 +1,201 @@
+/* Frame takes for the playtest card (/dev/playtest-frames). Each `.fx-<id>` is one edge on the same card. */
+
+.fx-card {
+  --gold-hi: #fde68a;
+  --gold: #d4a237;
+  --gold-lo: #7a4d10;
+  position: relative;
+  isolation: isolate;
+  box-shadow: var(--shadow-float);
+}
+.fx-card > .fx-paper {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: 0;
+  border-radius: inherit;
+  min-height: 0;
+  background: var(--up-bg) var(--up-glow) no-repeat;
+}
+.fx-inner {
+  position: relative;
+  padding: 40px 40px 36px;
+}
+
+/* A. Now */
+.fx-now {
+  border: 1px solid rgb(253 230 138 / 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* B. Double rule: a gold rule, dark, and a finer gold rule inside. */
+.fx-double {
+  border: 2px solid var(--gold);
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px #0008,
+    var(--shadow-float);
+}
+.fx-double::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgb(253 230 138 / 0.55);
+  pointer-events: none;
+}
+
+/* C. Corner pieces */
+.fx-corners {
+  border: 1px solid rgb(212 162 55 / 0.35);
+  border-radius: 2px;
+}
+.fx-corner {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  color: var(--gold);
+  filter: drop-shadow(0 1px 1px #000c);
+  z-index: 1;
+}
+.fx-corner:nth-of-type(1) {
+  top: -5px;
+  left: -5px;
+}
+.fx-corner:nth-of-type(2) {
+  top: -5px;
+  right: -5px;
+  transform: scaleX(-1);
+}
+.fx-corner:nth-of-type(3) {
+  bottom: -5px;
+  left: -5px;
+  transform: scaleY(-1);
+}
+.fx-corner:nth-of-type(4) {
+  bottom: -5px;
+  right: -5px;
+  transform: scale(-1);
+}
+
+/* D. Gilt frame: a thick bevelled gold border, lit from the top left. */
+.fx-gilt {
+  padding: 10px;
+  border-radius: 4px;
+  background: linear-gradient(145deg, var(--gold-hi) 0%, var(--gold) 22%, var(--gold-lo) 48%, var(--gold) 70%, #f6d77d 86%, var(--gold-lo) 100%);
+  box-shadow:
+    inset 0 1px 0 #fff6,
+    inset 0 -1px 0 #0008,
+    var(--shadow-float);
+}
+.fx-gilt > .fx-paper {
+  inset: 10px;
+  border-radius: 1px;
+  box-shadow:
+    inset 0 0 0 1px #000,
+    inset 0 2px 6px #000c;
+}
+
+/* E. Iron bound: dark metal bands, with a stud at each corner. */
+.fx-iron {
+  border: 6px solid #2a2723;
+  border-radius: 4px;
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 0 0 1px #000,
+    0 0 0 1px #000,
+    inset 0 1px 0 1px #fff1,
+    var(--shadow-float);
+  border-image: linear-gradient(180deg, #4a453e, #1b1916 55%, #34302a) 1;
+}
+.fx-stud {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #a39a8c 0%, #59524a 35%, #1c1a17 75%);
+  box-shadow: 0 1px 2px #000;
+  z-index: 1;
+}
+.fx-stud:nth-of-type(1) {
+  top: -10px;
+  left: -10px;
+}
+.fx-stud:nth-of-type(2) {
+  top: -10px;
+  right: -10px;
+}
+.fx-stud:nth-of-type(3) {
+  bottom: -10px;
+  left: -10px;
+}
+.fx-stud:nth-of-type(4) {
+  bottom: -10px;
+  right: -10px;
+}
+
+/* F. Cut corners: the card is chamfered, and a gold edge follows the cut. */
+.fx-notch {
+  --cut: 18px;
+  padding: 1.5px;
+  background: linear-gradient(160deg, var(--gold-hi), var(--gold) 30%, var(--gold-lo) 60%, var(--gold));
+  clip-path: polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut));
+  box-shadow: none;
+  filter: drop-shadow(0 18px 30px #000a);
+}
+.fx-notch > .fx-paper {
+  inset: 1.5px;
+  clip-path: inherit;
+}
+
+/* G. Living edge: an ember of light travels the hairline. */
+@property --fx-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes fx-turn {
+  to {
+    --fx-turn: 360deg;
+  }
+}
+.fx-rune {
+  padding: 1px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--fx-turn), rgb(212 162 55 / 0.25) 0deg, rgb(212 162 55 / 0.25) 280deg, #fde68a 330deg, rgb(212 162 55 / 0.25) 360deg);
+  animation: fx-turn 6s linear infinite;
+}
+.fx-rune > .fx-paper {
+  inset: 1px;
+  border-radius: 7px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-rune {
+    animation: none;
+  }
+}
+
+/* H. Title plate: the double rule, with the title on a plate that breaks the top edge. */
+.fx-banner {
+  margin-top: 44px;
+}
+.fx-plate {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  white-space: nowrap;
+  padding: 8px 40px 6px;
+  border: 2px solid var(--gold);
+  background: #120e0a;
+  box-shadow:
+    inset 0 0 0 3px #120e0a,
+    inset 0 0 0 4px rgb(253 230 138 / 0.5),
+    0 6px 16px #000c;
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+}
+.fx-banner .fx-inner {
+  padding-top: 52px;
+}
