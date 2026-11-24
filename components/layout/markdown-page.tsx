@@ -1,19 +1,25 @@
+import type { ReactNode } from "react"
 import { LedgerShell } from "@/components/layout/ledger-page"
 import { PostBody } from "@/components/updates/post-body"
 import type { Update } from "@/lib/updates"
 import { renderPost } from "@/lib/updates"
 
-/** A page whose words are a markdown file in `content/` (`readPage`), set like a post on /updates, with no numbers on its sections. */
-export function MarkdownPage({ page }: { page: Update }) {
+/**
+ * A page whose words are a markdown file in `content/` (`readPage`), set like a post on /updates, with no numbers on its
+ * sections. `head` takes the place of the plain title and line under it, as /about's lettering does.
+ */
+export function MarkdownPage({ page, head }: { page: Update; head?: ReactNode }) {
   const { html } = renderPost(page, { numbered: false })
   return (
     <LedgerShell>
       <div className="up-layout">
         <article className="up-main">
-          <header className="up-title-block">
-            <h1>{page.title}</h1>
-            {page.description && <p className="up-dek">{page.description}</p>}
-          </header>
+          {head ?? (
+            <header className="up-title-block">
+              <h1>{page.title}</h1>
+              {page.description && <p className="up-dek">{page.description}</p>}
+            </header>
+          )}
           <PostBody className="up-prose" html={html} />
         </article>
       </div>

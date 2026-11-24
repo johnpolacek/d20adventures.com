@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { AboutTitle } from "@/components/about/about-title"
 import { MarkdownPage } from "@/components/layout/markdown-page"
 import { readPage } from "@/lib/updates"
 import { served } from "@/lib/served"
@@ -14,5 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  return <MarkdownPage page={await page()} />
+  const p = await page()
+  return <MarkdownPage page={p} head={<AboutTitle title={p.title} />} />
 }

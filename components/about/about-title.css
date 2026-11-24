@@ -1,0 +1,36 @@
+/* The title of /about, and the first paragraph after it as the lede. Classes begin `ab-`. */
+.ab-t {
+  width: 100vw;
+  margin: 24px 0 32px calc(50% - 50vw);
+}
+.updates-page .ab-t h1 {
+  margin: 0;
+}
+/* The lettering is drawn on white, so multiply leaves only the ink on the paper. */
+.ab-t img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 330px;
+  object-fit: contain;
+  filter: brightness(1.04);
+  mix-blend-mode: multiply;
+}
+/* On the dark paper the ink turns light and keeps its warm hue. */
+html[data-update-theme="dark"] .ab-t img {
+  filter: invert(1) hue-rotate(180deg) sepia(0.75) saturate(0.85) brightness(0.95);
+  mix-blend-mode: screen;
+}
+.ab-t + .up-prose > p:first-child {
+  font-size: 23px;
+  line-height: 1.6;
+  color: var(--up-strong);
+}
+@media (max-width: 640px) {
+  .ab-t {
+    margin: 8px 0 20px calc(50% - 50vw);
+  }
+  .ab-t + .up-prose > p:first-child {
+    font-size: 20px;
+  }
+}
