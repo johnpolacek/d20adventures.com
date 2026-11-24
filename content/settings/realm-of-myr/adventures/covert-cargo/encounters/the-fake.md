@@ -38,7 +38,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {actor: Reinhard, target: Aelar Moonglimmer} His cold eyes promise violence as he takes a heavy step forward.
 
-{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer recoils, not in fear but in indignation, his calm breaking into open fury.
+{actor: Aelar Moonglimmer, target: Silas} Aelar recoils, not in fear but in indignation, his calm breaking into open fury.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: spitting} Worthless?
 

@@ -26,7 +26,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {speaker: Silas, delivery: quiet and controlled} As agreed.
 
-{actor: Aelar Moonglimmer, target: Silas} Aelar Moonglimmer takes it, his sharp grey eyes holding the rogue's gaze.
+{actor: Aelar Moonglimmer, target: Silas} Aelar takes it, his sharp grey eyes holding the rogue's gaze.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: quiet and controlled} The Circle is appreciative. They trust this partnership will prove fruitful for all involved.
 

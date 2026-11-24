@@ -15,6 +15,8 @@ One name to a line. A sound-alike spelling in quotes, or the sounds themselves b
 - Davos: /dˈɑːvɒs/ /dˈɑːvoʊs/
 - Beric: /bˈɛɹɪk/
 - Valkara: /vˈalkəɹə/ /vˈælkəɹə/
+- Valkaran: /vˈalkɑːɹan/ /vˈælkɑɹæn/
+- Valkarans: /vˈalkɑːɹanz/ /vˈælkɑɹænz/
 - Eamon: /ˈeɪmən/
 - Mikhail: /mɪkˈaɪl/
 - Karim: /kəɹˈiːm/
@@ -22,3 +24,4 @@ One name to a line. A sound-alike spelling in quotes, or the sounds themselves b
 - Vellis: /vˈɛlɪs/
 - Marros: /mˈaɹɒs/ /mˈæɹoʊs/
 - Zephyra: /zˈɛfɪɹə/
+- Silas: /sˈaɪləs/

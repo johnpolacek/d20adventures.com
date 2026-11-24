@@ -26,6 +26,15 @@ export function storyRules(scene: StoryScene): string {
     })
     .join("; ")
   const places = scene.places?.length ? scene.places.map((p) => `${p.id}: ${p.label}`).join("; ") : ""
+  // The full name is said once, where the adventure opens. After that a character goes by their first name, or by a
+  // title with it: Sister Danica stays Sister Danica.
+  const first = (name: string) => {
+    const words = name.trim().split(/\s+/)
+    return (/^(Sister|Brother|Father|Mother|Captain|Lord|Lady|Sir|Master|Elder|Old)$/.test(words[0]) ? words.slice(0, 2) : words.slice(0, 1)).join(" ")
+  }
+  const named = scene.cast.find((c) => first(c.name) !== c.name.trim())
+  const shared = scene.cast.filter((c) => scene.cast.some((o) => o.id !== c.id && first(o.name) === first(c.name)))
+  const calling = `Call a character by their first name${named ? `, as ${first(named.name)}, not ${named.name.trim()}` : ""}. Never their full name${shared.length ? `, except to tell apart ${shared.map((c) => c.name).join(" and ")}, who share one` : ""}.`
   return `Write the story as "beats", a list in the order things happen:
 - narration: the scene or an outcome, in the narrator's voice.${places ? ' "place": the id of a place it shows.' : ""}
 - action: one character doing something. "who": their id. "to": the id of whoever it is aimed at.${places ? ' "from": the id of the place they come from, only when they enter the scene. "pace": how they come: walk, hurry or sneak.' : ""} "effect" and "element": what an attack or spell looks like, if anything visible happens. "object": something they show or hand over.
@@ -33,6 +42,7 @@ export function storyRules(scene: StoryScene): string {
 - line: words one character says aloud. "text" holds only the spoken words, with no quote marks. "who": the speaker. "to": whom they speak to. "delivery": how, in a word or two.
 An action or line that no one else present could see or hear, such as a whisper, a word said low to one person, a note slipped across, or someone hidden acting unseen, has "private": true. Only its actor or speaker and whoever it is aimed at know of it. Leave it out for anything said or done in the open.
 Narration and action text never hold a listed character's words: every word a listed character says goes in a line. Someone not in the list, such as a guest in a crowd, has no lines: their words go in quote marks in the narration that shows them speaking. A beat is one or two sentences.
+${calling}
 Magic items come only from the game: the story never has anyone find, buy, craft or be given a magic item the game has not given, and never says an item does more than the game has told.
 Characters, by id: ${cast}.${places ? `\nPlaces, by id: ${places}.` : ""}
 Effects: ${EFFECT_KINDS.map((k) => `${k} (${EFFECTS[k]})`).join(", ")}.
