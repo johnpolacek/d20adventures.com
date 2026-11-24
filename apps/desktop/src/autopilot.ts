@@ -69,7 +69,8 @@ if (autopilot && typeof document !== "undefined") {
 }
 
 // Tells the recorder how far the playthrough has come: "ready" when the game is about to start, and "done" with the
-// spans spent waiting on the GM, which the recorder cuts.
+// spans spent waiting on the GM, which the recorder cuts. Each "turn" of a live run carries the spans so far, so a run
+// that never finishes can still be cut.
 export const mark = (name: "ready" | "done" | "turn", data: unknown) => invoke<void>("autopilot_mark", { name, data }).catch(() => {})
 
 // Development only, so it reaches apps/desktop/.logs/window.log (src/dev-log.ts).
@@ -189,7 +190,7 @@ export function useAutopilot(seat: Seat) {
         let line = lines.length ? lines[Math.min(n, lines.length - 1)] : play.fallback
         if (play.live) {
           const asked = Date.now()
-          await mark("turn", { key, actor: s.current.actor, encounter, story: s.current.story ?? [], replies: replies.current, at: asked })
+          await mark("turn", { key, actor: s.current.actor, encounter, story: s.current.story ?? [], replies: replies.current, spans: spans.current, at: asked })
           line = ""
           while (!line) {
             await wait(500)

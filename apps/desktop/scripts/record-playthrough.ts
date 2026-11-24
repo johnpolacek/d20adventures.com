@@ -12,7 +12,9 @@ import { prunePlaythroughs } from "./playthrough-prune"
 // Sound is recorded from BlackHole (brew install --cask blackhole-2ch). For the run the Mac's output becomes a device
 // that plays to the speakers and BlackHole at once (scripts/audio-route.swift), and is put back after. The app runs on
 // its own port, so a dev app already open keeps running. The terminal needs Screen Recording access.
-// Each run first deletes videos there older than 3 days (playthrough-prune.ts).
+// Each run first deletes videos there older than 3 days (playthrough-prune.ts). The uncut recording is deleted once the
+// cut is saved. A run that stops early is still cut, up to the last turn the autopilot asked for. The display is kept
+// awake for the run, since a sleeping display records as its last frame while the game plays on.
 
 const args = process.argv.slice(2)
 const flag = (name: string) => args.includes(name)
@@ -76,6 +78,35 @@ function cuts(spans: [number, number][], start: number) {
     .filter(([a, b]) => b > a)
 }
 
+// The cut video, from the raw picture and sound: the waits out, and nothing after until seconds when given. The sound is
+// cut by trimming its kept pieces and joining them, since aselect passes every sample through.
+function cutVideo(raw: string, rawSound: string | null, soundLate: number, cut: (readonly [number, number])[], final: string, until?: number) {
+  const end = until ?? Infinity
+  const drop = cut.map(([a, b]) => `between(t,${a.toFixed(2)},${b.toFixed(2)})`).join("+")
+  const keep = drop ? `not(${drop})` : "1"
+  const pieces: [number, number][] = []
+  let from = 0
+  for (const [a, b] of cut) {
+    if (a >= end) break
+    pieces.push([from, a])
+    from = b
+  }
+  if (from < end) pieces.push([from, end])
+  const trim = ([a, b]: [number, number]) => `atrim=start=${a.toFixed(3)}${Number.isFinite(b) ? `:end=${b.toFixed(3)}` : ""},asetpts=PTS-STARTPTS`
+  const sound = rawSound
+    ? `;[1:a]asplit=${pieces.length}${pieces.map((_, i) => `[s${i}]`).join("")};${pieces.map((p, i) => `[s${i}]${trim(p)}[k${i}]`).join(";")};${pieces.map((_, i) => `[k${i}]`).join("")}concat=n=${pieces.length}:v=0:a=1[a]`
+    : ""
+  const filter = `[0:v]select='${keep}',setpts=N/FRAME_RATE/TB,scale=1920:-2[v]${sound}`
+  const limit = until === undefined ? [] : ["-t", until.toFixed(2)]
+  execFileSync(
+    "ffmpeg",
+    ["-hide_banner", "-y", ...limit, "-i", raw, ...(rawSound ? ["-itsoffset", soundLate.toFixed(3), ...limit, "-i", rawSound] : []), "-filter_complex", filter, "-map", "[v]", ...(rawSound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
+    { stdio: "inherit" }
+  )
+  rmSync(raw, { force: true })
+  if (rawSound) rmSync(rawSound, { force: true })
+}
+
 function lsofBusy() {
   try {
     return execFileSync("lsof", ["-ti", `tcp:${PORT}`], { stdio: "pipe" }).toString().trim().length > 0
@@ -131,6 +162,8 @@ async function main() {
   prunePlaythroughs()
 
   if (lsofBusy()) throw new Error(`Port ${PORT} is in use. Is another recording running?`)
+  // Held until this script exits.
+  spawn("caffeinate", ["-d", "-i", "-w", String(process.pid)], { stdio: "ignore", detached: true }).unref()
   mkdirSync(base, { recursive: true })
   const restore = sound ? routeSound() : () => {}
   process.on("exit", restore)
@@ -176,14 +209,16 @@ async function main() {
   }
   process.on("SIGINT", quit)
 
+  let start = 0
+  let soundLate = 0
   try {
     await waitFor(join(marks, "ready.json"), 10, () => running)
     say("recording")
     const video = capture(["-f", "avfoundation", "-capture_cursor", "0", "-framerate", "30", "-i", `${screen}:none`, "-c:v", "h264_videotoolbox", "-b:v", "20M", "-pix_fmt", "yuv420p", raw])
     const audio = sound ? capture(["-thread_queue_size", "4096", "-f", "avfoundation", "-i", `none:${sound}`, "-c:a", "pcm_s16le", rawSound]) : null
-    const start = await video.started
+    start = await video.started
     // How much later the sound began than the picture, so the two line up.
-    const soundLate = audio ? ((await audio.started) - start) / 1000 : 0
+    soundLate = audio ? ((await audio.started) - start) / 1000 : 0
     const done: { spans: [number, number][]; problems: string[] } = await waitFor(join(marks, "done.json"), 150, () => running)
     await stopRecording()
     stopApp(app)
@@ -191,22 +226,27 @@ async function main() {
     for (const p of done.problems) say(`problem: ${p}`)
 
     const cut = flag("--keep-waits") ? [] : cuts(done.spans, start)
-    const drop = cut.map(([a, b]) => `between(t,${a.toFixed(2)},${b.toFixed(2)})`).join("+")
-    const keep = drop ? `not(${drop})` : "1"
     say(`cutting ${cut.length} waits, ${Math.round(cut.reduce((s, [a, b]) => s + b - a, 0))}s in all`)
-    const filter = `[0:v]select='${keep}',setpts=N/FRAME_RATE/TB,scale=1920:-2[v]${sound ? `;[1:a]aselect='${keep}',asetpts=N/SR/TB[a]` : ""}`
-    execFileSync(
-      "ffmpeg",
-      ["-hide_banner", "-y", "-i", raw, ...(sound ? ["-itsoffset", soundLate.toFixed(3), "-i", rawSound] : []), "-filter_complex", filter, "-map", "[v]", ...(sound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
-      { stdio: "inherit" }
-    )
+    cutVideo(raw, sound ? rawSound : null, soundLate, cut, final)
     say(`saved ${final}`)
-    say(`uncut ${raw}${sound ? ` and ${rawSound}` : ""}`)
   } catch (e) {
     say(String(e instanceof Error ? e.message : e))
     say(`app log: ${join(base, "app.log")}`)
     await stopRecording()
     stopApp(app)
+    restore()
+    // What was recorded, cut up to the last turn a live autopilot asked for, a few seconds after it was asked.
+    if (start && existsSync(raw)) {
+      try {
+        const turn = existsSync(join(marks, "turn.json")) ? JSON.parse(readFileSync(join(marks, "turn.json"), "utf8")) : null
+        const until = turn?.at ? (turn.at - start) / 1000 + 5 : undefined
+        const partial = final.replace(/\.mp4$/, "-partial.mp4")
+        cutVideo(raw, sound ? rawSound : null, soundLate, flag("--keep-waits") ? [] : cuts(turn?.spans ?? [], start), partial, until)
+        say(`saved what was recorded, ${partial}`)
+      } catch (e) {
+        say(`could not cut what was recorded, so it stays uncut: ${raw}. ${String(e instanceof Error ? e.message : e)}`)
+      }
+    }
     process.exit(1)
   }
 }
