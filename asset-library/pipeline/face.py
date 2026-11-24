@@ -106,6 +106,10 @@ if mode == "fit":
         json.dump(spec, open(f"{folder}/face.json", "w"), indent=2)
         print("FACE " + json.dumps({"fitted": False, "why": "no face found in the model's own" if A is None else "no face found in the close head"}))
         sys.exit(0)
+    # The model's own eyes, where its lids are: the middle of each and half its width and height, in the sheet's pixels.
+    # pilot.ts smooths the lids there for a brief with "lids": "smooth".
+    x0, y0 = spec["rect"][:2]
+    spec["ownEyes"] = [[float(x0 + A[eye][:, 0].mean() / K), float(y0 + A[eye][:, 1].mean() / K), float(np.ptp(A[eye][:, 0]) / 2 / K), float(np.ptp(A[eye][:, 1]) / 2 / K)] for eye in EYES]
     if "--eyes=painted" in sys.argv:
         # A model can come with its eyes all but shut (Rodin's Thalbern), and an eye pulled onto those lids is a slit.
         # Each eye is set where the model's is, and keeps the opening it was painted with.

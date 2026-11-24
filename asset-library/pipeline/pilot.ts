@@ -1811,6 +1811,8 @@ interface Brief {
   helpers?: boolean
   // The share of its gloss a figure keeps where it is not metal, of 1: 0.5 makes a roughness of 0.6 one of 0.8.
   gloss?: number
+  // "smooth" to smooth the model's own lids away, for a model made with lids heavy enough to hide the painted eyes.
+  lids?: "smooth"
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
@@ -1865,6 +1867,135 @@ async function face(brief: Brief, rest: string) {
   await io.write(`${dir}/lod0.glb`, doc)
   return painted.faceFromSheet
 }
+
+// The model's own lids smoothed away (its brief's `lids`), so the painted eyes are what is seen. Hi3D made Poppen with
+// thick upper lids and a sunken bag under each eye, and in the game's light those shapes were a pair of sleepy slits
+// in rings of shadow, however the eyes were painted (the owner, 2026-11-23: "too small and weird looking"). About each
+// eye that face.py found on the model, the front of the face is smoothed pass after pass, most at the eye and none at
+// the edge, and the paint, which lies where the eye is seen from the front, stays where it was.
+async function lidless(brief: Brief) {
+  const from = home(brief)
+  const spec = await kept<{ height: number; sole?: number; joints: Record<string, [number, number]> }>(`${from}/joints.json`)
+  const eyes = (await kept<{ ownEyes?: [number, number, number, number][] }>(`${from}/face.json`))?.ownEyes
+  const middle = (await kept<{ faceFromSheet?: { sheetMiddle?: number } }>(`${dir}/pilot/paint/paint.json`))?.faceFromSheet?.sheetMiddle
+  if (!spec || !eyes?.length || middle === undefined) return null
+  // The sheet's measures, as rig.py takes them, and the model in paint.py's frame: on the ground, its crown at the
+  // middle, as tall as the sheet's figure.
+  const J = spec.joints
+  const bottom = Math.max(J.toeL[1], J.toeR[1]) + (spec.sole ?? 6)
+  const px = spec.height / (bottom - J.headTop[1])
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  const prim = doc
+    .getRoot()
+    .listMeshes()
+    .flatMap((m) => m.listPrimitives())
+    .sort((a, b) => (b.getAttribute("POSITION")?.getCount() ?? 0) - (a.getAttribute("POSITION")?.getCount() ?? 0))[0]
+  const pos = prim?.getAttribute("POSITION")
+  if (!prim || !pos) return null
+  // Points at one position are one place, as in spread().
+  const places = new Map<string, number>()
+  const of: number[] = []
+  const at: number[][] = []
+  for (let i = 0; i < pos.getCount(); i++) {
+    const p = pos.getElement(i, [0, 0, 0])
+    const key = p.map((v) => v.toFixed(5)).join(",")
+    if (!places.has(key)) {
+      places.set(key, at.length)
+      at.push(p)
+    }
+    of.push(places.get(key) as number)
+  }
+  const ys = at.map((p) => p[1])
+  const [y0, y1] = [Math.min(...ys), Math.max(...ys)]
+  const crown = at.filter((p) => p[1] > y0 + 0.92 * (y1 - y0))
+  const cx = crown.reduce((s, p) => s + p[0], 0) / crown.length
+  const scale = spec.height / (y1 - y0)
+  const sheetOf = (p: number[]) => [middle + ((p[0] - cx) * scale) / px, bottom - ((p[1] - y0) * scale) / px]
+  // How much each place is smoothed: inside an oval about each eye, from the brow to under the bag, most at the eye and
+  // none at the edge, so the smoothed skin meets the rest without a step. Only the face's front is smoothed: not the
+  // nose beside the eye, which stands out past the lid, nor the back of the head behind the same oval.
+  const pull = new Float32Array(at.length)
+  for (const [ex, ey, rx] of eyes) {
+    const reach = (p: number) => {
+      const [sx, sy] = sheetOf(at[p])
+      return Math.hypot((sx - ex) / (LIDS.wide * rx), (sy - ey) / ((sy < ey ? LIDS.up : LIDS.down) * rx))
+    }
+    const near: number[] = []
+    let front = -Infinity
+    for (let p = 0; p < at.length; p++) {
+      const d = reach(p)
+      if (d >= 1) continue
+      near.push(p)
+      if (d < 0.35) front = Math.max(front, at[p][2])
+    }
+    const metres = (rx * px) / scale
+    for (const p of near) {
+      if (at[p][2] < front - 3 * metres || at[p][2] > front + 0.5 * metres) continue
+      const t = Math.min(1, Math.max(0, (1 - reach(p)) / LIDS.soft))
+      pull[p] = Math.max(pull[p], t * t * (3 - 2 * t))
+    }
+  }
+  const index = prim.getIndices()
+  const corners = index ? index.getCount() : pos.getCount()
+  const tris: number[][] = []
+  const beside = at.map(() => new Set<number>())
+  for (let t = 0; t < corners; t += 3) {
+    const tri = [0, 1, 2].map((k) => of[index ? index.getScalar(t + k) : t + k])
+    tris.push(tri)
+    if (!pull[tri[0]] && !pull[tri[1]] && !pull[tri[2]]) continue
+    for (const [x, y] of [
+      [tri[0], tri[1]],
+      [tri[1], tri[2]],
+      [tri[2], tri[0]],
+    ])
+      if (x !== y) {
+        beside[x].add(y)
+        beside[y].add(x)
+      }
+  }
+  const moving = [...pull.keys()].filter((p) => pull[p] > 0 && beside[p].size)
+  for (let pass = 0; pass < LIDS.passes; pass++) {
+    // In depth alone: a point that slid across the face would carry its paint with it, and the painted eye was laid
+    // on where each point is seen from the front.
+    const next = moving.map((p) => {
+      let mean = 0
+      for (const q of beside[p]) mean += at[q][2] / beside[p].size
+      return at[p][2] + (mean - at[p][2]) * 0.5 * pull[p]
+    })
+    moving.forEach((p, i) => {
+      at[p] = [at[p][0], at[p][1], next[i]]
+    })
+  }
+  // Each point moved, and the bend of the skin about them made again from the triangles they are in.
+  const touched = new Set(moving)
+  for (const p of moving) for (const q of beside[p]) touched.add(q)
+  const normal = new Map<number, number[]>()
+  for (const [a, b, c] of tris) {
+    if (!touched.has(a) && !touched.has(b) && !touched.has(c)) continue
+    const [u, v] = [at[b].map((x, k) => x - at[a][k]), at[c].map((x, k) => x - at[a][k])]
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+    for (const p of [a, b, c]) if (touched.has(p)) normal.set(p, (normal.get(p) ?? [0, 0, 0]).map((x, k) => x + n[k]))
+  }
+  const normals = prim.getAttribute("NORMAL")
+  let deepest = 0
+  for (let i = 0; i < pos.getCount(); i++) {
+    const p = of[i]
+    if (!touched.has(p)) continue
+    deepest = Math.max(deepest, Math.hypot(...pos.getElement(i, [0, 0, 0]).map((v, k) => v - at[p][k])))
+    pos.setElement(i, at[p])
+    const n = normal.get(p)
+    const length = n ? Math.hypot(...n) : 0
+    if (normals && n && length > 0) normals.setElement(i, n.map((x) => x / length))
+  }
+  await io.write(`${dir}/lod0.glb`, doc)
+  return { places: moving.length, mm: Math.round(deepest * scale * 10000) / 10 }
+}
+
+// How the lids are smoothed: the oval about each eye in the eye's half widths, across, up to the brow and down past the
+// bag, the share of it eased in from its edge, and how many passes. Each pass moves a point half way to the middle of
+// its neighbours, where the pull is whole. Poppen's lid stood out as high as two half widths over his eye's middle.
+const LIDS = { wide: 1.7, up: 2.6, down: 1.6, soft: 0.6, passes: 200 }
 
 // A figure's gloss turned down where it is not metal (its brief's `gloss`). Hi3D gives leather a roughness of 0.6 and
 // an eye one of 0.2: in a lit room the leather is wet and the eyes are chrome. Buckles and hilts keep theirs.
@@ -2351,6 +2482,10 @@ async function main() {
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
   const painted = await face(brief, made.rest)
   if (painted) say("face", `the sheet's, ${painted.fitted ? "fitted to the model's own" : "not fitted"}, ${painted.texels} texels`)
+  if (painted && brief.lids === "smooth") {
+    const smoothed = await lidless(brief)
+    say("lids", smoothed ? `${smoothed.places} points about the eyes smoothed, moved ${smoothed.mm} mm at the most` : "no eyes found on the model: run --redo=face")
+  }
   if ("rod" in made && made.rod) say("rod", `${await unblue()} texels of blue beside it given the colour of the skin`)
   if (brief.gloss !== undefined && brief.gloss < 1) say("gloss", `${await dull(brief.gloss)} texels keep ${brief.gloss} of it where they are not metal`)
   if (brief.lit) say("lit", `${await lit(brief.lit.hue, brief.lit.strength)} texels of that hue give off their colour ${brief.lit.strength} times over`)
