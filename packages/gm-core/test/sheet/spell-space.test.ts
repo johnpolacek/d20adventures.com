@@ -42,11 +42,14 @@ test("a spell reaches no farther than its range, and a touch no farther than 5 f
 })
 
 test("a spell does not pass total cover, and lesser cover is kept for the roll", () => {
-  // A crate 4 feet across, 40 feet along the line to a Bandit at 50. Six feet high it hides all of a 6-foot Bandit.
-  // Four feet high it hides 4 ÷ 6: half cover.
-  const crate = (top: number): Solid => ({ kind: "rect", x: 40, y: 0, halfWidth: 2, halfDepth: 2, turn: 0, top })
-  const shot = (top: number) => castInSpace({ spell: spell("ray-of-frost"), caster: lyra, everyone: [lyra, who("bandit", 50)], named: ["bandit"], floor: { solids: [crate(top)], doors: [] } })
-  assert.equal(shot(6).problem?.name, "Total Cover")
+  // A crate 4 feet across, 40 feet along the line to a Bandit at 50. Six feet high it hides most of a 6-foot Bandit,
+  // whose 5-foot space shows round its side: three-quarters cover. Ten feet across it hides all of him. Four feet high
+  // it hides 4 ÷ 6: half cover.
+  const crate = (top: number, across = 4): Solid => ({ kind: "rect", x: 40, y: 0, halfWidth: 2, halfDepth: across / 2, turn: 0, top })
+  const shot = (top: number, across?: number) =>
+    castInSpace({ spell: spell("ray-of-frost"), caster: lyra, everyone: [lyra, who("bandit", 50)], named: ["bandit"], floor: { solids: [crate(top, across)], doors: [] } })
+  assert.deepEqual(shot(6).cover, { bandit: "three-quarters" })
+  assert.equal(shot(6, 10).problem?.name, "Total Cover")
   assert.deepEqual(shot(4), { targets: ["bandit"], cover: { bandit: "half" }, measured: false })
 })
 
@@ -77,8 +80,8 @@ test("an area takes whoever stands in it", () => {
   // Sleep takes the creatures of the caster's choice in a 5-foot sphere: those named who stand in it.
   const sleep = castInSpace({ spell: spell("sleep"), caster: lyra, everyone: [lyra, who("a", 30), who("b", 33), who("c", 34), who("d", 30, 10)], named: ["a", "b", "d"], floor: open })
   assert.deepEqual(sleep.targets, ["a", "b"])
-  // A wall between the cone's caster and one in it keeps them out of it.
-  const wall: Solid = { kind: "rect", x: 6, y: 3, halfWidth: 0.5, halfDepth: 1.5, turn: 0 }
+  // A wall between the cone's point of origin and one in it keeps them out of it, when it hides all of their space.
+  const wall: Solid = { kind: "rect", x: 6, y: 4, halfWidth: 0.5, halfDepth: 3.5, turn: 0 }
   const walled = castInSpace({
     spell: spell("burning-hands"),
     caster: lyra,

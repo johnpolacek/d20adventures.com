@@ -364,9 +364,22 @@ test("a walker closes to reach of a creature, and stands beside whoever is there
 test("cover is read from what stands between the two, by its height", () => {
   const archer = { at: at(25, 0) }
   // The 4-foot crate in front of a 6-foot target hides 4 ÷ 6 of them: half cover. Against a 3.5-foot Small target it
-  // is as tall as they are: total cover.
+  // is as tall as they are, but only 4 feet across: from the side of their space the archer sees round it to the edge
+  // of the target's, and it hides most of them, three-quarters cover. One 10 feet across hides all of them.
   assert.equal(coverBetween(room.solids, archer, { at: at(45, 0) }), "half")
-  assert.equal(coverBetween(room.solids, archer, { at: at(45, 0), size: "Small" }), "total")
+  assert.equal(coverBetween(room.solids, archer, { at: at(45, 0), size: "Small" }), "three-quarters")
+  assert.equal(coverBetween([{ ...crate, halfDepth: 5 }], archer, { at: at(45, 0), size: "Small" }), "total")
+  // A wall to the ceiling with a window in it: a target seen through the gap has cover, and not total cover. Two
+  // stretches of wall along x = 35, 5 feet short of the target, leave a 3-foot gap from y = -1 to 2. Seen across it
+  // from straight on, the wall hides a side of the target's space: half cover. With the line from centre to centre on
+  // the wall, the target is still in sight through the gap: cover, but not total cover.
+  const windowed: Solid[] = [
+    { kind: "rect", x: 35, y: -11, halfWidth: 0.5, halfDepth: 10, turn: 0 },
+    { kind: "rect", x: 35, y: 12, halfWidth: 0.5, halfDepth: 10, turn: 0 },
+  ]
+  assert.equal(coverBetween(windowed, { at: o }, { at: at(40, 0) }), "half")
+  assert.notEqual(coverBetween(windowed, { at: o }, { at: at(40, 3) }), "total")
+  assert.equal(coverBetween(windowed, { at: o }, { at: at(40, 20) }), "total")
   // A 5-foot crate hides 5 ÷ 6: three-quarters cover.
   assert.equal(coverBetween([{ ...crate, top: 5 }], archer, { at: at(45, 0) }), "three-quarters")
   // The one who stands at the crate shoots over it: it is nearer them than the target.

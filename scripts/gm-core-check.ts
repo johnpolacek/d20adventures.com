@@ -511,10 +511,11 @@ async function npcFixedOutcome() {
   answer = { check: "hide", moveTo: "gangway" }
   assert.deepEqual((await readAction("Thalbern hides by the gangway.", ranger, { ...at(45), floor: pillar })).move?.at, { x: 6.5, y: 0 })
   // Cover. A 4-foot crate, 4 feet across, 20 feet along the line and nearer the Owlbear, hides 4 of its 10 feet:
-  // none. A 6-foot one hides 6 of 10: half cover, and Armor Class 13 is 15. A wall to the ceiling is total cover: no
-  // shot. Cover the game master names beside what the floor holds is taken when it is the greater.
+  // none. A 6-foot one hides 6 of 10: half cover, and Armor Class 13 is 15. A wall to the ceiling, 20 feet across, is
+  // total cover: no shot. Cover the game master names beside what the floor holds is taken when it is the greater.
   const behind = (top: number | undefined, extra?: object) => {
-    const walled = { ...floor, solids: [{ kind: "rect" as const, x: 20, y: 0, halfWidth: 2, halfDepth: 2, turn: 0, ...(top === undefined ? {} : { top }) }] }
+    const across = top === undefined ? 10 : 2
+    const walled = { ...floor, solids: [{ kind: "rect" as const, x: 20, y: 0, halfWidth: 2, halfDepth: across, turn: 0, ...(top === undefined ? {} : { top }) }] }
     answer = { check: "attack", weapon: "longbow", target: "owlbear", ...extra }
     return readAction("Thalbern shoots the owlbear.", ranger, { ...at(30), floor: walled })
   }

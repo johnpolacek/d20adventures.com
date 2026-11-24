@@ -66,11 +66,11 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
   const range = spell.range
   const cover: CastInSpace["cover"] = {}
   // Cover from where the spell comes to each it falls on. Total cover keeps them out of it.
-  const reached = (origin: Placed, found: readonly (typeof placed)[number][]) =>
+  const reached = (origin: Placed, found: readonly (typeof placed)[number][], spread: "space" | "point" = "space") =>
     found.filter((target) => {
       if (target.id === caster.id) return true
       const inTheWay = placed.filter((other) => other.id !== target.id && other.id !== caster.id)
-      const had: Cover = coverBetween(floor.solids, origin, target, inTheWay)
+      const had: Cover = coverBetween(floor.solids, origin, target, inTheWay, spread)
       if (had === "total") return false
       if (had !== "none") cover[target.id] = had
       return true
@@ -114,9 +114,9 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
       // An aura of the caster's own that takes "you and each creature you choose" (Pass without Trace) takes the caster and those named in it.
       if (area.selective && area.shape === "emanation") {
         const chosen = caught.filter((other) => args.named.includes(other.id))
-        return { targets: [caster.id, ...reached(from, chosen).map((target) => target.id)], cover, measured: true }
+        return { targets: [caster.id, ...reached(from, chosen, "point").map((target) => target.id)], cover, measured: true }
       }
-      return { targets: reached(from, caught).map((target) => target.id), cover, measured: true }
+      return { targets: reached(from, caught, "point").map((target) => target.id), cover, measured: true }
     }
     // An area at a range, centred on the one named, or one on each of the first named where the spell makes several
     // (./spell-rules `areas`). A centre out of range or past total cover makes no area. One caught by two is taken once.
@@ -137,7 +137,7 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
           : between(centre.at, other.at) <= area.size + 1e-9
       )
       const chosen = area.selective ? inside.filter((other) => args.named.includes(other.id)) : inside
-      for (const target of reached({ at: centre.at, size: "Tiny" }, chosen)) taken.add(target.id)
+      for (const target of reached({ at: centre.at, size: "Tiny" }, chosen, "point")) taken.add(target.id)
     }
     // One that stays on the floor stands where it is put, or over its caster (Call Lightning's cloud), and used again it
     // moves to where it is put now.

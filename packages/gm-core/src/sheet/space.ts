@@ -671,6 +671,10 @@ export function walk(
   return { at, used: Math.max(0, feet) - left, path }
 }
 
+// Where sight is read from, as shares of a space's width across it: the centre first, then its sides.
+const SIGHT_FROM_ATTACKER = [0, -0.4, 0.4] as const
+const SIGHT_ON_TARGET = [0, -0.4, -0.2, 0.2, 0.4] as const
+
 /** How much of a target something hides: none, half, three-quarters, or all of it. */
 export type Cover = "none" | "half" | "three-quarters" | "total"
 const COVER_ORDER: readonly Cover[] = ["none", "half", "three-quarters", "total"]
@@ -688,25 +692,38 @@ const HEIGHT: Record<Size, number> = { Tiny: 2, Small: 3.5, Medium: 6, Large: 10
 export const heightOf = (size: Size = "Medium"): number => HEIGHT[size]
 
 /**
- * The cover a target has from an attacker, read along the straight line between them. A solid thing on the line that
- * stands as tall as the target, or to the ceiling, is total cover. A lower one covers by its height against the
- * target's: three-quarters of it or more is three-quarters cover, half or more is half cover. A low thing counts only
- * when it is nearer the target than the attacker: one shoots over the crate one stands at, and not over the crate the
- * target crouches behind. Another creature on the line is half cover. A 4-foot crate in front of a 6-foot target is
- * 4 ÷ 6 of it: half cover. The solid things the two stand on themselves are not read.
+ * The cover a target has from an attacker: how much of the target the solid things between them hide. Sight is read
+ * along lines from across the attacker's space to across the target's, and the attacker takes the point that sees
+ * the most. A thing as tall as the target, or to the ceiling, hides what lies behind it on a line: one that hides
+ * every line is total cover, most of them three-quarters, some of them half. So one seen through an open window, or
+ * round a post, has cover and not total cover. A lower thing covers by its height against the target's, read on the
+ * line between their centres: three-quarters of it or more is three-quarters cover, half or more is half cover. A low
+ * thing counts only when it is nearer the target than the attacker: one shoots over the crate one stands at, and not
+ * over the crate the target crouches behind. Another creature on the line is half cover. A 4-foot crate in front of a
+ * 6-foot target is 4 ÷ 6 of it: half cover. The solid things the two stand on themselves are not read. An area's
+ * effect spreads from a point (`from: "point"`), so it is read from that point alone and does not see round a corner.
  */
-export function coverBetween(solids: readonly Solid[], attacker: Placed, target: Placed, others: readonly Placed[] = []): Cover {
+export function coverBetween(solids: readonly Solid[], attacker: Placed, target: Placed, others: readonly Placed[] = [], from: "space" | "point" = "space"): Cover {
   const gap = between(attacker.at, target.at)
   if (gap === 0) return "none"
   const height = HEIGHT[target.size ?? "Medium"]
-  let cover: Cover = "none"
-  for (const solid of solids) {
-    if (onSolid(solid, attacker.at) || onSolid(solid, target.at)) continue
+  const standing = solids.filter((solid) => !onSolid(solid, attacker.at) && !onSolid(solid, target.at))
+  const tall = (solid: Solid) => solid.top === undefined || solid.top >= height
+  const walls = standing.filter(tall)
+  // Points across each space, square to the line between them. A point inside something solid is not one sight
+  // passes through, so a target against a wall beside the line is not hidden by it.
+  const side = { x: -(target.at.y - attacker.at.y) / gap, y: (target.at.x - attacker.at.x) / gap }
+  const across = (one: Placed, shares: readonly number[]) =>
+    shares.map((share) => ({ x: one.at.x + side.x * spaceOf(one.size) * share, y: one.at.y + side.y * spaceOf(one.size) * share })).filter((point, index) => index === 0 || !solidAt(walls, point))
+  const sights = across(target, SIGHT_ON_TARGET)
+  const hidden = Math.min(...(from === "point" ? [attacker.at] : across(attacker, SIGHT_FROM_ATTACKER)).map((eye) => sights.filter((to) => walls.some((wall) => entersAt(wall, eye, to) !== undefined)).length))
+  if (hidden === sights.length) return "total"
+  let cover: Cover = hidden === 0 ? "none" : hidden / sights.length > 0.5 ? "three-quarters" : "half"
+  for (const solid of standing) {
+    if (tall(solid)) continue
     const enter = entersAt(solid, attacker.at, target.at)
-    if (enter === undefined) continue
-    if (solid.top === undefined || solid.top >= height) return "total"
-    if (enter * gap < gap / 2) continue
-    const share = solid.top / height
+    if (enter === undefined || enter * gap < gap / 2) continue
+    const share = (solid.top ?? 0) / height
     cover = greaterCover(cover, share >= 0.75 ? "three-quarters" : share >= 0.5 ? "half" : "none")
   }
   const blocking = others.some((other) => {
