@@ -210,15 +210,21 @@ export function wield(root: THREE.Object3D): Armed {
   }
   const at = (name: string) => bones.get(name)?.getWorldPosition(new THREE.Vector3()) ?? null
 
+  // How the bow lay in the hand at the last moment it was drawn and raised.
+  let aimed: THREE.Quaternion | null = null
   const shoot = (bow: Weapon, t: number, loosed: number) => {
     const [bowHand, drawHand] = [hands[bow.hand], hands[bow.hand === "L" ? "R" : "L"]]
     const string = strings.get(bow)
     if (!bowHand || !drawHand || !string) return
     const [left, right] = bow.hand === "L" ? ["Left", "Right"] : ["Right", "Left"]
     const drawn = t < loosed
-    close(drawHand, drawn ? HOOK : GRIP, drawn ? 1 : 0.25)
+    // Loosed, the drawing hand eases to a half curl, as a hand at rest is: a quarter closed, it splayed.
+    close(drawHand, drawn ? HOOK : GRIP, drawn ? 1 : 0.5)
     root.updateWorldMatrix(true, true)
-    const [grip, pull, hips, chest] = [at(`${left}Hand`), at(`${right}HandMiddle1`), at("Hips"), at("Spine2")]
+    // The string lies in the hook of the first two fingers at their middle joints, the arrow's nock between them, and
+    // not at the knuckles: there it ran into the back of the hand.
+    const [index2, middle2] = [at(`${right}HandIndex2`), at(`${right}HandMiddle2`)]
+    const [grip, pull, hips, chest] = [at(`${left}Hand`), index2 && middle2 ? index2.lerp(middle2, 0.5) : at(`${right}HandMiddle1`), at("Hips"), at("Spine2")]
     if (!grip || !pull || !hips || !chest) return
     // The bow hangs in the hand until the hand is raised, then stands upright along the arrow's line: from the hand
     // that draws to the hand that holds, or the way the figure faces while the two are together.
@@ -227,10 +233,16 @@ export function wield(root: THREE.Object3D): Armed {
     const up = new THREE.Vector3(0, 1, 0)
     const upright = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(up, ahead), up, ahead))
     const raised = THREE.MathUtils.smoothstep((grip.y - hips.y) / Math.max(0.05, chest.y - hips.y), 0.15, 0.75)
+    // Stood upright while the string is drawn, and once it is loosed held as it lay in the hand at the loosing, so it
+    // goes where the hand goes, as a gripped bow does. Kept upright as the hand swung on, it slid out of the fingers and
+    // they held air. Eased back to lie as the fingers first closed round it, it swung across the face.
     const parent = bow.group.parent
     if (!parent) return
-    const hung = parent.getWorldQuaternion(new THREE.Quaternion()).multiply(string.seated)
-    bow.group.quaternion.copy(parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(hung.slerp(upright, raised)))
+    if (t < loosed || !aimed) {
+      const hung = parent.getWorldQuaternion(new THREE.Quaternion()).multiply(string.seated)
+      bow.group.quaternion.copy(parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(hung.slerp(upright, raised)))
+      if (t < loosed && raised > 0.9) aimed = bow.group.quaternion.clone()
+    } else bow.group.quaternion.copy(aimed)
     bow.group.updateWorldMatrix(false, true)
     // The string goes back with the drawing hand once the hand is behind it, and flies straight when the clip looses.
     const to = bow.group.worldToLocal(pull.clone())

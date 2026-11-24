@@ -3,7 +3,7 @@
 //   pnpm exec next dev -p 3057
 //   Chrome with --remote-debugging-port=9478 (see scripts/stage-verify.ts)
 //   node --import tsx asset-library/pipeline/views.ts <id> --out=<folder> [--lod=0] [--moves=Shoot@1.4,Swing@0.4]
-//     [--only=half,face] [--do=<expression>]
+//     [--only=half,face] [--frame=half | --frame=0,0.8,0:0.9,0.85,0.6] [--do=<expression>]
 //
 // Writes <view>.jpg for each view below, at device scale 2, and sheet.jpg with all of them side by side. Every camera is
 // set from the figure's height and the place of its head, so two models of one character are seen from the same points.
@@ -38,10 +38,18 @@ async function main() {
   const lod = arg("lod") ?? "0"
   const figure = JSON.parse(await readFile(`${ROOT}/${id}/figure.json`, "utf8")) as { height: number; clips?: string[] }
   const H = figure.height
-  const moves: View[] = (arg("moves") ?? "")
-    .split(",")
-    .filter(Boolean)
-    .map((m) => ({ name: m.split("@")[0].toLowerCase().replace(/\s+/g, "-"), clip: m.split("@")[0], at: Number(m.split("@")[1] ?? 0), target: [0, 0.5, 0], from: round(35, 0.62) }))
+  // --frame=<view>: the moves seen from that view's camera (half, for the hands), and not from three quarters.
+  // Or a camera of its own, in the figure's heights: --frame=<target x,y,z>:<from x,y,z>.
+  const own = arg("frame")?.includes(":") ? (arg("frame") as string).split(":").map((xyz) => xyz.split(",").map(Number) as [number, number, number]) : null
+  const frame = own ? { target: own[0], from: own[1] } : (VIEWS.find((v) => v.name === arg("frame") && v.from) ?? { target: [0, 0.5, 0] as [number, number, number], from: round(35, 0.62) })
+  const asked = (arg("moves") ?? "").split(",").filter(Boolean)
+  // One clip asked at several moments is a strip: each picture is named with its moment.
+  const twice = (clip: string) => asked.filter((m) => m.split("@")[0] === clip).length > 1
+  const moves: View[] = asked.map((m) => {
+    const [clip, at = "0"] = m.split("@")
+    const name = clip.toLowerCase().replace(/\s+/g, "-") + (twice(clip) ? `-${at}` : "")
+    return { name, clip, at: Number(at), target: frame.target, from: frame.from }
+  })
   await mkdir(out, { recursive: true })
 
   const tab = (await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: "PUT" })).json()) as { id: string; webSocketDebuggerUrl: string }
