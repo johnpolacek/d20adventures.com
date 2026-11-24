@@ -269,9 +269,10 @@ export function createAiPcTurnService(ports: GmPorts) {
         rollRequirement: rollRequirement ?? undefined,
       })
       // A Bonus Action, and an action with no roll, leave their mark now. With no roll, submitReply marked the character complete.
-      await applyReading({ turnId, characterId, reading, rules: { playerDeath: plan?.playerDeath } })
+      const { fell } = await applyReading({ turnId, characterId, reading, rules: { playerDeath: plan?.playerDeath } })
       // With no roll the companion's turn is over, and a Legendary creature may act on it (../sheet/legendary-actions).
-      if (!rollRequirement) return afterHeroTurn(turnId, characterId)
+      // So is it for one a blow dropped as they moved: what they meant to roll is lost.
+      if (!rollRequirement || fell) return afterHeroTurn(turnId, characterId)
 
       turn = await ports.store.getTurn({ turnId })
       if (!turn) throw new Error("Turn disappeared while processing AI companion roll")

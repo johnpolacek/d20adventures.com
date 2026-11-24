@@ -84,6 +84,6 @@ export const dominations: SpellRules[] = [
 
 /**
  * Charm Monster takes any creature, and its Charmed holds "until the spell ends or until you or your allies damage it",
- * whoever deals it here, as Charm Person's does.
+ * as Charm Person's does: a blow from the bearer's own side leaves it.
  */
-export const charmMonster: SpellRules = { spells: ["charm-monster"], endsOnDamage: true }
+export const charmMonster: SpellRules = { spells: ["charm-monster"], endsOnDamage: "from-caster-side" }

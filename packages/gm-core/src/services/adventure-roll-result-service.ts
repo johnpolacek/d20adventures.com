@@ -421,6 +421,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
       modes: classConcentrationModes,
       d20: rollD20,
+      by: args.characterId,
     })
     turnCharacters = held.characters
     rolls = [...rolls, ...held.saves.map((save) => concentrationBeat(by, save, storyNames(args.turn.characters)))]

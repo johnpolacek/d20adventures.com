@@ -8,6 +8,7 @@ import type { ModeSource } from "./conditions"
 import { itemSaveModes } from "./item-effects"
 import { answerDowned, answerSaveLate, auraOnSaveLate, keepsConcentration } from "./late-rules"
 import { freedFrom } from "./masters"
+import { sameSide } from "./sides"
 import { speciesSaveModes } from "./species-traits"
 import { type Bearer, type Deflected, heldRule, spellRule } from "./spell-rules"
 import type { SpellEffect } from "./turn-effect"
@@ -354,6 +355,8 @@ export function settleConcentration<T extends Bearer>(args: {
   /** Advantage or Disadvantage a caster's class gives the save (../class-rules `classConcentrationModes`). */
   modes?: (character: T) => readonly ModeSource[]
   d20: () => number
+  /** Who dealt the damage, where one did: a charm ends only on damage from its caster's side. Unknown, any ends it. */
+  by?: string
 }): { characters: T[]; saves: ConcentrationSave[]; facts: string[] } {
   const stood = answerDowned({ before: args.before, after: args.after, d20: args.d20 })
   let characters = stood.characters
@@ -390,12 +393,26 @@ export function settleConcentration<T extends Bearer>(args: {
       facts.push(`${now.name ?? "The caster"} loses Concentration, and ${spell} ends.`)
     }
   }
-  // A spell that ends on its bearer when they take damage (./spell-rules `endsOnDamage`): Hypnotic Pattern, Suggestion.
-  const endsOnDamage = (id: string) => !!spellRule(id)?.endsOnDamage
+  // A spell that ends on its bearer when they take damage (./spell-rules `endsOnDamage`): Hypnotic Pattern. A charm
+  // ends only on damage its caster or the caster's allies deal (Charm Person), so a foe's blow leaves it.
+  const dealer = args.by === undefined ? undefined : args.before.find((character) => character.id === args.by)
+  const castersOf = (bearer: T, id: string) => [
+    ...(bearer.spellEffects ?? []).filter((effect) => effect.spell === id).map((effect) => effect.by),
+    ...(bearer.conditions ?? []).flatMap((entry) => (entry.spell === id && entry.source ? [entry.source] : [])),
+  ]
+  const endsOnDamageOf = (bearer: T) => (id: string) => {
+    const rule = spellRule(id)?.endsOnDamage
+    if (rule !== "from-caster-side" || !dealer) return !!rule
+    return castersOf(bearer, id).some((casterId) => {
+      const caster = args.before.find((character) => character.id === casterId)
+      return casterId === dealer.id || !caster || sameSide(dealer, caster)
+    })
+  }
   const spellsOn = (character: T) => [...new Set([...(character.spellEffects ?? []).map((effect) => effect.spell), ...(character.conditions ?? []).flatMap((entry) => entry.spell ?? [])])]
   for (const was of args.before) {
     const now = characters.find((character) => character.id === was.id)
     if (!now || (was.hitPoints ?? 0) <= (now.hitPoints ?? 0)) continue
+    const endsOnDamage = endsOnDamageOf(now)
     const ended = spellsOn(now).filter(endsOnDamage)
     if (!ended.length) continue
     characters = characters.map((character) => (character.id === was.id ? spellEnded(character, endsOnDamage) : character))

@@ -141,8 +141,11 @@ export type SpellRules = {
   whileAway?: (round: RoundContext, was: RoundBearer) => void
 
   // When a bearer takes damage (./spell-effects `settleConcentration`).
-  /** The spell ends on its bearer when they take damage: Sleep, Hypnotic Pattern. */
-  endsOnDamage?: true
+  /**
+   * The spell ends on its bearer when they take damage: Sleep, Hypnotic Pattern. With "from-caster-side", only damage
+   * its caster or the caster's allies deal ends it: Charm Person's Charmed lasts "until you or your allies damage it".
+   */
+  endsOnDamage?: true | "from-caster-side"
   /** What else damage to its bearer does: a save to end it. */
   damaged?: <T extends Bearer>(args: { bearer: T; lost: number; d20: () => number; characters: readonly T[] }) => { bearer: T; facts: string[]; others?: T[] } | undefined
 

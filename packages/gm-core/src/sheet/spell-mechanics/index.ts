@@ -11,7 +11,7 @@ import { conjures } from "./conjures"
 import { counts } from "./counts"
 import { charmMonster, dominations, hideousLaughter } from "./damage-saves"
 import { heroism, invisibility, mirrorImageRules, shield } from "./defences"
-import { animalFriendship, charmPerson, endOnDamage, holdPerson } from "./enchantments"
+import { animalFriendship, charmPerson, endOnDamage, holdPerson, suggestion } from "./enchantments"
 import { dispelMagic, lesserRestoration, removeCurse } from "./endings"
 import { ensnaringStrike } from "./ensnaring-strike"
 import { dimensionDoor, mistyStep, thunderwave } from "./forced-moves"
@@ -62,6 +62,7 @@ export const spellMechanics = (): readonly SpellRules[] => [
   charmPerson,
   animalFriendship,
   endOnDamage,
+  suggestion,
   sacredFlame,
   sorcerousBurst,
   heatMetal,

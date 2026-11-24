@@ -298,6 +298,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
         modes: classConcentrationModes,
         d20: dice.d20,
+        by: args.npc.id,
       })
       updatedCharacters = kept.characters.map((character) => afterHarm(character))
       const thrown = cast?.attack?.roll
@@ -372,6 +373,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
         modes: classConcentrationModes,
         d20: dice.d20,
+        by: args.npc.id,
       })
       updatedCharacters = kept.characters
       facts.push(...kept.facts)
@@ -463,6 +465,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
         modes: classConcentrationModes,
         d20: dice.d20,
+        by: args.npc.id,
       })
       updatedCharacters = stayed.characters
       const then = following(rollRequirement)
@@ -519,6 +522,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
         modes: classConcentrationModes,
         d20: dice.d20,
+        by: args.npc.id,
       })
       updatedCharacters = kept.characters
       const then = following(reading.feature)

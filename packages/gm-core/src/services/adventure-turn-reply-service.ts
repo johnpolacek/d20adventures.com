@@ -16,6 +16,7 @@ import { authoredText } from "../story/authored"
 import { moveBeats, type StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
 import { attackBeat, concentrationBeat, turnScript } from "../story/turn"
+import { fallen } from "../sheet/attack"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
@@ -202,8 +203,12 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       // What the areas on the floor did to the hero as they walked (../sheet/spell-rounds `areasWalked`).
       leaving.push(...went.told.map((fact): StoryBeat => ({ kind: "feature", by, character: fact.character, name: fact.spell, text: fact.text })))
       leaving.push(...kept.saves.map((save) => concentrationBeat(by, save, storyNames(turn.characters))))
-      // A hero the blow dropped does nothing more this turn: what they meant to do is lost, and any roll with it.
+      // A hero the blow dropped does nothing more this turn: what they meant to do is lost, and any roll with it. The
+      // story says so, or the action they set out on would simply vanish from it.
       if (went.stopped) {
+        const dropped = [...went.attacks].reverse().find((made) => made.blow.hitPoints.after === 0)
+        if (mover && dropped)
+          leaving.push({ kind: "feature", by, character: mover.id, name: "Down", text: `${fallen(mover.name, dropped.blow)} What ${mover.name} set out to do is not done.` })
         await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, story: [...turn.story, ...leaving], updatedAt: Date.now() } })
         return { fell: true }
       }

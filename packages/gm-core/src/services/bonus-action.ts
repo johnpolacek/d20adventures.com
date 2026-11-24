@@ -123,6 +123,7 @@ export async function useBonus(args: {
     bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
     modes: classConcentrationModes,
     d20: args.d20,
+    by: actor.id,
   })
   return {
     characters: kept.characters,

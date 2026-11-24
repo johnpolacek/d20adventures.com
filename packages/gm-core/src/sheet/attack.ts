@@ -694,8 +694,8 @@ export function strike<T extends Target>(args: StrikeArgs<T>): Strike & { target
   return landBlow(args, rollAttack(args))
 }
 
-// How a target the blow left at 0 stands, in words.
-function fallen(target: string, blow: Strike): string {
+/** How a target the blow left at 0 stands, in words: "Thalbern drops to 0 hit points, falls Unconscious and is dying." */
+export function fallen(target: string, blow: Strike): string {
   const down = blow.hitPoints.before === 0
   switch (blow.fate) {
     case "dies":
