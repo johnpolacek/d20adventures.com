@@ -21,7 +21,7 @@ test("anonymous homepage renders the public hero without personalized requests",
   const response = await page.goto("/")
   expect(response?.headers()["x-clerk-auth-status"]).toBeUndefined()
   await expect(page.getByRole("button", { name: "Sign In", exact: true })).toBeVisible()
-  await expect(page.getByRole("link", { name: "Quick Start" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Become a Playtester" })).toBeVisible()
   await expect(page.locator("#active-adventure-card")).toHaveCount(0)
   expect(personalizedRequests).toEqual([])
 })
@@ -57,7 +57,7 @@ test("signed-in welcome loads through the API and disappears after sign-out", as
   expect(await document.text()).not.toContain(activeAdventure.title)
 
   await clerk.signOut({ page })
-  await expect(page.getByRole("link", { name: "Quick Start" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Become a Playtester" })).toBeVisible()
   await expect(page.locator("#active-adventure-card")).toHaveCount(0)
 })
 
@@ -86,7 +86,7 @@ for (const scenario of ["empty", "failed", "different-user"] as const) {
     await signInAsTestUser(page)
     await response
     await expect(page.locator("#tokenCount")).toBeVisible()
-    await expect(page.getByRole("link", { name: "Quick Start" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Become a Playtester" })).toBeVisible()
     await expect(page.locator("#active-adventure-card")).toHaveCount(0)
   })
 }
