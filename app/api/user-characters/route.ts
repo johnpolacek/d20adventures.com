@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { getUserCharacters } from "@/app/_actions/character"
+import { getUserCharacters } from "@/lib/heroes/user-characters"
 import { isUserAdmin } from "@/lib/auth-utils"
 
 export async function GET(req: Request) {

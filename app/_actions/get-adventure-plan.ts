@@ -9,6 +9,8 @@ import type { AdventurePlan } from "@/types/adventure-plan"
  * adventures, the legacy S3 `AdventurePlan` JSON otherwise.
  */
 export async function getAdventurePlan(settingId: string, adventurePlanId: string): Promise<AdventurePlan | null> {
+  // Both name a folder and file in storage, so only plain slugs are read.
+  if (![settingId, adventurePlanId].every((id) => /^[\w-]+$/.test(id))) return null
   try {
     return await loadAdventurePlanForRuntime(settingId, adventurePlanId)
   } catch (error) {

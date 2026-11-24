@@ -8,7 +8,7 @@ export async function verifyCaptcha(captchaToken: string) {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: `secret=${RECAPTCHA_SECRET_KEY}&response=${captchaToken}`,
+    body: new URLSearchParams({ secret: RECAPTCHA_SECRET_KEY ?? "", response: captchaToken }),
   })
 
   const captchaValidation = await response.json()

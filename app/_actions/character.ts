@@ -1,16 +1,7 @@
 "use server"
 import { auth } from "@clerk/nextjs/server"
-import { deleteS3Object, listAndReadJsonFilesInS3Directory, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
+import { deleteS3Object, readJsonFromS3, updateJsonOnS3 } from "@/lib/s3-utils"
 import type { PCTemplate } from "@/types/character"
-
-export async function getUserCharacters(userId: string): Promise<PCTemplate[]> {
-  try {
-    const results = await listAndReadJsonFilesInS3Directory(`characters/${userId}/`)
-    return results.map((r) => r.data as PCTemplate)
-  } catch {
-    return []
-  }
-}
 
 /**
  * Soft delete a user's character by moving it under a deleted/ subdirectory
@@ -19,6 +10,7 @@ export async function getUserCharacters(userId: string): Promise<PCTemplate[]> {
 export async function softDeleteUserCharacter(characterId: string): Promise<{ success: boolean; error?: string }> {
   const { userId } = await auth()
   if (!userId) return { success: false, error: "Unauthorized" }
+  if (!/^[\w-]+$/.test(characterId)) return { success: false, error: "Unknown character" }
   // characterId here is the file basename without .json, matching usage in routes
   const sourceKey = `characters/${userId}/${characterId}.json`
   const destinationKey = `characters/${userId}/deleted/${characterId}.json`

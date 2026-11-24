@@ -117,7 +117,9 @@ export async function createAdventure(input: CreateAdventureInput) {
       let characterData: PCTemplate | unknown = findPremadeSheet(choice.characterId)
       if (!characterData) {
         // Try to load as a custom character (should not throw if not found)
+        // A saved hero is read only from the player's own folder, never from a key the browser names.
         try {
+          if (!choice.characterId.startsWith(`characters/${userId}/`)) throw new Error("not this player's hero")
           const customChar = await readJsonFromS3(choice.characterId)
           characterData = customChar
         } catch {}
@@ -266,7 +268,9 @@ export async function createPracticeAdventure(input: CreatePracticeAdventureInpu
 }
 
 function normalizePlayerCharacterKey(userId: string, characterId: string) {
-  if (characterId.startsWith("characters/")) return characterId
+  // Always the player's own folder: a key naming another account's hero keeps only its file name.
+  if (characterId.startsWith(`characters/${userId}/`)) return characterId
+  if (characterId.startsWith("characters/")) return `characters/${userId}/${characterId.split("/").pop()}`
   if (characterId.endsWith(".json")) return `characters/${userId}/${characterId}`
   return `characters/${userId}/${characterId}.json`
 }

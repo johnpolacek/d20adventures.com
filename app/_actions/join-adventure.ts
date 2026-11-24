@@ -67,7 +67,8 @@ export async function joinAdventure({ settingId, adventurePlanId, adventureId, c
         const plan = await loadAdventurePlanForRuntime(settingId, adventurePlanId)
         characterData = seat ? await seatHero(seat, plan.premadePlayerCharacters) : plan.premadePlayerCharacters?.find((pc) => pc.id === sheetId(characterId))
       } catch {}
-      if (!characterData && !held) {
+      // A saved hero is read only from the player's own folder, never from a key the browser names.
+      if (!characterData && !held && characterId.startsWith(`characters/${userId}/`)) {
         try {
           const customChar = await readJsonFromS3(characterId)
           characterData = customChar

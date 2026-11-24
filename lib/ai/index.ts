@@ -1,4 +1,4 @@
-"use server"
+// Server only, and not a server action: as one, anyone could run the site's model on its budget.
 import type { Prompt } from "@d20/gm-core"
 import type { z } from "zod"
 import { createServerLlm } from "@/lib/gm-server/llm"

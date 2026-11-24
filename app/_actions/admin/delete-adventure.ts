@@ -11,7 +11,8 @@ import { convex } from "@/lib/convex/server"
 // live in the owner's shared characters/ namespace) and orphaned audio files
 // in the public bucket are harmless.
 export async function deleteAdventureAdmin(adventureId: Id<"adventures">) {
-  await requireAdmin()
+  // requireAdmin redirects in production only. Elsewhere it answers, so its answer is checked.
+  if (!(await requireAdmin()).isAdmin) throw new Error("Forbidden")
 
   const result = await convex.mutation(api.adventure.deleteAdventureCascade, { adventureId })
   revalidatePath("/admin/adventures")

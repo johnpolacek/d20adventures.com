@@ -1,4 +1,4 @@
-"use server"
+// Server only, and not a server action: as one, a browser could read, write or delete any key in the bucket.
 
 import type { Readable } from "node:stream"
 import { CopyObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3"
