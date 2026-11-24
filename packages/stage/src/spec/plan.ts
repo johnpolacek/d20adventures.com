@@ -21,7 +21,13 @@ export type Solid = z.infer<typeof solidSchema>
 export const placeSchema = z.object({ id: z.string(), label: z.string(), x: z.number(), z: z.number(), obscured: z.literal(true).optional() }).strict()
 export type Place = z.infer<typeof placeSchema>
 
-// A set: what is solid, its doorways as a point just inside and one just outside, and its labelled marks.
+// Water deep enough to swim in, as rings of points in metres read by the even-odd rule: a ring inside another is dry land
+// in it, an island or a pier's boards. Water with something to stand on over it, or too shallow to swim, is left out.
+export const waterSchema = z.array(z.array(pointSchema).min(3))
+export type Water = z.infer<typeof waterSchema>
+
+// A set: what is solid, its doorways as a point just inside and one just outside, its labelled marks, and its water,
+// when it has any to swim in.
 export const setPlanSchema = z
   .object({
     id: z.string(),
@@ -29,6 +35,7 @@ export const setPlanSchema = z
     solids: z.array(solidSchema),
     doors: z.array(z.tuple([pointSchema, pointSchema])),
     places: z.array(placeSchema),
+    water: waterSchema.optional(),
   })
   .strict()
 export type SetPlan = z.infer<typeof setPlanSchema>
@@ -57,7 +64,7 @@ export const encounterPlanSchema = z
 export type EncounterPlan = z.infer<typeof encounterPlanSchema>
 
 // The two joined: what a reader is handed.
-export const floorPlanSchema = encounterPlanSchema.extend({ title: z.string(), solids: setPlanSchema.shape.solids, doors: setPlanSchema.shape.doors, places: setPlanSchema.shape.places }).strict()
+export const floorPlanSchema = encounterPlanSchema.extend({ title: z.string(), solids: setPlanSchema.shape.solids, doors: setPlanSchema.shape.doors, places: setPlanSchema.shape.places, water: waterSchema.optional() }).strict()
 export type FloorPlan = z.infer<typeof floorPlanSchema>
 
 export const parseSetPlan = (input: unknown): SetPlan => setPlanSchema.parse(input)
@@ -67,5 +74,5 @@ export const parseFloorPlan = (input: unknown): FloorPlan => floorPlanSchema.par
 // An encounter and its set as one plan. The set must be the one the encounter names.
 export function joinPlan(encounter: EncounterPlan, set: SetPlan): FloorPlan {
   if (encounter.set !== set.id) throw new Error(`floor plan ${encounter.encounterId} is on set ${encounter.set}, not ${set.id}`)
-  return parseFloorPlan({ ...encounter, title: set.title, solids: set.solids, doors: set.doors, places: set.places })
+  return parseFloorPlan({ ...encounter, title: set.title, solids: set.solids, doors: set.doors, places: set.places, ...(set.water ? { water: set.water } : {}) })
 }

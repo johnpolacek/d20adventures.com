@@ -15,6 +15,7 @@ import {
   feet,
   greaterCover,
   inArea,
+  inWater,
   metres,
   movementBudget,
   movementBudgetOf,
@@ -33,6 +34,7 @@ import {
   type Watcher,
   walk,
   walkOver,
+  waterSpans,
   within,
 } from "../../src/sheet/space"
 
@@ -394,4 +396,58 @@ test("cover is read from what stands between the two, by its height", () => {
   // Only the greater cover counts. Half adds 2 to Armor Class and Dexterity saves, three-quarters 5.
   assert.equal(greaterCover("half", "three-quarters"), "three-quarters")
   assert.deepEqual([coverBonus("none"), coverBonus("half"), coverBonus("three-quarters"), coverBonus("total")], [0, 2, 5, 0])
+})
+
+test("water is read by the even-odd rule, and a path's stretch in it by where it crosses the rings", () => {
+  // A river from x = 10 to x = 20, and in it a pier's boards from x = 14 to x = 16, a ring inside a ring.
+  const rect = (x0: number, x1: number) => [
+    { x: x0, y: -50 },
+    { x: x1, y: -50 },
+    { x: x1, y: 50 },
+    { x: x0, y: 50 },
+  ]
+  const water = [rect(10, 20), rect(14, 16)]
+  assert.equal(inWater(water, { x: 12, y: 0 }), true)
+  assert.equal(inWater(water, { x: 15, y: 0 }), false)
+  assert.equal(inWater(water, { x: 5, y: 0 }), false)
+  assert.equal(inWater(undefined, { x: 12, y: 0 }), false)
+  // Along y = 0 from (0, 0) to (30, 0): in the water from a third to 14/30, and from 16/30 to two thirds.
+  const spans = waterSpans(water, { x: 0, y: 0 }, { x: 30, y: 0 })
+  assert.equal(spans.length, 2)
+  assert.ok(Math.abs(spans[0][0] - 1 / 3) < 1e-9 && Math.abs(spans[0][1] - 14 / 30) < 1e-9)
+  assert.ok(Math.abs(spans[1][0] - 16 / 30) < 1e-9 && Math.abs(spans[1][1] - 2 / 3) < 1e-9)
+  assert.deepEqual(waterSpans(water, { x: 0, y: 60 }, { x: 30, y: 60 }), [])
+})
+
+test("a walk over water stops at its edge, or swims it for 1 extra foot a foot unless there is a Swim Speed", () => {
+  const floor: Floor = {
+    solids: [],
+    doors: [],
+    water: [
+      [
+        { x: 10, y: -50 },
+        { x: 20, y: -50 },
+        { x: 20, y: 50 },
+        { x: 10, y: 50 },
+      ],
+    ],
+  }
+  // Bound for the far bank at (40, 0) with no way round, 40 feet to give: stops 0.1 foot short of the water, at 9.9.
+  const stopped = walk(floor, { x: 0, y: 0 }, { x: 40, y: 0 }, 40)
+  assert.ok(Math.abs(stopped.at.x - 9.9) < 1e-9)
+  assert.ok(Math.abs(stopped.used - 9.9) < 1e-9)
+  // Bound for a goal in the river at (15, 0), it swims: 10 feet of bank and 5 of water at 2 is 20 spent. Over the whole
+  // river to (20, 0) is 30; the 10 feet across cost 20.
+  const swum = walk(floor, { x: 0, y: 0 }, { x: 20, y: 0 }, 40, { swim: { into: true } })
+  assert.ok(Math.abs(swum.at.x - 20) < 1e-9 && Math.abs(swum.used - 30) < 1e-9)
+  // With 25 feet to give, the same swim is stopped by its cost: 10 on the bank, 15 left at 2 each is 7.5 feet in, to 17.5.
+  const tired = walk(floor, { x: 0, y: 0 }, { x: 20, y: 0 }, 25, { swim: { into: true } })
+  assert.ok(Math.abs(tired.at.x - 17.5) < 1e-9 && Math.abs(tired.used - 25) < 1e-9)
+  // With a Swim Speed it costs nothing extra: 20 feet is 20 spent.
+  const swimmer = walk(floor, { x: 0, y: 0 }, { x: 20, y: 0 }, 40, { swim: { into: true, speed: true } })
+  assert.ok(Math.abs(swimmer.at.x - 20) < 1e-9 && Math.abs(swimmer.used - 20) < 1e-9)
+  // The way round goes by named places on dry ground when the river is shut: here past its end at y = 50, by (5, 60) and (25, 60).
+  const round = { ...floor, waypoints: [{ x: 5, y: 60 }, { x: 25, y: 60 }] }
+  assert.deepEqual(routeThrough(round, { x: 0, y: 0 }, { x: 30, y: 0 }, undefined, { water: floor.water ?? [], shut: true }), [{ x: 5, y: 60 }, { x: 25, y: 60 }, { x: 30, y: 0 }])
+  assert.equal(routeThrough(floor, { x: 0, y: 0 }, { x: 30, y: 0 }, undefined, { water: floor.water ?? [], shut: true }), undefined)
 })

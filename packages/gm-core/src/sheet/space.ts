@@ -130,7 +130,7 @@ export const rangedInCloseCombat = (attacker: Placed, others: readonly Bystander
 /** A character's Speed in feet: a hero's from its sheet, an NPC's walking Speed from its stat block. A hero with no sheet has none. */
 export function speedOf(character: Roller): number | undefined {
   // A hero in a Beast's shape moves at the stat block's walking Speed, or its Fly Speed where that is more: the floor is
-  // flat, so flying is moving, as with Dragon Wings (./shape). A Swim Speed finds no water on the floor.
+  // flat, so flying is moving, as with Dragon Wings (./shape). A Swim Speed is read for the water on the floor (`swimsFree`).
   const shape = shapeOf(character)
   if (shape) return Math.max(shape.speed.walk, shape.speed.fly ?? 0)
   // A feature may give a Speed beyond their own while it lasts (Dragon Wings' Fly Speed), by ./late-rules.
@@ -147,6 +147,17 @@ export function climbOf(character: Roller & { size?: Size }): Climb {
   const shape = shapeOf(character)
   const speed = shape ? shape.speed.climb : character.sheet ? deriveSheet(character.sheet).speeds.climb : character.type === "npc" ? blockOf(character)?.speed.climb : undefined
   return { height: heightOf(sizeOf(character)), ...(speed ? { speed: true } : {}) }
+}
+
+/**
+ * Whether a character crosses water with none of the extra cost swimming has (`SWIM_EXTRA`): they have a Swim Speed,
+ * from a Beast's shape, their sheet (Roving, an item) or their stat block, or they fly, from a shape, a feature
+ * (Dragon Wings) or their stat block, and so pass over it.
+ */
+export function swimsFree(character: Roller): boolean {
+  const shape = shapeOf(character)
+  const speeds: { swim?: number; fly?: number } | undefined = shape ? shape.speed : character.sheet ? deriveSheet(character.sheet).speeds : character.type === "npc" ? blockOf(character)?.speed : undefined
+  return !!speeds?.swim || !!(speeds as { fly?: number } | undefined)?.fly || !!featureSpeed(character)
 }
 
 /** What the Slow mastery takes from a creature's Speed until the start of the attacker's next turn. Hits from several weapons take no more. */
@@ -290,10 +301,16 @@ export const caughtIn = <T extends { at: Point }>(area: AreaOfEffect, origin: Po
 export type Solid = { kind: "rect"; x: number; y: number; halfWidth: number; halfDepth: number; turn: number; top?: number } | { kind: "circle"; x: number; y: number; radius: number; top?: number }
 
 /**
- * An encounter's floor: its solid things, its doorways as a point just inside and one just outside, and other points a
- * way round may pass through, such as its named places.
+ * Water deep enough to swim in, as rings of points in feet read by the even-odd rule: a point is in water when it is
+ * inside an odd number of rings, so a ring inside another is dry land in it, as a pier's boards over a river are.
  */
-export type Floor = { solids: readonly Solid[]; doors: readonly (readonly [Point, Point])[]; waypoints?: readonly Point[] }
+export type Water = readonly (readonly Point[])[]
+
+/**
+ * An encounter's floor: its solid things, its doorways as a point just inside and one just outside, its water to swim
+ * in, and other points a way round may pass through, such as its named places.
+ */
+export type Floor = { solids: readonly Solid[]; doors: readonly (readonly [Point, Point])[]; water?: Water; waypoints?: readonly Point[] }
 
 const onSolid = (solid: Solid, point: Point): boolean => {
   if (solid.kind === "circle") return between(solid, point) < solid.radius
@@ -361,6 +378,72 @@ export function spanThrough(solid: Solid, from: Point, to: Point): readonly [num
   return leave - enter > EDGE ? [enter, leave] : undefined
 }
 
+const ringHolds = (ring: readonly Point[], point: Point): boolean => {
+  let inside = false
+  for (let index = 0, last = ring.length - 1; index < ring.length; last = index++) {
+    const a = ring[index]
+    const b = ring[last]
+    if (a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) inside = !inside
+  }
+  return inside
+}
+
+/** Whether a point is in water: inside an odd number of its rings. */
+export const inWater = (water: Water | undefined, point: Point): boolean => !!water && water.filter((ring) => ringHolds(ring, point)).length % 2 === 1
+
+/**
+ * The stretches of a straight path from one point to another that lie in water, as shares of the path from 0 to 1.
+ * Where it crosses a ring's edge the water starts or stops, and each stretch between two crossings is in or out as
+ * its middle is. A path from (0, 0) to (30, 0) over a river from x = 10 to x = 20 is in water from a third to two thirds.
+ */
+export function waterSpans(water: Water, from: Point, to: Point): [number, number][] {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const marks = [0, 1]
+  for (const ring of water) {
+    // A ring wholly to one side of the path has no edge on it.
+    if (ring.every((point) => point.x < Math.min(from.x, to.x)) || ring.every((point) => point.x > Math.max(from.x, to.x))) continue
+    if (ring.every((point) => point.y < Math.min(from.y, to.y)) || ring.every((point) => point.y > Math.max(from.y, to.y))) continue
+    for (let index = 0, last = ring.length - 1; index < ring.length; last = index++) {
+      const a = ring[last]
+      const ex = ring[index].x - a.x
+      const ey = ring[index].y - a.y
+      const run = dx * ey - dy * ex
+      if (run === 0) continue
+      const along = ((a.x - from.x) * ey - (a.y - from.y) * ex) / run
+      const across = ((a.x - from.x) * dy - (a.y - from.y) * dx) / run
+      if (along > 0 && along < 1 && across >= 0 && across <= 1) marks.push(along)
+    }
+  }
+  marks.sort((x, y) => x - y)
+  const spans: [number, number][] = []
+  for (let index = 1; index < marks.length; index++) {
+    const start = marks[index - 1]
+    const end = marks[index]
+    if (end - start < 1e-9 || !inWater(water, { x: from.x + (dx * (start + end)) / 2, y: from.y + (dy * (start + end)) / 2 })) continue
+    const last = spans[spans.length - 1]
+    if (last && start - last[1] < 1e-9) last[1] = end
+    else spans.push([start, end])
+  }
+  return spans
+}
+
+/**
+ * Swimming's extra cost: 1 extra foot of movement for each foot moved through water, 2 extra in Difficult Terrain,
+ * unless one has a Swim Speed (SRD 5.2.1, Swimming). Ten feet across a river cost 20.
+ */
+export const SWIM_EXTRA = 1
+
+/**
+ * How a walker meets the water of a floor. `shut`: they do not enter it, and stop at its edge, as a move that does not
+ * mean to go into water does (`walk`). Otherwise they swim, each foot costing `SWIM_EXTRA` more unless they have a
+ * Swim Speed (`speed`).
+ */
+export type Swim = { water: Water; shut?: boolean; speed?: boolean }
+
+// How far short of water's edge a walker who may not enter it stops, so that they stand on dry ground.
+const BANK = 0.1
+
 /**
  * Ground that costs more than a foot of movement for each foot moved through it, as a shape on the floor and the feet
  * each foot costs: Difficult Terrain's 2, Wall of Thorns' 4.
@@ -368,9 +451,11 @@ export function spanThrough(solid: Solid, from: Point, to: Point): readonly [num
 export type Rough = { shape: Solid; cost: number }
 
 // How far along a straight path of `gap` feet a walker gets for `feet` of movement, where the rough ground it crosses
-// costs more: the feet walked and the movement spent. Where rough shapes overlap the dearest counts.
-function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number, feet: number): { walked: number; spent: number } {
-  if (!rough.length || gap === 0) return { walked: Math.min(gap, feet), spent: Math.min(gap, feet) }
+// costs more: the feet walked and the movement spent. Where rough shapes overlap the dearest counts. Water that is
+// swum adds swimming's extra to the ground it covers: Difficult Terrain's 2 and swimming's 1 make 3.
+function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number, feet: number, swim?: Swim): { walked: number; spent: number } {
+  const wet = swim && !swim.shut && !swim.speed && swim.water.length ? waterSpans(swim.water, from, to).map(([start, end]) => ({ from: start * gap, to: end * gap })) : []
+  if ((!rough.length && !wet.length) || gap === 0) return { walked: Math.min(gap, feet), spent: Math.min(gap, feet) }
   const marks = new Set([0, gap])
   const spans = rough.flatMap((each) => {
     const span = spanThrough(each.shape, from, to)
@@ -379,6 +464,10 @@ function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number,
     marks.add(span[1] * gap)
     return [{ from: span[0] * gap, to: span[1] * gap, cost: each.cost }]
   })
+  for (const each of wet) {
+    marks.add(each.from)
+    marks.add(each.to)
+  }
   const points = [...marks].sort((a, b) => a - b)
   let walked = 0
   let spent = 0
@@ -386,7 +475,7 @@ function roughWalk(rough: readonly Rough[], from: Point, to: Point, gap: number,
     const start = points[index - 1]
     const length = points[index] - start
     const middle = start + length / 2
-    const cost = Math.max(1, ...spans.filter((span) => span.from <= middle && middle <= span.to).map((span) => span.cost))
+    const cost = Math.max(1, ...spans.filter((span) => span.from <= middle && middle <= span.to).map((span) => span.cost)) + (wet.some((each) => each.from <= middle && middle <= each.to) ? SWIM_EXTRA : 0)
     if (spent + length * cost >= feet) return { walked: walked + (feet - spent) / cost, spent: feet }
     walked += length
     spent += length * cost
@@ -416,7 +505,9 @@ export const climbCost = (height: number, across: number, climb: Climb): number 
  * 10. One who starts on something solid, as on a roof, walks off it freely. Rough ground on the way costs more of the
  * feet given for each foot walked (`rough`): 30 feet across 10 feet of Difficult Terrain walk 20, and `used` is the
  * movement spent. A walker who climbs (`climb`) goes over a thing no taller than they stand at climbing's cost
- * (`climbCost`), all of it or none: one without the feet to get over stops before it.
+ * (`climbCost`), all of it or none: one without the feet to get over stops before it. Water (`swim`) that the walker
+ * may not enter stops them at its edge, and water they swim costs more (`SWIM_EXTRA`): 30 feet across 10 feet of river
+ * walk 20 and spend 30.
  */
 export function walkOver(
   solids: readonly Solid[],
@@ -424,7 +515,8 @@ export function walkOver(
   to: Point,
   feet: number,
   rough: readonly Rough[] = [],
-  climb?: Climb
+  climb?: Climb,
+  swim?: Swim
 ): { at: Point; used: number; blocked: boolean } {
   const gap = between(from, to)
   const along = (d: number): Point => (gap === 0 ? { ...from } : { x: from.x + ((to.x - from.x) * d) / gap, y: from.y + ((to.y - from.y) * d) / gap })
@@ -437,6 +529,9 @@ export function walkOver(
     if (climbs(solid, climb)) over.push({ from: span[0] * gap, to: span[1] * gap, height: solid.top ?? 0 })
     else first = Math.min(first, span[0] * gap)
   }
+  // Water they may not enter is a wall at its edge.
+  const wet = swim?.shut && swim.water.length ? waterSpans(swim.water, from, to)[0] : undefined
+  if (wet) first = Math.min(first, Math.max(0, wet[0] * gap - BANK))
   const reach = Math.min(gap, first)
   const budget = Math.max(0, feet)
   // Over what stands in the way before the first thing that cannot be climbed, one after another; things that touch
@@ -455,7 +550,7 @@ export function walkOver(
   let done = 0
   let spent = 0
   for (const each of climbsOver) {
-    const went = roughWalk(rough, along(done), along(each.from), each.from - done, budget - spent)
+    const went = roughWalk(rough, along(done), along(each.from), each.from - done, budget - spent, swim)
     spent += went.spent
     if (went.walked < each.from - done - 1e-9) return { at: along(done + went.walked), used: spent, blocked: false }
     const cost = climbCost(each.height, Math.min(each.to, gap) - each.from, climb as Climb)
@@ -464,7 +559,7 @@ export function walkOver(
     spent += cost
     done = Math.min(each.to, gap)
   }
-  const went = roughWalk(rough, along(done), along(reach), reach - done, budget - spent)
+  const went = roughWalk(rough, along(done), along(reach), reach - done, budget - spent, swim)
   spent += went.spent
   const walked = done + went.walked
   return { at: along(walked), used: spent, blocked: first < gap && walked >= reach - 1e-9 && spent < feet - 1e-9 }
@@ -499,9 +594,15 @@ const cornersOf = (solid: Solid): Point[] => {
  * walk goes round a deckhouse by the side deck and not the long way by the bank. The points to walk through, ending at
  * the goal. None when no way is clear. From the bank to the boat's saloon it goes by the gangway and the saloon door.
  */
-export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb): Point[] | undefined {
-  // Straight there when nothing at all stands between. Over something climbed, the way round may cost less.
-  if (!walkOver(floor.solids, from, to, Number.POSITIVE_INFINITY).blocked) return [to]
+export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb, swim?: Swim): Point[] | undefined {
+  // Water that costs nothing to cross is no obstacle. Water they may not enter is a wall, and no way leads through it.
+  const water = swim?.water.length && (swim.shut || !swim.speed) ? swim.water : undefined
+  const wet = (a: Point, b: Point) => (water ? waterSpans(water, a, b) : [])
+  const shut = !!swim?.shut
+  const barred = (a: Point, b: Point) => shut && wet(a, b).length > 0
+  // Straight there when nothing at all stands between. Over something climbed, or through water they swim, the way
+  // round may cost less.
+  if (!walkOver(floor.solids, from, to, Number.POSITIVE_INFINITY, [], undefined, swim).blocked && !wet(from, to).length) return [to]
   // The shortest path over the points a way may pass through, the one likeliest to lead there first (its way so far and
   // the straight line on), reading a leg only when it is reached. Besides the doorways and waypoints, a way turns just
   // off the corners of a solid thing that stands in a leg it tries: the corners of what blocks the line on to the goal,
@@ -551,6 +652,8 @@ export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb
   const costOf = (a: Point, b: Point) => {
     const gap = between(a, b)
     let cost = gap
+    // Swimming costs more for each foot in the water, unless that is shut off, and then no leg may cross it.
+    if (!shut) for (const [start, end] of wet(a, b)) cost += (end - start) * gap * SWIM_EXTRA
     for (const solid of climbable) {
       if (onSolid(solid, a)) continue
       const span = spanThrough(solid, a, b)
@@ -578,7 +681,7 @@ export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb
         const far = reached[at] + costOf(nodes[at], nodes[index])
         if (far >= reached[index]) continue
         const stood = blocking(nodes[at], nodes[index])
-        if (!stood.length) {
+        if (!stood.length && !barred(nodes[at], nodes[index])) {
           reached[index] = far
           came[index] = at
         } else if (index >= fixed) deeper.push(...stood.flatMap(turnsOf))
@@ -593,7 +696,7 @@ export function routeThrough(floor: Floor, from: Point, to: Point, climb?: Climb
   let last = from
   for (let index = 0; index < found.length; index++) {
     const after = found[index + 1]
-    if (after && !blocking(last, after).length && costOf(last, after) <= costOf(last, found[index]) + costOf(found[index], after) + 1e-6) continue
+    if (after && !blocking(last, after).length && !barred(last, after) && costOf(last, after) <= costOf(last, found[index]) + costOf(found[index], after) + 1e-6) continue
     way.push(found[index])
     last = found[index]
   }
@@ -623,18 +726,25 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
  * that costs more to cross (`rough`: Difficult Terrain) spends more of the feet given, and one who climbs (`climb`)
  * goes over low things at climbing's cost where that is the shorter way. Gives where they end, the feet
  * used, and the points walked through.
+ *
+ * The floor's water (`Floor.water`) is not walked into: a walk stops at its edge, and a way round goes by what is dry.
+ * One that sets out in water, or is bound for a goal in water (`swim.into`), swims instead, each foot costing
+ * `SWIM_EXTRA` more unless they have a Swim Speed (`swim.speed`). Backing straight away from a fight on the Mordava's
+ * bank stops at the water, and a walk to someone in the river swims out to them.
  */
 export function walk(
   floor: Floor,
   from: Point,
   to: Point,
   feet: number,
-  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[]; climb?: Climb } = {}
+  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[]; climb?: Climb; swim?: { speed?: boolean; into?: boolean } } = {}
 ): { at: Point; used: number; path: Point[] } {
   const short = options.stopShort ?? 0
   const gap = between(from, to)
   const others = options.others ?? []
   const climb = options.climb
+  const water = floor.water?.length ? floor.water : undefined
+  const wading: Swim | undefined = water ? { water, shut: !(options.swim?.into || inWater(water, from)), speed: options.swim?.speed } : undefined
   const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY, [], climb).blocked
   const length = (way: readonly Point[]) => way.reduce((sum, point, index) => sum + between(index ? way[index - 1] : from, point), 0)
   // Already within the distance asked, with nothing solid between: no step is taken.
@@ -643,15 +753,15 @@ export function walk(
   // one: the straight approach where it will do, else the spot round them that is the shortest way to reach. One who
   // stands behind a wall is closed with from their own side of it.
   let goal = standingRoom(floor.solids, others, from, to)
-  let way = routeThrough(floor, from, goal, climb)
+  let way = routeThrough(floor, from, goal, climb, wading)
   if (short) {
-    const free = (point: Point) => !solidAt(floor.solids, point) && clear(point, to) && others.every((other) => between(other, to) < 1e-6 || between(other, point) >= BASE_REACH - 1e-6)
+    const free = (point: Point) => !solidAt(floor.solids, point) && !(wading?.shut && inWater(water, point)) && clear(point, to) && others.every((other) => between(other, to) < 1e-6 || between(other, point) >= BASE_REACH - 1e-6)
     const spots = [
       moveToward(to, from, short).at,
       ...Array.from({ length: 12 }, (_, index) => ({ x: to.x + Math.sin((index * Math.PI) / 6) * short, y: to.y + Math.cos((index * Math.PI) / 6) * short })),
     ].filter(free)
     const ways = spots.flatMap((spot) => {
-      const found = routeThrough(floor, from, spot, climb)
+      const found = routeThrough(floor, from, spot, climb, wading)
       return found ? [{ spot, found }] : []
     })
     const best = ways.sort((a, b) => length(a.found) - length(b.found))[0]
@@ -662,7 +772,7 @@ export function walk(
   let left = Math.max(0, feet)
   const path: Point[] = []
   for (const point of way ?? [goal]) {
-    const leg = walkOver(floor.solids, at, point, left, options.rough, climb)
+    const leg = walkOver(floor.solids, at, point, left, options.rough, climb, wading)
     if (leg.used > 0) path.push(leg.at)
     left -= leg.used
     at = leg.at

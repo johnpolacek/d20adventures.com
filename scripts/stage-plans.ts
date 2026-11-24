@@ -1,5 +1,5 @@
 // Builds every authored encounter's floor plan from its 3D set and staging, headless, and writes it as plain JSON into
-// packages/stage/src/plans: one file per set (what is solid, the doorways, the labelled marks) and one per encounter
+// packages/stage/src/plans: one file per set (what is solid, the doorways, the labelled marks, the water to swim in) and one per encounter
 // (where the cast starts, where the party stands, spare spots), with a generated index that reads them. The encounters
 // are the desktop's scenes (each adventure's scenes.json), after their changes to the gate stagings.
 //
@@ -15,6 +15,7 @@ import { resolveCast } from "@d20/stage/spec/resolve"
 import { stagingSpecSchema } from "@d20/stage/spec/staging"
 import { doorways, onFootprint } from "@d20/stage/spec/walk"
 import { SCENES } from "./repo-scenes"
+import { waterRings } from "./stage-water"
 
 const ROOT = "packages/stage/src/plans"
 const check = process.argv.includes("--check")
@@ -78,7 +79,14 @@ function setPlan(raw: unknown) {
   const places = Object.entries(set.marks)
     .flatMap(([mark, m]) => (m.label ? [{ id: mark, label: m.label, ...pt(m.at[0], m.at[1]), ...(m.obscured ? { obscured: true as const } : {}) }] : []))
     .sort((a, b) => a.id.localeCompare(b.id))
-  const plan: SetPlan = setPlanSchema.parse({ id, title: set.title, solids, doors, places })
+  // Water to swim in, round the set's marks and what its views look at, with room beyond them for a long swim.
+  const spots = [...Object.values(set.marks).map((m) => m.at), ...Object.values(set.shots).map((s) => [s.target[0], s.target[2]])]
+  const ROOM = 60
+  const box: [number, number, number, number] = spots.length
+    ? [Math.min(...spots.map((p) => p[0])) - ROOM, Math.min(...spots.map((p) => p[1])) - ROOM, Math.max(...spots.map((p) => p[0])) + ROOM, Math.max(...spots.map((p) => p[1])) + ROOM]
+    : [set.camera.min[0], set.camera.min[2], set.camera.max[0], set.camera.max[2]]
+  const water = waterRings(built.batch.buckets, set.materials, box).map((ring) => ring.map(([x, z]) => pt(x, z)))
+  const plan: SetPlan = setPlanSchema.parse({ id, title: set.title, solids, doors, places, ...(water.length ? { water } : {}) })
   // The exact footprints, for the checks below, so rounding cannot move anyone across an edge.
   return { set, plan, footprints: built.footprints }
 }

@@ -48,5 +48,6 @@
     { "id": "middle", "label": "the middle tables", "x": -0.4, "z": -5.8 },
     { "id": "quay", "label": "the quay", "x": -0.4, "z": -17.5 },
     { "id": "seaMap", "label": "the carved sea map", "x": -1.4, "z": -3.8 }
-  ]
+  ],
+  "water": [[{ "x": -66, "z": -80 }, { "x": 65.5, "z": -80 }, { "x": 65.5, "z": -70 }, { "x": -66, "z": -70 }]]
 }

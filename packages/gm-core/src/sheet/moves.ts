@@ -9,6 +9,7 @@ import {
   between,
   climbOf,
   heightOf,
+  inWater,
   movementBudgetOf,
   moveToward,
   type Point,
@@ -22,6 +23,7 @@ import {
   spanThrough,
   standingRoom,
   stopShortFor,
+  swimsFree,
   walk,
   walkOver,
 } from "./space"
@@ -52,12 +54,16 @@ export const moveBudget = (mover: Mover, others: readonly Other[] = [], dash = f
 /**
  * A character's move on their turn, before they act. They walk toward the place or the creature named, or straight
  * away from one, by the floor's ways, as far as their movement goes: their Speed, twice it with Dash, none for one who
- * cannot move, Difficult Terrain costing double. Walking to a creature stops within 5 feet of them, and never on anyone. With no move named, `close`
+ * cannot move, Difficult Terrain costing double. Walking to a creature stops within 5 feet of them, and never on anyone.
+ * Water is not walked into, and a move stops at its edge: unless it is bound for a place or a creature in water, and
+ * then it swims, each foot costing 1 extra, and 2 extra in Difficult Terrain, but for one with a Swim Speed or wings
+ * (SRD 5.2.1, Swimming). With no move named, `close`
  * walks them to within reach of the one they attack in melee, when that one is out of reach. None when they stay where
  * they are, or have no position.
  *
  * Thalbern, Speed 30, 45 feet from Reinhard: asked to close, he walks 30 feet and stands 15 from him. With Dash he
- * walks 40 and stands within 5. `extra` is feet a Bonus Action adds to a move that can be made at all (Instinctive
+ * walks 40 and stands within 5. Backing up the bank from the Mordava, he stops at the water's edge, and to reach Reinhard
+ * 10 feet out in the river he swims, the 10 feet costing 20. `extra` is feet a Bonus Action adds to a move that can be made at all (Instinctive
  * Pounce).
  *
  * `hide` is the Hide action, taken out of sight of the enemies it names by id. A hider goes to the place named when the
@@ -88,6 +94,8 @@ export function takeMove(args: {
   const rough = roughGround(floorAreas(everyone))
   // Over a rail, a sill or a crate no taller than they stand, at climbing's cost.
   const climb = climbOf(args.mover)
+  // Across water at swimming's cost, unless they have a Swim Speed. They go into it only to reach a place or someone in it.
+  const speed = swimsFree(args.mover)
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
   if (args.hide) {
@@ -95,19 +103,25 @@ export function takeMove(args: {
     const enemies = args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : []))
     const areas = floorAreas(everyone)
     // The place named, when the move gets them all the way there and it hides them: the story said they hide there.
-    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb }) : undefined
+    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) } }) : undefined
     const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 && hidingCover({ floor, at: rounded(there.at), size, enemies, areas }) ? there : undefined
-    const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas })
+    const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas, ...(speed ? { swims: true } : {}) })
     return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
   }
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
   let walked: ReturnType<typeof walk> | undefined
-  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough, climb })
+  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) } })
   else if (toward?.position) {
     const reach = args.close && args.close.target === toward.id ? args.close.reach : 5
-    walked = walk(floor, from, toward.position, budget, { stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach), others: standing, rough, climb })
-  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb })
+    walked = walk(floor, from, toward.position, budget, {
+      stopShort: stopShortFor(sizeOf(args.mover), sizeOf(toward), reach),
+      others: standing,
+      rough,
+      climb,
+      swim: { speed, into: inWater(floor.water, toward.position) },
+    })
+  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb, swim: { speed } })
   if (!walked || walked.used < 0.5) return undefined
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }
@@ -194,6 +208,8 @@ export function coverToHide(args: {
   rough: readonly Rough[]
   enemies: readonly Point[]
   areas: ReturnType<typeof floorAreas>
+  /** They swim at no extra cost (`swimsFree`). */
+  swims?: boolean
 }): { at: Point; used: number; path: Point[] } | undefined {
   const { floor, from, size, budget } = args
   const hiding = floor.solids.filter((solid) => hidesCrouched(solid, size) && toEdge(solid, from) <= budget)
@@ -214,7 +230,7 @@ export function coverToHide(args: {
     )
   )
   for (const spot of [...places, ...hugging]) {
-    const walked = walk(floor, from, spot, budget, { others: args.standing, rough: args.rough })
+    const walked = walk(floor, from, spot, budget, { others: args.standing, rough: args.rough, swim: { speed: args.swims } })
     // Where the walk ends is what must hide them: a step short of the spot may be in an enemy's sight.
     if (walked.used >= 0.5 && between(walked.at, spot) <= 1 && covered(rounded(walked.at))) return walked
   }

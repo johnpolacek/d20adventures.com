@@ -14,8 +14,8 @@ export type Place = {
 export type Staged = { id: string; name?: string; at: Point }
 
 /**
- * An encounter's floor as the engine reads it, in feet: its solid things and doorways, its named places, where the
- * cast starts, the spots where the party stands, and spare spots for heroes beyond them.
+ * An encounter's floor as the engine reads it, in feet: its solid things and doorways, its water to swim in, its named
+ * places, where the cast starts, the spots where the party stands, and spare spots for heroes beyond them.
  */
 export type EncounterFloor = Floor & {
   places: readonly Place[]
@@ -38,6 +38,8 @@ export type FloorPlanInMetres = {
   solids: readonly (({ kind: "rect"; hw: number; hd: number; ry: number } | { kind: "circle"; r: number }) & Metres & { height?: number })[]
   doors: readonly (readonly [Metres, Metres])[]
   places: readonly ({ id: string; label: string; obscured?: boolean } & Metres)[]
+  /** Water to swim in, as rings read by the even-odd rule (the set's plan: `water`). */
+  water?: readonly (readonly Metres[])[]
   cast: readonly ({ id: string; name?: string } & Metres)[]
   party: readonly ({ id: string } & Metres)[]
   spare: readonly Metres[]
@@ -62,6 +64,7 @@ export function floorFromMetres(plan: FloorPlanInMetres): EncounterFloor {
     cast: plan.cast.map((member) => ({ id: member.id, ...(member.name ? { name: member.name } : {}), at: inFeet(member) })),
     party: plan.party.map((slot) => ({ id: slot.id, at: inFeet(slot) })),
     spare: plan.spare.map(inFeet),
+    ...(plan.water?.length ? { water: plan.water.map((ring) => ring.map(inFeet)) } : {}),
     ...(plan.where ? { where: plan.where } : {}),
     ...(plan.set ? { set: plan.set } : {}),
     // A way round may pass by the named places: they are where the set means people to walk.
