@@ -46,8 +46,8 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 
 - The site's own GM starts new games of the demo adventure only: `demo` in `LOCAL_WIKI_ADVENTURES`, checked by `playsOnSite()`. Every other adventure is hosted from the desktop app. Development runs them all.
 - Every AI call the site pays for runs inside a daily budget (`lib/gm-server/budget.ts`, ledger in `convex/aiBudget.ts`): wrap a new one in `paid()`, or ask `budgetOpen()` first and `recordSpend()` after. The owner sets the limit on `/admin`. A new model needs its price added there.
-- Convex functions reach production only by `pnpm convex:deploy`, not by a push. Never edit `convex/_generated`, which `npx convex codegen` writes.
-- Auto mode blocks `pnpm convex:deploy`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production.
+- A push to `main` does not deploy the site. `pnpm deploy:site` sends what `origin/main` holds to production, since the Hobby plan allows 100 deploys a day. Convex functions reach production only by `pnpm convex:deploy`. Never edit `convex/_generated`, which `npx convex codegen` writes.
+- Auto mode blocks `pnpm convex:deploy`, `pnpm deploy:site`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production.
 - `proxy.ts` is the Clerk middleware.
 - There is no `wiki/`, `tailwind.config.ts`, Prettier or Biome. Match the formatting of the file you edit.
 - Scratchpad scripts cannot resolve `@d20/*` imports. Import the package's source file by absolute path.

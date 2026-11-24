@@ -28,6 +28,7 @@
     "wt:clean": "sh ./scripts/wt.sh clean",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
+    "deploy:site": "bash scripts/deploy-site.sh",
     "build": "node packages/ui/scripts/check-imports.mjs && next build",
     "postinstall": "npx convex codegen",
     "start": "next start",
