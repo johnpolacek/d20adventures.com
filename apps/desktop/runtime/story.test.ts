@@ -229,7 +229,7 @@ test("chapters add up along the chain, whoever the heroes are, and only through 
     assert.match(note, /The crate never left the pier\./)
     assert.equal(storyNote(store.state!.story, store.current().characters.find((c) => c.type === "pc")!.id), "")
     const prompts: string[] = []
-    await step("the-gates-ahead", {}, prompts)
+    await step("the-fortune-teller", {}, prompts)
     assert.ok(prompts.some((p) => p.includes("The crate never left the pier.") && p.includes("the gossip follows what happened there")))
   })
 })

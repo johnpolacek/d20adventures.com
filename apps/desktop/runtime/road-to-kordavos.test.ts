@@ -47,3 +47,21 @@ test("every Road to Kordavos encounter has a 3D scene, created heroes take the t
     assert.match(standingWords(placed, floor) ?? "", where[encounter.id], encounter.id)
   }
 })
+
+test("The Road takes Covert Cargo's heroes beside made ones, four to a party, and each scene has a place for all four", () => {
+  const m = pack.artifacts.manifest
+  assert.deepEqual([m.minPlayers, m.maxPlayers, m.strangers], [1, 4, true])
+  assert.deepEqual([...m.premadeCharacterIds].sort(), ["1749159962941", "1749307435667", "thalbern"])
+  assert.ok(m.heroHooks?.length, "a made hero needs hooks for their arrival")
+  const party = [
+    { ...pack.artifacts.characterSheets.premadeCharacters.thalbern.sheet, type: "pc" },
+    { ...pack.artifacts.characterSheets.premadeCharacters["1749159962941"].sheet, type: "pc" },
+    { ...pack.artifacts.characterSheets.premadeCharacters["1749307435667"].sheet, type: "pc" },
+    who("hero-cccc3333", "Mara Quill", "Human", "Wizard", "Female"),
+  ]
+  for (const encounter of Object.values(pack.artifacts.encounters)) {
+    const characters = [...buildLocalWikiTurnCharacters({ artifacts: pack.artifacts, encounter, players: [] }), ...party]
+    const { staging } = partyScene(sceneFor(encounter.id)!, characters)
+    for (const hero of party) assert.ok(staging.cast.some((c) => c.id === hero.id), `${encounter.id}: ${hero.name} has no place`)
+  }
+})

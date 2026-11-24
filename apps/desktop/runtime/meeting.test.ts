@@ -254,17 +254,20 @@ test("heroes who come on together from The Road to Kordavos already know each ot
         { id: doran, ai: true },
       ],
     })
-    for (const c of store.current().characters) Object.assign(c, { hasReplied: true, isComplete: true })
-    store.save()
-    const road: Llm = {
-      generateText: unused,
-      generateObject: async ({ schema }) => {
-        const parsed = schema.safeParse({ nextEncounterId: "the-gates-ahead", beats: [{ kind: "narration", text: "The gates come into view." }], knowledge: [], adventurePatch: {} })
-        if (parsed.success) return { object: parsed.data }
-        throw new Error("Unexpected model request")
-      },
+    // Down the road past the fortune teller, and on to the gates.
+    for (const nextEncounterId of ["the-fortune-teller", "the-gates-ahead"]) {
+      for (const c of store.current().characters) Object.assign(c, { hasReplied: true, isComplete: true })
+      store.save()
+      const road: Llm = {
+        generateText: unused,
+        generateObject: async ({ schema }) => {
+          const parsed = schema.safeParse({ nextEncounterId, beats: [{ kind: "narration", text: "The road goes on." }], knowledge: [], adventurePatch: {} })
+          if (parsed.success) return { object: parsed.data }
+          throw new Error("Unexpected model request")
+        },
+      }
+      await game(store, packs, road)({ kind: "continue", turnId: store.current()._id })
     }
-    await game(store, packs, road)({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.state!.adventure.status, "completed")
 
     await game(

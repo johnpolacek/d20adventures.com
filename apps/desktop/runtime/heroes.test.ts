@@ -203,11 +203,11 @@ test("a new game checks the party against the adventure's player range, premades
   const { store, cleanup } = setup()
   try {
     const run = game(store, packs, offline)
-    const gnome = addHero(store, "Tibble Fernwhistle", "Gnome", "Bard", "gnome-a")
+    const tiefling = addHero(store, "Tibble Fernwhistle", "Tiefling", "Bard")
     const fighter = addHero(store, "Rosa Vell", "Human", "Fighter")
     const start = (adventure: string, party: { id: string; ai: boolean }[]) => run({ kind: "start", provider: "claude", adventure, party, replace: true })
     await assert.rejects(() => start("the-road-to-kordavos", []), /Too small|>=1|too_small/i)
-    await assert.rejects(() => start("the-road-to-kordavos", [{ id: gnome.id, ai: false }]), /cannot join The Road to Kordavos/)
+    await assert.rejects(() => start("the-road-to-kordavos", [{ id: tiefling.id, ai: false }]), /cannot join The Road to Kordavos/)
     await assert.rejects(
       () =>
         start("covert-cargo", [

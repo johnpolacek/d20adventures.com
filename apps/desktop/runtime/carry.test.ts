@@ -38,8 +38,8 @@ test("continuing the story keeps the heroes who can go on, on the seats they had
   // The Midnight Summons into Covert Cargo: Thalbern stays the player's, and the others join on the AI.
   assert.deepEqual(openingParty(info("covert-cargo"), [], [you(THALBERN)]), [you(THALBERN), ai(LYRA), ai(POPPEN)])
 
-  // Covert Cargo into The Road: the Road is played with heroes the player makes, so nobody goes on.
-  assert.deepEqual(openingParty(info("the-road-to-kordavos"), [], [you(LYRA), you(POPPEN), ai(THALBERN)]), [])
+  // Covert Cargo into The Road: the Road takes Covert Cargo's heroes beside the player's own, so all three go on.
+  assert.deepEqual(openingParty(info("the-road-to-kordavos"), [], [you(LYRA), you(POPPEN), ai(THALBERN)]), [you(LYRA), you(POPPEN), ai(THALBERN)])
 
   // The Road into Welcome to Kordavos: the player's own heroes go on, and the authored companions fill the party.
   const roster = [

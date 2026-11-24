@@ -8,6 +8,7 @@ title: "Well Met"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"
 landmark: "kordavos/marquis-road"
+roundBudget: 3
 npcs:
   - id: "npcs-1749870310278"
     side: "none"
@@ -30,19 +31,41 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 
 ## Intro
 
-{actor: Dmitri Volkov} Among the travelers on the road to Kordavos rolls a well-kept caravan, its wagons laden with exotic goods and marked by a thriving import-export house, a few watchful guards alongside. At its head rides a man with neatly combed white hair and beard and a keen, smiling face that misses nothing.
+{actor: Sister Mira} Morning on the Marquis Road, the last day's walk to Kordavos, where the road winds through wooded hills of fir under pale peaks of rock. At a wayside shrine on the verge, a priestess in worn leather over plain robes rests on the step, the silver symbol of Valkara at her throat. Travellers bound for the Harvest Festival stop here to drink from the shrine's spring before the last miles.
+
+{actor: Elaraen Whisperwind} Across the road, a half-elf with a lute sits on an old milestone, trying the same few bars of a festival song until he has them right.
+
+{hero: thalbern} A lean, weathered man in a cloak of forest hues drinks at the spring, a longbow across his back. River mud still cakes his boots, and his eyes keep going back down the road toward the Mordava.
+
+{hero: 1749159962941} A young scholar in spectacles sits on the shrine's low wall with her hood up, peeling apart the swollen pages of a book. The hem of her robe is stiff with dried river water.
+
+{hero: 1749307435667} A halfling in a patchwork waistcoat chats up everyone who stops at the spring, trading a joke for every scrap of news from the city.
+
+{actor: Dmitri Volkov} Up the road rolls a well-kept caravan, two covered wagons marked with a black wolf's head, pack horses at its tail and a pair of guards alongside. At its head rides a man with neatly combed white hair and beard and a keen, smiling face that misses nothing. He reins in at the shrine and looks the travellers over.
+
+{speaker: Dmitri Volkov} Well met, travellers! Bound for Kordavos and the Festival, every one of you, or I'm no judge of faces. Walk a while with us, and the miles go quicker.
 
 ## GM Notes
 
-As the road nears the gates, Dmitri presses a Potion of Healing on the party, a traveller's thanks for good company.
+This scene is where the heroes meet. Give them room to talk to each other, and to Dmitri, Elaraen and Sister Mira. No one here is in charge of them, and nothing here threatens them. The caravan walks on toward the city at an easy pace, and anyone may walk with it.
 
-Road gossip, which any of the three can pass on if the talk turns to news. A night or two ago a riverboat came down a quiet fork of the Mordava before dawn and tied up at an old smugglers' pier three miles from the city. Elves were seen there. There was a fight aboard, and a woman is said to have gone into the river. By sunrise the boat had cast off and gone on to Kordavos. Dmitri has also heard that relics of Old Valkara are changing hands in the city, and that the Blackthorn family is buying. None of them knows more than that. If the story so far tells of that night at the pier, the gossip follows what happened there, garbled as rumor is.
+**Between the heroes.** Each hero shows something the others can notice and ask about: Thalbern's river mud, Lyra's soaked book, Poppen's questions. Any other hero shows the detail their own paragraph in the intro gives. A hero with no paragraph in the intro is shown the first time the story turns to them, with one detail of how they look. When one hero asks another about themselves, leave the answer to that hero. Never answer for them. Heroes who came on together from the adventure before this one already walk together.
 
-Legacy runtime flag: skipInitialNpcTurns was true.
+**What the travellers know.** Each knows only what any traveller hears, and is glad to share it with anyone who asks or listens.
+
+- Dmitri trades in spices and fine cloth, and knows the city's money. Kordavos is the capital of the March of Davos, ruled for the Asterian Empire by its governor, though the March was Valkaran long before the Empire came. Three clans hold the city. The Blackthorns took up Asterian customs and grew rich on them. The Raskovs are smugglers and opportunists, and do well whoever rules. The Valtors keep the old Valkaran ways and stand close to the Church. The old families and those who side with the Empire are at odds, and that moves prices.
+- Elaraen is going to play at the Festival and wants an audience to try his songs on. He knows the old songs of Valkara and its First Clans, and he knows the city's inns, the Dragonbone Inn best of all, for its odd patrons and its stories. Last year's Festival ended in a brawl between the clans, and he has heard the city watch means to be strict this year.
+- Sister Mira has ministered to the frontier settlements for years and is going back to the Church of Valkara's temple in the city to report and resupply. The Festival gives thanks to Valkara for the harvest, and the faithful bring offerings for its rites. She will pray with a hero, tend a hurt or bless a journey, and speaks plainly of hard winters on the frontier.
+
+None of them knows anything of a secret order, of a key, or of a missing young man of the city, and none of them speaks of such things.
+
+**Road gossip,** which any of the three can pass on if the talk turns to news. A night or two ago a riverboat came down a quiet fork of the Mordava before dawn and tied up at an old smugglers' pier three miles from the city. Elves were seen there. There was a fight aboard, and a woman is said to have gone into the river. By sunrise the boat had cast off and gone on to Kordavos. Dmitri has also heard that relics of Old Valkara are changing hands in the city, and that the Blackthorn family is buying. None of them knows more than that. If the story so far tells of that night at the pier, the gossip follows what happened there, garbled as rumor is. A hero who was there may speak up or keep quiet. Leave it to them.
+
+Before the caravan moves on, Dmitri presses a Potion of Healing on the party, a traveller's thanks for good company.
 
 ## Transitions
 
-- To [[encounter:the-gates-ahead]] when After 4 turns, transition to The Gates Ahead
+- To [[encounter:the-fortune-teller]] when the heroes walk on toward Kordavos, or when the third round ends. The caravan rolls on ahead, and the heroes go on up the road.
 
 ## Migration Context
 

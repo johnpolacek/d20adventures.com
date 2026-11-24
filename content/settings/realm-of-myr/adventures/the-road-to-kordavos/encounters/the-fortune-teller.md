@@ -8,6 +8,7 @@ title: "The Fortune Teller"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"
 landmark: "kordavos/marquis-road"
+roundBudget: 2
 npcs:
   - id: "npcs-1749870598631"
     side: "none"
@@ -28,6 +29,10 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 ## GM Notes
 
 Her readings are vague but true. Whatever else she tells them, she may see three things waiting in Kordavos: a stone that holds a promise, a key that opens every door, and a friend's face under a cowl. She does not know what they mean.
+
+A reading costs a silver piece. She reads each hero who sits down on their own, from their face and their cards, and touches on what brought them to the road without saying it outright: a hero's own past and errand, as their sheet tells it. She also reads paths that run together, and may tell the heroes that theirs have crossed for a reason. She knows nothing of any hero beyond what she sees and what her cards show.
+
+A hero who does not want a reading may simply listen, or talk with the others while she reads.
 
 ## Transitions
 
