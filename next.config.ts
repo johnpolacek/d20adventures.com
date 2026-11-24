@@ -9,6 +9,24 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": ["./content/settings/realm-of-myr/**/*"],
   },
+  poweredByHeader: false,
+  // Security headers on every response. No other site may frame these pages, a browser keeps to the type a file
+  // is sent as, other sites see only the origin in Referer, and the site asks for no camera, microphone or location.
+  // Vercel sends Strict-Transport-Security itself. A full Content-Security-Policy would also need Clerk's, Convex's and the bucket's origins kept current.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       { source: "/playtesters", destination: "/playtest", permanent: true },
