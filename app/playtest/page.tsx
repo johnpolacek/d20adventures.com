@@ -10,7 +10,9 @@ import { hostPrompt, REPO } from "@/lib/host-prompt"
 import "@/app/updates/updates.css"
 import "./playtest.css"
 import { Leaving } from "./leaving"
+import { preload } from "react-dom"
 import { served } from "@/lib/served"
+import { REALM_ART } from "./realm-art"
 
 export const dynamic = "force-dynamic"
 export const metadata = share({ title: "Become a Playtester", description: "Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web." })
@@ -25,11 +27,13 @@ const hairline = "h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/
 export default async function PlaytestPage() {
   const { userId } = await auth()
   const joined = !!userId
+  // Asked for in the head, so a full load fetches the painting before the page's scripts.
+  preload(served(REALM_ART), { as: "image", fetchPriority: "high" })
 
   return (
     <div className="relative isolate">
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-black">
-        <Image fill priority src={served("/stage/realm/realm-of-myr/realm.jpg")} alt="" className="object-cover" />
+        <Image fill priority src={served(REALM_ART)} alt="" className="object-cover" />
       </div>
       <div className="container pt-28 pb-24">
         <article className="playtest-card relative isolate mx-auto max-w-3xl overflow-hidden rounded-lg border border-accent-200/20 shadow-float transition-[opacity,scale] duration-200 ease-out has-[[data-leaving]]:pointer-events-none has-[[data-leaving]]:scale-[0.98] has-[[data-leaving]]:opacity-0">

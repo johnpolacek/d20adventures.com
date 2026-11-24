@@ -3,9 +3,13 @@ import { textShadowSpreadLight } from "@d20/ui/typography/styles"
 import Image from "@d20/ui/native-image"
 import HomeAdventure from "@/components/views/home-adventure"
 import PlaytesterCta from "@/components/views/playtester-cta"
+import { preload } from "react-dom"
 import { served } from "@/lib/served"
+import { REALM_ART } from "@/app/playtest/realm-art"
 
 export default function HomePage() {
+  // Become a Playtester leads to a page painted with the realm, so it is fetched now and is there when that page opens.
+  preload(served(REALM_ART), { as: "image", fetchPriority: "low" })
   return (
     <>
       <RedirectHandler />
