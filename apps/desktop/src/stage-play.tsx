@@ -16,7 +16,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
-import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorNames, setNarratorVoice } from "@d20/ui/sound/narrator"
+import { NARRATOR_VOICES, narratorAvailable, sentenceOf, setNarratorNames, setNarratorVoice, spokenGender } from "@d20/ui/sound/narrator"
 import { setSoundOn, soundOn } from "@d20/ui/sound/settings"
 import { withCharacters } from "@d20/ui/sound/pronunciations"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
@@ -436,10 +436,18 @@ export function StagePlay(props: {
     if (plan) void loadPronunciations(plan).then((list) => setNarratorNames(withCharacters(list, characterNames.split("|"))))
   }, [plan, characterNames])
   const nextWords = paragraphs[paragraph + 1]?.roll || paragraphs[paragraph + 1]?.feature ? undefined : text[paragraph + 1]
+  // Whoever is quoted in a paragraph, whose words a narrator of the other gender hands to a voice of theirs.
+  const speakerOf = (at: number) => {
+    const line = paragraphs[at]?.beats.find((b) => b.kind === "line")
+    const c = line?.kind === "line" ? (turn?.characters.find((c) => c.id === line.speaker) ?? before?.characters.find((c) => c.id === line.speaker)) : undefined
+    return c ? spokenGender(c) : undefined
+  }
   const voiced = useNarrator({
     key: `${turn?._id}:${paragraph}`,
     text: rolled || used ? undefined : text[paragraph],
     next: nextWords,
+    speaker: speakerOf(paragraph),
+    nextSpeaker: speakerOf(paragraph + 1),
     on: reading && !hidden && !props.overlay && !sceneWaits,
   })
   // What the stage shows keeps time with the narrator. A paragraph read aloud plays nothing until its first words are

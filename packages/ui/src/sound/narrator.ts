@@ -8,13 +8,50 @@ import { onSoundSetting } from "./settings"
 // Kokoro makes on the player's own machine. On, as the English woman, unless changed.
 
 export const NARRATOR_VOICES = [
-  { id: "bf_emma", label: "English Woman" },
-  { id: "bm_george", label: "English Man" },
-  { id: "af_heart", label: "American Woman" },
-  { id: "am_michael", label: "American Man" },
+  { id: "bf_emma", label: "English Woman", gender: "female", other: "bm_george" },
+  { id: "bm_george", label: "English Man", gender: "male", other: "bf_emma" },
+  { id: "af_heart", label: "American Woman", gender: "female", other: "am_michael" },
+  { id: "am_michael", label: "American Man", gender: "male", other: "af_heart" },
 ] as const
 export type NarratorVoice = (typeof NARRATOR_VOICES)[number]["id"]
 const DEFAULT: NarratorVoice = "bf_emma"
+
+// A character's gender as their voice hears it: what the sheet says, or failing that the pronouns of their description.
+// Undefined for a creature that is neither, which speaks in the narrator's voice.
+export type Spoken = "female" | "male" | undefined
+export function spokenGender(c: { gender?: string; appearance?: string; personality?: string; background?: string }): Spoken {
+  const g = c.gender?.toLowerCase() ?? ""
+  if (/\b(female|woman|girl|she|her)\b/.test(g)) return "female"
+  if (/\b(male|man|boy|he|him)\b/.test(g)) return "male"
+  const words = `${c.appearance ?? ""} ${c.personality ?? ""} ${c.background ?? ""}`.toLowerCase()
+  const she = words.match(/\b(she|her|hers|herself)\b/g)?.length ?? 0
+  const he = words.match(/\b(he|him|his|himself)\b/g)?.length ?? 0
+  return she > he ? "female" : he > she ? "male" : undefined
+}
+
+// The voice a character's words are said in: the narrator's own, or the narrator's counterpart of the other gender, so a
+// man's lines are not read by a woman.
+export function voiceFor(narrator: NarratorVoice, speaker: Spoken): NarratorVoice {
+  const n = NARRATOR_VOICES.find((v) => v.id === narrator)
+  return n && speaker && speaker !== n.gender ? n.other : narrator
+}
+
+// A paragraph's sentences in the voices that read them: the words inside quote marks in the speaker's, the rest in the
+// narrator's. Each piece keeps the place of its sentence in sentences(text).
+function pieces(text: string, voice: NarratorVoice, speaker: Spoken): { text: string; voice: NarratorVoice; sentence: number }[] {
+  const said = voiceFor(voice, speaker)
+  if (said === voice) return sentences(text).map((t, sentence) => ({ text: t, voice, sentence }))
+  const out: { text: string; voice: NarratorVoice; sentence: number }[] = []
+  let quoted = false
+  for (const [sentence, s] of sentences(text).entries()) {
+    for (const [i, part] of s.split(/["“”]/).entries()) {
+      if (i > 0) quoted = !quoted
+      const t = part.trim()
+      if (/[\p{L}\p{N}]/u.test(t)) out.push({ text: t, voice: quoted ? said : voice, sentence })
+    }
+  }
+  return out
+}
 
 const KEY = "d20.narrator"
 const listeners = new Set<() => void>()
@@ -130,9 +167,9 @@ export function sentenceOf(text: string, phrase: string): number {
 }
 
 // Makes a paragraph ahead of time, for the one the player will read next.
-export function prepareNarration(text: string, voice: NarratorVoice) {
+export function prepareNarration(text: string, voice: NarratorVoice, speaker?: Spoken) {
   if (state !== "ready") return
-  for (const s of sentences(text)) say(s, voice).catch(() => {})
+  for (const p of pieces(text, voice, speaker)) say(p.text, p.voice).catch(() => {})
 }
 
 // Narration sits over the other sounds: the voice bus is at the master's level, so the words are lifted above it.
@@ -145,14 +182,15 @@ let spokeOnce = false
 
 // Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `done` settles when the last
 // sentence ends, or at once when stopped, with whether any of it was heard. `onSentence` is told as each sentence is
-// heard, by its place in sentences(text), so what the stage shows keeps time with the words.
-export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void): { done: Promise<boolean>; stop: () => void } | null {
+// heard, by its place in sentences(text), so what the stage shows keeps time with the words. A speaker's gender says
+// their quoted words in the voice for them (voiceFor).
+export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void, speaker?: Spoken): { done: Promise<boolean>; stop: () => void } | null {
   const c = audio()
   // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
   if (!c || state !== "ready") return null
-  const lines = sentences(text)
+  const lines = pieces(text, voice, speaker)
   if (!lines.length) return null
-  const made = lines.map((s) => say(s, voice))
+  const made = lines.map((p) => say(p.text, p.voice))
   for (const m of made) m.catch(() => {})
   let stopped = false
   let last: AudioBufferSourceNode | null = null
@@ -208,7 +246,8 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
         src.connect(gain)
         at = Math.max(at, c.currentTime)
         src.start(at)
-        if (onSentence) heard.push(setTimeout(() => !stopped && onSentence(i), Math.max(0, (at - c.currentTime) * 1000)))
+        const sentence = lines[i].sentence
+        if (onSentence && lines[i - 1]?.sentence !== sentence) heard.push(setTimeout(() => !stopped && onSentence(sentence), Math.max(0, (at - c.currentTime) * 1000)))
         at += buffer.duration
         playing.add(src)
         src.onended = () => playing.delete(src)
