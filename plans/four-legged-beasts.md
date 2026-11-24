@@ -57,4 +57,5 @@ Its quadruped is a robot of rigid parts on 13 bones, with no skin. What carries 
 
 ## Done
 
-Nothing yet.
+- 2026-11-23: the drake's brief, its two sheets (front and back, its two sides), and `pilot.ts` taught a beast on four feet. Its picks: Idle, Walk, Run, Rend, Tail, Charge, Stunned, Fall from the lizard stock. The model ($2.10) and the rig ($0.20) wait for the owner to run `pnpm assets:pilot forest-drake --pay`. The rig is held after that until the model is looked at and passed with `--facing=ok`.
+- 2026-11-23: the wrecked docks' look (`looks.ts`), not played: arrival low on the quay behind the party, wide, and play. Lyra stands for Cassia and Poppen for Yeva, as at the Gates. Astrid and Petra still have no figures.

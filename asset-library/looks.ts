@@ -321,6 +321,29 @@ export const LOOKS: Record<string, Look> = {
     params: { paint: "0", isobox: "-14,-14,14,14", isowhole: "1", isohaze: "1", bloom: "on" },
     shots: { wide: { iso: "20,25,40,30" } },
   },
+  // The Kordavos docks after the drake broke out of the Star of Faelendar's hold, by day. Not played yet: Astrid,
+  // Petra and the drake have no figures. The party stands as at the Gates, Lyra for Cassia and Poppen for Yeva.
+  "realm-of-myr/kordavos-docks-wrecked": {
+    params: {
+      paint: "0",
+      isobox: "-40,-30,40,26",
+      isowhole: "1",
+      rings: "branka-stoneveil,cassia-verane,yeva-softstep,milos-radan",
+      shade: "0.42",
+      bloom: "on",
+    },
+    figures: { "cassia-verane": "lyra", "yeva-softstep": "poppen" },
+    open: "arrival",
+    shots: {
+      // Low on the quay behind the party, looking up past the drake and the broken crane to the Star's sails and the
+      // city on its hill.
+      arrival: { iso: "-79.7,-14.5,23.1,58", isoat: "8,2,7" },
+      // The quay from over the harbour's end: the warehouses, the wreck of cargo and the ship along it.
+      wide: { iso: "70.4,33.8,70,38", isoat: "0,2,0" },
+      // The fight, from over the quay's end: the party, the drake in the wreckage, the hold it broke out of.
+      play: { iso: "71.6,30.9,33.2,40", isoat: "1,5,0" },
+    },
+  },
   "realm-of-myr/dragonbone-inn": {
     params: { paint: "0", isolight: "1.4,0.3,1.8" },
     shots: { wide: { iso: "45,35,40,17" }, play: { iso: "45,35,40,6", isoat: "5.2,2.6" } },
