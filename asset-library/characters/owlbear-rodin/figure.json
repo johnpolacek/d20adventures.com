@@ -8,11 +8,13 @@
   "party": false,
   "height": 3.3,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
-    "triangles": 50000,
+    "triangles": 49984,
     "cost": 0.6,
-    "made": "2026-11-17"
+    "made": "2026-11-17",
+    "built": "2026-11-24"
   },
   "rig": {
     "bones": 0,
@@ -29,7 +31,6 @@
     "Walk Heavy",
     "Claw Hook"
   ],
-  "thumb": "thumb.webp",
   "motion": {
     "idle": "Idle Heavy",
     "walk": "Walk Heavy",
@@ -45,20 +46,20 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "triangles": 50000,
-      "megabytes": 7.46,
+      "triangles": 49984,
+      "megabytes": 4.2,
       "texture": 2048
     },
     {
       "file": "lod1.glb",
       "triangles": 19998,
-      "megabytes": 1.71,
+      "megabytes": 1.75,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5998,
-      "megabytes": 0.91,
+      "megabytes": 0.93,
       "texture": 512
     }
   ]

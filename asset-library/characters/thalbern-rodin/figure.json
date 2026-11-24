@@ -8,12 +8,13 @@
   "party": true,
   "height": 1.82,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
     "triangles": 50000,
     "cost": 0.6,
     "made": "2026-11-15",
-    "built": "2026-11-20"
+    "built": "2026-11-24"
   },
   "rig": {
     "bones": 0,
@@ -33,7 +34,6 @@
     "Combo",
     "Strafe"
   ],
-  "thumb": "thumb.webp",
   "motion": {
     "idle": "Idle",
     "walk": "Walk",
@@ -53,19 +53,19 @@
     {
       "file": "lod0.glb",
       "triangles": 50000,
-      "megabytes": 5.77,
+      "megabytes": 4.25,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19988,
-      "megabytes": 1.84,
+      "megabytes": 1.89,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 1.06,
+      "megabytes": 1.1,
       "texture": 512
     }
   ]
