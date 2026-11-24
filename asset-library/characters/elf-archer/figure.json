@@ -8,11 +8,13 @@
   "party": false,
   "height": 1.8,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
     "triangles": 200000,
     "cost": 2.3,
-    "made": "2026-11-20"
+    "made": "2026-11-20",
+    "built": "2026-11-24"
   },
   "rig": {
     "bones": 0,
@@ -27,7 +29,6 @@
     "Hit",
     "Fall"
   ],
-  "thumb": "thumb.webp",
   "motion": {
     "idle": "Idle",
     "walk": "Walk",

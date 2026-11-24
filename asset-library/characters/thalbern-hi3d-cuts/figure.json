@@ -8,10 +8,10 @@
   "front": "front.webp",
   "source": {
     "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
-    "triangles": 200000,
+    "triangles": 198948,
     "cost": 2.3,
     "made": "2026-11-19",
-    "built": "2026-11-20"
+    "built": "2026-11-24"
   },
   "rig": {
     "bones": 0,
@@ -32,19 +32,19 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "triangles": 200000,
-      "megabytes": 11.67,
+      "triangles": 198948,
+      "megabytes": 11.66,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
-      "triangles": 19976,
+      "triangles": 19982,
       "megabytes": 1.63,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
-      "triangles": 5996,
+      "triangles": 6000,
       "megabytes": 0.9,
       "texture": 512
     }

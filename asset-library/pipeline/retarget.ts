@@ -179,7 +179,14 @@ function take(figure: Document, { library, clip, from, to }: Part): Take | null 
   }
   const rest = new Map([...pairs.values()].map((theirs) => [theirs, resting(theirs)]))
   const [hipsRest, pelvisRest] = [hips.getTranslation(), resting(pelvis).at]
-  const tall = resting(hips).at[1] / pelvisRest[1]
+  // Each measured from its own feet: Hi3D's figures stand about their middle, the hips 15 cm over the origin, and
+  // measured from the origin a fall dropped them a sixth of the way and the figure lay in the air (the owner,
+  // 2026-11-23: "the fall pose for characters has them floating in the air").
+  const floor = (doc: Document, names: string[], prefixed: boolean) =>
+    Math.min(...names.map((n) => bone(doc, n, prefixed)).flatMap((n) => (n ? [resting(n).at[1]] : [])))
+  const ours = floor(figure, ["LeftToeBase", "RightToeBase", "LeftFoot", "RightFoot"], true)
+  const theirsFloor = floor(library, ["ball_l", "ball_r", "foot_l", "foot_r"], false)
+  const tall = (resting(hips).at[1] - (Number.isFinite(ours) ? ours : 0)) / (pelvisRest[1] - (Number.isFinite(theirsFloor) ? theirsFloor : 0))
   const above = hips.getParentNode() ? resting(hips.getParentNode() as Node).turn : ([0, 0, 0, 1] as Quat)
   for (let i = 0; i < count; i++) {
     const theirs = posed(times[i])

@@ -8,12 +8,13 @@
   "party": true,
   "height": 1.7,
   "front": "front.webp",
+  "thumb": "thumb.webp",
   "source": {
     "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
-    "triangles": 200000,
+    "triangles": 199351,
     "cost": 2.3,
     "made": "2026-11-19",
-    "built": "2026-11-20"
+    "built": "2026-11-24"
   },
   "rig": {
     "bones": 0,
@@ -27,7 +28,6 @@
     "Fall",
     "Cast"
   ],
-  "thumb": "thumb.webp",
   "motion": {
     "idle": "Idle",
     "walk": "Walk",
@@ -40,19 +40,19 @@
   "lods": [
     {
       "file": "lod0.glb",
-      "triangles": 200000,
+      "triangles": 199351,
       "megabytes": 10.9,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
-      "triangles": 20000,
-      "megabytes": 1.39,
+      "triangles": 19999,
+      "megabytes": 1.4,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
-      "triangles": 5998,
+      "triangles": 5997,
       "megabytes": 0.68,
       "texture": 512
     }
