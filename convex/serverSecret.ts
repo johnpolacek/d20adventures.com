@@ -17,11 +17,15 @@ export function requireServer(secret: string) {
 type Def<Ctx, A extends PropertyValidators, R> = { args?: A; handler: (ctx: Ctx, args: ObjectType<A>) => R }
 type Signed<A extends PropertyValidators> = ObjectType<A> & { secret: string }
 
+// ALLOW_UNSIGNED=1 in the deployment's environment lets a call without the secret through, for a site deploy still on
+// its way. A wrong secret is refused all the same. Set and unset it with `npx convex env`, with no deploy.
+const unsignedAllowed = () => process.env.ALLOW_UNSIGNED === "1"
+
 function signed<Ctx, A extends PropertyValidators, R>(def: Def<Ctx, A, R>) {
   return {
-    args: { ...def.args, secret: v.string() },
+    args: { ...def.args, secret: v.optional(v.string()) },
     handler: (ctx: Ctx, { secret, ...args }: Signed<A>) => {
-      requireServer(secret)
+      if (secret !== undefined || !unsignedAllowed()) requireServer(secret ?? "")
       return def.handler(ctx, args as unknown as ObjectType<A>)
     },
   } as never
