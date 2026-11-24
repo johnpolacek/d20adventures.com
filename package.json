@@ -62,6 +62,7 @@
     "packages:build": "tsx scripts/adventure-packages.ts",
     "packages:check": "tsx scripts/adventure-packages.ts --check",
     "packages:creator": "tsx scripts/creator-package.ts",
+    "clean:space": "tsx scripts/clean-space.ts",
     "stage:check": "tsx scripts/stage-check.ts",
     "stage:plans": "tsx scripts/stage-plans.ts",
     "stage:plans:check": "tsx scripts/stage-plans.ts --check",

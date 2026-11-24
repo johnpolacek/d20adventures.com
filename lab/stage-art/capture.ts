@@ -6,9 +6,11 @@
 //   node --import tsx lab/stage-art/capture.ts --name=plain [--q=backdrop=stones-backdrop.webp] [--shots=stones,river] [--camera]
 //
 // Writes lab/stage-art/raw/captures/<name>-<shot>.png, and with --camera the shot's camera as <name>-<shot>.json.
+// It first deletes captures older than a week (prune.ts), except those raw/captures/keep.txt names.
 
 import { mkdir, writeFile } from "node:fs/promises"
 import { speakerShot } from "../../packages/stage/src/director"
+import { pruneCaptures } from "./prune"
 
 const BASE = process.env.STAGE_BASE || "http://localhost:3057"
 const PORT = process.env.STAGE_CDP_PORT || "9478"
@@ -72,6 +74,7 @@ async function main() {
   await send("Emulation.setDeviceMetricsOverride", { width: 1350, height: 900, deviceScaleFactor: Number(arg("dpr") ?? 2), mobile: false })
   await send("Emulation.setFocusEmulationEnabled", { enabled: true })
   await mkdir(OUT, { recursive: true })
+  await pruneCaptures()
   // --page=stage: /dev/stage, the game's own stage page, where &look=play builds a set as the game plays it (play.ts).
   const page = arg("page") === "stage" ? "stage" : "stage-lab"
   const url = `${BASE}/dev/${page}?motion=${process.argv.includes("--motion") || arg("glide") ? 1 : 0}&tier=${arg("tier") ?? "high"}${q ? `&${q}` : ""}`
