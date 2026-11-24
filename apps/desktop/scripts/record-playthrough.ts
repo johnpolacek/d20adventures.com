@@ -3,6 +3,7 @@ import { cpSync, createWriteStream, existsSync, mkdirSync, readdirSync, readFile
 import { homedir, tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { prunePlaythroughs } from "./playthrough-prune"
 
 // Records the desktop app playing an adventure on its own (src/autopilot.ts), with its sound, as a video on the Desktop.
 // The app runs from the dev server on a data folder of its own, so real saves are never touched. Time spent waiting on
@@ -11,6 +12,7 @@ import { fileURLToPath } from "node:url"
 // Sound is recorded from BlackHole (brew install --cask blackhole-2ch). For the run the Mac's output becomes a device
 // that plays to the speakers and BlackHole at once (scripts/audio-route.swift), and is put back after. The app runs on
 // its own port, so a dev app already open keeps running. The terminal needs Screen Recording access.
+// Each run first deletes videos there older than 3 days (playthrough-prune.ts).
 
 const args = process.argv.slice(2)
 const flag = (name: string) => args.includes(name)
@@ -126,6 +128,7 @@ async function main() {
   if (!existsSync(join(data, "models")) && existsSync(installed)) cpSync(installed, join(data, "models"), { recursive: true })
   rmSync(marks, { recursive: true, force: true })
   mkdirSync(out, { recursive: true })
+  prunePlaythroughs()
 
   if (lsofBusy()) throw new Error(`Port ${PORT} is in use. Is another recording running?`)
   mkdirSync(base, { recursive: true })

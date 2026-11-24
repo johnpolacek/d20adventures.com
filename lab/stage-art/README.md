@@ -115,7 +115,7 @@ open "http://localhost:3057/dev/stage-lab?$S&tier=ultra&paint=0&project=cp-cli,c
 
 - `&drift=0.15,8` sways the camera 15 cm about its point over 8 seconds (`capture.ts --motion --record=12 --view`). `&fill=1` runs paint on over what no painting saw, `&bare=1` marks it magenta, and `&fade=0` suits a camera that stays at its painting's point.
 - With motion on, cloth blows and carries its paint: the lab looks paint up from the cloth's pose in the plate. A flag that leaves its painted spot shows a copy behind it.
-- `capture.ts` deletes captures older than a week as it starts (`prune.ts`). A plate to keep gets a line in `raw/captures/keep.txt`, such as `inn-*-view*`. `pnpm clean:space` prunes them too, and clears Next's dev build and the Rust build output when nothing is using them.
+- `capture.ts` deletes captures older than a week as it starts (`prune.ts`). A plate to keep gets a line in `raw/captures/keep.txt`, such as `inn-*-view*`. `pnpm clean:space` prunes them too, with playthrough videos older than 3 days, and clears Next's dev build when no dev server is running. `--rust` also runs cargo clean.
 - `capture.ts --dpr=1 --tier=balanced` is a lighter page, for measuring. An ultra capture at DPR 2 took this machine under 20% free memory.
 - `cards.ts` is free, on the ChatGPT subscription, about 60 seconds a card. The tool usually answers a green-screen request with a transparent background, and the cutout takes whichever came.
 - `publish.ts <setting>/<set> <point>=<painting>[,<closer painting>]` moves lab paintings into the game: WebP files under `public/stage/paintings/<set>/` and the set's `painted.points`. `@2048` after a name sets its width, 1536 otherwise.
