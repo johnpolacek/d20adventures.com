@@ -44,7 +44,7 @@
 import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises"
-import { type Accessor, type Document, type Node, NodeIO } from "@gltf-transform/core"
+import { type Accessor, type Document, type Node, NodeIO, type Primitive, type Texture } from "@gltf-transform/core"
 import { ALL_EXTENSIONS, EXTTextureWebP, KHRMaterialsEmissiveStrength } from "@gltf-transform/extensions"
 import { simplify, textureCompress, weld } from "@gltf-transform/functions"
 import { MeshoptSimplifier } from "meshoptimizer"
@@ -1959,6 +1959,72 @@ const widest = (doc: Document) =>
       .listTextures()
       .map((t) => t.getSize()?.[0] ?? 0)
   )
+// The gaps between the pieces a texture is cut into, filled with the colour of the piece nearest. A generator leaves
+// them dark, and a texture made smaller blends each piece's edge with the dark beside it: a line down Lyra's cheek and
+// from her mouth to her chin in the middle copy, where the full one is clean (the owner, 2026-11-23, of her face in
+// the game). Done to each texture at full size, before it is made smaller.
+async function padded(doc: Document) {
+  const uses = new Map<Texture, Primitive[]>()
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives()) {
+      const m = prim.getMaterial()
+      if (!m || !prim.getAttribute("TEXCOORD_0")) continue
+      for (const t of [m.getBaseColorTexture(), m.getNormalTexture(), m.getMetallicRoughnessTexture(), m.getOcclusionTexture(), m.getEmissiveTexture()])
+        if (t) uses.set(t, [...(uses.get(t) ?? []), prim])
+    }
+  for (const [texture, prims] of uses) {
+    const image = texture.getImage()
+    if (!image) continue
+    const { data, info } = await sharp(image).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const W = info.width
+    const H = info.height
+    // Each texel a triangle covers, and those a little past its edges, so a thin one is not lost.
+    const covered = new Uint8Array(W * H)
+    for (const prim of prims) {
+      const uv = prim.getAttribute("TEXCOORD_0")?.getArray()
+      if (!uv) continue
+      const idx = prim.getIndices()?.getArray()
+      const count = idx ? idx.length : uv.length / 2
+      for (let i = 0; i + 2 < count; i += 3) {
+        const [a, b, c] = idx ? [idx[i], idx[i + 1], idx[i + 2]] : [i, i + 1, i + 2]
+        const [x0, y0, x1, y1, x2, y2] = [uv[a * 2] * W, uv[a * 2 + 1] * H, uv[b * 2] * W, uv[b * 2 + 1] * H, uv[c * 2] * W, uv[c * 2 + 1] * H]
+        const lx = Math.max(0, Math.floor(Math.min(x0, x1, x2)) - 1)
+        const hx = Math.min(W - 1, Math.ceil(Math.max(x0, x1, x2)) + 1)
+        const ly = Math.max(0, Math.floor(Math.min(y0, y1, y2)) - 1)
+        const hy = Math.min(H - 1, Math.ceil(Math.max(y0, y1, y2)) + 1)
+        const area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)
+        const slack = Math.abs(area) < 1e-9 ? Infinity : 0.75 / Math.sqrt(Math.abs(area))
+        for (let y = ly; y <= hy; y++)
+          for (let x = lx; x <= hx; x++) {
+            if (slack === Infinity) {
+              covered[y * W + x] = 1
+              continue
+            }
+            const b1 = ((x + 0.5 - x0) * (y2 - y0) - (x2 - x0) * (y + 0.5 - y0)) / area
+            const b2 = ((x1 - x0) * (y + 0.5 - y0) - (x + 0.5 - x0) * (y1 - y0)) / area
+            if (b1 >= -slack && b2 >= -slack && 1 - b1 - b2 >= -slack) covered[y * W + x] = 1
+          }
+      }
+    }
+    // Outward from every covered texel, one ring at a time, until the gaps are full.
+    const queue = new Int32Array(W * H)
+    let tail = 0
+    for (let p = 0; p < W * H; p++) if (covered[p]) queue[tail++] = p
+    for (let head = 0; head < tail; head++) {
+      const p = queue[head]
+      const x = p % W
+      for (const q of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, p - W, p + W]) {
+        if (q < 0 || q >= W * H || covered[q]) continue
+        covered[q] = 1
+        data.copyWithin(q * 4, p * 4, p * 4 + 4)
+        queue[tail++] = q
+      }
+    }
+    const png = await sharp(data, { raw: { width: W, height: H, channels: 4 } }).png({ compressionLevel: 1 }).toBuffer()
+    texture.setImage(new Uint8Array(png)).setMimeType("image/png")
+  }
+}
+
 async function thin() {
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
   await MeshoptSimplifier.ready
@@ -1983,6 +2049,7 @@ async function thin() {
   for (const [file, most, texture] of LODS) {
     const doc = await io.read(`${dir}/lod0.glb`)
     const ratio = Math.min(1, most / Math.max(1, triangles(doc)))
+    await padded(doc)
     await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.02 }), textureCompress({ encoder: sharp, resize: [texture, texture], targetFormat: "webp", quality: 85 }))
     await io.write(`${dir}/${file}`, doc)
     rows.push({ file, triangles: triangles(doc), megabytes: await megabytes(file), texture: widest(doc) })
@@ -2263,7 +2330,16 @@ async function rodinHyper(brief: Brief) {
 
 async function main() {
   if (!id) throw new Error("Name a character: pnpm assets:pilot <id>")
-  const brief = JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
+  // `--lods` makes the lighter copies again from the lod0.glb there is, and nothing else.
+  if (args.includes("--lods")) {
+    const was = await kept<{ lods?: unknown; source?: { built?: string } }>(`${dir}/figure.json`)
+    if (!was || !existsSync(`${dir}/lod0.glb`)) throw new Error(`No figure in ${dir}: pnpm assets:fetch ${id} first`)
+    const lods = await thin()
+    say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))
+    await writeFile(`${dir}/figure.json`, `${JSON.stringify({ ...was, lods }, null, 2)}\n`)
+    return
+  }
+  const brief =JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
   const sheet = `${home(brief)}/apose-front.png`
   if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
   // The day its model was made is kept through every time it is put together again: a trial's is its rig's.

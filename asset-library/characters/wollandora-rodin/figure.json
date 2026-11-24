@@ -47,13 +47,13 @@
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.68,
+      "megabytes": 1.71,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5999,
-      "megabytes": 0.84,
+      "megabytes": 0.85,
       "texture": 512
     }
   ]
