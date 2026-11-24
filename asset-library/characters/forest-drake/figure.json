@@ -1,0 +1,52 @@
+{
+  "id": "forest-drake",
+  "name": "Forest Drake",
+  "role": "Beast of the Kordavos docks",
+  "cast": [
+    "forest-drake"
+  ],
+  "party": false,
+  "height": 2.6,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hyper3D Low Poly on fal, rigged by Hyper3D",
+    "triangles": 9452,
+    "cost": 0.4,
+    "made": "2026-11-24",
+    "built": "2026-11-24"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Rend",
+    "Tail",
+    "Charge",
+    "Stunned",
+    "Fall"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 9452,
+      "megabytes": 4.68,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 9452,
+      "megabytes": 1.48,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 1.08,
+      "texture": 512
+    }
+  ]
+}
