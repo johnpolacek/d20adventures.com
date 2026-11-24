@@ -36,6 +36,8 @@ With a final sharp nod, Aelar and his kin step off the boat and cross the ricket
 
 The elves have their payment and are gone, up the bank trail into the woods. They do not come back and take no side in what follows. Only Silas, Reinhard and Lyra are left aboard.
 
+A watcher who shows himself here is a stranger to Silas and Reinhard. They order him off the boat and do not fight him yet: their business is Lyra, and the next scene is the fight.
+
 Lyra's fee is to be paid in Kordavos once the job is done. If she asks after it, Silas puts her off until then and pays her nothing here.
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.

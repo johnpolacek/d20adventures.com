@@ -50,7 +50,7 @@ Once anyone attacks in earnest, or a hero is struck, it is a fight: move on to B
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
 
-Aelar and his elves are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+Aelar and his elves are here only to trade the crate. A quarrel inside Silas's crew is none of theirs: they step back with hands near their weapons, wait to be paid, and strike only if struck. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
 
 ## Transitions
 
