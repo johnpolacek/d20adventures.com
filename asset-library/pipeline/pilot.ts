@@ -15,6 +15,9 @@
 // A brief with "low": { "faces": 10000 } has its model made lighter by Hyper3D Low Poly on fal ($0.20, 10,000 at most) before it is
 // rigged: a new mesh laid over the old one, quads unless "mode" says "Raw", with the old textures baked onto it.
 //
+// A brief with "maker": "lowpoly" (forest-drake) has its model from Hyper3D Low Poly's pictures to 3D on fal ($0.20),
+// from all of the sheet's views, with no Hi3D before it. "low" gives its faces, 10,000 unless said, its cap.
+//
 // A brief with "body": "<id>" (thalbern-rodin-meshy) makes no model: it takes that figure's, and its sheet, and pays
 // for Meshy's rig and clips alone ($1.04). Hyper3D's stock has no bow and no sword, and Meshy's library has both.
 //
@@ -1792,7 +1795,7 @@ interface Brief {
   // A beast, not a person (build.ts asks for its sheet as an animal): its head's skin is given to the head bone.
   creature?: boolean
   // Who makes it: Tripo then Meshy (the default), or Rodin or Hi3D then Hyper3D's rigging.
-  maker?: "rodin" | "hi3d"
+  maker?: "rodin" | "hi3d" | "lowpoly"
   // "four": a beast on four feet (build.ts). Hi3D is given its two sides as well, and none of a person's mends is made.
   stance?: "four"
   // Hyper3D's skeleton, "human" unless said, and the stock its clips come from, "human" unless said ("lizard", "canine").
@@ -2261,6 +2264,7 @@ const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
 // Hi3D v3.0 from views given by name. It makes no fewer than 100,000 faces and says 2,000,000 serve it best: 200,000
 // is four times Rodin's, and the copies for a crowd are thinned from it as any figure's are.
 const HI3D = { endpoint: "hitem3d/hi3d/v3.0/multi-view-to-3d", cost: 2.1, faces: 200_000 }
+const LOWMADE = { endpoint: "hyper3d/lowpoly/image-to-3d", cost: 0.2, faces: 10_000 }
 const HYPER = { endpoint: "hyper3d/rigging", list: "hyper3d/rigging/animations", cost: 0.2 }
 const LOW = { endpoint: "hyper3d/lowpoly/mesh-to-3d", cost: 0.2 }
 // The clips wanted from Hyper3D's stock, by the name the game plays each by: the first stock clip whose name or
@@ -2295,8 +2299,16 @@ type RodinAnswer = { model_mesh?: Remote }
 async function rodinHyper(brief: Brief) {
   // A brief with a body takes that figure's sheet, model and picks, and is rigged again on its own.
   const from = home(brief)
-  const hi3d = (brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker === "hi3d"
-  const maker = hi3d ? { name: "Hi3D v3.0 on fal", cost: HI3D.cost } : { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost }
+  const makes = (brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker
+  const hi3d = makes === "hi3d"
+  const lowpoly = makes === "lowpoly"
+  const maker = hi3d
+    ? { name: "Hi3D v3.0 on fal", cost: HI3D.cost }
+    : lowpoly
+      ? { name: "Hyper3D Low Poly on fal", cost: LOWMADE.cost }
+      : { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost }
+  // A model Low Poly made is light already: "low" gives its faces, and nothing lays it again.
+  const relay = lowpoly ? undefined : brief.low
   const four = brief.stance === "four"
   const views = ["apose-front.png", "apose-back.png", "apose-left.png", "apose-right.png"].filter((f) => existsSync(`${from}/${f}`))
   const view = (name: string) => views.indexOf(`apose-${name}.png`)
@@ -2322,18 +2334,33 @@ async function rodinHyper(brief: Brief) {
   let rig = await kept<HyperAnswer>(`${dir}/pilot-rig.json`)
   if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
   const skinning = brief.skinning ?? "core"
-  let low = brief.low ? await kept<RodinAnswer>(`${dir}/pilot-low.json`) : null
-  const lowCost = brief.low ? LOW.cost : 0
-  const owed = (model ? 0 : maker.cost) + (brief.low && !low ? LOW.cost : 0) + (rig ? 0 : HYPER.cost)
+  let low = relay ? await kept<RodinAnswer>(`${dir}/pilot-low.json`) : null
+  const lowCost = relay ? LOW.cost : 0
+  const owed = (model ? 0 : maker.cost) + (relay && !low ? LOW.cost : 0) + (rig ? 0 : HYPER.cost)
   if (owed > 0 && !pay) {
     const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${maker.cost.toFixed(2)} from ${views.length} views (${maker.name})`
-    const lighter = brief.low ? `, ${low ? "the lighter mesh kept" : `the mesh laid again with ${brief.low.faces} faces $${LOW.cost.toFixed(2)}`}` : ""
+    const lighter = relay ? `, ${low ? "the lighter mesh kept" : `the mesh laid again with ${relay.faces} faces $${LOW.cost.toFixed(2)}`}` : ""
     say("cost", `$${owed.toFixed(2)} to make: ${had}${lighter}, the rig (${skinning} skinning) and its clips $${HYPER.cost.toFixed(2)}. Look over ${from}/pilot-picks.json, then run again with --pay`)
     return null
   }
   if (!model) {
     const images = await Promise.all(views.map(async (f) => dataUri(await sharp(`${from}/${f}`).png().toBuffer())))
-    model = hi3d
+    // Low Poly is told which way each picture looks, in the order it is given them.
+    const labels: Record<string, string> = { front: "F", back: "B", left: "L", right: "R" }
+    model = lowpoly
+      ? await fal<RodinAnswer>(`pilot model ${id}`, LOWMADE.endpoint, {
+          image_urls: images,
+          image_labels: views.map((f) => labels[f.replace(/^apose-|\.png$/g, "")] ?? "?"),
+          prompt: brief.who,
+          face_count: brief.low?.faces ?? LOWMADE.faces,
+          mesh_mode: brief.low?.mode ?? "Quad",
+          material: "PBR",
+          // 4K, and its "high" detail, as Hi3D's colour is at 2048 and this is the whole figure's.
+          resolution: "High",
+          texture_mode: "high",
+          geometry_file_format: "glb",
+        })
+      : hi3d
       ? await fal<RodinAnswer>(`pilot model ${id}`, HI3D.endpoint, {
           front_image_url: images[0],
           ...(view("back") >= 0 ? { back_image_url: images[view("back")] } : {}),
@@ -2360,11 +2387,11 @@ async function rodinHyper(brief: Brief) {
     say("model", `made, $${maker.cost.toFixed(2)}`)
   } else say("model", "kept")
   if (!model.model_mesh?.url) throw new Error(`No model in ${from}/pilot-model.json`)
-  if (brief.low && !low) {
+  if (relay && !low) {
     low = await fal<RodinAnswer>(`pilot low ${id}`, LOW.endpoint, {
       model_url: model.model_mesh.url,
-      face_count: brief.low.faces,
-      mesh_mode: brief.low.mode ?? "Quad",
+      face_count: relay.faces,
+      mesh_mode: relay.mode ?? "Quad",
       // 4K, as the generator's colour is kept for lod0.
       resolution: "High",
       transfer_texture: true,
@@ -2498,7 +2525,7 @@ async function rodinHyper(brief: Brief) {
     rod: !!way,
     clips: made,
     rest: all,
-    generator: `${maker.name}${brief.low ? `, laid again with ${brief.low.faces} faces by Hyper3D Low Poly` : ""}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
+    generator: `${maker.name}${relay ? `, laid again with ${relay.faces} faces by Hyper3D Low Poly` : ""}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
     weights: "hyper3d",
     cost: maker.cost + lowCost + HYPER.cost,
   }
@@ -2522,7 +2549,7 @@ async function main() {
   const before = existsSync(`${dir}/${brief.body ? "pilot-rig.json" : "pilot-model.json"}`) ? await kept<{ source?: { made?: string } }>(`${dir}/figure.json`) : null
   const today = new Date().toISOString().slice(0, 10)
   const motion = (await kept<{ motion?: unknown }>(`${dir}/figure.json`))?.motion
-  const made = brief.maker === "rodin" || brief.maker === "hi3d" ? await rodinHyper(brief) : await tripoMeshy(brief)
+  const made = brief.maker === "rodin" || brief.maker === "hi3d" || brief.maker === "lowpoly" ? await rodinHyper(brief) : await tripoMeshy(brief)
   if (!made) return
   say("merge", `${dir}/lod0.glb with ${made.clips.join(", ")}`)
   const painted = await face(brief, made.rest)

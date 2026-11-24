@@ -8,7 +8,7 @@ The first is the Forest Drake of Welcome to Kordavos (owner, 2026-11-23), in The
 
 Hyper3D's rigger on fal, which `pilot.ts` already uses, takes a `bone_template`: `human`, `quadruped`, `bird`, `dragon`, `kaiju` or `custom`. Its stock clips come by body: `lizard` has 13 (walk, run, idle, a front-leg hit, tail swipes, charge, stunned, two deaths) and `canine` 35. Tripo's rigger on fal has `quadruped`, `avian` and `serpentine` too. Meshy's on fal is for people alone.
 
-So the drake goes through the route a person does, Hi3D then Hyper3D Low Poly then Hyper3D, with a beast's skeleton and clips, and the skeleton and gait of our own below wait until a stock rig fails. What AnyMachine still gives the drake is the checks (step 6).
+So the drake goes through the route a person does, Hyper3D Low Poly from the pictures, then Hyper3D's rig, with a beast's skeleton and clips, and the skeleton and gait of our own below wait until a stock rig fails. What AnyMachine still gives the drake is the checks (step 6).
 
 ## What AnyMachine Shows
 
@@ -26,7 +26,7 @@ Its quadruped is a robot of rigid parts on 13 bones, with no skin. What carries 
 
 1. A brief, `asset-library/characters/forest-drake`, with `"stance": "four"`, `"rig": "dragon"` and `"stock": "lizard"`. The sheet paints it on all four feet, wings folded tight along its back, tail out straight behind, mouth shut.
 2. A second sheet of its two sides, since a beast is read side on. Hi3D takes left and right views beside the front and the back.
-3. Hi3D, then Hyper3D Low Poly laying the mesh again at 10,000 triangles (`"low": { "faces": 10000 }`, the owner's choice on 2026-11-23, so the full mesh is not shipped), then Hyper3D with the beast's skeleton and its stock clips, named as the game plays them: Idle, Walk, Rend (the front-leg hit), Tail, Hit, Stunned for a net, Fall.
+3. Hyper3D Low Poly's pictures to 3D (`"maker": "lowpoly"`, $0.20), from all four views at 10,000 triangles, its cap. The owner's choice on 2026-11-23, a trial: it skips Hi3D ($2.10), and the whole drake is $0.40 against $2.50 for Hi3D laid again by Low Poly. Then Hyper3D with the beast's skeleton and its stock clips, named as the game plays them: Idle, Walk, Rend (the front-leg hit), Tail, Hit, Stunned for a net, Fall.
 4. The person's mends in `pilot.ts` (upright chest, shoulder plates, the face painted on, hands relaxed) left off a beast that stands on four feet.
 5. Foot slip and leg-through-leg checks over its clips.
 6. The wrecked docks' look, not marked `play` until Cassia, Yeva, Astrid and Petra have figures, or the owner says they may stand as cards.
@@ -45,7 +45,7 @@ Its quadruped is a robot of rigid parts on 13 bones, with no skin. What carries 
 
 - Which of Hyper3D's skeletons the lizard clips play on: `dragon`, `quadruped`, or `auto`.
 
-- Whether the horn spikes, the claws and the wing edges survive Low Poly's 10,000 triangles, its cap. If not, the drake keeps Hi3D's mesh and a lighter copy of our own, as the cast do.
+- Whether the horn spikes, the claws and the wing edges survive Low Poly's 10,000 triangles, made straight from the pictures. No figure has been made this way yet. If they do not, the drake goes to Hi3D laid again by Low Poly (`"maker": "hi3d"` with `"low"`, $2.30 more).
 - Whether Hi3D gives four separate legs. AnyMachine's generators fused them, and gave a spider six legs when it was asked for eight.
 - Whether a stock rigger on fal rigs a four-legged body. Meshy's and Hyper3D's riggers are a person's, as far as we have used them. Ask fal before building our own skeleton. If one does, it may come with clips.
 - Whether the free clip libraries hold a wolf, and whether one retargets onto our skeleton. A written gait needs no library.
@@ -58,5 +58,5 @@ Its quadruped is a robot of rigid parts on 13 bones, with no skin. What carries 
 
 ## Done
 
-- 2026-11-23: the drake's brief, its two sheets (front and back, its two sides), and `pilot.ts` taught a beast on four feet. Its picks: Idle, Walk, Run, Rend, Tail, Charge, Stunned, Fall from the lizard stock. The model ($2.10), Low Poly ($0.20) and the rig ($0.20) wait for the owner to run `pnpm assets:pilot forest-drake --pay`. The rig is held after that until the model is looked at and passed with `--facing=ok`.
+- 2026-11-23: the drake's brief, its two sheets (front and back, its two sides), and `pilot.ts` taught a beast on four feet. Its picks: Idle, Walk, Run, Rend, Tail, Charge, Stunned, Fall from the lizard stock. The model from Low Poly ($0.20) and the rig ($0.20) wait for the owner to run `pnpm assets:pilot forest-drake --pay`. The rig is held after that until the model is looked at and passed with `--facing=ok`.
 - 2026-11-23: the wrecked docks' look (`looks.ts`), not played: arrival low on the quay behind the party, wide, and play. Lyra stands for Cassia and Poppen for Yeva, as at the Gates. Astrid and Petra still have no figures.
