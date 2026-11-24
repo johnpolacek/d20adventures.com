@@ -717,10 +717,11 @@
     { "id": "pierEnd", "label": "the end of the gangway", "x": 2.85, "z": 5.6 },
     { "id": "reeds", "label": "the reeds by the gangway", "x": -1.2, "z": 4.6 },
     { "id": "saloon", "label": "the tug's saloon", "x": 5.6, "z": 0.9 },
-    { "id": "stern", "label": "the stern", "x": 5.2, "z": -8.6 },
+    { "id": "stern", "label": "the tug's stern deck, behind the aft cabin", "x": 5.2, "z": -8.6 },
     { "id": "thicket", "label": "the thicket on the bank below the stern", "x": -1.4, "z": -6.4 },
     { "id": "trail", "label": "the bank trail into the woods", "x": -4.6, "z": 20 },
     { "id": "treeline", "label": "the bushes at the treeline", "x": -5, "z": 4.3 },
+    { "id": "windows", "label": "the bank below the saloon's open windows", "x": -0.6, "z": 0.5 },
     { "id": "woods", "label": "deep in the woods along the trail", "x": -12, "z": 38 }
   ]
 }

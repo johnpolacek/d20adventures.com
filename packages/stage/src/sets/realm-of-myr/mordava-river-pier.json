@@ -28125,8 +28125,8 @@
         5.2,
         -8.6
       ],
-      "label": "the stern"
-    },
+      "label": "the tug's stern deck, behind the aft cabin"
+    }, "windows": {"at": [-0.6, 0.5], "label": "the bank below the saloon's open windows"},
     "reeds": {
       "at": [
         -1.2,

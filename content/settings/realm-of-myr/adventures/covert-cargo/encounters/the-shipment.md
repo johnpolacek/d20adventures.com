@@ -76,9 +76,9 @@ If Lyra successfully casts a spell on the crate to detect magic, she will be det
 
 Lyra's fee is to be paid in Kordavos once the job is done. If she asks after it, Silas puts her off until then.
 
-Silas pays only on Lyra's word. Until she gives her verdict the scrollcase stays in his hands and the elves stay aboard.
+Silas pays only on Lyra's word. Until she gives her verdict the scrollcase stays in his hands and the elves stay aboard. Once she gives it, true or false, the scene ends on her word. For the rest of the round Silas, Reinhard and Aelar only take it in: no one pays, argues, draws or leaves. What they do about it is told in the next scene, so do not tell it here.
 
-A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
+Aelar's two archers keep watch on deck, one at the bow and one at the stern. They are the ones who may spot a watcher on the bank or at the rail, and one who does draws on him and calls a warning in Elvish. A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
 
