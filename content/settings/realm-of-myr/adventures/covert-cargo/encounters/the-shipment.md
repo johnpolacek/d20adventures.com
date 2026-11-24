@@ -42,7 +42,7 @@ The air is cool and damp and smells of wet earth. Crickets chirp, water laps at 
 
 {actor: thalbern, private: true} Neither knows of the third watcher. Farther down the bank, in a thicket below the boat's stern, Thalbern kneels with his longbow across his knee, still as the roots around him. The druid Wollandora sent him after relics taken from the elven vaults of the Valkarr woods, and after the Valkaran-made riverboat she saw carrying them toward Kordavos. He has followed the Mordava down from the Standing Stones through the trees, and here is the boat, moored where no honest boat would stop, lamps lit, strangers aboard. No one has seen him, and he has seen no one else on the bank. Whatever the boat carries is about to change hands.
 
-{actor: Aelar Moonglimmer} Wood creaks as the cabin door opens. A tall, lithe elf in dark leather armor steps out with silent, deliberate grace. Two more elves with bows keep watch on deck, one near the bow and one by the stern.
+{actor: Aelar Moonglimmer} Wood creaks as the cabin door opens. A tall, lithe elf in close-fitting dark clothes steps out with silent, deliberate grace. Two more elves keep watch on deck, an archer near the bow and a spearman with a round shield by the stern.
 
 {actor: Aelar Moonglimmer, target: Silas} The lead elf steps to the crate and looks to Lyra's escorts. His voice is low and clear.
 
@@ -68,7 +68,7 @@ The crate stays closed. No one may see inside, so Lyra must judge it by magecraf
 
 ## GM Notes
 
-If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his sword and threaten her. Reinhard draws only on that nod, never on his own.
+If Lyra asks questions or stalls in any way, Reinhard and Silas will be impatient and urge her to do what she was paid for. If Lyra tries to engage Aelar in conversation he will be evasive. If she continues to delay, then Silas will nod at Reinhard who will draw his mace and threaten her. Reinhard draws only on that nod, never on his own.
 
 Whatever Lyra says of the crate is her verdict, true or not. Inside the sealed crate is the relic, a large, heavy sitting stone of about 500 pounds, carved by the Valkarans. No one lifts it out or holds it up here: the crate stays shut. A nod to Silas is a verdict too: it is the signal he asked for, and it means the relic is genuine. No check stands between her words and the scene that follows: if she says it holds no magic, it is The Fake, and Silas weighs her word there.
 
@@ -78,7 +78,7 @@ Lyra's fee is to be paid in Kordavos once the job is done. If she asks after it,
 
 Silas pays only on Lyra's word. Until she gives her verdict the scrollcase stays in his hands and the elves stay aboard. Once she gives it, true or false, the scene ends on her word. For the rest of the round Silas, Reinhard and Aelar only take it in: no one pays, argues, draws or leaves. What they do about it is told in the next scene, so do not tell it here.
 
-Aelar's two archers keep watch on deck, one at the bow and one at the stern. They are the ones who may spot a watcher on the bank or at the rail, and one who does draws on him and calls a warning in Elvish. A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
+Aelar's two sentries keep watch on deck, the archer at the bow and the spearman at the stern. They are the ones who may spot a watcher on the bank or at the rail, and one who does turns bow or spear on him and calls a warning in Elvish. A watcher who creeps closer or comes aboard unseen stays unseen until he acts in the open or someone passes a check to spot him. A noise the sentries hear and turn toward is a disturbance, as much as a watcher seen.
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. Each learns of the other only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where an arrow, a voice or a noise came from. Use DC 10 once the other has acted in the open, with a shot, a shout or a step onto the pier. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure.
 

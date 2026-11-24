@@ -192,7 +192,7 @@ test("a killing blow leaves a hero alive, and nobody comes to the rescue: Thalbe
         .sort(),
       ["Lyra Silvanus", "Poppen Quickfoot", "Thalbern"]
     )
-    const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his sword again." }], adventurePatch: {} })
+    const fightGoesOn = () => ({ nextEncounterId: "battle-on-the-boat", beats: [{ kind: "narration", text: "Reinhard raises his mace again." }], adventurePatch: {} })
     // The engine's blow takes Lyra to 0, and nothing the model says that round kills her.
     Object.assign(lyra(store), withDamage(lyra(store), lyra(store).hitPoints!).character)
     store.save()

@@ -11,7 +11,7 @@ landmark: "valkarr-woods/forest-pier"
 roundBudget: 4
 npcs:
   - id: "npcs-1749163978757"
-    behavior: "Means to be rid of Lyra without leaving a body aboard. Fights to seize her, drag her out on deck and throw her over the side into the river. Uses his grip, his weight and the flat of his blade before the edge."
+    behavior: "Means to be rid of Lyra without leaving a body aboard. Fights to seize her, drag her out on deck and throw her over the side into the river. Uses his grip and his weight before his mace."
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Bars the door until Reinhard has hold of Lyra, then opens it for him. Once she is in the river he cuts the mooring lines and casts off with the crate. Fights only if Reinhard is brought down, someone comes aboard or reaches in at a window, though he strikes at Lyra if she tries to slip past him."
@@ -27,7 +27,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {actor: Reinhard, target: 1749159962941} He takes a slow step, his bulk filling the cabin.
 
-{actor: Silas, object: blade} The cabin door clicks shut, loud in the stillness. Silas stands before it, blocking the only exit, and with a whisper of steel on leather two wicked daggers appear in his hands.
+{actor: Silas, object: blade} The cabin door clicks shut, loud in the stillness. Silas stands before it, blocking the only exit, and with a whisper of steel on leather he draws a shortsword, its edge dark with poison.
 
 {speaker: Silas, delivery: flat} No loose ends.
 

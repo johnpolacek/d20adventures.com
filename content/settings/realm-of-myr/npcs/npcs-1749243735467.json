@@ -11,39 +11,34 @@
   "equipment": [
     {
       "name": "Whisperwood Longbow",
-      "description": "A finely crafted longbow made from ancient Whisperwood, known for its incredible range and accuracy."
+      "description": "A finely crafted longbow of ancient Whisperwood."
     },
     {
-      "name": "Quiver of Swift Arrows",
-      "description": "A quiver containing 20 meticulously fletched arrows, some tipped with special broadheads for hunting, others with enchanted tips for magical threats."
+      "name": "Quiver of Arrows",
+      "description": "Twenty meticulously fletched hunting arrows."
     },
     {
-      "name": "Forest-Green Leather Armor",
-      "description": "Lightweight, supple leather armor dyed forest-green, providing protection without hindering movement, and excellent camouflage."
+      "name": "Leather Armor",
+      "description": "Supple leather dyed forest green, light and quiet."
     },
     {
-      "name": "Elven Hunting Knife",
-      "description": "A sharp, balanced knife used for skinning, carving, and close-quarters defense."
+      "name": "Shortsword",
+      "description": "A sharp, balanced elven blade for close-quarters defense."
     },
     {
-      "name": "Cloak of the Wilds",
-      "description": "A hooded cloak woven with natural fibers, providing warmth and blending seamlessly with forest environments."
+      "name": "Hooded Forest Cloak",
+      "description": "Woven of natural fibers, it blends with the forest."
     }
   ],
-  "skills": ["Archery (Expert)", "Stealth", "Survival", "Perception", "Tracking", "Nature Lore", "Acrobatics"],
-  "specialAbilities": [
-    "Fey Ancestry (Advantage on saves vs. charm, cannot be put to sleep by magic)",
-    "Trance (Does not require sleep, meditates for 4 hours)",
-    "Forest Camouflage (Can attempt to hide even when only lightly obscured by natural phenomena)"
-  ],
+  "skills": ["Nature", "Perception", "Stealth", "Survival"],
   "type": "npc",
   "attributes": {
-    "strength": 10,
-    "dexterity": 18,
-    "constitution": 14,
-    "intelligence": 12,
-    "wisdom": 16,
-    "charisma": 10
+    "strength": 11,
+    "dexterity": 14,
+    "constitution": 12,
+    "intelligence": 11,
+    "wisdom": 13,
+    "charisma": 11
   },
   "id": "npcs-1749243735467",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/66faef7d-7d77-4aac-bdec-83850e136f5f.png?t=1749243814586",

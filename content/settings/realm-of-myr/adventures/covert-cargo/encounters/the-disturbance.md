@@ -40,7 +40,7 @@ A sudden disturbance throws the clandestine meeting off course.
 
 Aelar will order his two elves to investigate. Everyone else will stay with the shipment. The elves search where the disturbance came from. They find only the watcher who caused it, unless the other gives himself away too.
 
-The elves mean to drive a found watcher off, not to kill him. They threaten with blade and bow and strike only if he attacks or rushes the boat. One who goes back into the trees is let go. One who surrenders, or stops to tend someone hurt, is made to leave once he is done.
+The elves mean to drive a found watcher off, not to kill him. They threaten with spear and bow and strike only if he attacks or rushes the boat. One who goes back into the trees is let go. One who surrenders, or stops to tend someone hurt, is made to leave once he is done.
 
 Silas and Reinhard stay at the pier and wait on the trade. They do not cast off or cut the lines in this scene. Silas still pays on Lyra's word or once the watcher is gone. He will not wait on her for long: if she has given no word by the end of the second round, he pays anyway, wanting the deal done before the light comes up. The payment is the sealed scrollcase, not coin. Once he means to pay, the scene ends there: the handover and the elves' leaving are told in The Transaction, so do not tell them here.
 

@@ -28,11 +28,11 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {place: saloon} A cold, sharp silence falls over the cabin after the arcanist's pronouncement.
 
-{actor: Silas, target: Aelar Moonglimmer} Silas moves first. In one fluid motion he is standing before the door, blocking the only exit, a dagger aimed steadily at Aelar.
+{actor: Silas, target: Aelar Moonglimmer} Silas moves first. In one fluid motion he is standing before the door, blocking the only exit, a hand crossbow aimed steadily at Aelar.
 
 {speaker: Silas, to: Aelar Moonglimmer, delivery: silken threat} There seems to have been a misunderstanding. My employers do not appreciate being sold worthless trinkets.
 
-{actor: Reinhard, target: Aelar Moonglimmer} Reinhard growls low, his hand dropping to the hilt of the massive blade at his side.
+{actor: Reinhard, target: Aelar Moonglimmer} Reinhard growls low, his hand dropping to the heavy mace at his belt.
 
 {speaker: Reinhard, to: Aelar Moonglimmer, delivery: snarling} You have nerve, elf.
 

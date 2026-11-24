@@ -11,34 +11,30 @@
   "equipment": [
     {
       "name": "Shadowsilk Cloak",
-      "description": "A dark, lightweight cloak woven with shadowsilk, providing excellent camouflage and muffling sound."
+      "description": "A dark, lightweight cloak that blends into the shadows."
     },
     {
-      "name": "Moon-Forged Dagger",
-      "description": "A finely crafted dagger with a razor-sharp edge, designed for silent takedowns."
+      "name": "Moon-Forged Shortsword",
+      "description": "A finely crafted elven shortsword, its edge oiled with poison."
     },
     {
-      "name": "Master Lockpicks",
-      "description": "A set of intricate tools capable of bypassing complex locks."
+      "name": "Hand Crossbow",
+      "description": "A slim elven hand crossbow, its bolts poisoned like his blade."
     },
     {
-      "name": "Valkaran Artifact",
-      "description": "A small, intricately carved obsidian orb pulsating with faint, ancient energy. Its true power and purpose are a closely guarded secret."
-    },
-    {
-      "name": "Concealed Communicator",
-      "description": "A small, enchanted device allowing discreet communication with his faction."
+      "name": "Thieves' Tools",
+      "description": "Intricate elven tools for bypassing complex locks."
     }
   ],
-  "skills": ["Stealth", "Acrobatics", "Perception", "Diplomacy", "Investigation", "Negotiation", "Disguise"],
+  "skills": ["Deception", "Insight", "Investigation", "Perception", "Sleight of Hand", "Stealth"],
   "type": "npc",
   "attributes": {
     "strength": 10,
-    "dexterity": 18,
-    "constitution": 14,
-    "intelligence": 16,
-    "wisdom": 15,
-    "charisma": 12
+    "dexterity": 15,
+    "constitution": 10,
+    "intelligence": 12,
+    "wisdom": 14,
+    "charisma": 16
   },
   "id": "npcs-1749184389465",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/npcs/e8e02409-93a9-4936-8b2e-b5a3d083889d.png?t=1749226155922",
