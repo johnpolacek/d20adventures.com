@@ -6,7 +6,7 @@ import { z } from "zod"
 export const PACES = ["walk", "hurry", "sneak"] as const
 export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
-export const OBJECT_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
+export const OBJECT_KINDS = ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
 // Sounds a beat can make that nothing on stage shows: a door, a chest's lid, someone going into water, wood split open,
 // a rope cut through. The stage's SOUND_CUES, which gm-core cannot import.
 export const SOUNDS = ["door-open", "door-close", "door-creak", "chest", "splash", "crack", "rope"] as const

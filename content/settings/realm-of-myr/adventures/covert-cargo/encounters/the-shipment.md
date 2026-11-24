@@ -52,7 +52,7 @@ The air is cool and damp and smells of wet earth. Crickets chirp, water laps at 
 
 {speaker: Silas, to: Aelar Moonglimmer} I have it here, Aelar.
 
-{actor: Silas, object: scroll} He draws a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
+{actor: Silas, object: scrollcase} He draws a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
 
 {speaker: Aelar Moonglimmer, to: Silas} Very well.
 

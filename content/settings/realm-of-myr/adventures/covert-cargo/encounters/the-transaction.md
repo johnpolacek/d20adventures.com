@@ -22,7 +22,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{actor: Silas, object: scroll} Silas holds out the sealed scrollcase to the elf.
+{actor: Silas, target: Aelar Moonglimmer, object: scrollcase} Silas holds out the sealed scrollcase to the elf.
 
 {speaker: Silas, delivery: quiet and controlled} As agreed.
 

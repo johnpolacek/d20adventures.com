@@ -7,7 +7,7 @@ import type { Surface } from "./surface"
 
 export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
-export const PROP_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
+export const PROP_KINDS = ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 export type Element = (typeof ELEMENTS)[number]
 export type PropKind = (typeof PROP_KINDS)[number]
@@ -456,6 +456,17 @@ function propMesh(kind: PropKind): THREE.Object3D {
     case "scroll": {
       add(new THREE.CylinderGeometry(0.06, 0.06, 0.42, 14), mat(PARCHMENT)).rotation.z = Math.PI / 2
       for (const x of [-0.23, 0.23]) add(new THREE.CylinderGeometry(0.025, 0.025, 0.06, 8), mat("#4a3020"), x).rotation.z = Math.PI / 2
+      break
+    }
+    case "scrollcase": {
+      // A leather tube with brass bands, its cap held shut by a black wax seal across the seam.
+      const brass = mat("#b08a3a", { metal: 0.8, rough: 0.35 })
+      add(new THREE.CylinderGeometry(0.07, 0.07, 0.4, 18), mat("#3a2618", { rough: 0.6 }), -0.03).rotation.z = Math.PI / 2
+      add(new THREE.CylinderGeometry(0.076, 0.076, 0.12, 18), mat("#2c1c12", { rough: 0.55 }), 0.2).rotation.z = Math.PI / 2
+      for (const x of [-0.236, 0.262]) add(new THREE.CylinderGeometry(0.062, 0.062, 0.012, 18), brass, x).rotation.z = Math.PI / 2
+      for (const x of [-0.19, -0.05]) add(new THREE.TorusGeometry(0.073, 0.008, 6, 22), brass, x).rotation.y = Math.PI / 2
+      add(new THREE.CylinderGeometry(0.038, 0.042, 0.016, 16), mat("#141012", { rough: 0.3 }), 0.14, 0, 0.074).rotation.x = Math.PI / 2
+      add(new THREE.CylinderGeometry(0.022, 0.022, 0.006, 12), mat("#2a2226", { rough: 0.25 }), 0.14, 0, 0.084).rotation.x = Math.PI / 2
       break
     }
     case "letter":
