@@ -151,7 +151,7 @@ async function replayTurn() {
   await core.resolvePlayerRollResult({ turnId: "turn-1", characterId: player.id, result: 20 })
   assert.ok(game.records.get("turn-1").characters.every((actor: any) => actor.isComplete))
   await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })
-  assert.equal(index, 6)
+  assert.equal(index, 7)
   if (UPDATE) fixture.writes = game.writes
   assert.deepEqual(game.writes, fixture.writes)
   assert.deepEqual(game.narrations, ["turn-1", "turn-1", "turn-2"])
@@ -168,7 +168,7 @@ async function replayTurn() {
   if (UPDATE) save("scripts/gm-core-fixtures/turn.json", fixture)
   assert.ok(game.records.get("turn-2").adventurePatch)
   assert.equal((await core.advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })).status, "already_advanced")
-  assert.equal(index, 6, "duplicate advance must not call the model")
+  assert.equal(index, 7, "duplicate advance must not call the model")
   await assert.rejects(
     game.ports.store.commitWikiTurnAdvance({
       adventureId: "fixture-adventure",
@@ -777,7 +777,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 6-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, questions kept in the scene, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, questions kept in the scene, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

@@ -17,6 +17,7 @@ import type { AdventurePlan } from "../types/adventure-plan"
 import { hasFled, isAiControlledPc, isDead, isDown, isDying, playsForMaster } from "../utils/turn-actors"
 import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
+import { createExitCheck } from "./exit-check-service"
 import { legendaryAfterTurn } from "./legendary-action-service"
 import { createNpcTurnBranchService, handleSkipPassNpcTurn, leavesForGood, type NpcRollInfo, type NpcTurnBranchResult } from "./npc-turn-branch-service"
 import { buildDeadCharacterCompletion, buildNpcTurnUpdatePatch } from "./npc-turn-effects-service"
@@ -84,6 +85,9 @@ export function createNpcTurnService(ports: GmPorts) {
   const { processAiPcTurn } = createAiPcTurnService(ports)
   const { resolveNpcTurnRollOrDirectBranch } = createNpcTurnBranchService(ports)
   const { generateNpcAction } = createNpcTurnGenerationService(ports)
+  const exitMet = createExitCheck(ports)
+  // The story length of each round last asked whether a way out was met, so a job that plays no one new asks nothing.
+  const asked = new Map<string, number>()
   const isLocalWikiAdventure = ports.content.isWikiAdventure.bind(ports.content)
   const loadWikiAdventureRuntime = ports.content.loadWikiRuntime.bind(ports.content)
   async function resolveDmContext(settingId: string, planId: string, encounterId: string, names: StoryNames): Promise<DmEncounterContext> {
@@ -417,6 +421,20 @@ export function createNpcTurnService(ports: GmPorts) {
 
     let processedNpcCount = 0
     for (const char of initiativeOrder) {
+      // A way out of the encounter met by what has been done this round ends the round here: those still to act do not,
+      // and the round's end takes the way out (./exit-check-service). Asked again only once the story has grown.
+      const now = await ports.store.getTurn({ turnId })
+      if (now && asked.get(turnId) !== now.story.length) {
+        asked.set(turnId, now.story.length)
+        if (await exitMet({ settingId: adventure.settingId, planId: adventure.planId, turn: { encounterId: now.encounterId, story: now.story, characters: now.characters as TurnCharacter[] } })) {
+          console.log("[LLM DM] A way out is met: the round ends before", char.name)
+          await ports.store.updateTurn({
+            turnId: now._id,
+            patch: { characters: (now.characters as TurnCharacter[]).map((c) => (c.isComplete ? c : { ...c, hasReplied: true, isComplete: true })), updatedAt: Date.now() },
+          })
+          break
+        }
+      }
       // Skip a hero who is dead or Stable and continue processing NPCs. A dying hero's turn is their Death Saving
       // Throw: an AI companion's is rolled below, and the loop stops on a player's.
       if (char.type === "pc" && isDown(char) && !isDying(char)) {

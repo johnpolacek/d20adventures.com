@@ -152,6 +152,8 @@ function stubLlm(
         const parsed = schema.safeParse(answer)
         if (parsed.success) return { object: parsed.data }
       }
+      // The check after each turn for a way out of the scene: none is met.
+      if (schema.safeParse({ met: false }).success) return { object: schema.parse({ met: false }) }
       throw new Error("Unexpected model request")
     },
   }
@@ -249,6 +251,8 @@ const walksOff = (): Llm => ({
       const parsed = schema.safeParse(answer)
       if (parsed.success) return { object: parsed.data }
     }
+    // The check after each turn for a way out of the scene: none is met.
+    if (schema.safeParse({ met: false }).success) return { object: schema.parse({ met: false }) }
     throw new Error("Unexpected model request")
   },
 })
@@ -307,7 +311,8 @@ test("a hero who walks out of an NPC's reach is struck at, and one who Disengage
       await game(store, packs, picks)({ kind: "reply", turnId: store.current()._id, characterId: lyra(store).id, text: "Lyra walks to the saloon door." })
       const after = store.current().story.slice(was)
       told = {
-        features: after.flatMap((beat) => (beat.kind === "feature" ? [`${beat.name} by ${beat.character === reinhard().id ? "Reinhard" : beat.character}`] : [])),
+        // A blow that drops her is told as she falls ("Down"), which is not what this test is about.
+        features: after.flatMap((beat) => (beat.kind === "feature" && beat.name !== "Down" ? [`${beat.name} by ${beat.character === reinhard().id ? "Reinhard" : beat.character}`] : [])),
         rolls: after.filter((beat) => beat.kind === "roll").length,
       }
       assert.equal(!!reinhard().turnEffects?.some((effect) => effect.id === "reacted"), check === "none")

@@ -45,6 +45,8 @@ function table(prompts: string[], encounter: string, learned: unknown[] = []): L
         const parsed = schema.safeParse(answer)
         if (parsed.success) return { object: parsed.data }
       }
+      // The check after each turn for a way out of the scene: none is met.
+      if (schema.safeParse({ met: false }).success) return { object: schema.parse({ met: false }) }
       throw new Error("Unexpected model request")
     },
   }

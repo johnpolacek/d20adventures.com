@@ -554,10 +554,30 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
     } else {
-      // What the rules of space would not allow is told as an entry of its own, after the NPC's own telling of the move.
+      // What the rules of space would not allow is told as an entry of its own. The NPC's own telling was written before
+      // the ruling, as though the act were done (Silas "drives a dagger at Thalbern" from 7 feet off), so the turn is told
+      // again from the ruling: what the NPC did instead, and nothing of what was not done.
       const ruled: StoryBeat[] = reading.ruling ? [{ kind: "feature", by: npcStep(args.npc), character: args.npc.id, name: reading.ruling.name, text: reading.ruling.text }] : []
-      beatsToAppend = [...cleanStory(args.actionResult.beats, args.scene, npcStep(args.npc)), ...ruled]
-      effects = args.actionResult.effects
+      const retold = reading.ruling
+        ? await generateNpcOutcome(
+            buildNpcOutcomePrompt({
+              contextString: args.npcActionContext.contextString,
+              npcDetails: args.npcActionContext.npcDetails,
+              playerCharacters: args.npcActionContext.playerCharacters,
+              npcName: args.npc.name,
+              actionSummary: args.actionResult.actionSummary,
+              rollType: reading.ruling.name,
+              result: 0,
+              difficulty: 0,
+              success: false,
+              scene: args.scene,
+              attacks: [`${reading.ruling.text} Tell only what ${args.npc.name} does instead, and none of what was not done.`],
+            }),
+            args.npc.id
+          ).catch(() => undefined)
+        : undefined
+      beatsToAppend = [...cleanStory(retold?.beats ?? args.actionResult.beats, args.scene, npcStep(args.npc)), ...ruled]
+      effects = retold ? retold.effects : args.actionResult.effects
       // An action with no roll (Dodge, Help) is the NPC's whole turn, and leaves its mark.
       if (reading.action) updatedCharacters = takeAction(updatedCharacters, args.npc.id, reading.action).characters
 
