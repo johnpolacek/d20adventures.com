@@ -1,0 +1,236 @@
+[
+  {
+    "animation_id": "lizard_000012",
+    "category": "lizard",
+    "display_name": "atk",
+    "content_description": "Attack: tail swipe",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 60,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000004",
+    "category": "lizard",
+    "display_name": "atk",
+    "content_description": "Attack: spinning tail swipe",
+    "frames": 121,
+    "duration_seconds": 4,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000000",
+    "category": "lizard",
+    "display_name": "charge",
+    "content_description": "Rising up and charging forward",
+    "frames": 11,
+    "duration_seconds": 0.3333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 10,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000005",
+    "category": "lizard",
+    "display_name": "die",
+    "content_description": "Death: leaping up, then falling backward",
+    "frames": 51,
+    "duration_seconds": 1.6666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000006",
+    "category": "lizard",
+    "display_name": "die",
+    "content_description": "Death: dying and lying on its side",
+    "frames": 91,
+    "duration_seconds": 3,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000007",
+    "category": "lizard",
+    "display_name": "hit",
+    "content_description": "Quick hit with a front leg",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000001",
+    "category": "lizard",
+    "display_name": "idle",
+    "content_description": "Idle, raising upper body and looking around",
+    "frames": 120,
+    "duration_seconds": 3.966666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 119,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000002",
+    "category": "lizard",
+    "display_name": "run",
+    "content_description": "Running",
+    "frames": 16,
+    "duration_seconds": 0.5,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 15,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000008",
+    "category": "lizard",
+    "display_name": "run",
+    "content_description": "Running",
+    "frames": 24,
+    "duration_seconds": 0.7666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 23,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000009",
+    "category": "lizard",
+    "display_name": "stun",
+    "content_description": "Stunned in place",
+    "frames": 51,
+    "duration_seconds": 1.6666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 50,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000010",
+    "category": "lizard",
+    "display_name": "swim run",
+    "content_description": "Swimming upward, then crawling a few steps",
+    "frames": 91,
+    "duration_seconds": 3,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000003",
+    "category": "lizard",
+    "display_name": "walk",
+    "content_description": "Walking slowly with a low crawl",
+    "frames": 51,
+    "duration_seconds": 1.6666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 50,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "lizard_000011",
+    "category": "lizard",
+    "display_name": "walk",
+    "content_description": "Walking with a low crawl",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 60,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  }
+]

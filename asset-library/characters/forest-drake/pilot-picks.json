@@ -1,0 +1,10 @@
+{
+  "Idle": "lizard_000001",
+  "Walk": "lizard_000011",
+  "Run": "lizard_000002",
+  "Rend": "lizard_000007",
+  "Tail": "lizard_000012",
+  "Charge": "lizard_000000",
+  "Stunned": "lizard_000009",
+  "Fall": "lizard_000006"
+}

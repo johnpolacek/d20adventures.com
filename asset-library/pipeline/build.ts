@@ -65,6 +65,9 @@ interface Brief {
   face?: "sheet" | "close"
   // A beast that stands upright on two legs, painted as an animal and not a person in costume.
   creature?: boolean
+  // "four": a beast that stands on four feet. Its sheets are painted on all fours, a second one of its two sides, and
+  // `pilot.ts` makes and rigs it: the joints and the close face are a person's and are not looked for.
+  stance?: "four"
 }
 
 const args = process.argv.slice(2)
@@ -85,7 +88,22 @@ Keep this creature's head, colouring, markings, build and proportions. Render it
 
 Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
 
-const prompt = (b: Brief) => (b.creature ? creaturePrompt(b) : personPrompt(b))
+// A beast on four feet, as a sheet of two views: its front and back, or its own left and right sides.
+const fourPrompt = (b: Brief, sides: boolean) => `The attached images are the front and the back of a painted game creature: ${b.who}. Make one landscape reference sheet of the SAME creature as a photorealistic studio photograph of a living animal, for building a 3D model. It is a real creature, not a sculpture.
+
+${
+  sides
+    ? "Two full-body views one above the other at the same scale, each filling the frame's width from the tip of the snout to the tip of the tail: on top its own left side, seen square from that side, its head toward the left edge of the picture; below its own right side, seen square from that side, its head toward the right edge. The two views are the same creature in the same pose, one the mirror of the other."
+    : "Two full-body views side by side at the same scale, each filling the frame's height from the top of the head to the soles of the feet: on the left the front view, seen from directly in front at the height of its chest; on the right the back view from directly behind, with no face visible."
+}
+
+Pose, in every view: standing square on all four feet, as an animal stands at rest, with each leg straight under the body and a clear gap of background between the legs. Not rearing, not crouching, nothing raised. ${b.stow} The head held level and forward on the neck, mouth closed, looking straight ahead. Calm.
+
+Keep this creature's head, colouring, markings, build and proportions. Render it as real scales, skin, claws and horn.
+
+Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
+
+const prompt = (b: Brief) => (b.stance === "four" ? fourPrompt(b, false) : b.creature ? creaturePrompt(b) : personPrompt(b))
 // A hand that holds something (props.ts) is painted closed, so the model has a fist for the prop to stand in. Bending
 // an open hand's mesh shut does not make a grip.
 const hands = (b: Brief) => {
@@ -142,6 +160,15 @@ async function sheet(dir: string, b: Brief) {
     const half = Math.floor(width / 2)
     await sharp(png).extract({ left: 0, top: 0, width: half, height }).png().toFile(`${dir}/apose-front.png`)
     await sharp(png).extract({ left: half, top: 0, width: half, height }).png().toFile(`${dir}/apose-back.png`)
+  }
+  // A beast on four feet is read side on: its sides are a second sheet, the left above the right.
+  if (b.stance === "four") {
+    const sides = await codexPaint(`character sides ${b.id}`, fourPrompt(b, true), [await card(b.card.front), await card(b.card.back)], "landscape 3:2")
+    const { width: w = 0, height: h = 0 } = await sharp(sides).metadata()
+    const half = Math.floor(h / 2)
+    await writeFile(`${dir}/sides.png`, sides)
+    await sharp(sides).extract({ left: 0, top: 0, width: w, height: half }).png().toFile(`${dir}/apose-left.png`)
+    await sharp(sides).extract({ left: 0, top: half, width: w, height: h - half }).png().toFile(`${dir}/apose-right.png`)
   }
   await mkdir(DESKTOP, { recursive: true })
   await sharp(png).jpeg({ quality: 92 }).toFile(`${DESKTOP}/${b.id}-sheet.jpg`)
@@ -204,6 +231,7 @@ async function build(b: Brief) {
     await sheet(dir, b)
     say("sheet", `painted, a copy at ${DESKTOP}/${b.id}-sheet.jpg`)
   }
+  if (b.stance === "four") return say("next", `look at ${dir}/sheet.png and sides.png, then pnpm assets:pilot ${b.id}`)
   if (made(dir, "joints.json", "joints")) say("joints", "kept")
   else {
     const out = run("joints", "uv", [

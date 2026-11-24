@@ -1,0 +1,29 @@
+{
+  "id": "forest-drake",
+  "name": "Forest Drake",
+  "role": "Beast of the Kordavos docks",
+  "cast": [
+    "forest-drake"
+  ],
+  "height": 2.6,
+  "card": {
+    "front": "/stage/fixtures/welcome-to-kordavos/forest-drake-front.webp",
+    "back": "/stage/fixtures/welcome-to-kordavos/forest-drake-back.webp"
+  },
+  "who": "a forest drake, a huge four-legged dragon the size of a draft horse, with mossy green and bark-brown scales flecked with pale lichen, a pale yellow-green belly of broad plates, a long crocodile-like head with a row of horn spikes down the neck and back, yellow eyes, thick clawed legs, a broken iron shackle on its right foreleg, bat-like wings and a very long, heavy tail",
+  "stow": "Its wings are folded tight along its back and sides, closed like a bat's, held against the body from shoulder to hip, with no part of them standing above its back or hanging past its belly. Its tail lies straight out behind it, low, just clear of the ground.",
+  "arms": 0,
+  "creature": true,
+  "stance": "four",
+  "maker": "hi3d",
+  "rig": "quadruped",
+  "stock": "lizard",
+  "gloss": 0.5,
+  "lit": {
+    "hue": [
+      50,
+      75
+    ],
+    "strength": 2
+  }
+}

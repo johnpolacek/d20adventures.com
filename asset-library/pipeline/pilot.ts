@@ -1790,6 +1790,11 @@ interface Brief {
   creature?: boolean
   // Who makes it: Tripo then Meshy (the default), or Rodin or Hi3D then Hyper3D's rigging.
   maker?: "rodin" | "hi3d"
+  // "four": a beast on four feet (build.ts). Hi3D is given its two sides as well, and none of a person's mends is made.
+  stance?: "four"
+  // Hyper3D's skeleton, "human" unless said, and the stock its clips come from, "human" unless said ("lizard", "canine").
+  rig?: "human" | "quadruped" | "bird" | "dragon" | "kaiju"
+  stock?: string
   // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
   body?: string
   // Clips copied from another skeleton's library, each by the name it is played by: "ual1:Sword_Attack".
@@ -2264,6 +2269,17 @@ const WANT: [string, RegExp, boolean][] = [
   ["Hit", /\b(hit|react|impact|stagger)/i, false],
   ["Fall", /\b(death|die|dying|knock|fall)/i, false],
 ]
+// A beast's, from the lizard stock. Every one of its clips is marked as looping, so the match alone picks.
+const WANT_BEAST: [string, RegExp, boolean][] = [
+  ["Idle", /^idle\b/i, true],
+  ["Walk", /walking with a low crawl/i, true],
+  ["Run", /^run\b/i, true],
+  ["Rend", /hit with a front leg/i, true],
+  ["Tail", /^atk attack: tail swipe/i, true],
+  ["Charge", /charg/i, true],
+  ["Stunned", /stun/i, true],
+  ["Fall", /lying on its side/i, true],
+]
 type Stock = { animation_id: string; display_name?: string; content_description?: string; loop?: { kind?: string } | null; duration_seconds?: number }
 type HyperAnswer = { model_mesh?: Remote; rigged_character_glb?: Remote; animations?: { action_id?: string; animation_glb?: Remote }[] }
 type RodinAnswer = { model_mesh?: Remote }
@@ -2275,12 +2291,14 @@ async function rodinHyper(brief: Brief) {
   const from = home(brief)
   const hi3d = (brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker === "hi3d"
   const maker = hi3d ? { name: "Hi3D v3.0 on fal", cost: HI3D.cost } : { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost }
-  const views = ["apose-front.png", "apose-back.png"].filter((f) => existsSync(`${from}/${f}`))
+  const four = brief.stance === "four"
+  const views = ["apose-front.png", "apose-back.png", "apose-left.png", "apose-right.png"].filter((f) => existsSync(`${from}/${f}`))
+  const view = (name: string) => views.indexOf(`apose-${name}.png`)
   let picks = await kept<Record<string, string>>(`${from}/pilot-picks.json`)
   if (!picks) {
-    const { animations } = await fal<{ animations: Stock[] }>(`pilot stock ${id}`, HYPER.list, { category: "human" })
+    const { animations } = await fal<{ animations: Stock[] }>(`pilot stock ${id}`, HYPER.list, { category: brief.stock ?? "human" })
     picks = {}
-    for (const [role, match, loops] of WANT) {
+    for (const [role, match, loops] of four ? WANT_BEAST : WANT) {
       const found = animations.filter((a) => match.test(`${a.display_name ?? ""} ${a.content_description ?? ""} ${a.animation_id}`))
       const pick = found.find((a) => !!a.loop === loops) ?? found[0]
       if (pick) picks[role] = pick.animation_id
@@ -2309,7 +2327,9 @@ async function rodinHyper(brief: Brief) {
     model = hi3d
       ? await fal<RodinAnswer>(`pilot model ${id}`, HI3D.endpoint, {
           front_image_url: images[0],
-          ...(images[1] ? { back_image_url: images[1] } : {}),
+          ...(view("back") >= 0 ? { back_image_url: images[view("back")] } : {}),
+          ...(view("left") >= 0 ? { left_image_url: images[view("left")] } : {}),
+          ...(view("right") >= 0 ? { right_image_url: images[view("right")] } : {}),
           resolution: "2048quality",
           face_count: HI3D.faces,
           enable_texture: true,
@@ -2335,14 +2355,15 @@ async function rodinHyper(brief: Brief) {
   const source = await fetched(model.model_mesh, "model")
   const at = source ? await facing(source) : null
   say("faces", at ? `${at.faces}, widest along ${at.wide}, toes ${at.toes.join(", ")}` : "not known")
-  if (!rig && !args.includes("--facing=ok") && !(at?.faces === "+z" && at.wide === "x")) {
+  // A beast's feet say nothing of the way it faces, as a person's toes do: it is looked at, every time.
+  if (!rig && !args.includes("--facing=ok") && (four || !(at?.faces === "+z" && at.wide === "x"))) {
     say("rig", `not made: the rigger wants the model facing +z. Look at ${dir}/pilot/model.glb, and run again with --pay --facing=ok if it does`)
     return null
   }
   if (!rig) {
     rig = await fal<HyperAnswer>(`pilot rig ${id}`, HYPER.endpoint, {
       model_url: model.model_mesh.url,
-      bone_template: "human",
+      bone_template: brief.rig ?? "human",
       image_url: dataUri(await sharp(`${from}/apose-front.png`).png().toBuffer()),
       // "core" gathers a bone's pull about the skeleton, "for precise humanoid joints". "shell" "favors smooth weights
       // on the visible mesh" (fal's words for both).
@@ -2379,7 +2400,7 @@ async function rodinHyper(brief: Brief) {
   // 49 MB of them. With one normal to a place, points that are the same in every way are made one again.
   await doc.transform(weld())
   // `--sixth=off` leaves a hand with a finger too many as the generator made it.
-  if (!args.includes("--sixth=off")) for (const line of sixth(doc)) say("sixth", line)
+  if (!four && !args.includes("--sixth=off")) for (const line of sixth(doc)) say("sixth", line)
   // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for
   // a cut: they are taken out, keys and all, and the borrowed ones go by the names the game plays.
   if (Object.keys(brief.borrowed ?? {}).length) {
@@ -2400,7 +2421,7 @@ async function rodinHyper(brief: Brief) {
     say("shoulder", `each joint moved ${raise} cm up`)
   }
   // `--spread=off` leaves the shares as the rigger gave them, to measure one rigging against another.
-  if (!args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
+  if (!four && !args.includes("--spread=off")) say("spread", `${spread(doc, SPREAD.reach, SPREAD.passes)} points about the shoulders`)
   made.push(...(await borrow(doc, brief.borrowed)))
   for (const [name, { until }] of Object.entries(brief.drawn ?? {})) {
     const moved = draw(doc, name, until, brief.height ?? 1.8)
@@ -2415,22 +2436,22 @@ async function rodinHyper(brief: Brief) {
     say("chin", lifted ? `${name}: the face looked ${lifted[0].toFixed(0)}° under level at its lowest, and is lifted by up to ${lifted[1].toFixed(0)}°` : `${name}: no such clip, or no neck and head keyed in it`)
   }
   // `--elbows=off` leaves each elbow as its clip has it, and `--hang=off` each finger as it was modelled.
-  const bent = args.includes("--elbows=off") ? null : elbows(doc)
+  const bent = four || args.includes("--elbows=off") ? null : elbows(doc)
   if (bent) say("elbows", `${bent.moved} keys moved: an elbow went ${bent.past.toFixed(0)}° past straight (the ${bent.where}), and no arm near straight is under ${FLOOR}° now`)
-  const hung = args.includes("--hang=off") ? 0 : hang(doc, brief.holds?.hand ?? (brief.holds ? "R" : undefined))
+  const hung = four || args.includes("--hang=off") ? 0 : hang(doc, brief.holds?.hand ?? (brief.holds ? "R" : undefined))
   if (hung) say("hang", `fingers closed by up to ${hung.toFixed(0)}° a joint, to a hand at ease`)
   // The measures of a hand and an arm are a person's, 1.8 m tall: an owlbear's are near twice those and a halfling's
   // little over half.
   const big = (brief.height ?? 1.8) / 1.8
-  const cloth = fingersOnly(doc, brief.holds ? (brief.holds.hand ?? "R") : undefined, big)
+  const cloth = four ? 0 : fingersOnly(doc, brief.holds ? (brief.holds.hand ?? "R") : undefined, big)
   if (cloth) say("fingers", `${cloth} points that are no finger or no hand taken off those bones, and given to the hand or the forearm`)
   // A beast's head is its head bone's: `--crown=off` leaves it shared as the rigger had it.
-  const crowned = brief.creature && !args.includes("--crown=off") ? crown(doc) : 0
+  const crowned = brief.creature && !four && !args.includes("--crown=off") ? crown(doc) : 0
   if (crowned) say("crown", `${crowned} points of the head given to the head bone`)
   // `--helpers=off` leaves the skeleton as the rigger made it, to measure against.
-  if (!args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
+  if (!four && !args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
-  const rolled = args.includes("--rolls=off") ? null : rolls(doc, big)
+  const rolled = four || args.includes("--rolls=off") ? null : rolls(doc, big)
   if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})`)
   // What the brief says it carries, as rig.py leaves it on its skeleton: "staff:R:2.1".
   const hips = doc
@@ -2447,7 +2468,7 @@ async function rodinHyper(brief: Brief) {
     say("holds", `a ${brief.holds.what} in the ${brief.holds.hand === "L" ? "left" : "right"} hand, ${brief.holds.length ?? 2} m`)
   }
   await io.write(`${dir}/lod0.glb`, doc)
-  const order = ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
+  const order = four ? WANT_BEAST.map(([role]) => role) : ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
   return {
     rod: !!way,
