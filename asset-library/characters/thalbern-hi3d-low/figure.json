@@ -1,0 +1,54 @@
+{
+  "id": "thalbern-hi3d-low",
+  "name": "Thalbern (Hi3D, laid again by Low Poly)",
+  "role": "Ranger of the Valkarr Woods, Hi3D's model laid again with 10,000 quads, the most it makes,, to measure against thalbern-hi3d",
+  "cast": [],
+  "party": false,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, laid again with 10000 faces by Hyper3D Low Poly, rigged by Hyper3D",
+    "triangles": 9938,
+    "cost": 2.5,
+    "made": "2026-11-24",
+    "built": "2026-11-24"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Shoot",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sword Idle",
+    "Block",
+    "Combo",
+    "Strafe"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 9938,
+      "megabytes": 5.69,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 9938,
+      "megabytes": 1.54,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 1.12,
+      "texture": 512
+    }
+  ]
+}

@@ -12,6 +12,9 @@
 // A brief with "maker": "hi3d" (thalbern-hi3d) has its model from Hi3D v3.0 on fal ($2.10), from the same front and
 // back, and the same rig after it.
 //
+// A brief with "low": { "faces": 10000 } has its model made lighter by Hyper3D Low Poly on fal ($0.20, 10,000 at most) before it is
+// rigged: a new mesh laid over the old one, quads unless "mode" says "Raw", with the old textures baked onto it.
+//
 // A brief with "body": "<id>" (thalbern-rodin-meshy) makes no model: it takes that figure's, and its sheet, and pays
 // for Meshy's rig and clips alone ($1.04). Hyper3D's stock has no bow and no sword, and Meshy's library has both.
 //
@@ -1816,6 +1819,8 @@ interface Brief {
   helpers?: boolean
   // The share of its gloss a figure keeps where it is not metal, of 1: 0.5 makes a roughness of 0.6 one of 0.8.
   gloss?: number
+  // The model laid again with so many faces by Hyper3D Low Poly before the rig, its textures baked onto the new mesh.
+  low?: { faces: number; mode?: "Quad" | "Raw" }
   // "smooth" to smooth the model's own lids away, for a model made with lids heavy enough to hide the painted eyes.
   lids?: "smooth"
 }
@@ -2257,6 +2262,7 @@ const RODIN = { endpoint: "fal-ai/hyper3d/rodin/v2.5", cost: 0.4 }
 // is four times Rodin's, and the copies for a crowd are thinned from it as any figure's are.
 const HI3D = { endpoint: "hitem3d/hi3d/v3.0/multi-view-to-3d", cost: 2.1, faces: 200_000 }
 const HYPER = { endpoint: "hyper3d/rigging", list: "hyper3d/rigging/animations", cost: 0.2 }
+const LOW = { endpoint: "hyper3d/lowpoly/mesh-to-3d", cost: 0.2 }
 // The clips wanted from Hyper3D's stock, by the name the game plays each by: the first stock clip whose name or
 // description matches, a looping one first for a clip that loops. `pilot-picks.json` keeps what was picked: edit it
 // before paying to choose others.
@@ -2316,10 +2322,13 @@ async function rodinHyper(brief: Brief) {
   let rig = await kept<HyperAnswer>(`${dir}/pilot-rig.json`)
   if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
   const skinning = brief.skinning ?? "core"
-  const owed = (model ? 0 : maker.cost) + (rig ? 0 : HYPER.cost)
+  let low = brief.low ? await kept<RodinAnswer>(`${dir}/pilot-low.json`) : null
+  const lowCost = brief.low ? LOW.cost : 0
+  const owed = (model ? 0 : maker.cost) + (brief.low && !low ? LOW.cost : 0) + (rig ? 0 : HYPER.cost)
   if (owed > 0 && !pay) {
     const had = model ? `the model kept${brief.body ? ` from ${brief.body}` : ""}` : `the model $${maker.cost.toFixed(2)} from ${views.length} views (${maker.name})`
-    say("cost", `$${owed.toFixed(2)} to make: ${had}, the rig (${skinning} skinning) and its clips $${HYPER.cost.toFixed(2)}. Look over ${from}/pilot-picks.json, then run again with --pay`)
+    const lighter = brief.low ? `, ${low ? "the lighter mesh kept" : `the mesh laid again with ${brief.low.faces} faces $${LOW.cost.toFixed(2)}`}` : ""
+    say("cost", `$${owed.toFixed(2)} to make: ${had}${lighter}, the rig (${skinning} skinning) and its clips $${HYPER.cost.toFixed(2)}. Look over ${from}/pilot-picks.json, then run again with --pay`)
     return null
   }
   if (!model) {
@@ -2351,8 +2360,23 @@ async function rodinHyper(brief: Brief) {
     say("model", `made, $${maker.cost.toFixed(2)}`)
   } else say("model", "kept")
   if (!model.model_mesh?.url) throw new Error(`No model in ${from}/pilot-model.json`)
+  if (brief.low && !low) {
+    low = await fal<RodinAnswer>(`pilot low ${id}`, LOW.endpoint, {
+      model_url: model.model_mesh.url,
+      face_count: brief.low.faces,
+      mesh_mode: brief.low.mode ?? "Quad",
+      // 4K, as the generator's colour is kept for lod0.
+      resolution: "High",
+      transfer_texture: true,
+      geometry_file_format: "glb",
+    })
+    await writeFile(`${dir}/pilot-low.json`, `${JSON.stringify(low, null, 2)}\n`)
+    say("low", `made, $${LOW.cost.toFixed(2)}`)
+  } else if (low) say("low", "kept")
+  if (low && !low.model_mesh?.url) throw new Error(`No mesh in ${dir}/pilot-low.json`)
+  const mesh = low?.model_mesh ?? model.model_mesh
   // Hyper3D's rigging does not turn a model. One that faces another way is not sent, so the rig is not paid for.
-  const source = await fetched(model.model_mesh, "model")
+  const source = await fetched(mesh, low ? "low" : "model")
   const at = source ? await facing(source) : null
   say("faces", at ? `${at.faces}, widest along ${at.wide}, toes ${at.toes.join(", ")}` : "not known")
   // A beast's feet say nothing of the way it faces, as a person's toes do: it is looked at, every time.
@@ -2362,7 +2386,7 @@ async function rodinHyper(brief: Brief) {
   }
   if (!rig) {
     rig = await fal<HyperAnswer>(`pilot rig ${id}`, HYPER.endpoint, {
-      model_url: model.model_mesh.url,
+      model_url: mesh!.url,
       bone_template: brief.rig ?? "human",
       image_url: dataUri(await sharp(`${from}/apose-front.png`).png().toBuffer()),
       // "core" gathers a bone's pull about the skeleton, "for precise humanoid joints". "shell" "favors smooth weights
@@ -2474,9 +2498,9 @@ async function rodinHyper(brief: Brief) {
     rod: !!way,
     clips: made,
     rest: all,
-    generator: `${maker.name}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
+    generator: `${maker.name}${brief.low ? `, laid again with ${brief.low.faces} faces by Hyper3D Low Poly` : ""}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
     weights: "hyper3d",
-    cost: maker.cost + HYPER.cost,
+    cost: maker.cost + lowCost + HYPER.cost,
   }
 }
 
