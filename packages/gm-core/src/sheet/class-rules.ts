@@ -468,6 +468,8 @@ export type ChoiceRule = {
     d20: () => number
     roll: (sides: number) => number
     rules?: DeathRules
+    /** The encounter's floor, for what moves one who is shoved. */
+    floor?: Floor
   }) => Cast<Featured> & { problem?: string; name: string }
   /** As a reading that took it is applied: what it spends, and its beat for the story. */
   apply?: (characters: Featured[], actorId: string) => { characters: Featured[]; told?: { name: string; text: string } }

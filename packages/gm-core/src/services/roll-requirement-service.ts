@@ -11,12 +11,13 @@ import { conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, isHidden, type ModeSource } from "../sheet/conditions"
 import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
 import { found, type Hider, hiddenFrom, searchRoll } from "../sheet/hiding"
-import { chargedFeet, escapeFrom } from "../sheet/hit-riders"
+import { chargedFeet, escapeFrom, strengthAndProficiency } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
 import { itemName, itemWords } from "../sheet/items"
 import { type MoveAsk, type Moved, mayHide, moveBudget, takeMove, takeTeleport, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
+import { canHold, HOLD_IDS, HOLD_LINES, type HoldId, holdBarred, isHold } from "../sheet/holds"
 import { ruledReading } from "../sheet/ruled-turns"
 import { auraOnSave } from "../sheet/save-rules"
 import { shapeOf } from "../sheet/shape"
@@ -267,6 +268,9 @@ export function createRollRequirementService(ports: GmPorts) {
     const freeable = [{ ...character, id: self ?? "" }, ...others.filter((other) => sameSide(other, character) && beside(other))].filter((other) =>
       other.turnEffects?.some((effect) => effect.id === "attached")
     )
+    // An Unarmed Strike's Grapple and Shove, as the action, on an enemy that may be one size larger at most (../sheet/holds).
+    const holdFoes = canHold(character) && !isIncapacitated(character) ? standing.filter((other) => areEnemies(other, character)) : []
+    const holdOptions = HOLD_IDS.filter((id) => holdFoes.some((other) => !holdBarred(id, { ...character, id: self }, other, options?.present ?? [])))
     // The magic items a hero may hand to another hero within 5 feet as their action, and who may take them (../sheet/loot).
     const owned: readonly OwnedItem[] = "type" in character && character.type === "pc" ? (character.sheet?.items ?? []) : []
     const takers = owned.length ? others.filter((other) => other.type === "pc" && "sheet" in other && !!other.sheet && sameSide(other, character) && beside(other)) : []
@@ -467,7 +471,7 @@ ${
      "hide": they get out of sight to strike or slip away unseen, in a fight or out of one: a player who says they hide is "hide". The game rolls stealth for it and sets its difficulty, so give none.
 ${hiders.length ? `     "search": someone hides from the character now: ${hiders.map((other) => `${other.id} (${other.name})`).join(", ")}. When the character looks, listens, sniffs or hunts about for them, or for whatever they heard, "check" is "search". It is then never "none" or "perception": looking for one who hides is no passive watching, and point 4 does not apply. The game rolls Perception against the hider's Stealth and sets its difficulty, so give none.\n` : ""}${isHidden(character) ? `     The character is hidden now. "loud" is true when this turn they speak above a whisper, call out, shout or make a noise others here would hear, which gives them away. Whispering, signalling by hand, keeping still and moving quietly are not loud.\n` : ""}     "dodge": they give the turn to avoiding blows. "dash": they give it to covering ground. "disengage": they give it to backing out of reach. None of these is rolled.
      "help": they give the turn to aiding an ally, in a fight or out of one, and nothing is rolled. To aid an ally's next attack, "target" is the id of the enemy. To aid an ally's next check, "target" is the ally's id and "helps" is the skill's id.
-${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}${givable.length ? `     "give": they give the turn to handing one of their magic items to a hero beside them to keep, in a fight or out of one, and nothing is rolled. "target" is the id of who takes it: ${takers.map((other) => other.id).join(" or ")}. "gives" is the item's id: ${givable.map((item) => `${item.id} (${item.name})`).join(", ")}. A potion given for an ally to drink now is its Bonus Action, not "give".\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
+${holdOptions.map((id) => `     "${id}": ${HOLD_LINES[id]}, taken as the whole action with no roll of theirs. "target" is the id of who, from Who Is Here. Putting an enemy in a hold or shoving one is never a strength check or an attack, and the game sets the difficulty.\n`).join("")}${freeable.length ? `     "escape": they give the turn to pulling off a creature attached to them or to an ally beside them, and nothing is rolled. "target" is the id of who is freed: ${freeable.map((other) => other.id).join(" or ")}.\n` : ""}${givable.length ? `     "give": they give the turn to handing one of their magic items to a hero beside them to keep, in a fight or out of one, and nothing is rolled. "target" is the id of who takes it: ${takers.map((other) => other.id).join(" or ")}. "gives" is the item's id: ${givable.map((item) => `${item.id} (${item.name})`).join(", ")}. A potion given for an ally to drink now is its Bonus Action, not "give".\n` : ""}     Sneaking past or after someone is "stealth", not "hide". Avoiding one hazard is a save, not "dodge". Running somewhere outside a fight is "none".
    - BONUS ACTIONS: beside the action above, the character may use one of their own Bonus Actions in the same turn. Set "bonus" to its id only when their words plainly use it, and leave it out otherwise. One given to someone else takes "bonusTarget", that ally's id.
      Their Bonus Actions: ${
        [
@@ -567,7 +571,7 @@ ${
    - An attack takes no "harm": its weapon sets the damage. Never use damage for fear, shame, a threat, or a fight not yet joined.
 
 11) "harm" also holds the conditions this roll's own outcome would give or end. Most rolls give none. The game knows these and applies their rules itself: ${conditionIds.join(", ")}.
-   - An act that puts one on someone when it works (a trip or a shove knocks them prone, a hold leaves them grappled, a net or a snare leaves them restrained, a spell charms or frightens them): on "success", target them, kind "condition", and "condition" is its id.
+   - An act that puts one on someone when it works (a trip knocks them prone, a net or a snare leaves them restrained, a spell charms or frightens them): on "success", target them, kind "condition", and "condition" is its id.
    - A save against something that puts one on the character when it fails (a poison, a terror, a blinding flash, a snare): on "failure", target the character's own id, kind "condition".
    - An act that frees someone of one they have when it works (breaking a hold, tearing out of a net, shaking off fear): on "success", target who is freed, kind "end-condition". Only for a condition that Conditions or Who Is Here shows they have.
    - "span" is how long it lasts: "turn" is until their next turn is over, "minute" is the rest of a fight, "lasting" is until something ends it. Leave it out when unsure.
@@ -614,6 +618,7 @@ Action: "${action}"
         ...choices.flatMap(({ rule }) => (rule.check ? [rule.check] : [])),
         ...blockActions.map((entry) => entry.id),
         ...(freeable.length ? ["escape"] : []),
+        ...holdOptions,
         ...(givable.length ? ["give"] : []),
       ]
       // "search" is on the menu only while someone hides from the roller, and "loud" is asked only of one who is hidden.
@@ -1001,6 +1006,40 @@ Action: "${action}"
         const roll = chosenBonus ? { ...made.roll, modifier: made.roll.modifier + chosenBonus } : made.roll
         console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...roll })
         return { roll, ...also }
+      }
+      // An Unarmed Strike's Grapple or Shove, as the whole action: the target saves against 8 plus the striker's Strength
+      // modifier and Proficiency Bonus, and the game rolls it as it is resolved (../sheet/holds). A melee action closes
+      // with its target first, and one out of reach is not made.
+      if (isHold(pick.check) && holdOptions.includes(pick.check)) {
+        const id: HoldId = pick.check
+        const asked = [...(pick.target ? [pick.target] : []), ...(pick.targets ?? [])]
+        const foe = holdFoes.find((other) => asked.some((given) => named(given, other.name, other.id))) ?? (holdFoes.length === 1 ? holdFoes[0] : undefined)
+        const barred = foe ? holdBarred(id, { ...character, id: self }, foe, options?.present ?? []) : undefined
+        if (!foe || barred) {
+          also.ruling = {
+            name: "No Hold",
+            text: foe ? `${character.name} ${barred}, and the ${id === "unarmed-grapple" ? "Grapple" : "Shove"} is not made on ${foe.name}.` : `${character.name} has no one here to take hold of or shove.`,
+          }
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, refused: barred ?? "no one to take hold of" })
+          return { roll: null, ...also }
+        }
+        const stood = withMove(character, moved(moveFor({ target: foe.id, reach: 5 })))
+        const everyone = (options?.present ?? []).filter((other) => !isDead(other) && !hasFled(other))
+        const spaced = mover && floor ? castInSpace({ spell: { name: id === "unarmed-grapple" ? "Grapple" : "Shove", range: { kind: "feet", distance: 5 } }, caster: { ...stood, id: mover.id }, everyone, named: [foe.id], floor }) : undefined
+        if (spaced?.problem) {
+          also.ruling = spaced.problem
+          console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, ...also })
+          return { roll: null, ...also }
+        }
+        const feature: RequiredFeature = {
+          feature: { id, targets: [foe.id] },
+          rollType: id === "unarmed-grapple" ? "Grapple" : "Shove",
+          difficulty: 8 + strengthAndProficiency({ ...character, id: self }),
+          modifier: 0,
+          mode: "normal",
+        }
+        console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: false, feature: feature.feature })
+        return { roll: null, feature, ...also }
       }
       // An action of the stat block that is a save, used as the whole action: the game rolls it as it is resolved, as a
       // class feature used as the action is. On a floor its area is measured where the move left the roller, and takes

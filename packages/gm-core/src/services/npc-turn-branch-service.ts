@@ -515,6 +515,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         d20: dice.d20,
         roll: dice.roll,
         rules: args.rules,
+        floor,
       })
       const kept = settleConcentration({
         before: args.turn.characters,

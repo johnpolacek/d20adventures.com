@@ -224,7 +224,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       // A class feature used as the action (Channel Divinity), or a Beast's breath in Wild Shape: the engine rolls it and
       // every target's save, and spends the use, as it does a spell that asks for no throw. It is told by the same path
       // as a cast.
-      const used = featureResolver(required.feature.id)({ characters: turnCharacters as Featured[], actorId: args.characterId, feature: required.feature, d20: rollD20, roll: rollDie, rules })
+      const used = featureResolver(required.feature.id)({ characters: turnCharacters as Featured[], actorId: args.characterId, feature: required.feature, d20: rollD20, roll: rollDie, rules, floor })
       turnCharacters = used.characters as typeof turnCharacters
       const { name } = used
       rolls = castBeats(by, args.character, { name }, used, storyNames(args.turn.characters), "uses")

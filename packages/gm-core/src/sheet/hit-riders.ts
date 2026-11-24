@@ -9,6 +9,7 @@ import type { ConditionEntry, ConditionSpan } from "./condition-entry"
 import { conditionName, withCondition, withoutCondition } from "./conditions"
 import { afterHarm, type DeathRules, withDamage } from "./death"
 import { deriveSheet } from "./derive"
+import { hasFeature } from "./feature-rules"
 import type { ConditionChange } from "./harm"
 import { hitPointsOf } from "./hit-points"
 import { typesTaken } from "./monster-traits"
@@ -284,7 +285,7 @@ type Held = RiderHeld
 const grappleOn = (character: { conditions?: readonly ConditionEntry[] }) => character.conditions?.find((entry) => entry.id === "grappled" && entry.source)
 
 /** The creatures a holder grapples with one attack, by id. */
-const heldWith = (holder: string, attack: string, present: readonly { id?: string; conditions?: readonly ConditionEntry[] }[]) =>
+export const heldWith = (holder: string, attack: string, present: readonly { id?: string; conditions?: readonly ConditionEntry[] }[]) =>
   present.flatMap((other) => (other.conditions?.some((entry) => entry.id === "grappled" && entry.source === holder && entry.attack === attack) && other.id ? [other.id] : []))
 
 /** Whom an attached creature holds: the one bearing its "attached" mark. */
@@ -448,11 +449,17 @@ export function escapeFrom(character: Roller & { conditions?: readonly Condition
   return { dc: 8 + strengthAndProficiency(holder), hinders: false, holder }
 }
 
-function strengthAndProficiency(holder: Roller): number {
+/**
+ * What an Unarmed Strike's Grapple and Shove add to 8 for their Difficulty Class, and escaping the grapple: the Strength
+ * modifier and Proficiency Bonus. A Monk with Martial Arts and no armor or Shield may use Dexterity in Strength's place.
+ */
+export function strengthAndProficiency(holder: Roller): number {
   const shape = shapeOf(holder)
   if (holder.sheet && !shape) {
     const derived = deriveSheet(holder.sheet)
-    return derived.abilityModifiers.str + derived.proficiencyBonus
+    const mods = derived.abilityModifiers
+    const dexterous = hasFeature(holder, "monk-martial-arts") && !holder.sheet.armor && !holder.sheet.shield
+    return (dexterous ? Math.max(mods.str, mods.dex) : mods.str) + derived.proficiencyBonus
   }
   const monster: Monster | undefined = shape ?? blockOf(holder)
   return monster ? monster.abilities.str.mod + monster.pb : 0

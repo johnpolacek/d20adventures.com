@@ -3,6 +3,7 @@ import type { CheckResult, Roller } from "./check"
 import { type BonusAction, type BonusActionRule, bonusActionRule, bonusActionRules, type ChoiceRule, effectChoice, type Featured, type FeatureUse } from "./class-rules"
 import { deriveSheet } from "./derive"
 import { featureUseCount } from "./feature-rules"
+import { isHold, resolveHold } from "./holds"
 import { potionRule } from "./item-spend"
 import { potionActionsOf } from "./item-use"
 import { blockBonusActions, blockBonusRule, resolveBlockAction } from "./stat-block-actions"
@@ -54,10 +55,10 @@ export const bonusRuleFor = (character: Holder, id: string | undefined): BonusAc
 
 /**
  * How a feature used as the turn's action (`RequiredFeature`) is resolved, by its effect's id: a class's (Channel
- * Divinity), or else an action of the user's stat block that is a save (./stat-block-actions), which tells why when
- * the user has no such action ready.
+ * Divinity), an Unarmed Strike's Grapple or Shove (./holds), or else an action of the user's stat block that is a save
+ * (./stat-block-actions), which tells why when the user has no such action ready.
  */
-export const featureResolver = (id: string): NonNullable<ChoiceRule["resolve"]> => effectChoice(id)?.resolve ?? resolveBlockAction
+export const featureResolver = (id: string): NonNullable<ChoiceRule["resolve"]> => effectChoice(id)?.resolve ?? (isHold(id) ? resolveHold : resolveBlockAction)
 
 /** Whether a move taken with a Bonus Action draws no Opportunity Attacks, by the Bonus Action's own rule and the feet moved. */
 export function bonusDisengages(character: (Featured & { position?: { x: number; y: number } }) | undefined, bonus: string | undefined, feet: number): boolean {
