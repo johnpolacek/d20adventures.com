@@ -1,3 +1,12 @@
 packages:
   - packages/*
   - apps/desktop
+
+# Security overrides, from pnpm audit (2026-11-23).
+# @clerk/themes reads only types from @clerk/shared, and 3.x carries a critical middleware advisory.
+# Convex offers @clerk/clerk-react as an optional peer, and nothing here imports convex/react-clerk.
+# SendGrid's client allows axios ^1.12.0, and axios before 1.21 has high advisories.
+overrides:
+  "@clerk/themes>@clerk/shared": ^4.48.1
+  "@sendgrid/client>axios": ^1.21.1
+  "convex>@clerk/clerk-react": "-"
