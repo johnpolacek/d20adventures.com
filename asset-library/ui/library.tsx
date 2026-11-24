@@ -56,6 +56,8 @@ const named = (s: string) =>
 const scene = (staging: string) => named(staging.split("/")[1] ?? staging)
 // A step of a held clip, in frames a second.
 const FRAMES = 30
+// The keys that move a figure room's camera.
+const ORBIT_KEYS = ["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE"]
 const scenes = (n: number) => `${n} ${n === 1 ? "Scene" : "Scenes"}`
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 // A day as it is read: "2026-11-19" is "Nov 19, 2026".
@@ -91,6 +93,8 @@ interface Room {
   // Its weapons, and its arms put where a fight move needs them (packages/stage/src/figures/fight.ts), as the game does.
   armed: Armed | null
   framed: boolean
+  // The camera moved by the keys held, each frame.
+  move?: (dt: number) => void
 }
 
 function discard(root: THREE.Object3D) {
@@ -188,6 +192,7 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
         scrub.current.value = String(r.action.time)
         clock.current.textContent = `${r.action.time.toFixed(2)} / ${long.toFixed(2)} s · ${Math.round(r.action.time * FRAMES)}`
       }
+      r.move?.(Math.min(0.1, (now - last) / 1000))
       last = now
       controls.update()
       renderer.render(scene, camera)
@@ -198,6 +203,38 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
       }
     }
     raf = requestAnimationFrame(tick)
+    // The keys move the camera about the figure: W and S nearer and farther, A and D round it, Q and E down and up,
+    // and Shift faster. The arrows stay with the clip's frames.
+    const held = new Set<string>()
+    let fast = false
+    const down = (e: KeyboardEvent) => {
+      fast = e.shiftKey
+      if (!ORBIT_KEYS.includes(e.code) || e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement | null)?.closest?.("input, textarea, select")) return
+      e.preventDefault()
+      held.add(e.code)
+    }
+    const up = (e: KeyboardEvent) => {
+      fast = e.shiftKey
+      held.delete(e.code)
+    }
+    const blur = () => held.clear()
+    addEventListener("keydown", down)
+    addEventListener("keyup", up)
+    addEventListener("blur", blur)
+    r.move = (dt: number) => {
+      if (!held.size) return
+      const pace = dt * (fast ? 3 : 1)
+      const way = (plus: string, minus: string) => (held.has(plus) ? 1 : 0) - (held.has(minus) ? 1 : 0)
+      const off = camera.position.clone().sub(controls.target)
+      // Round the figure, a half turn in two seconds.
+      off.applyAxisAngle(new THREE.Vector3(0, 1, 0), way("KeyD", "KeyA") * Math.PI * 0.5 * pace)
+      // Nearer and farther, by a share of the distance, so a close look slows as it closes.
+      const far = THREE.MathUtils.clamp(off.length() * (1 - way("KeyW", "KeyS") * 1.2 * pace), controls.minDistance, controls.maxDistance)
+      off.setLength(far)
+      // Down and up, the camera and the point it looks at together.
+      controls.target.y = THREE.MathUtils.clamp(controls.target.y + way("KeyE", "KeyQ") * 1.2 * pace, 0, 3)
+      camera.position.copy(controls.target).add(off)
+    }
     // For a capture: the frame is drawn and read in one task, since the canvas keeps nothing between frames.
     const w = window as unknown as { __assets?: unknown }
     w.__assets = {
@@ -211,6 +248,9 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
     return () => {
       cancelAnimationFrame(raf)
       watch.disconnect()
+      removeEventListener("keydown", down)
+      removeEventListener("keyup", up)
+      removeEventListener("blur", blur)
       controls.dispose()
       if (r.figure) discard(r.figure)
       pmrem.dispose()
@@ -406,6 +446,7 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
         <div className="font-mono text-4xs opacity-55">
           {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {day(figure.source.made)}
         </div>
+        <div className="text-4xs opacity-55">Drag to turn · scroll to zoom · W S nearer and farther · A D round · Q E down and up · Shift faster</div>
       </div>
     </>
   )
