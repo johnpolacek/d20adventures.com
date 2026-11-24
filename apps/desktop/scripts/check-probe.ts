@@ -175,8 +175,9 @@ async function run(probe: Probe): Promise<Graded> {
     const picked = cast
       ? "cast"
       : reading.feature
-        ? // An action of the stat block is named by its id, and a class feature used as the action as Channel Divinity.
-          blockActionsOf(standing).some((entry) => entry.id === reading.feature?.feature.id)
+        ? // An action of the stat block or an Unarmed Strike's Grapple or Shove is named by its id, and a class feature
+          // used as the action as Channel Divinity.
+          blockActionsOf(standing).some((entry) => entry.id === reading.feature?.feature.id) || reading.feature.feature.id.startsWith("unarmed-")
           ? reading.feature.feature.id
           : "channel-divinity"
         : !got

@@ -8668,5 +8668,6 @@
     "action": "Branka backs off from Rae toward Vera's stall with her shield up.",
     "checks": ["none", "disengage", "dodge"],
     "fight": true
-  }
+  },
+  {"id": "slip-past-silas", "adventure": "covert-cargo", "encounter": "battle-on-the-boat", "hero": "1749159962941", "narrative": "Silas stands before the shut saloon door, blocking the only exit, a poisoned shortsword in his hand. Reinhard is closing on Lyra from across the cabin.", "action": "Lyra ducks under Silas's arm and tries to slip past him to the door.", "checks": ["unarmed-shove-push"], "stakes": []}
 ]
