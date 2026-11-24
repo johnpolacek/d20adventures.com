@@ -2,6 +2,8 @@
 
 This guide is for an AI coding agent helping someone host a game. The host runs the game in the desktop app on their own computer, and friends join in a browser. To play solo, follow the same steps with no friends: leave every hero on You or AI, click **Play**, and skip step 6. You do the terminal work. The person does the clicking, so give them one step at a time and wait for them to say what they see.
 
+Steps marked **Person step** are theirs alone. At each one, stop, tell them what to do, and wait until they say it worked. Do not go on to the next step first, and never guess what they saw.
+
 ## 1. Agree on the game
 
 Ask how many friends will play and which adventure, unless they said. Seats count every hero: each friend's, the host's if the host plays, and any the AI plays. The host can also just watch.
@@ -30,17 +32,23 @@ Read the script, then run it. It downloads the latest release, installs it and o
 - Mac or Linux: read https://d20adventures.com/install.sh, then `curl -fsSL https://d20adventures.com/install.sh | sh`
 - Windows, in PowerShell: read https://d20adventures.com/install.ps1, then `irm https://d20adventures.com/install.ps1 | iex`
 
-If the app is already installed, run the script anyway: it replaces the app with the latest release and keeps saved games. It quits the app first, which stops a game being hosted, so ask before updating. If you are not allowed to open apps, ask the person to open D20 Adventures.
+If the app is already installed, run the script anyway: it replaces the app with the latest release and keeps saved games. It quits the app first, which stops a game being hosted, so ask before updating.
+
+**Person step.** If you are not allowed to open apps, ask the person to open D20 Adventures.
 
 ## 4. Link the account
 
 A new install opens on **Link your account**, and nothing plays until it is done. An app that is already linked skips this.
+
+**Person step,** all of it.
 
 1. The person clicks **Link account**. Their browser opens https://d20adventures.com/desktop/link with a code filled in, and the app shows the same code.
 2. On the website they sign in, or sign up free, then click **Link**.
 3. The app moves on to its title screen.
 
 ## 5. Start the game
+
+**Person step,** all of it.
 
 1. Click **Begin**, then **Play** on the adventure.
 2. On the party screen each hero has **Who plays**: You, AI or Invite. Set a hero to **Invite** for each friend. The host leaves one on You to play too.
@@ -49,6 +57,8 @@ A new install opens on **Link your account**, and nothing plays until it is done
 5. Click **Invite**. It replaces Play once any hero is set to Invite.
 
 ## 6. Invite friends
+
+**Person step,** all of it.
 
 1. The **Hosting** screen lists an invite link for each open seat, with a **Copy** button. The host sends one to each friend.
 2. A friend opens the link, signs in or signs up free, picks a hero and clicks **Join**. If the button says **Ask to Join**, the host approves them under **Asking to join**.
@@ -66,4 +76,16 @@ If the host closes the app, friends see “The host’s app is offline” and th
 - To report a problem, use **Give Us Feedback** in the top bar during play, or https://d20adventures.com/contact.
 - The app's code is in `apps/desktop` at https://github.com/johnpolacek/d20adventures.com.
 
-When the game is running, tell the person what you did and anything that failed.
+## Report the result
+
+When the game is running, or you are stuck, end with this list. Mark each line done, skipped or failed, and say why for any that are not done.
+
+- Node.js 24 or newer, where the app looks
+- AI CLI answered a real request
+- App installed, latest release
+- Account linked
+- Adventure chosen, Game Master picked
+- Invite links sent (skip when solo)
+- Game started
+
+Then give the person one next step: fix what failed, or enjoy the game.
