@@ -113,7 +113,9 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
   const config = useContext(Config)
   const host = useRef<HTMLDivElement>(null)
   const room = useRef<Room | null>(null)
-  const [lod, setLod] = useState(Math.min(Number(params.lod) || 0, figure.lods.length - 1))
+  // It opens at the second level, a seventh the size of the full figure, so a crowd of visitors costs little to serve.
+  // The full figure is a click away, and `lod=0` in the address opens it.
+  const [lod, setLod] = useState(Math.max(0, Math.min(params.lod ? Number(params.lod) || 0 : 1, figure.lods.length - 1)))
   // The clips its shelf lists, and the fight moves every figure rigged by rig.py plays as well. One rigged elsewhere
   // (pipeline/pilot.ts) carries its own clips and no others.
   const clips = useMemo(
@@ -944,7 +946,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
       className={`up-card up-lib-figure relative text-left ${wide ? "is-wide" : ""}`}
     >
       <span className="up-card-art up-lib-portrait block">
-        <img src={`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`} alt="" loading="lazy" />
+        <img src={served(`${config.files}/${c.figure?.id}/${c.figure?.thumb ?? c.figure?.front}`)} alt="" loading="lazy" />
       </span>
       <span className="up-card-body block">
         <span className="up-lib-card-name">{named(c.name)}</span>
