@@ -36,14 +36,16 @@ export default async function PlaytestPage() {
         <Image fill priority src={served(REALM_ART)} alt="" className="object-cover" />
       </div>
       <div className="container pt-28 pb-24">
-        <article className="playtest-card relative isolate mx-auto max-w-3xl overflow-hidden rounded-lg border border-accent-200/20 shadow-float transition-[opacity,scale] duration-200 ease-out has-[[data-leaving]]:pointer-events-none has-[[data-leaving]]:scale-[0.98] has-[[data-leaving]]:opacity-0">
-            {/* Ledger's dark paper, with its grain and warm glow, behind everything on the card. */}
-            <div aria-hidden data-up-theme="dark" className="up-surface" style={{ position: "absolute", inset: 0, zIndex: -1, padding: 0, borderRadius: 0, background: "var(--up-bg) var(--up-glow) no-repeat" }} />
-          <header className="px-6 pt-10 sm:px-10 lg:px-14 lg:pt-14">
-            <Heading variant="h1" className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text text-transparent drop-shadow-[0_2px_6px_#f59e0b55]">
-              {joined ? "You’re a Playtester" : "Become a Playtester"}
-            </Heading>
-            <p className="mt-4 font-serif text-lg leading-relaxed text-white/80">
+        <article className="playtest-card relative isolate mx-auto mt-8 max-w-3xl rounded-lg shadow-float transition-[opacity,scale] duration-200 ease-out has-[[data-leaving]]:pointer-events-none has-[[data-leaving]]:scale-[0.98] has-[[data-leaving]]:opacity-0">
+          {/* Ledger's dark paper, with its grain and warm glow, inside the card's living edge (playtest.css). */}
+          <div aria-hidden data-up-theme="dark" className="up-surface playtest-paper" />
+          <header className="px-6 pt-16 sm:px-10 lg:px-14 lg:pt-20">
+            <div className="playtest-plate">
+              <Heading variant="h2" as="h1" className="bg-[linear-gradient(180deg,#fff7d6_0%,#fcd34d_38%,#b7791f_55%,#fde68a_72%,#a16207_100%)] bg-clip-text text-center text-transparent drop-shadow-[0_2px_6px_#f59e0b55]">
+                {joined ? "You’re a Playtester" : "Become a Playtester"}
+              </Heading>
+            </div>
+            <p className=" font-serif text-lg leading-relaxed text-white/80">
               Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so your feedback is appreciated while we are in development.
             </p>
           </header>
