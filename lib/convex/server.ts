@@ -1,6 +1,7 @@
 import { ConvexHttpClient } from "convex/browser"
 import type { FunctionReference, FunctionReturnType } from "convex/server"
 import { api, internal } from "@/convex/_generated/api"
+import { serverSecret } from "./server-secret"
 
 const convexUrl = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL
 if (!convexUrl) {
@@ -23,19 +24,27 @@ async function once<T>(call: () => Promise<T>): Promise<T> {
   }
 }
 
-type AnyQueryRef = FunctionReference<"query", "public" | "internal">
-type AnyMutationRef = FunctionReference<"mutation", "public" | "internal">
-type AnyActionRef = FunctionReference<"action", "public" | "internal">
+type AnyQueryRef = FunctionReference<"query", "public">
+type AnyMutationRef = FunctionReference<"mutation", "public">
+type AnyActionRef = FunctionReference<"action", "public">
+
+// Every Convex function answers only this server (convex/serverSecret.ts), so every call carries the secret. A caller
+// may still name it, as older ones do.
+type Args<Ref extends FunctionReference<"query" | "mutation" | "action", "public">> = Omit<Ref["_args"], "secret"> & { secret?: string }
+const signed = <A>(args: A) => ({ ...args, secret: serverSecret() })
+
+type Http = { [K in "query" | "mutation" | "action"]: (fn: unknown, args: unknown) => Promise<unknown> }
+const http = client as unknown as Http
 
 export const convex = {
-  query<Query extends AnyQueryRef>(query: Query, args: Query["_args"]): Promise<FunctionReturnType<Query>> {
-    return once(() => (client as { query: (fn: Query, fnArgs: Query["_args"]) => Promise<FunctionReturnType<Query>> }).query(query, args))
+  query<Query extends AnyQueryRef>(query: Query, args: Args<Query>): Promise<FunctionReturnType<Query>> {
+    return once(() => http.query(query, signed(args)) as Promise<FunctionReturnType<Query>>)
   },
-  mutation<Mutation extends AnyMutationRef>(mutation: Mutation, args: Mutation["_args"]): Promise<FunctionReturnType<Mutation>> {
-    return once(() => (client as { mutation: (fn: Mutation, fnArgs: Mutation["_args"]) => Promise<FunctionReturnType<Mutation>> }).mutation(mutation, args))
+  mutation<Mutation extends AnyMutationRef>(mutation: Mutation, args: Args<Mutation>): Promise<FunctionReturnType<Mutation>> {
+    return once(() => http.mutation(mutation, signed(args)) as Promise<FunctionReturnType<Mutation>>)
   },
-  action<Action extends AnyActionRef>(action: Action, args: Action["_args"]): Promise<FunctionReturnType<Action>> {
-    return once(() => (client as { action: (fn: Action, fnArgs: Action["_args"]) => Promise<FunctionReturnType<Action>> }).action(action, args))
+  action<Action extends AnyActionRef>(action: Action, args: Args<Action>): Promise<FunctionReturnType<Action>> {
+    return once(() => http.action(action, signed(args)) as Promise<FunctionReturnType<Action>>)
   },
 }
 

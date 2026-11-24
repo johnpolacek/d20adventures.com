@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { serverMutation, serverQuery } from "./serverSecret"
 
 function isTestOrDevEnv() {
   return process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development"
@@ -9,7 +9,7 @@ function isTestOrDevEnv() {
  * Delete all documents from a table
  * This mutation should only be available in test environments
  */
-export const deleteAll = mutation({
+export const deleteAll = serverMutation({
   args: { tableName: v.union(v.literal("mailing_list_subscriptions"), v.literal("adventures"), v.literal("turns")) },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
@@ -27,7 +27,7 @@ export const deleteAll = mutation({
  * Count documents in a table
  * This query should only be available in test environments
  */
-export const countDocuments = query({
+export const countDocuments = serverQuery({
   args: { tableName: v.literal("mailing_list_subscriptions") },
   handler: async (ctx, args) => {
     if (!isTestOrDevEnv()) {
@@ -42,7 +42,7 @@ export const countDocuments = query({
  * Seed test data for mailing_list_subscriptions
  * This mutation should only be available in test environments
  */
-export const seedTestData = mutation({
+export const seedTestData = serverMutation({
   args: {},
   handler: async (ctx) => {
     if (!isTestOrDevEnv()) {

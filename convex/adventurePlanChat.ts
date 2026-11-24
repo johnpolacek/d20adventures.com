@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { serverMutation, serverQuery } from "./serverSecret"
 
 const scopeValidator = v.optional(
   v.object({
@@ -37,7 +37,7 @@ const contextReportValidator = v.optional(
   })
 )
 
-export const appendMessage = mutation({
+export const appendMessage = serverMutation({
   args: {
     settingId: v.string(),
     adventurePlanId: v.string(),
@@ -65,7 +65,7 @@ export const appendMessage = mutation({
   },
 })
 
-export const updateProposalStatus = mutation({
+export const updateProposalStatus = serverMutation({
   args: {
     messageId: v.id("adventure_plan_chat_messages"),
     status: v.union(v.literal("used"), v.literal("dismissed")),
@@ -85,7 +85,7 @@ export const updateProposalStatus = mutation({
   },
 })
 
-export const getRecent = query({
+export const getRecent = serverQuery({
   args: {
     settingId: v.string(),
     adventurePlanId: v.string(),
@@ -103,7 +103,7 @@ export const getRecent = query({
   },
 })
 
-export const getAllForPlan = query({
+export const getAllForPlan = serverQuery({
   args: {
     settingId: v.string(),
     adventurePlanId: v.string(),
@@ -117,7 +117,7 @@ export const getAllForPlan = query({
   },
 })
 
-export const getBefore = query({
+export const getBefore = serverQuery({
   args: {
     settingId: v.string(),
     adventurePlanId: v.string(),

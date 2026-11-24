@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import sgMail from "@sendgrid/mail"
 import { revalidatePath } from "next/cache"
 import { addMailingListSubscription, getMailingListSubscriptions, removeMailingListSubscription } from "@/lib/services/mailing-list"
@@ -20,13 +20,16 @@ function isEmailServiceAvailable() {
   return isEmailServiceConfigured
 }
 
-export async function subscribe(data: { userId: string; email: string; name: string | null }) {
+// The signed-in player joins with their own account's email. Nothing the browser sends names who joins.
+export async function subscribe() {
   try {
+    const user = await currentUser()
+    const email = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses[0]?.emailAddress
+    if (!user || !email) throw new Error("Please sign in to join the waitlist")
     const result = await addMailingListSubscription({
-      userId: data.userId,
-      email: data.email,
-      name: data.name ?? undefined,
-      // Preferences are no longer passed for waitlist
+      userId: user.id,
+      email,
+      name: user.fullName || user.firstName || undefined,
     })
     revalidatePath("/mailing-list") // Consider if this path is still relevant or needs to be /waitlist
     return {

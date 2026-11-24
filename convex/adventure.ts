@@ -1,7 +1,7 @@
 import { v } from "convex/values"
 import { mergeKnowledge } from "../packages/gm-core/src/story/knowledge"
 import type { Doc, Id } from "./_generated/dataModel"
-import { action, mutation, query } from "./_generated/server"
+import { serverAction, serverMutation, serverQuery } from "./serverSecret"
 import { knowledgeValidator, storyValidator } from "./story"
 
 const contentRefValidator = v.object({
@@ -22,7 +22,7 @@ const generatedByValidator = v.object({
 })
 
 // Create a new adventure
-export const createAdventure = mutation({
+export const createAdventure = serverMutation({
   args: {
     planId: v.string(),
     settingId: v.string(),
@@ -78,7 +78,7 @@ export const createAdventure = mutation({
 })
 
 // Join an existing adventure
-export const joinAdventure = mutation({
+export const joinAdventure = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     userId: v.string(),
@@ -157,7 +157,7 @@ export const joinAdventure = mutation({
 // Add an AI-controlled companion to a lobby. Owner-only; the entry carries the
 // owner's userId plus the "ai" marker, and is NOT added to playerIds (that
 // stays human clerk ids for access control and cost splitting).
-export const addAiCompanion = mutation({
+export const addAiCompanion = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     requesterId: v.string(),
@@ -185,7 +185,7 @@ export const addAiCompanion = mutation({
   },
 })
 
-export const removeAiCompanion = mutation({
+export const removeAiCompanion = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     requesterId: v.string(),
@@ -211,7 +211,7 @@ export const removeAiCompanion = mutation({
 })
 
 // Create a new turn for an adventure
-export const createTurn = mutation({
+export const createTurn = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     encounterId: v.string(),
@@ -259,7 +259,7 @@ export const createTurn = mutation({
 })
 
 // Update a turn (story or characters)
-export const updateTurn = mutation({
+export const updateTurn = serverMutation({
   args: {
     turnId: v.id("turns"),
     story: v.optional(storyValidator),
@@ -276,7 +276,7 @@ export const updateTurn = mutation({
 })
 
 // Query: Get current adventure and its current turn
-export const getCurrentAdventure = query({
+export const getCurrentAdventure = serverQuery({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
@@ -290,7 +290,7 @@ export const getCurrentAdventure = query({
 })
 
 // Mutation: Get current adventure and process NPC turn if needed
-export const getCurrentAdventureWithNpcProcessing = mutation({
+export const getCurrentAdventureWithNpcProcessing = serverMutation({
   args: { adventureId: v.id("adventures"), refreshKey: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
@@ -304,7 +304,7 @@ export const getCurrentAdventureWithNpcProcessing = mutation({
   },
 })
 
-export const createAdventureWithFirstTurn = mutation({
+export const createAdventureWithFirstTurn = serverMutation({
   args: {
     planId: v.string(),
     settingId: v.string(),
@@ -385,7 +385,7 @@ export const createAdventureWithFirstTurn = mutation({
 })
 
 // Action: AI rewrite of reply (no DB access)
-export const aiRewriteReply = action({
+export const aiRewriteReply = serverAction({
   args: {
     characterName: v.string(),
     playerInput: v.string(),
@@ -399,7 +399,7 @@ export const aiRewriteReply = action({
 })
 
 // Mutation: Submit reply (updates turn with AI result)
-export const submitReply = mutation({
+export const submitReply = serverMutation({
   args: {
     turnId: v.id("turns"),
     characterId: v.string(),
@@ -436,7 +436,7 @@ export const submitReply = mutation({
 })
 
 // Internal query: Get a turn by ID
-export const getTurnById = query({
+export const getTurnById = serverQuery({
   args: { turnId: v.id("turns") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.turnId)
@@ -444,7 +444,7 @@ export const getTurnById = query({
 })
 
 // Query: Get a turn by adventure ID and order
-export const getTurnByOrder = query({
+export const getTurnByOrder = serverQuery({
   args: {
     adventureId: v.id("adventures"),
     order: v.number(),
@@ -460,7 +460,7 @@ export const getTurnByOrder = query({
 })
 
 // Query: Get all turns for an adventure ordered by turn order
-export const getTurnsByAdventure = query({
+export const getTurnsByAdventure = serverQuery({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -472,7 +472,7 @@ export const getTurnsByAdventure = query({
 })
 
 // Internal mutation: Patch a turn by ID
-export const patchTurn = mutation({
+export const patchTurn = serverMutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
@@ -488,7 +488,7 @@ export const patchTurn = mutation({
 })
 
 // Action: Get encounter context (intro/instructions)
-export const getEncounterContext = action({
+export const getEncounterContext = serverAction({
   args: { encounterId: v.string() },
   handler: async () => {
     // TODO: Implement real logic to fetch encounter context
@@ -501,7 +501,7 @@ export const getEncounterContext = action({
 })
 
 // Query: Get adventure by ID
-export const getAdventureById = query({
+export const getAdventureById = serverQuery({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.adventureId)
@@ -509,7 +509,7 @@ export const getAdventureById = query({
 })
 
 // Internal mutation: Patch an adventure by ID
-export const patchAdventure = mutation({
+export const patchAdventure = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     patch: v.object({
@@ -537,7 +537,7 @@ export const patchAdventure = mutation({
 
 // Mutation: Set Storyview auto-narration settings (toggle and pause state).
 // Authorization happens in the calling Next server action/route.
-export const setStoryviewSettings = mutation({
+export const setStoryviewSettings = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     storyview: v.object({
@@ -560,7 +560,7 @@ export const setStoryviewSettings = mutation({
   },
 })
 
-export const commitWikiTurnAdvance = mutation({
+export const commitWikiTurnAdvance = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     expectedCurrentTurnId: v.id("turns"),
@@ -675,7 +675,7 @@ function mergeThreads(existing: unknown[], added: Array<{ id?: string }>, resolv
 }
 
 // Query: Get turn navigation info (efficient - minimal data transfer)
-export const getTurnNavigationInfo = query({
+export const getTurnNavigationInfo = serverQuery({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     // Get adventure with current turn info
@@ -705,7 +705,7 @@ export const getTurnNavigationInfo = query({
 })
 
 // Query: Get all adventures (for admin)
-export const getAllAdventures = query({
+export const getAllAdventures = serverQuery({
   handler: async (ctx) => {
     return await ctx.db.query("adventures").order("desc").collect()
   },
@@ -715,7 +715,7 @@ export const getAllAdventures = query({
 // audio manifests, chat, reports, a hosted game's GM jobs). Authorization
 // happens in the calling server action (requireAdmin) — keep this mutation
 // out of client reach.
-export const deleteAdventureCascade = mutation({
+export const deleteAdventureCascade = serverMutation({
   args: {
     adventureId: v.id("adventures"),
   },
@@ -776,7 +776,7 @@ export const deleteAdventureCascade = mutation({
   },
 })
 
-export const getAdventuresByPlayer = query({
+export const getAdventuresByPlayer = serverQuery({
   args: {
     playerId: v.string(),
     status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
@@ -796,7 +796,7 @@ export const getAdventuresByPlayer = query({
 })
 
 // Query: Get adventure lobby data with real-time updates
-export const getAdventureLobbyData = query({
+export const getAdventureLobbyData = serverQuery({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)

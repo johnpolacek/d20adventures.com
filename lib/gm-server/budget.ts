@@ -46,15 +46,15 @@ export async function budgetToday() {
   return { day, ...(await convex.query(api.aiBudget.day, { secret: serverSecret(), day })) }
 }
 
-/** Whether the site may still pay for AI today. If the ledger cannot be read, it may: each player's tokens still bound them. */
+/** Whether the site may still pay for AI today. If the ledger cannot be read, it may not, so an outage cannot run up a bill. */
 export async function budgetOpen(): Promise<boolean> {
   if (!limited()) return true
   try {
     const { usd, limit } = await budgetToday()
     return usd < limit
   } catch (error) {
-    console.error("budget: could not read today's spend, so the call goes ahead:", error)
-    return true
+    console.error("budget: could not read today's spend, so the call is refused:", error)
+    return false
   }
 }
 

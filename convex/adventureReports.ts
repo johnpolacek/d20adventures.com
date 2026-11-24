@@ -1,7 +1,7 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { serverMutation, serverQuery } from "./serverSecret"
 
-export const createAdventureReport = mutation({
+export const createAdventureReport = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     ownerId: v.string(),
@@ -21,7 +21,7 @@ export const createAdventureReport = mutation({
   },
 })
 
-export const getReportsByAdventure = query({
+export const getReportsByAdventure = serverQuery({
   args: {
     adventureId: v.id("adventures"),
     limit: v.optional(v.number()),
@@ -36,7 +36,7 @@ export const getReportsByAdventure = query({
   },
 })
 
-export const getLatestReportByAdventure = query({
+export const getLatestReportByAdventure = serverQuery({
   args: { adventureId: v.id("adventures") },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -47,7 +47,7 @@ export const getLatestReportByAdventure = query({
   },
 })
 
-export const getReportsByOwner = query({
+export const getReportsByOwner = serverQuery({
   args: {
     ownerId: v.string(),
     limit: v.optional(v.number()),

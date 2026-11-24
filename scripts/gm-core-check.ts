@@ -81,7 +81,12 @@ function memoryGame() {
     },
   }
   // Exercise the actual Convex handlers. Only the database transport is replaced.
-  const handler = (mutation: unknown) => (mutation as { _handler(ctx: unknown, args: unknown): Promise<any> })._handler
+  // Every handler answers only the Next server, which passes the shared secret (convex/serverSecret.ts).
+  process.env.STORE_SERVER_SECRET ??= "gm-core-check"
+  const handler =
+    (mutation: unknown) =>
+    (ctx: unknown, args: object): Promise<any> =>
+      (mutation as { _handler(ctx: unknown, args: unknown): Promise<any> })._handler(ctx, { ...args, secret: process.env.STORE_SERVER_SECRET })
   const store: Store = {
     getAdventure: ({ adventureId }) => db.get(adventureId),
     getTurn: ({ turnId }) => db.get(turnId),

@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation } from "./_generated/server"
+import { serverMutation } from "./serverSecret"
 import { storyValidator } from "./story"
 
 const contentRefValidator = v.object({
@@ -20,7 +20,7 @@ const generatedByValidator = v.object({
 })
 
 // Minimal mutation: create a new turn
-export const createTurn = mutation({
+export const createTurn = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     encounterId: v.string(),
@@ -62,7 +62,7 @@ export const createTurn = mutation({
 })
 
 // Minimal mutation: update a turn (patch)
-export const updateTurn = mutation({
+export const updateTurn = serverMutation({
   args: {
     turnId: v.id("turns"),
     patch: v.object({
@@ -81,7 +81,7 @@ export const updateTurn = mutation({
 })
 
 // Minimal mutation: patch adventure
-export const patchAdventure = mutation({
+export const patchAdventure = serverMutation({
   args: {
     adventureId: v.id("adventures"),
     patch: v.object({

@@ -23,12 +23,7 @@ export function MailingListForm({ initialEmail }: { initialEmail?: string }) {
 
     try {
       setIsLoading(true)
-      await subscribe({
-        userId: user.id,
-        email: initialEmail || user.emailAddresses[0].emailAddress,
-        name: user.fullName || user.firstName || null,
-        // preferences: {} // Assuming subscribe action will be updated
-      })
+      await subscribe()
       toast.success("Successfully joined the waitlist!")
       router.refresh()
     } catch (error) {

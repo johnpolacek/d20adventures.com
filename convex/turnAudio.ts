@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { serverMutation, serverQuery } from "./serverSecret"
 
 // A "generating" row older than this is considered abandoned (crashed generation)
 // and may be reclaimed by a new request.
@@ -16,7 +16,7 @@ const segmentValidator = v.object({
   paragraphHash: v.optional(v.string()),
 })
 
-export const getTurnAudio = query({
+export const getTurnAudio = serverQuery({
   args: { turnId: v.id("turns") },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -28,7 +28,7 @@ export const getTurnAudio = query({
 
 // Atomically claim the right to generate audio for a turn. Convex mutations are
 // serialized per document, so only one of two concurrent callers wins the claim.
-export const claimTurnAudioGeneration = mutation({
+export const claimTurnAudioGeneration = serverMutation({
   args: {
     turnId: v.id("turns"),
     adventureId: v.id("adventures"),
@@ -77,7 +77,7 @@ export const claimTurnAudioGeneration = mutation({
   },
 })
 
-export const finalizeTurnAudio = mutation({
+export const finalizeTurnAudio = serverMutation({
   args: {
     turnId: v.id("turns"),
     storyHash: v.string(),
@@ -105,7 +105,7 @@ export const finalizeTurnAudio = mutation({
   },
 })
 
-export const failTurnAudio = mutation({
+export const failTurnAudio = serverMutation({
   args: {
     turnId: v.id("turns"),
     storyHash: v.string(),
