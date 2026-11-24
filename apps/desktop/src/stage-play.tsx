@@ -572,21 +572,24 @@ export function StagePlay(props: {
   // Entrances the scene ties to the narration: offstage until the paragraph that brings them on ("the cabin door
   // opened"), then they walk on from the door to where the engine has them. Narration without the phrase finds them
   // in place. An action that brings someone on from a place does the same, at its own paragraph.
+  // A hero is in the scene from its start, so one the story brings out of a place, as Poppen creeping out of the bushes
+  // at the treeline, waits there in plain view and is not taken off the stage until then.
   const cues = useMemo(() => {
     const entrances = stage?.staging?.entrances ?? []
     const authored = entrances.flatMap((e) =>
-      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, ...when(text, e.when) }] : []
+      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, here: false, ...when(text, e.when) }] : []
     )
     const told = paragraphs.flatMap((p, at) =>
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
+        const here = b.kind === "action" && turn?.characters.find((c) => c.id === b.actor)?.type === "pc"
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], at, s: sentenceOf(p.text, b.text) }]
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], here, at, s: sentenceOf(p.text, b.text) }]
           : []
       })
     )
     return [...authored.filter((e) => !told.some((t) => t.cast === e.cast)), ...told]
-  }, [stage, text, paragraphs, castOf])
+  }, [stage, text, paragraphs, castOf, turn?.characters])
   const arriving = cues.find((e) => reached(e.at, e.s))
   // The entrances played on this stage, by cast and paragraph. A stage built at a scene change can be ready only once
   // the reader is on the entrance's paragraph, with everyone standing in place: the entrance is still walked.
@@ -606,8 +609,8 @@ export function StagePlay(props: {
       const key = `${e.cast}:${e.at}`
       if (toCome(e.at, e.s)) {
         entered.current.delete(key)
-        stage.placeCast(e.cast, from)
-        stage.setOnStage(e.cast, false)
+        stage.placeCast(e.cast, from, e.here ? home.facing : undefined)
+        stage.setOnStage(e.cast, e.here)
       } else if (reached(e.at, e.s) && !entered.current.has(key)) {
         entered.current.add(key)
         stage.placeCast(e.cast, from, to)
@@ -835,8 +838,8 @@ export function StagePlay(props: {
   }, [stage])
   // Everyone where the engine has them. A new stage, or a new encounter on it, places them at once. After that, someone
   // the engine moves walks there from where they are drawn, when the reader reaches the paragraphs of their latest
-  // step, or at once when the story is not being read. A newer move takes over a walk under way. Someone offstage
-  // waiting for an entrance is left to it.
+  // step, or at once when the story is not being read. A newer move takes over a walk under way. Someone waiting for
+  // an entrance, offstage or a hero in plain view at the place they come out of, is left to it.
   const drawn = useRef<{ stage: Stage; encounter: string; at: Map<string, string>; walks: Map<string, number> } | null>(null)
   useEffect(() => {
     // A stage being replaced for the next encounter must not take the new encounter's positions.
@@ -848,8 +851,10 @@ export function StagePlay(props: {
     for (const [id, { character, at: to }] of spots) {
       const key = to.join()
       if (d.at.get(id) === key) continue
-      if (fresh || !stage.isOnStage(id)) {
+      const cued = cues.some((e) => e.cast === id && e.here && (toCome(e.at, e.s) || reached(e.at, e.s)))
+      if (fresh || !stage.isOnStage(id) || cued) {
         d.at.set(id, key)
+        if (cued) continue
         // Someone on a walk the narration cues is left to it.
         if (stage.isOnStage(id) && !(reading && walks.some((w) => w.cast === id))) stage.placeCast(id, to)
         continue
@@ -891,7 +896,7 @@ export function StagePlay(props: {
       const low = keptLow(c) && (!spot || d.at.get(id) === spot.at.join())
       if (low !== stage.isLow(id)) stage.setLow(id, low, fresh)
     }
-  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, started, walks, onError])
+  }, [stage, stageRef, shown, spots, paragraphs, reading, paragraph, started, walks, cues, onError])
   // What labelled paragraphs do on stage: effects and objects, each played once when its paragraph is first read.
   // An attack in a hero's reply waits for the roll that decides it, and plays after the roll as a hit or a miss, unless
   // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
