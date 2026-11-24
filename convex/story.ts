@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { EFFECT_KINDS, ELEMENTS, OBJECT_KINDS, PACES } from "../packages/gm-core/src/story/beats"
+import { EFFECT_KINDS, ELEMENTS, OBJECT_KINDS, PACES, READIES } from "../packages/gm-core/src/story/beats"
 
 const oneOf = <T extends string>(values: readonly [T, ...T[]]) => v.union(...values.map((value) => v.literal(value)))
 
@@ -28,6 +28,7 @@ export const storyValidator = v.array(
       enters: v.optional(v.object({ from: v.string(), pace: v.optional(oneOf(PACES)) })),
       effect: v.optional(v.object({ kind: oneOf(EFFECT_KINDS), element: v.optional(oneOf(ELEMENTS)) })),
       object: v.optional(v.object({ kind: oneOf(OBJECT_KINDS), to: v.optional(v.string()) })),
+      ready: v.optional(oneOf(READIES)),
       private: v.optional(v.literal(true)),
     }),
     v.object({ kind: v.literal("line"), by, text: v.string(), speaker: v.string(), to: v.optional(v.string()), delivery: v.optional(v.string()), private: v.optional(v.literal(true)) }),

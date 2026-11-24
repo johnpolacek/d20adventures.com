@@ -15,6 +15,9 @@ export interface Armed {
   // Called each frame after the clip has moved the figure: `t` is seconds into the move and `weight` how much of it
   // plays, 0 to 1.
   after: (clip: string, t: number, weight: number) => void
+  // Called each frame after the clip, while the weapon a move needs is kept in hand between moves, as an arrow nocked:
+  // the hand closed on it as it hangs.
+  rest: (clip: string) => void
   dispose: () => void
 }
 
@@ -108,6 +111,8 @@ export function arm(root: THREE.Object3D, moves: string[], height: number): Arme
       if (clip === "Shoot") shoot(t, weight)
       else if (clip === "Swing") swing(t, weight)
     },
+    // Seated in the hand at rest, it hangs as the arm does.
+    rest: () => {},
     dispose: () => {
       for (const w of weapons.values()) w.dispose()
     },

@@ -1865,6 +1865,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     }
     return this.fire(kind, from, to, element, miss)
   }
+  // Keep a weapon in a figure's hand between its moves, as an arrow nocked or a sword drawn, or put it away. A card
+  // shows nothing of it.
+  readyWeapon(id: string, what: "bow" | "blade" | null) {
+    return this.models.ready(id, what)
+  }
   // A figure's move by its clip's name, such as a roar, turned toward a cast member or a place. Resolves to the seconds
   // until it lands, or null when the cast member is no figure or has no such clip.
   act(id: string, clip: string, toward?: string | [number, number]) {

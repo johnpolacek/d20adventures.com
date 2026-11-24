@@ -3,7 +3,7 @@ import { isHidden } from "@d20/gm-core/sheet/conditions"
 import { levelOwed } from "@d20/gm-core/sheet/level-owed"
 import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
 import { metres } from "@d20/gm-core/sheet/space"
-import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import type { FeatureBeat, Ready, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
@@ -797,6 +797,30 @@ export function StagePlay(props: {
     }
     return () => falls.forEach(clearTimeout)
   }, [stage, shown, exits, paragraphs, reading, paragraph, started])
+  // A weapon kept in hand, as Thalbern's arrow nocked in the thicket: the last one the story readied for each cast member
+  // in this encounter, in its earlier turns and in this one as far as it has been read. One put away leaves the hand
+  // empty, and so does a new encounter.
+  const readied = (() => {
+    if (!shown) return ""
+    const out = new Map<string, Ready>()
+    const take = (b: StoryBeat) => {
+      const id = b.kind === "action" && b.ready ? castOf(b.actor) : undefined
+      if (id && b.kind === "action" && b.ready) out.set(id, b.ready)
+    }
+    const earlier = (save?.turns ?? []).filter((t) => t.encounterId === shown.encounterId && (t.order ?? 0) < (shown.order ?? 0))
+    for (const t of earlier.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) for (const b of t.story) take(b)
+    if (closingNow) for (const b of shown.story) take(b)
+    else paragraphs.forEach((p, at) => p.beats.forEach((b) => b.kind === "action" && !toCome(at, sentenceOf(p.text, b.text)) && take(b)))
+    return JSON.stringify([...out])
+  })()
+  useEffect(() => {
+    if (!stage) return
+    const kept = new Map<string, Ready>(readied ? JSON.parse(readied) : [])
+    for (const c of stage.cast) {
+      const what = kept.get(c.id)
+      stage.readyWeapon(c.id, what === "bow" || what === "blade" ? what : null)
+    }
+  }, [stage, readied])
   // Walks the scene ties to the narration for someone already on stage, such as Thalbern on his way through the woods as
   // the story opens. They stand where the walk starts until its paragraph, then walk to where the engine has them. This
   // comes before the opening view, which frames them where the walk starts.

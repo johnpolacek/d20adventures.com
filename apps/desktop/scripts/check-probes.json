@@ -690,6 +690,18 @@
     }
   },
   {
+    "id": "nock-and-creep-to-the-edge",
+    "adventure": "covert-cargo",
+    "encounter": "the-shipment",
+    "hero": "thalbern",
+    "floor": true,
+    "action": "I nock an arrow and creep to the edge of the thicket so I can watch the crate and the scrollcase.",
+    "checks": ["stealth", "none"],
+    "moved": {
+      "feet": [5, 10]
+    }
+  },
+  {
     "id": "ray-out-of-range",
     "adventure": "covert-cargo",
     "encounter": "battle-on-the-boat",

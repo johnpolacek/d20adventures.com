@@ -72,6 +72,10 @@ interface Model {
   // The move it is making, once through, and the way it turns to make it.
   move: { clip: string; action: THREE.AnimationAction; t: number; held?: boolean } | null
   aim: number | null
+  // The move whose weapon it keeps in hand between moves, as an arrow nocked or a sword drawn, and the move whose
+  // weapon shows now.
+  ready: string | null
+  shown: string | null
   // Its moves' clips, held: `update` runs them through once.
   actions: Map<string, THREE.AnimationAction>
   // The weapons its moves put in its hands, and its arms put where a move needs them (fight.ts).
@@ -133,6 +137,8 @@ export class Models {
   onChange: (() => void) | null = null
 
   private room: Promise<THREE.Texture> | null = null
+  // The weapon each cast member keeps ready, for a figure that loads after it was asked.
+  private readied = new Map<string, "bow" | "blade">()
   constructor(
     private cast: CastMember[],
     private shared: SharedUniforms,
@@ -315,6 +321,8 @@ export class Models {
       carried,
       move: null,
       aim: null,
+      ready: null,
+      shown: null,
       actions,
       armed,
       hitT: null,
@@ -329,6 +337,7 @@ export class Models {
       glow: mats.map((m) => m.emissive.clone()),
       triangles,
     })
+    this.ready(cast.id, this.readied.get(cast.id) ?? null)
   }
   // Seconds between a figure's footfalls as it walks at `gait` metres a second: half its walk cycle, at the rate the
   // walk plays. Null for one with no walk of its own.
@@ -350,7 +359,6 @@ export class Models {
     const action = m.actions.get(clip)
     if (!action) return null
     if (m.move && m.move.action !== action) m.move.action.setEffectiveWeight(0)
-    m.armed?.show(clip)
     m.move = { clip, action, t: 0 }
     const c = m.cast
     m.aim = toward && Math.hypot(toward.x - c.x, toward.z - c.z) > 0.2 ? Math.atan2(toward.x - c.x, toward.z - c.z) : null
@@ -362,6 +370,17 @@ export class Models {
     const m = this.items.get(id) as Model
     if (m.move) Object.assign(m.move, { t: seconds, held: true })
     return true
+  }
+  // Keep a weapon in hand between moves, the bow its shot uses or the blade its cut does, or put it away. False when
+  // the figure has no move that wields it.
+  ready(id: string, what: "bow" | "blade" | null) {
+    if (what) this.readied.set(id, what)
+    else this.readied.delete(id)
+    const m = this.items.get(id)
+    if (!m) return false
+    const clip = what ? m.spec.moves?.[what === "bow" ? "ranged" : "melee"] : undefined
+    m.ready = clip && m.actions.has(clip) ? clip : null
+    return !what || !!m.ready
   }
   hit(id: string, color: string, strength = 1) {
     const m = this.items.get(id)
@@ -437,7 +456,6 @@ export class Models {
         if (!mv.held) mv.t += step
         if (!mv.held && (mv.t >= d || down || !motion)) {
           mv.action.setEffectiveWeight(0)
-          m.armed?.show(null)
           m.move = null
           m.aim = null
         } else {
@@ -466,9 +484,18 @@ export class Models {
       const lowWant = this.standees.low.has(c.id) && !down && !c.walking ? 1 - c.walk : 0
       m.lowT = motion ? THREE.MathUtils.clamp(m.lowT + THREE.MathUtils.clamp(lowWant - m.lowT, -dt * 3, dt * 1.8), 0, 1) : lowWant
       m.crouch?.setEffectiveWeight((1 - f) * THREE.MathUtils.smootherstep(m.lowT, 0, 1))
+      // The weapon the move needs shows while it plays, and one kept ready stays in hand after, standing, walking or
+      // low, until the figure falls.
+      const kept = !m.move && !down ? m.ready : null
+      const showing = m.move?.clip ?? kept
+      if (showing !== m.shown) {
+        m.armed?.show(showing)
+        m.shown = showing
+      }
       m.mixer.update(step)
       m.carried?.update(1 - f)
       if (m.move) m.armed?.after(m.move.clip, m.move.t, v)
+      else if (kept) m.armed?.rest(kept)
       m.root.position.set(c.x, (c.y ?? 0) + m.lift, c.z)
       // A model with no fall clip is tipped onto its back, as a card is.
       // Which face shows is settled as a card's is: the back past 100 degrees off its facing, the front again under 80.

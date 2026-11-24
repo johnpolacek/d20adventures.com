@@ -610,6 +610,11 @@
                   "type": "string",
                   "enum": ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
+                "ready": {
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "type": "string",
+                  "enum": ["bow", "blade", "away"]
+                },
                 "sound": {
                   "description": "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut",
                   "type": "string",
@@ -887,6 +892,11 @@
                   "type": "string",
                   "enum": ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
+                "ready": {
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "type": "string",
+                  "enum": ["bow", "blade", "away"]
+                },
                 "sound": {
                   "description": "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut",
                   "type": "string",
@@ -970,6 +980,11 @@
                   "description": "action: an object the actor shows or hands over, if any",
                   "type": "string",
                   "enum": ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
+                },
+                "ready": {
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "type": "string",
+                  "enum": ["bow", "blade", "away"]
                 },
                 "sound": {
                   "description": "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut",
@@ -1289,6 +1304,11 @@
                   "description": "action: an object the actor shows or hands over, if any",
                   "type": "string",
                   "enum": ["scroll", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
+                },
+                "ready": {
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "type": "string",
+                  "enum": ["bow", "blade", "away"]
                 },
                 "sound": {
                   "description": "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut",

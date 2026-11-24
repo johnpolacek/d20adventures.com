@@ -577,6 +577,7 @@ ${
 ${
   mover && floor
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
+   - An action that goes anywhere moves them, however short the way. Creeping to the edge of the cover they are in, or stepping up to a rail or a window, is "moveTo" what they come closer to, with "moveFeet" 5. Leave the move out only when they stay where they are.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
    - Every turn that moves sets "fight": true when a fight is on in the scene, false when it is not. A scene of talk or trade is no fight, whoever stands near.

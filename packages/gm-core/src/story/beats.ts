@@ -10,12 +10,15 @@ export const OBJECT_KINDS = ["scroll", "letter", "map", "pouch", "coin", "key", 
 // Sounds a beat can make that nothing on stage shows: a door, a chest's lid, someone going into water, wood split open,
 // a rope cut through. The stage's SOUND_CUES, which gm-core cannot import.
 export const SOUNDS = ["door-open", "door-close", "door-creak", "chest", "splash", "crack", "rope"] as const
+// A weapon a character takes in hand and keeps there, as an arrow nocked or a sword drawn, or puts away again.
+export const READIES = ["bow", "blade", "away"] as const
 
 export type Pace = (typeof PACES)[number]
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 export type Element = (typeof ELEMENTS)[number]
 export type ObjectKind = (typeof OBJECT_KINDS)[number]
 export type StorySound = (typeof SOUNDS)[number]
+export type Ready = (typeof READIES)[number]
 
 // Which step of the game wrote a beat, and for whom: an encounter's intro, a hero's reply, a roll and its outcome, an
 // NPC's turn, or the end of a round.
@@ -52,6 +55,8 @@ export type ActionBeat = {
   enters?: StoryEntrance
   effect?: StoryEffect
   object?: StoryObject
+  // A weapon they take in hand and keep there until they put it away: the stage shows it held.
+  ready?: Ready
   sound?: StorySound
   private?: true
 }
@@ -116,6 +121,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     enters: z.object({ from: id, pace: z.enum(PACES).optional() }).optional(),
     effect: z.object({ kind: z.enum(EFFECT_KINDS), element: z.enum(ELEMENTS).optional() }).optional(),
     object: z.object({ kind: z.enum(OBJECT_KINDS), to: id.optional() }).optional(),
+    ready: z.enum(READIES).optional(),
     sound: z.enum(SOUNDS).optional(),
     private: z.literal(true).optional(),
   }),
@@ -171,6 +177,7 @@ export const storyOutputSchema = z
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),
+      ready: menu(READIES, "action: a weapon the actor takes in hand and keeps ready, or away when they put it away"),
       sound: menu(SOUNDS, "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut"),
       delivery: z.string().optional().describe("line: how it is said, in one or two words, such as quietly or with a growl"),
       private: z.boolean().optional().catch(undefined).describe("action and line: true when only the one acting or speaking and the one it is aimed at can see or hear it"),

@@ -27,6 +27,7 @@ const KEYS: Record<string, keyof StoryOutput[number]> = {
   effect: "effect",
   element: "element",
   object: "object",
+  ready: "ready",
   sound: "sound",
   delivery: "delivery",
   private: "private",

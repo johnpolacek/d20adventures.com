@@ -255,6 +255,15 @@ export function wield(root: THREE.Object3D): Armed {
       grip(h, grips.get(weapon.what) ?? new Map())
       if (weapon.what === "bow") shoot(weapon, t, LOOSED[clip] ?? Number.POSITIVE_INFINITY)
     },
+    // Closed on as it hangs, the bow loosed and its string straight, the other hand easy.
+    rest: (clip) => {
+      const need = holds(clip)
+      const weapon = need ? weapons.get(need.what) : null
+      const h = need ? hands[need.hand] : null
+      if (!weapon || !h || weapon !== shown) return
+      grip(h, grips.get(weapon.what) ?? new Map())
+      if (weapon.what === "bow") shoot(weapon, Number.POSITIVE_INFINITY, 0)
+    },
     dispose: () => {
       for (const w of weapons.values()) w.dispose()
     },

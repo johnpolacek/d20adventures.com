@@ -118,6 +118,7 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       const from = findPlace(scene, out.from)?.id
       if (from) action.enters = { from, ...(out.pace ? { pace: out.pace } : {}) }
       if (out.effect) action.effect = { kind: out.effect, ...(out.element ? { element: out.element } : {}) }
+      if (out.ready) action.ready = out.ready
       if (out.object) action.object = { kind: out.object, ...(action.target ? { to: action.target } : {}) }
       if (out.sound) action.sound = out.sound
       if (out.private) action.private = true
