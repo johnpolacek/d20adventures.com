@@ -16,6 +16,9 @@
   "creature": true,
   "stance": "four",
   "maker": "hi3d",
+  "low": {
+    "faces": 10000
+  },
   "rig": "quadruped",
   "stock": "lizard",
   "gloss": 0.5,
