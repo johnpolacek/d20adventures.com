@@ -4,9 +4,11 @@
 // panel resizes, and the new text fades in. A paragraph that is a dice roll shows the roll itself (see RollResult), and
 // one that is a class feature used shows it as a small entry (see FeatureEntry). Dots mark the paragraph's place in the turn; the controls replay the turn,
 // step back, move on (Continue when stepping through, the next paragraph when it plays itself), or skip to the end.
-// Given a reading time, Continue fills as the time runs and then presses itself. Read aloud, it fills as the words are
+// Given a reading time, Continue fills darker as the time runs and then presses itself. Read aloud, it fills as the words are
 // heard instead, and presses itself a moment after they end. Pause holds the turn, the words read aloud and the fill
 // alike, and so does a click on the words. Stepping back holds only Continue, until it is pressed.
+// Given the rounds around it, arrows by the heading step to the round before and after, and Back at the first paragraph
+// goes on into the round before. A round read again from the past says so, with a way back to the one in play.
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Button, type ButtonProps, epicReducedButtonStyle } from "../button"
@@ -38,6 +40,26 @@ function Control({ label, children, ...rest }: Omit<ButtonProps, "variant" | "si
   )
 }
 
+// A small arrow by the heading to the round before or after. Without a click there is no round there.
+function RoundStep({ label, onClick, children }: { label: string; onClick?: () => void; children: ReactNode }) {
+  return (
+    <Tip label={label}>
+      <Button
+        variant="plain"
+        type="button"
+        aria-label={label}
+        disabled={!onClick}
+        onClick={onClick}
+        className="grid h-5 w-5 place-items-center rounded-full text-foreground transition-[color,scale] duration-150 ease-snap hover:text-accent enabled:active:scale-90 disabled:cursor-default disabled:opacity-30 [&_svg]:h-2.5 [&_svg]:w-2.5"
+      >
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+          {children}
+        </svg>
+      </Button>
+    </Tip>
+  )
+}
+
 export function Narration({
   heading,
   text,
@@ -58,6 +80,9 @@ export function Narration({
   progress,
   paused: pausedProp,
   onPause,
+  canBack = false,
+  rounds,
+  onNow,
   className,
   style,
   onAnimationEnd,
@@ -87,6 +112,12 @@ export function Narration({
   // Whether the turn is paused, when the caller holds it.
   paused?: boolean
   onPause?: (paused: boolean) => void
+  // Back is open at the first paragraph too, for a round before it.
+  canBack?: boolean
+  // The rounds before and after this one, each step there when there is one.
+  rounds?: { onPrev?: () => void; onNext?: () => void }
+  // While a past round is read: back to the round in play.
+  onNow?: () => void
 }) {
   const [shown, setShown] = useState(text)
   const [shownRoll, setShownRoll] = useState(roll)
@@ -193,8 +224,43 @@ export function Narration({
     >
       <div ref={inner} className={compact ? "px-3 pt-2 pb-2" : "px-5 pt-4 pb-3"}>
         <div className={cn(eyebrow, "flex items-center gap-3 before:h-px before:w-6 before:bg-accent", compact ? "mb-1" : "mb-2")}>
-          {shownHeading}
-          {paused && <span className="ml-auto text-muted-foreground">Paused</span>}
+          <span className="min-w-0 truncate">{shownHeading}</span>
+          <span className="ml-auto flex shrink-0 items-center gap-2">
+            {paused && <span className="text-muted-foreground">Paused</span>}
+            {onNow && (
+              <Button variant="plain" type="button" className="text-accent underline-offset-2 hover:underline" onClick={onNow}>
+                Return to Now
+              </Button>
+            )}
+            {rounds && (
+              <span className="flex items-center gap-1">
+                <RoundStep
+                  label="Previous Round"
+                  onClick={
+                    rounds.onPrev &&
+                    (() => {
+                      setStayed(true)
+                      rounds.onPrev?.()
+                    })
+                  }
+                >
+                  <path d="M7.5 2.5 4 6l3.5 3.5" />
+                </RoundStep>
+                <RoundStep
+                  label="Next Round"
+                  onClick={
+                    rounds.onNext &&
+                    (() => {
+                      setStayed(true)
+                      rounds.onNext?.()
+                    })
+                  }
+                >
+                  <path d="M4.5 2.5 8 6 4.5 9.5" />
+                </RoundStep>
+              </span>
+            )}
+          </span>
         </div>
         {shownRoll ? (
           <div className={cn("transition-opacity duration-150", visible ? "opacity-100" : "opacity-0", compact ? "py-0.5" : "py-1")}>
@@ -256,7 +322,7 @@ export function Narration({
                 setStayed(true)
                 onBack()
               }}
-              disabled={index <= 0}
+              disabled={index <= 0 && !canBack}
             >
               <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                 <path d="M7.5 2.5 4 6l3.5 3.5" />
@@ -277,8 +343,8 @@ export function Narration({
               >
                 {/* WebKit lets a moving layer spill past a rounded overflow-hidden parent, so the fill has a clip of its own. */}
                 {timed && (
-                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 mix-blend-overlay [clip-path:inset(0_round_9999px)]">
-                    <span ref={fill} className="absolute inset-0 origin-left bg-white/60"style={{ transform: "scaleX(0)" }} />
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-0 [clip-path:inset(0_round_9999px)]">
+                    <span ref={fill} className="absolute inset-0 origin-left bg-black/30" style={{ transform: "scaleX(0)" }} />
                   </span>
                 )}
                 <span className="relative flex items-center gap-1.5">

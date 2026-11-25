@@ -99,6 +99,14 @@ function wayOff(stage: Stage, id: string, heroes: string[]): [number, number] | 
   }
   return null
 }
+// A shot the director has no take for still lives: once there, the camera circles a little and closes slowly, easing
+// out over the paragraph. Paragraphs turn opposite ways, so a run of them does not wind round one way.
+const SETTLE = { push: 0.07, rise: 0.12, seconds: 9 }
+function alive(shot: StagingShot | string, turn: number): StagingShot | string {
+  if (typeof shot === "string" || "orbit" in shot) return shot
+  const way = turn % 2 ? -1 : 1
+  return { ...shot, orbit: way * 2.5, sweep: 10 }
+}
 // The shot for an aim, framed on where everyone stands now.
 function shotFor(stage: Stage, aim: Aim, heroes: string[]): StagingShot | string | null {
   // Framed for a person, and farther off and higher for someone much taller (speakerShot).
@@ -333,12 +341,25 @@ export function StagePlay(props: {
   // card, waits to replace it until the round has been read.
   const [onScreen, setOnScreen] = useState<string | null>(null)
   const kept = latest && onScreen !== latest._id ? save?.turns.find((t) => t._id === onScreen) : undefined
-  const turn = kept && (reading || held?.turn === kept._id) ? kept : latest
+  const live = kept && (reading || held?.turn === kept._id) ? kept : latest
+  // A past round read again, reached by stepping back from a round's first paragraph or by the round arrows. It is only
+  // read: nothing in it is played, and the game waits on the round in play until the reader returns to it.
+  const [viewing, setViewing] = useState<string | null>(null)
+  const past = viewing ? save?.turns.find((t) => t._id === viewing) : undefined
+  const turn = past ?? live
   const turnRef = useRef(turn)
   turnRef.current = turn
   useEffect(() => {
-    if (turn) setOnScreen(turn._id)
-  }, [turn?._id])
+    if (turn && !past) setOnScreen(turn._id)
+  }, [turn?._id, past])
+  useEffect(() => setViewing(null), [save?.adventure._id])
+  // Where the reader lands in a round moved to: its first paragraph or its last, read. And where they were in the
+  // round in play when they left it, to return to. `moved` places the cast for the round moved to, as `land` is read.
+  const land = useRef<{ turn: string; paragraph: number; reading: boolean } | null>(null)
+  const resume = useRef<{ turn: string; paragraph: number; reading: boolean } | null>(null)
+  const moved = useRef<{ turn: string; where: "start" | "end" } | null>(null)
+  // A round moved to whose paragraph frames nothing takes the set's opening view, not the last close shot of another.
+  const reframe = useRef<string | null>(null)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
   // A turn that opens a new encounter starts with the end of the last round, which closes the old one. Those
   // paragraphs are told on the old encounter's scene, with its people, and the new scene follows them.
@@ -351,7 +372,9 @@ export function StagePlay(props: {
   // A turn not yet read starts at its first paragraph. Until the reader is set there, the old scene stays, so the new
   // scene is not built and then thrown away for the closing paragraphs.
   const newTurn = turn !== undefined && previousText.current.turn !== turn._id
-  const closingNow = closing > 0 && (newTurn || (reading && paragraph < closing))
+  // A round stepped back into lands at its end, past the closing paragraphs, so the old scene is not built for it.
+  const landing = land.current?.turn === turn?._id ? land.current : null
+  const closingNow = closing > 0 && (newTurn ? !(landing && landing.paragraph >= closing) : reading && paragraph < closing)
   const shown = closingNow ? before : turn
   // With no save, the stage shows the fallback encounter. Encounters without an authored scene play in story view.
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
@@ -416,6 +439,37 @@ export function StagePlay(props: {
   const told = turn ? JSON.stringify([turn._id, turn.story]) : ""
   const paragraphs = useMemo(() => story(turn), [told])
   const text = useMemo(() => paragraphs.map((p) => p.text), [paragraphs])
+  // The rounds that can be read again, in order: each earlier one with a story, then the round in play.
+  const rounds = useMemo(() => {
+    if (!save || !live) return []
+    const done = save.turns.filter((t) => t._id !== live._id && (t.order ?? 0) < (live.order ?? 0) && story(t).length > 0)
+    return [...done.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), live]
+  }, [save?.turns, live])
+  const at = rounds.findIndex((t) => t._id === turn?._id)
+  // Not while a roll waits on the card: its answer is read in the round in play.
+  const roundBefore = at > 0 && !held ? rounds[at - 1] : undefined
+  const roundAfter = at >= 0 && at < rounds.length - 1 ? rounds[at + 1] : undefined
+  const goTo = (to: (typeof rounds)[number] | undefined, where: "start" | "end") => {
+    if (!to || !live || held) return
+    if (to._id !== live._id && !past) resume.current = { turn: live._id, paragraph, reading }
+    if (to._id === live._id) resume.current = null
+    land.current = { turn: to._id, paragraph: where === "start" ? 0 : Number.POSITIVE_INFINITY, reading: true }
+    moved.current = { turn: to._id, where }
+    reframe.current = to._id
+    setViewing(to._id === live._id ? null : to._id)
+  }
+  // Back to the round in play, where the reader left it.
+  const toNow = () => {
+    if (!live) return
+    const back = resume.current?.turn === live._id ? resume.current : { turn: live._id, paragraph: 0, reading: true }
+    resume.current = null
+    land.current = back
+    moved.current = { turn: live._id, where: back.paragraph > 0 || !back.reading ? "end" : "start" }
+    reframe.current = live._id
+    setViewing(null)
+  }
+  // On from the paragraph on screen: the next one, or past the last, the next round read again or the round's end.
+  const advance = () => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : past ? goTo(roundAfter, "start") : setReading(false))
   // The paragraph's dice roll, for the narration to show: the numbers from the roll, the names and how a dying hero
   // stands from the turn, the roller's portrait from the scene. Or the class feature it tells.
   const rolled = paragraphs[paragraph]?.roll
@@ -663,7 +717,8 @@ export function StagePlay(props: {
   const gone = useMemo(() => {
     const out = new Map<string, "dead" | "fled">()
     if (!stage || !save || !turn || !shown) return out
-    const rounds = save.turns.filter((t) => t.encounterId === shown.encounterId).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    // Up to the round on screen: someone who falls in a later round is still here in a round read again.
+    const rounds = save.turns.filter((t) => t.encounterId === shown.encounterId && (t.order ?? 0) <= (turn.order ?? 0)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     for (const t of rounds)
       for (const c of t.characters) {
         const id = castIdFor(stage.cast, c)
@@ -901,7 +956,20 @@ export function StagePlay(props: {
     const fresh = drawn.current?.stage !== stage || drawn.current.encounter !== encounter
     if (fresh) drawn.current = { stage, encounter, at: new Map(), walks: new Map() }
     const d = drawn.current!
+    // A round moved to places everyone at once, walks under way called off: read from its start, where the round
+    // before left them, to walk on at their paragraphs, and read from its end, where it leaves them.
+    const jump = moved.current?.turn === turn?._id && shown === turn ? moved.current : null
+    if (jump) moved.current = null
     for (const [id, { character, at: to, walked, teleport }] of spots) {
+      if (jump) {
+        const was = jump.where === "start" ? prior?.characters.find((c) => c.id === character)?.position : undefined
+        const from: [number, number] = was ? [metres(was.x), metres(was.y)] : to
+        d.walks.set(id, (d.walks.get(id) ?? 0) + 1)
+        d.at.set(id, from.join())
+        const cued = cues.some((e) => e.cast === id && e.here && (toCome(e.at, e.s) || reached(e.at, e.s)))
+        if (!cued && stage.isOnStage(id)) stage.placeCast(id, from)
+        continue
+      }
       const key = to.join()
       if (d.at.get(id) === key) continue
       const cued = cues.some((e) => e.cast === id && e.here && (toCome(e.at, e.s) || reached(e.at, e.s)))
@@ -1067,12 +1135,22 @@ export function StagePlay(props: {
     framed.current = stage
     const plan = plansRef.current[paragraph]
     const cast = stage.cast.filter((c) => stage.isOnStage(c.id))
+    const arrived = reframe.current === turn?._id
+    if (arrived) reframe.current = null
     // A spot is clear when nothing solid stands between it and the one it is taken from, however far off it is.
     const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => (
       logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut),
       traceShot(stage, paragraph, which, t, cast),
-      stage.shot(which, { instant: cut || !!t?.cut, follow, duration: t?.duration, ease: t?.ease, move: t?.move, impact: t?.impact, take: t?.label }))
+      stage.shot(t ? which : alive(which, paragraph), {
+        instant: cut || !!t?.cut,
+        follow,
+        duration: t?.duration ?? 2600,
+        ease: t?.ease,
+        move: t ? t.move : SETTLE,
+        impact: t?.impact,
+        take: t?.label,
+      }))
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
     if (take) return void go(take.shot, take)
@@ -1082,7 +1160,7 @@ export function StagePlay(props: {
       return void go(leader ? speakerShot(leader, shot) : { subject: lead, ...shot }, null)
     }
     const view = beats[paragraph]?.view
-    if (!view) return
+    if (!view) return void (arrived && stage.staging?.shot && go(stage.staging.shot, null))
     const shot = shotFor(stage, view, heroes.current)
     // A walk under way in this paragraph is followed: two facing off keep both in the picture.
     if (shot) go(shot, null, "pair" in view ? view.pair : [])
@@ -1118,7 +1196,7 @@ export function StagePlay(props: {
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
     const seconds = voiced.status === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
-    const timer = setTimeout(() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)), seconds * 1000)
+    const timer = setTimeout(advance, seconds * 1000)
     return () => clearTimeout(timer)
   }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
@@ -1144,14 +1222,23 @@ export function StagePlay(props: {
       const at = paragraphs.findLastIndex((p) => p.roll?.character === hold.actor.id)
       return void setParagraph(at >= 0 ? at + 1 : Math.max(0, firstChanged))
     }
+    // A round moved to, or the round in play returned to.
+    const to = land.current
+    if (to && to.turn === turn?._id) {
+      land.current = null
+      setParagraph(Math.max(0, Math.min(to.paragraph, text.length - 1)))
+      return void setReading(to.reading && text.length > 0)
+    }
     // Narration that arrives while an earlier paragraph is still being read waits its turn.
     setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
     // A turn with nothing told yet, such as the hero's own turn opening a round, has nothing to read: its card shows.
     setReading(text.length > 0)
   }, [text, paragraphs, turn?._id])
+  // A reply being written is kept while a past round is read.
+  const liveActor = live ? findCurrentActor(live.characters)?.id : undefined
   useEffect(() => {
     setDraft("")
-  }, [turn?._id, actor?.id])
+  }, [live?._id, liveActor])
   const focus = useCallback(
     (id: string) => {
       const characters = turnRef.current?.characters
@@ -1216,7 +1303,7 @@ export function StagePlay(props: {
     const sid = stage && actor && !holding && castIdFor(stage.cast, actor)
     if (!stage || !sid || reading) return
     const h = stage.cast.find((c) => c.id === sid)?.height ?? 1.7
-    stage.shot({ subject: sid, distance: Math.min(3.6, Math.max(2.4, h * 1.9)), angle: 18, height: h * 0.9 + 0.15, lookHeight: h * 0.62, fov: 45 })
+    stage.shot({ subject: sid, distance: Math.min(3.6, Math.max(2.4, h * 1.9)), angle: 18, height: h * 0.9 + 0.15, lookHeight: h * 0.62, fov: 45, orbit: 1.5, sweep: 8 }, { move: { push: 0.04, seconds: 10 } })
   }, [stage, actor?.id, reading, holding])
   // Where the card leaves room to frame a shot. A tall card, a hero's reply, leaves the column beside it, and the
   // stage frames its subject there, standing full height. A short card leaves the top of the screen.
@@ -1237,13 +1324,13 @@ export function StagePlay(props: {
   const danger = (turn?.characters ?? []).some((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && !isDead(c) && (isDown(c) || (c.healthPercent ?? 100) <= 25))
   // Heroes the AI plays take their turns like NPCs, through Continue.
   const aiActor = actor?.type === "pc" && actor.controlledBy === "ai"
-  const cardActor = aiActor || !actor || !props.controls(actor) ? null : (party.find((c) => c.id === actor.id) ?? null)
+  const cardActor = aiActor || !actor || past || !props.controls(actor) ? null : (party.find((c) => c.id === actor.id) ?? null)
   const rr = actor?.rollRequired
   // A finished adventure ends on its final narration. Its last turn has characters but takes no more actions.
   const finished = save?.adventure.status === "completed"
   const ended = finished && turn === latest
   // A ring on the ground about whoever's turn it is, as the turn order marks them.
-  const ringed = ended ? undefined : castOf(actor?.id)
+  const ringed = ended || past ? undefined : castOf(actor?.id)
   useEffect(() => {
     stage?.setTurn(ringed ?? null)
   }, [stage, ringed])
@@ -1299,6 +1386,7 @@ export function StagePlay(props: {
   const cardRoller = (held?.actor ?? cardActor)?.id
   const cardPace = turn && cardRoller ? rollPace(paces, `${held?.turn ?? turn._id}:card:${cardRoller}`) : "full"
   if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy, ...(result ? { result } : {}) }
+  else if (past) mode = null
   else if (busy) mode = playing(turn?._id, actor, aiActor, portrait)
   else if (props.writing) mode = reading ? null : playing(turn?._id, actor, aiActor, portrait)
   // An action waits for the next scene to be on screen.
@@ -1337,7 +1425,7 @@ export function StagePlay(props: {
   const unseen = reading || previousText.current.paragraphs !== text
   const ahead = Boolean(autoContinue && !props.writing && (!mode || (held && !props.busy)) && (next || latest === turn))
   const continueKey =
-    !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi)
+    !past && !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi)
       ? `${latest._id}:${next?.id ?? "round"}${reaction ? `:${reaction.expiresAt}` : ""}`
       : null
   const [continued, setContinued] = useState<string | null>(null)
@@ -1391,7 +1479,7 @@ export function StagePlay(props: {
     step: turn?.story.length,
     encounter: turn?.encounterId,
     paragraph: reading ? `${turn?._id}:${paragraph}:${voiced.status}` : null,
-    advance: () => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false)),
+    advance,
     setAuto,
     setDraft,
     reply,
@@ -1513,15 +1601,18 @@ export function StagePlay(props: {
                   setParagraph(0)
                   setReading(true)
                 }}
-                onBack={() => setParagraph((n) => Math.max(0, n - 1))}
-                onNext={() => setParagraph((n) => Math.min(text.length - 1, n + 1))}
-                onSkip={() => setReading(false)}
-                onContinue={() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : setReading(false))}
+                onBack={() => (paragraph > 0 ? setParagraph((n) => n - 1) : goTo(roundBefore, "end"))}
+                onNext={() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : goTo(roundAfter, "start"))}
+                onSkip={() => (past ? toNow() : setReading(false))}
+                onContinue={advance}
+                canBack={Boolean(roundBefore)}
+                rounds={rounds.length > 1 ? { onPrev: roundBefore && (() => goTo(roundBefore, "start")), onNext: roundAfter && (() => goTo(roundAfter, "start")) } : undefined}
+                onNow={past ? toNow : undefined}
               />
             </Presence>
           </div>
           <div className={`pointer-events-none absolute z-20 ${nook}`}>
-            <Presence show={on && !reading && !held} motion="rise" asChild>
+            <Presence show={on && !reading && !held && !past} motion="rise" asChild>
               <Pill
                 className="pointer-events-auto"
                 onClick={() => {
@@ -1629,7 +1720,7 @@ export function StagePlay(props: {
               />
             )}
           </Presence>
-          <Presence show={on && Boolean(!ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey))} motion="rise" asChild>
+          <Presence show={on && Boolean(!past && !ended && !busy && !reading && !mode && turn && !offerWaits && !(autoContinue && continueKey && continued !== continueKey))} motion="rise" asChild>
             {turn && (
               <div className={`${panel} absolute bottom-28 left-1/2 z-raised -translate-x-1/2 p-6 text-center`}>
                 <p className={`${passed ? "mb-1" : "mb-3"} font-serif text-xl`}>{actor ? `${actor.name}’s Turn` : "The Round Is Complete"}</p>
