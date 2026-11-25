@@ -34,6 +34,8 @@ export const effectColor = (element?: Element, fallback: keyof typeof COLORS = "
 export interface EffectEnd {
   at: THREE.Vector3
   id?: string
+  // At a figure's hand, as it casts, and not its chest: a ray starts there and not out in front of it.
+  hand?: boolean
 }
 // What the effects do, for a host that sounds them: an effect starting, a missile landing (`struck` when it lands on
 // someone), an object taken in hand, a sound the story names (`near`: how far from the camera, in metres, when it
@@ -301,11 +303,11 @@ export class Effects {
     const color = effectColor(element, "arcane")
     const frost = element === "frost"
     const D = 1.3
-    // From in front of the caster's chest to the near side of the target's, not from body to body.
+    // From the caster's hand, or in front of their chest, to the near side of the target's, not from body to body.
     const flat = to.at.clone().sub(from.at).setY(0)
     const reach = flat.length()
     flat.normalize()
-    const a = from.at.clone().addScaledVector(flat, Math.min(0.3, reach * 0.2))
+    const a = from.at.clone().addScaledVector(flat, from.hand ? 0.05 : Math.min(0.3, reach * 0.2))
     const b = to.at.clone().addScaledVector(flat, -Math.min(0.22, reach * 0.15))
     const dir = b.clone().sub(a)
     const len = dir.length()

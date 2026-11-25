@@ -1916,7 +1916,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     if (crit) this.reeling.set(to, from)
     // A figure that casts a sling lets fly a stone where an arrow would fly, and one that throws, a knife.
     const shot = move !== null && SLUNG[move] !== undefined ? "stone" : kinds[0] === "throw" ? "knife" : undefined
-    await this.fire(kind, from, to, element, miss, shot)
+    await this.fire(kind, from, to, element, miss, shot, move !== null && !WEAPON_MOVES.includes(kinds[0]))
     if (crit) this.reeling.delete(to)
     const stumble = miss && outcome === "fumble" ? this.models.moveFor(from, "stumble") : null
     if (stumble) this.models.act(from, stumble, toward)
@@ -1933,8 +1933,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     const at = typeof toward === "string" ? this.castAt(toward) : toward ? this.point(toward) : undefined
     return this.models.act(id, clip, at)
   }
-  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean, shot?: Shot): Promise<void> {
-    const start = this.chest(from)
+  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean, shot?: Shot, cast = false): Promise<void> {
+    // A spell a figure has just cast flies from the hand it cast with.
+    const aim = to === undefined ? undefined : this.endOf(to).at
+    const hand = cast && aim && (kind === "bolt" || kind === "beam") ? this.models.handAt(from, aim) : null
+    const start = hand ? { at: hand, id: from, hand: true } : this.chest(from)
     let end = to === undefined ? undefined : this.endOf(to)
     if (end && miss) {
       const away = end.at.clone().sub(start.at).setY(0)

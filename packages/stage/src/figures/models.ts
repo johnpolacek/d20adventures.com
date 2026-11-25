@@ -409,6 +409,15 @@ export class Models {
     return most.action.getClip().duration / 2 / gaitRate(most.gait, most.speed, gait)
   }
   // The clip a figure plays for a kind of move, if it has one: the first of several it has, when given several.
+  // Where the hand it reaches out with is, the one nearer `toward`, as a cast puts it out: null for a figure with
+  // no arms to find.
+  handAt(id: string, toward: THREE.Vector3) {
+    const m = this.on ? this.items.get(id) : undefined
+    if (!m) return null
+    const hands = (["L", "R"] as const).map((side) => armBones(m.root, side)?.[3]?.getWorldPosition(new THREE.Vector3())).filter((p): p is THREE.Vector3 => !!p)
+    if (!hands.length) return null
+    return hands.reduce((a, b) => (b.distanceToSquared(toward) < a.distanceToSquared(toward) ? b : a))
+  }
   moveFor(id: string, kind: keyof NonNullable<FigureSpec["moves"]> | readonly (keyof NonNullable<FigureSpec["moves"]>)[]) {
     const m = this.on ? this.items.get(id) : undefined
     for (const k of typeof kind === "string" ? [kind] : kind) {
