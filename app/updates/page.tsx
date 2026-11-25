@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
-import { share } from "@/lib/share"
 import Link from "next/link"
-import { formatPostDate, getPosts, renderPost } from "@/lib/updates"
+import { share } from "@/lib/share"
+import { formatPostDate, getPosts, renderPost, type Update } from "@/lib/updates"
+import "@/app/vision/vision.css"
+import "./index.css"
 
 // Rebuilt at most hourly, so a post dated today appears within the hour of midnight, Chicago time, with no deploy.
 export const revalidate = 3600
@@ -11,52 +13,79 @@ export const metadata: Metadata = {
   alternates: { canonical: "./", types: { "application/rss+xml": "/updates/rss.xml" } },
 }
 
-/** The newest post as a wide row with its cover, then the earlier ones as a tight list of text. */
-export default async function UpdatesPage() {
-  const [latest, ...earlier] = await getPosts()
+function Orn() {
   return (
-    <div className="up-layout up-index">
-      <div className="up-main">
-        <header className="up-title-block">
-          <h1>Updates</h1>
-        </header>
-        {latest && (
-          <Link href={`/updates/${latest.slug}`} className="up-post up-lead">
-            {latest.image && (
-              // The cover comes from the bucket at one size, so the plain tag serves it as it is.
-              <img className="up-post-cover" src={latest.image} alt="" decoding="async" />
-            )}
-            <div>
-              <time dateTime={latest.date}>{formatPostDate(latest.date)}</time>
-              <h2>{latest.title}</h2>
-              {latest.description && <p>{latest.description}</p>}
-              <span className="up-post-more">Read On</span>
-            </div>
-          </Link>
-        )}
-        {earlier.length > 0 && (
-          <>
-            <div className="up-earlier">
-              <h2 className="up-label">Earlier</h2>
-              <a href="/updates/rss.xml">RSS</a>
-            </div>
-            <ul className="up-posts">
-              {earlier.map((post) => (
-                <li key={post.slug}>
-                  <Link href={`/updates/${post.slug}`} className="up-post up-row">
-                    <time dateTime={post.date}>{formatPostDate(post.date)}</time>
-                    <div>
-                      <h3>{post.title}</h3>
-                      {post.description && <p>{post.description}</p>}
-                    </div>
-                    <span className="up-post-min">{renderPost(post).minutes} Min</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
+    <div className="vn-orn" aria-hidden>
+      <span />
+      <i />
+      <span />
     </div>
+  )
+}
+
+/**
+ * A title page over a pen and ink engraving of a herald reading a proclamation in a market square, dressed as /vision
+ * is. The dark look turns its ink pale, as /vision does.
+ */
+function Header() {
+  return (
+    <header className="vn-head ul-head">
+      <img className="ul-head-art" src="/images/updates/herald.webp" alt="" width={2020} height={724} />
+      <div className="vn-head-inner">
+        <Orn />
+        <p className="up-label">Notes from the Road</p>
+        <h1>Updates</h1>
+        <p className="vn-head-as">What’s new in D20 Adventures, and how it is built</p>
+        <Orn />
+      </div>
+    </header>
+  )
+}
+
+/** The /vision emblem a post wears, read from its slug and title. Gameplay videos take the stage. */
+function emblem(post: Update) {
+  const t = `${post.slug} ${post.title}`.toLowerCase()
+  if (t.includes("gameplay")) return "graphics"
+  if (t.includes("baldur") || t.includes("open source")) return "open-source"
+  if (t.includes("figure") || t.includes("character")) return "characters"
+  if (t.includes("multiplayer")) return "multiplayer"
+  if (t.includes("rules")) return "rules"
+  return "create"
+}
+
+/** Each post as a full-width band, led by its emblem, the newest one larger. */
+export default async function UpdatesPage() {
+  const posts = await getPosts()
+  return (
+    <>
+      <Header />
+      <div className="vn-wrap is-edge">
+        <ul className="ul-bands">
+          {posts.map((post, i) => (
+            <li key={post.slug} className={`ul-band${i === 0 ? " is-lead" : ""}`}>
+              <Link href={`/updates/${post.slug}`} className="ul-band-link">
+                <img className="vn-emblem" src={`/images/vision/emblems/${emblem(post)}.webp`} alt="" width={256} height={256} />
+                <span className="vn-name">
+                  <time className="ul-date" dateTime={post.date}>
+                    {formatPostDate(post.date)}
+                  </time>
+                  <b>{post.title}</b>
+                  {post.description && <small>{post.description}</small>}
+                </span>
+                <span className="ul-min">
+                  <span className="ul-min-num">{renderPost(post).minutes}</span>
+                  <span className="vn-num">Min Read</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="vn-outro">
+          <p>
+            Follow along by <a href="/updates/rss.xml">RSS</a>, or see how far along it all is on the <a href="/vision">Vision</a> page.
+          </p>
+        </div>
+      </div>
+    </>
   )
 }

@@ -1,0 +1,177 @@
+/*
+ * /updates: the list of posts, dressed as /vision is (app/vision/vision.css). A title page over an engraving, then
+ * each post as a full-width warm band led by an engraved emblem.
+ */
+
+/* The header's art fills the header from its top edge to its bottom, cropping its sides on a short, wide window. The
+   header grows with the window so the art keeps its height. */
+.vn-head.ul-head {
+  padding-bottom: max(clamp(120px, 16vw, 260px), calc(35.8vw - 280px));
+}
+.ul-head-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+  pointer-events: none;
+}
+/* The dark look turns the ink pale and screens it onto the dark paper, as /vision does. */
+html[data-update-theme="dark"] .ul-head-art {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+/* A soft glow of paper behind the words: as wide as the subtitle and a little past it, fading before the figures. */
+.vn-head.ul-head .vn-head-inner::before {
+  inset: -32px max(0px, calc(50% - 460px));
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--up-bg) 40%, color-mix(in srgb, var(--up-bg) 70%, transparent) 65%, transparent 100%);
+}
+
+.ul-date {
+  margin-bottom: 4px;
+  font-family: var(--up-mono);
+  font-size: 13px;
+  color: var(--up-muted);
+}
+
+/* Each post a full-width warm band, its words in the centered column. */
+.ul-bands {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ul-band {
+  --gutter: max(24px, calc((100vw - 1232px) / 2));
+  position: relative;
+  background: linear-gradient(8deg, rgb(150 100 40 / 0.11), rgb(150 100 40 / 0.03) 55%, transparent 90%);
+}
+html[data-update-theme="dark"] .ul-band {
+  background: linear-gradient(8deg, rgb(255 220 160 / 0.07), rgb(255 220 160 / 0.02) 55%, transparent 90%);
+}
+.ul-band::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid var(--up-line);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+}
+.ul-band-link {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr) 110px;
+  gap: 32px;
+  align-items: center;
+  padding: 20px var(--gutter);
+  color: inherit;
+  transition: background-color 160ms;
+}
+.ul-band-link:hover {
+  background: rgb(150 100 40 / 0.03);
+}
+.ul-band-link:hover .vn-name b {
+  color: var(--up-accent);
+}
+.ul-band-link:focus-visible {
+  outline: 2px solid var(--up-accent);
+  outline-offset: -2px;
+}
+.ul-band .vn-name b {
+  font-family: var(--font-display), var(--up-serif);
+  font-size: clamp(22px, 2.1vw, 28px);
+  font-weight: 400;
+  line-height: 1.2;
+  -webkit-text-stroke: 0.45px currentColor;
+  transition: color 160ms;
+}
+.ul-band .vn-name small {
+  max-width: 62ch;
+  margin-top: 6px;
+  font-family: var(--up-serif);
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.5;
+}
+/* The minutes, in the serif: the display face draws a 1 as a capital I. */
+.ul-min {
+  display: grid;
+  justify-items: end;
+  text-align: right;
+}
+.ul-min-num {
+  font-family: var(--up-serif);
+  font-size: 28px;
+  line-height: 1.1;
+  color: var(--up-strong);
+}
+.ul-band.is-lead .ul-band-link {
+  grid-template-columns: 180px minmax(0, 1fr) 110px;
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+.ul-band.is-lead .vn-emblem {
+  width: 180px;
+  height: 180px;
+}
+.ul-band.is-lead .vn-name b {
+  font-size: clamp(30px, 3.4vw, 46px);
+}
+.ul-band.is-lead .vn-name small {
+  font-size: 20px;
+}
+
+/*
+ * On a phone the words come first on plain paper, then the art below them as a band of its own, cropped to keep the
+ * herald in view. It fades in at its top edge so the two meet softly.
+ */
+@media (max-width: 760px) {
+  .vn-head.ul-head {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 0 0;
+  }
+  .ul-head .vn-head-inner {
+    padding: 0 20px;
+  }
+  .ul-head .vn-head-inner::before {
+    display: none;
+  }
+  .updates-page .ul-head h1 {
+    font-size: 44px;
+  }
+  .ul-head .vn-head-as {
+    font-size: 17px;
+    text-wrap: balance;
+  }
+  .ul-head-art {
+    position: relative;
+    order: 2;
+    height: 240px;
+    margin-top: 8px;
+    object-position: 2% 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to bottom, transparent, #000 28%);
+  }
+}
+@media (max-width: 820px) {
+  .ul-band-link,
+  .ul-band.is-lead .ul-band-link {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .ul-band .vn-emblem,
+  .ul-band.is-lead .vn-emblem {
+    width: 80px;
+    height: 80px;
+  }
+  .ul-min {
+    display: none;
+  }
+}
