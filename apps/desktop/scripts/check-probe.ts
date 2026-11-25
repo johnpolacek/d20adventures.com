@@ -7,6 +7,7 @@ import { createRollRequirementService } from "@d20/gm-core/services/roll-require
 import { DIFFICULTY_CLASSES } from "@d20/gm-core/sheet/check"
 import type { ConditionEntry } from "@d20/gm-core/sheet/condition-entry"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
+import { type RoomSpot, roomSpot } from "@d20/gm-core/sheet/room"
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import type { Stake } from "@d20/gm-core/sheet/stakes"
 import { blockActionsOf } from "@d20/gm-core/sheet/stat-block-actions"
@@ -67,8 +68,9 @@ type Probe = {
   floor?: true
   at?: Record<string, [number, number]>
   // Where the move should leave the hero: nowhere new, within 5 feet of someone, at least so far from someone, having
-  // walked between so many feet, or toward one of the floor's places, by its id.
-  moved?: { none?: true; near?: string; clearOf?: string; feet?: [number, number]; toward?: string }
+  // walked between so many feet, toward one of the floor's places, by its id, or to a spot of the room they start in,
+  // as far as it goes from someone (`spotAway`).
+  moved?: { none?: true; near?: string; clearOf?: string; feet?: [number, number]; toward?: string; spot?: RoomSpot; spotAway?: string }
   // What the rules of space should say of the move, by name: "Out Of Range". None for most.
   ruling?: string
   // Reasons the roll's Advantage or Disadvantage must name, such as "Long Range".
@@ -252,6 +254,14 @@ async function run(probe: Probe): Promise<Graded> {
         const gap = (from: { x: number; y: number } | undefined) => (from && toward ? Math.hypot(toward.x - from.x, toward.y - from.y) : 0)
         if (!(walked >= 10 && gap(standing.position) - gap(ended) >= walked * 0.7))
           faults.push(`moved ${walked} feet and ended ${Math.round(gap(ended))} feet from ${probe.moved.toward}, wanted toward it`)
+      }
+      // To a spot of the room they start in: within 3 feet of where the engine reads it.
+      if (probe.moved?.spot && floor && standing.position) {
+        const awayFrom = probe.moved.spotAway ? everyone.find((character) => character.id === probe.moved?.spotAway)?.position : undefined
+        const taken = everyone.flatMap((character) => (character.id !== standing.id && character.position ? [character.position] : []))
+        const spot = roomSpot({ floor, from: standing.position, spot: probe.moved.spot, mover: standing.position, ...(awayFrom ? { awayFrom } : {}), taken })
+        const off = spot && ended ? Math.hypot(spot.x - ended.x, spot.y - ended.y) : undefined
+        if (off === undefined || off > 3) faults.push(`moved ${walked} feet and ended ${off === undefined ? "nowhere" : `${Math.round(off)} feet`} from the room's ${probe.moved.spot}, wanted at it`)
       }
       if ((reading.ruling?.name ?? "none") !== (probe.ruling ?? "none")) faults.push(`ruling ${reading.ruling?.name ?? "none"}, wanted ${probe.ruling ?? "none"}`)
       for (const reason of probe.reasons ?? []) if (!got?.reasons?.includes(reason)) faults.push(`reasons ${got?.reasons?.join(", ") || "none"}, wanted ${reason} among them`)

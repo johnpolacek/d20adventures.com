@@ -702,6 +702,31 @@
     }
   },
   {
+    "id": "cabin-corner",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "floor": true,
+    "action": "I go to the corner of the cabin.",
+    "checks": ["none"],
+    "moved": {
+      "spot": "corner"
+    }
+  },
+  {
+    "id": "cabin-corner-away",
+    "adventure": "covert-cargo",
+    "encounter": "the-transaction",
+    "hero": "1749159962941",
+    "floor": true,
+    "action": "I back away into the far corner of the cabin, as far from Silas as I can get.",
+    "checks": ["none"],
+    "moved": {
+      "spot": "corner",
+      "spotAway": "npcs-1749181492795"
+    }
+  },
+  {
     "id": "ray-out-of-range",
     "adventure": "covert-cargo",
     "encounter": "battle-on-the-boat",

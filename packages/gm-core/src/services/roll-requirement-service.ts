@@ -14,6 +14,7 @@ import { found, type Hider, hiddenFrom, searchRoll } from "../sheet/hiding"
 import { chargedFeet, escapeFrom, strengthAndProficiency } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
 import { itemName, itemWords } from "../sheet/items"
+import { ROOM_SPOTS } from "../sheet/room"
 import { type MoveAsk, type Moved, mayHide, moveBudget, takeMove, takeTeleport, withMove } from "../sheet/moves"
 import type { EncounterFloor } from "../sheet/placement"
 import type { RestKind } from "../sheet/rest"
@@ -87,6 +88,10 @@ const rollPickSchema = z.object({
     .describe("For a Bonus Action spell that takes several creatures: the id of each one it is cast on, from Who Is Here or the character's own id"),
   moveTo: z.string().max(80).optional().describe("Where the character goes before they act: the id of a place or of someone here, from Where Things Are"),
   moveAway: z.string().max(80).optional().describe("Instead of moveTo: the id of someone here they back straight away from"),
+  moveSpot: z
+    .enum(ROOM_SPOTS)
+    .optional()
+    .describe('A spot within a room they go to: a corner, against a wall, its far side or its middle. "moveTo" names the place whose room, left out for the room they are in'),
   moveFeet: z.number().min(0).max(240).optional().describe("How far they go, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10"),
   cover: z
     .enum(["half", "three-quarters", "total"])
@@ -582,6 +587,7 @@ ${
 ${
   mover && floor
     ? `12) MOVING: a character moves before they act, and the game walks them and measures every distance. "moveTo" is where they go: the id of a place or of someone here, from Where Things Are. "moveAway" is instead the id of someone they back straight away from. Leave both out when they stay where they are. "moveFeet" is how far, when they do not go the whole way: a step is 5, and backing off or edging toward something is 10.
+   - "moveSpot" is a spot within a room that Places do not name: "corner", "wall", "far side" or "middle". With it, "moveTo" is the place whose room it is, left out for the room they stand in, and "moveAway" is someone the spot is as far as it can be from. Going "to the corner", "against the wall", "across the room" or "to the back corner, away from the guard" is "moveSpot", never a place they already stand at.
    - An action that goes anywhere moves them, however short the way. Creeping to the edge of the cover they are in, or stepping up to a rail or a window, is "moveTo" what they come closer to, with "moveFeet" 5. Leave the move out only when they stay where they are.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
@@ -665,7 +671,7 @@ Action: "${action}"
           : {}),
       })
       // Where there is no floor to move on, the game master is not asked where anyone goes.
-      const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveFeet: true, cover: true })) as unknown as typeof rollPickSchema
+      const asked = (mover && floor ? schema : schema.omit({ moveTo: true, moveAway: true, moveSpot: true, moveFeet: true, cover: true })) as unknown as typeof rollPickSchema
       const { object: read } = await generateObject({ schema: asked, prompt })
       // What the menus built for this read add to the pick.
       const pick = read as typeof read & { check: string } & Record<string, unknown>
@@ -722,7 +728,7 @@ Action: "${action}"
       if (pick.fight === false && pick.check !== "attack") also.fight = false
       // The move, made before the action: to the place or the one named, or away from one. With Dash the whole turn is
       // movement. An attack in melee may close with its target instead, which is settled where the attack is.
-      const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet }
+      const ask: MoveAsk = { to: pick.moveTo?.trim() || undefined, away: pick.moveAway?.trim() || undefined, feet: pick.moveFeet, ...(pick.moveSpot ? { spot: pick.moveSpot } : {}) }
       // Dash, as the action or with a Bonus Action that moves as one (Cunning Action).
       const usedRule = bonusRuleFor(character, used?.id)
       const dash = pick.check === "dash" || !!usedRule?.dash

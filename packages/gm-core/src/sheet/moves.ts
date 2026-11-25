@@ -3,7 +3,8 @@ import { isAway, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import { floorAreas, floorInPlay, roughGround, sightBlocked } from "./floor-areas"
-import type { EncounterFloor } from "./placement"
+import type { EncounterFloor, Place } from "./placement"
+import { type RoomSpot, roomSpot } from "./room"
 import { sameSide } from "./sides"
 import { movesThroughLarger } from "./species-traits"
 import {
@@ -32,8 +33,26 @@ import {
 } from "./space"
 import type { TurnEffect } from "./turn-effect"
 
-/** Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther than some feet. */
-export type MoveAsk = { to?: string; away?: string; feet?: number }
+/**
+ * Where a move is read as going: to a named place or to someone, by id, or straight away from someone, and no farther
+ * than some feet. With `spot` it goes to that spot of a room (./room `RoomSpot`): the room `to` names, or the one the
+ * mover stands in, and as far from `away` as that spot goes.
+ */
+export type MoveAsk = { to?: string; away?: string; feet?: number; spot?: RoomSpot }
+
+/**
+ * The spot of a room a move asks for, as a place to go to: in the room of the place or the one `to` names, else the
+ * mover's own, nearest the mover or farthest from the one `away` names. None when the move names no spot, or the
+ * floor there is open ground with no room to read.
+ */
+function spotPlace(floor: EncounterFloor, ask: MoveAsk, mover: Standing, others: readonly Other[]): Place | undefined {
+  if (!ask.spot || !mover.position) return undefined
+  const named = ask.to ? (floor.places.find((entry) => entry.id === ask.to)?.at ?? others.find((other) => other.id === ask.to)?.position) : undefined
+  const awayFrom = ask.away ? others.find((other) => other.id === ask.away)?.position : undefined
+  const taken = others.flatMap((other) => (other.position && !isAway(other) && !isDead(other) ? [other.position] : []))
+  const at = roomSpot({ floor, from: named ?? mover.position, spot: ask.spot, mover: mover.position, ...(awayFrom ? { awayFrom } : {}), size: sizeOf(mover), taken })
+  return at ? { id: ask.spot, label: ask.spot, at } : undefined
+}
 
 /**
  * A move as the engine made it: where the character now stands, the feet it took, and the points it walked through,
@@ -109,7 +128,7 @@ export function takeMove(args: {
     )
   const walker = { size: sizeOf(args.mover), nimble: movesThroughLarger(args.mover) }
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
-  const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
+  const place = spotPlace(floor, ask, args.mover, args.others) ?? (ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined)
   if (args.hide) {
     const size = sizeOf(args.mover)
     const enemies = args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : []))
@@ -267,7 +286,7 @@ export function takeTeleport(args: { floor: EncounterFloor; mover: Standing; oth
   const everyone = [args.mover, ...args.others]
   const solids = floorInPlay(args.floor, everyone).solids
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position && !isAway(other)) : undefined)
-  const place = args.ask.to ? args.floor.places.find((entry) => entry.id === args.ask.to) : undefined
+  const place = spotPlace({ ...args.floor, solids }, args.ask, args.mover, args.others) ?? (args.ask.to ? args.floor.places.find((entry) => entry.id === args.ask.to) : undefined)
   const toward = place ? undefined : someone(args.ask.to)
   const fleeing = place || toward ? undefined : someone(args.ask.away)
   // Straight away from one with no feet named goes no farther than the floor reaches: its farthest named place or staged spot.
