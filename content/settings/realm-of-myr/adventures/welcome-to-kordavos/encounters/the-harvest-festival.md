@@ -30,15 +30,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044853455"
 
 ## Intro
 
-Beyond the gates, the annual Valkaran Harvest Festival fills the streets. Stalls show crafts and goods from all over Thylún. Jugglers, acrobats, and fire-eaters compete for the crowd's attention, and the smell of roasted meats, sweet pastries, and spiced wine draws people to the food stalls.
+Beyond the gates, the Valkaran Harvest Festival fills the streets with stalls, jugglers and fire-eaters, and the smell of roasted meat and spiced wine.
 
 {place: gameStall} "Come, try your luck!" a vendor shouts, waving at a game of chance with small trinkets and toys for prizes.
 
-{actor: madam-zephyra} At another stall the fortune teller Madam Zephyra peers into a crystal ball, her face half hidden by a veil.
+{actor: madam-zephyra} At another stall, the veiled fortune teller Madam Zephyra peers into a crystal ball.
 
 {speaker: madam-zephyra, delivery: whispering with a mysterious smile} I see great things in your future.
 
-{place: musicStage} On a stage in the center of the square, musicians play lively Valkaran tunes and dancers invite onlookers to join in. Children dart through the crowd, laughing and playing. The celebration is hard to resist.
+{place: musicStage} On a stage in the square, musicians play Valkaran tunes and dancers invite onlookers to join in.
 
 ## GM Notes
 

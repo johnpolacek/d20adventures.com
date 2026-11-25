@@ -17,13 +17,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726436939251"
 
 ## Intro
 
-Between two crumbling buildings stands a makeshift entrance, a few old planks nailed together, bare but for a faint snake-and-moon scratched into the beam above. To those who know what to look for, it is unmistakably the hidden doorway to the Black Market. A heavy cloth curtain hangs over it, swaying in the faint breeze and hiding what lies beyond.
+Between two crumbling buildings, a heavy curtain hangs over a doorway of nailed planks. A faint snake-and-moon is scratched into the beam above. To those who know, it marks the hidden entrance to the Black Market.
 
-{actor: garrick} A burly figure in a tattered cloak stands guard, his face mostly hidden beneath a hood. His arms are crossed, and a long dagger is tucked in plain view in his belt. He eyes the adventurers with suspicion as they approach.
+{actor: garrick} A burly guard in a tattered hooded cloak stands before it, arms crossed, a long dagger in plain view in his belt.
 
 {speaker: garrick, delivery: a low and gravelly grunt} Looking for something?
 
-{actor: garrick} He steps forward, blocking the entrance with his broad frame, and waits to see if the adventurers are worthy of entry.
+{actor: garrick} He steps forward to block the way.
 
 ## GM Notes
 

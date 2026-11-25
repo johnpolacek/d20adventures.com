@@ -19,15 +19,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 
 ## Intro
 
-The Old Grand Library is a beacon of knowledge on the rugged frontier of the March of Davos. Connected to the nearby Church of Valkara, the ancient building has arched ceilings, ivy-lined stone walls, and stained-glass windows showing the deeds of Valkaran saints.
+The Old Grand Library stands beside the Church of Valkara, with arched ceilings, ivy-lined stone walls and stained glass of Valkaran saints.
 
-Inside, towering shelves of rare and mystical texts climb toward the ceiling, and secluded alcoves offer quiet for study. Cobblestone floors worn by centuries of seekers echo underfoot, and the air smells faintly of old parchment and burning candles.
+Inside, towering shelves of rare texts climb toward the ceiling. The air smells of old parchment and candles.
 
-{actor: sister-danica} A robed woman steps from a nearby alcove, calm yet commanding. Her long dark hair is intricately braided, and candlelight glints off her silver pendant, a tree intertwined with the moon, the symbol of Thyra. She approaches the adventurers with a serene, warm smile.
+{actor: sister-danica} A robed woman with braided dark hair steps from an alcove, a silver pendant of a tree and moon at her throat, the symbol of Thyra. She smiles warmly.
 
 {speaker: sister-danica, delivery: soft with soothing authority} Welcome to the Grand Library. I am Sister Danica, a cleric of Thyra, the Wayfinder. You appear to be travelers in search of something beyond the ordinary. If you seek knowledge, I would be honored to assist you.
 
-{actor: sister-danica} She gestures toward a nearby table, inviting them to talk.
+{actor: sister-danica} She gestures to a nearby table.
 
 {speaker: sister-danica} The library holds many secrets, some ancient, some untamed. Let us explore the answers together.
 

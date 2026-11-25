@@ -19,11 +19,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726439333709"
 
 ## Intro
 
-The winding streets of the Lower Districts teem with hurried vendors, wandering townsfolk, and shady figures lurking in the shadows. Chimney smoke hangs in the air, and the clatter of distant market stalls blends with the hum of conversation.
+The narrow streets of the Lower Districts teem with vendors, townsfolk and hooded figures.
 
-People jostle through the crowded, narrow alleys, faces hidden under hoods or wide-brimmed hats. Children dart between them, chasing each other or carrying small parcels, while street performers play haunting melodies on worn instruments.
-
-Amid it all, a group of halfling urchins weaves unnoticed through the crowd with practiced ease. A small, wide-eyed halfling with messy brown hair slips between legs, laughing mischievously. A red-haired halfling with dirt-smudged cheeks skips along, bumping into people as she goes. More halflings trail behind, joking and giggling, lost in the bustle of the district.
+Through the crowd weaves a band of halfling urchins. A wide-eyed boy with messy brown hair slips between legs, laughing. A red-haired girl skips along, bumping into people as she goes.
 
 ## GM Notes
 

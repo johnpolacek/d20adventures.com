@@ -18,13 +18,13 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-{place: treeLine} Eyes shine in the shadows of the tree line, where the sound came from.
+{place: treeLine} Eyes shine in the tree line.
 
-{actor: owlbear, from: treeLine, pace: walk} A hulking monster shoulders out of the undergrowth, fifteen feet tall, with the body of a giant bear and the head of an owl. It comes on at an unhurried pace.
+{actor: owlbear, from: treeLine, pace: walk} An owlbear shoulders out of the undergrowth, fifteen feet of bear with the head of an owl. It is in no hurry.
 
-{actor: owlbear} It stops on the trail, lifts its great beaked head and tastes the air.
+{actor: owlbear} It stops on the trail and tastes the air.
 
-{actor: thalbern} Thalbern holds still where he has hidden, close enough to hear it breathe.
+{actor: thalbern} Thalbern holds still in his hiding place, close enough to hear it breathe.
 
 ## GM Notes
 

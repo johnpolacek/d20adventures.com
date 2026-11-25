@@ -482,7 +482,7 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
     const asked = prompts.find((p) => p.includes("most likely")) ?? ""
     assert.match(asked, /throw her over the side into the river and cast off with the crate for Kordavos\. This is the most likely way the fight ends/)
     assert.equal(store.current().encounterId, "overboard")
-    assert.match(storyText(store.current().story), /The river closes over Lyra/)
+    assert.match(storyText(store.current().story), /Lyra plunges into the black, cold river/)
     assert.deepEqual(
       store.current().characters.map((c) => c.type),
       ["pc", "pc", "pc"]

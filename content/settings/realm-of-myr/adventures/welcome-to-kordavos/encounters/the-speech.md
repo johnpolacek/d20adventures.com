@@ -21,23 +21,21 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726779752897"
 
 ## Intro
 
-In the grand ballroom the mood has turned to eager anticipation. Warm light flickers over the elegantly dressed guests.
+In the grand ballroom, the guests wait eagerly.
 
-{actor: thaddeus-blackthorn} Thaddeus Blackthorn stands confidently on the stage, his dark formal attire gleaming under the chandeliers. He raises his hand with a proud smirk, and the room falls silent.
+{actor: thaddeus-blackthorn} Thaddeus Blackthorn stands on the stage and raises his hand. The room falls silent.
 
 {speaker: thaddeus-blackthorn, delivery: booming with practiced ease} Ladies and gentlemen. We stand on the brink of greatness. A new era of prosperity awaits those bold enough to embrace it. Those who align themselves with the Blackthorns and the Margrave will find opportunity and wealth.
 
-{actor: thaddeus-blackthorn} He pauses, his gaze sweeping the room.
-
-{actor: seraphina-valtor} At the back of the crowd, Seraphina Valtor alone does not applaud. She watches Thaddeus without blinking.
+{actor: seraphina-valtor} At the back of the crowd, Seraphina Valtor alone does not applaud.
 
 {speaker: thaddeus-blackthorn} But those who cling to outdated traditions will be left behind. The future belongs to those who dare to seize it.
 
-{actor: thaddeus-blackthorn} As the crowd murmurs approval, Thaddeus gestures to the far side of the ballroom. With a flourish, a large curtain is drawn back to reveal the Forest Drake, caged but still impressive in size and power. Its green scales shimmer, and its bright eyes survey the crowd with predatory focus.
+{actor: thaddeus-blackthorn} Thaddeus gestures, and a curtain is drawn back to reveal a caged Forest Drake, its green scales shimmering.
 
 {speaker: thaddeus-blackthorn, delivery: announcing} Behold, a symbol of the new alliances we've forged with the elves of the Valkarr Forest. Together, we will unlock the ancient secrets of the wilds and bring forth untold riches and power!
 
-The crowd gasps in awe as the drake towers above them.
+The crowd gasps.
 
 ## GM Notes
 

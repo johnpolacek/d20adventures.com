@@ -20,19 +20,17 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726597339022"
 
 ## Intro
 
-In formal finery, their faces hidden behind the ornate masks of the masquerade, the adventurers approach the Asterian Quarter. The Blackthorn Mansion looms ahead, its towering spires silhouetted against the darkening sky. Torchlight flickers across its imposing stone walls.
+Masked and in finery, the adventurers approach the Blackthorn Mansion, its spires dark against the evening sky.
 
-Wrought iron gates worked with Valkaran and Asterian symbols stand open to the evening’s elite. Uniformed servants guide carriages through the cobblestone courtyard, and guests in lavish costumes and masks climb the grand staircase to the entrance.
+Guests in lavish costumes climb the grand staircase. At its foot stand two guards in polished black armor bearing the Blackthorn crest.
 
-At the foot of the staircase stand two guards in polished black armor bearing the Blackthorn family crest. Their hands rest casually on their sword hilts, but their eyes study every guest.
+{actor: Barok Redbeard} One guard steps forward. It is Barok, his beard trimmed, his posture straighter.
 
-{actor: Barok Redbeard} One of the guards steps forward, a burly man with a red beard and a familiar, imposing frame.
-
-{actor: Barok Redbeard} It is Barok, though far more composed now, his unruly beard neatly trimmed and his posture straighter, as if the formal attire demands it. His eyes narrow in recognition, but he says nothing of their last meeting. He raises a gloved hand.
+{actor: Barok Redbeard} His eyes narrow in recognition, but he says nothing of their last meeting. He raises a gloved hand.
 
 {speaker: Barok Redbeard, delivery: restrained grunt} Invitation.
 
-{actor: Barok Redbeard} His voice is as gruff as they remember. His eyes linger on each of them a moment longer than necessary.
+{actor: Barok Redbeard} His eyes linger on each of them a moment too long.
 
 ## GM Notes
 

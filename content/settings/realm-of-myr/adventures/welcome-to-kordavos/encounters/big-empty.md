@@ -26,11 +26,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951960914"
 
 ## Intro
 
-The seal dissolves with a deafening crack, and the black iron door rumbles open. The adventurers brace for an attack, but find only... silence.
+The seal dissolves with a crack, and the black iron door rumbles open. Beyond lies only silence.
 
-Beyond lies a vast, cavernous chamber, its ceiling lost in darkness the torches cannot reach. Fine grey dust covers the floor. It looks like a tomb picked clean. At the far end, a single narrow archway leads further in.
+A vast chamber stretches into darkness, its floor deep in grey dust. A single narrow archway leads further in.
 
-{actor: astrid-blackthorn} Astrid steps into the center of the hall, her voice echoing.
+{actor: astrid-blackthorn} Astrid steps into the hall, her voice echoing.
 
 {speaker: astrid-blackthorn, delivery: frustrated} All this? For an empty cellar?
 

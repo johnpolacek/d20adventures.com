@@ -17,13 +17,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726672244509"
 
 ## Intro
 
-Deeper in the mansion’s winding halls is a wing clearly reserved for the highest-ranking member of the Blackthorn family. The decor grows ever more ornate: rich tapestries, priceless paintings of conquest and glory, and opulent candelabras casting a warm golden glow.
+Deep in the mansion is the wing of the Blackthorn family's head, hung with tapestries and paintings of conquest.
 
-Two guards block the way to a large, intricately carved door. Both wear dark leather reinforced with iron plating, with the Blackthorn crest, a black tree twisted into a circle, stitched on their tabards.
+Two guards block a large carved door. They wear the Blackthorn crest, a black tree twisted into a circle, and carry longswords.
 
-They carry longswords, but they stand at ease, more interested in the Masquerade’s lavish spread than in any threat. The hall is otherwise silent, the ball barely audible this far into the mansion.
-
-{actor: blackthorn-guard} One, a stocky man with graying hair, leans against the wall, absently fiddling with his armor straps. The other, a younger guard with a scruffy beard, chuckles and mutters about the wine and roasted game downstairs. Neither seems to care what goes on beyond the door they guard, though they still glance down the hall now and then.
+{actor: blackthorn-guard} They stand at ease. The stocky, graying one fiddles with his armor straps. The younger one mutters about the wine downstairs. Now and then they glance down the hall.
 
 ## GM Notes
 

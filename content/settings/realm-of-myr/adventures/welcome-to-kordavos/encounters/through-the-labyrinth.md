@@ -18,19 +18,19 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726950403113"
 
 ## Intro
 
-Past the barrels, the tunnel splits into a maze of identical forks: rough-hewn stone, dripping water, no natural light. The air grows heavy with a faint, pulsing hum that the magically sensitive feel in their teeth.
+Past the barrels, the tunnel splits into a maze of identical forks. A faint, pulsing hum hangs in the air.
 
 {speaker: astrid-blackthorn, delivery: muttering} Too many turns. It’s designed to lose anyone who isn’t supposed to be down here.
 
-{actor: astrid-blackthorn} She turns to her small squad of surviving soldiers.
+{actor: astrid-blackthorn} She turns to her surviving soldiers.
 
 {speaker: astrid-blackthorn} Split up. Take the east and west spurs. Report back if you find anything. We take the center path.
 
-{actor: eamon} As the party presses on with Astrid and Eamon, the scholar runs his fingers over faint crystal-set runes that resonate softly.
+{actor: eamon} Eamon runs his fingers over faint crystal-set runes.
 
 {speaker: eamon, delivery: whispering} These aren’t just markings. They’re transmission stones. The Covenant has been using these tunnels to eavesdrop on the noble estates above. Look at the angle. This one is directly beneath the City Council chambers.
 
-After a sharp turn, the tunnel ends at a massive, seamless stone wall, and the hum swells to a crescendo.
+The tunnel ends at a massive, seamless stone wall, and the hum swells.
 
 ## GM Notes
 

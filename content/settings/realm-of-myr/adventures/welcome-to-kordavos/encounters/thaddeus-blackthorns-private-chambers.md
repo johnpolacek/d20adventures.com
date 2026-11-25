@@ -19,15 +19,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726695978966"
 
 ## Intro
 
-Thaddeus Blackthorn’s private chambers are a stark contrast to the opulence of the rest of the mansion. The room is grand but cold: no lavish decorations or personal touches, just polished dark wood and expensive furnishings, meticulously arranged.
+Thaddeus Blackthorn’s private chambers are grand but cold: dark wood, fine furniture, nothing personal.
 
-At its center stands an imposing mahogany desk, covered in neat stacks of papers, ledgers, and maps. Behind it, a large window looks out over moonlit Kordavos, its thick velvet curtains half-drawn, as if to limit how much can be seen.
+An imposing mahogany desk holds stacks of papers, ledgers and maps. Behind it, a window looks out over moonlit Kordavos.
 
-The shelves along the walls hold no books, only scrolls and sealed letters, many bearing the insignias of prominent families, including the Blackthorn and Asterian crests. A glass cabinet in one corner holds rare, valuable trinkets: gems, ornate daggers, and a few objects that seem out of place, among them a small carved wooden idol of Valkaran origin.
+The shelves hold scrolls and sealed letters bearing the crests of prominent families, the Blackthorn and Asterian among them. A glass cabinet holds gems, ornate daggers and a small carved wooden idol of Valkaran origin.
 
-On one wall hangs an ornate sword, its scabbard adorned with intricate Valkaran symbols. Its hilt gleams in the firelight, as if it means more than decoration. A second door, almost hidden behind a heavy tapestry, seems to lead to a smaller, more private study.
-
-This is where business is done: deals struck, secrets kept, plans formed. It is easy to imagine Thaddeus behind the desk, plotting his further rise in Kordavos’s politics.
+On one wall hangs a sword in a scabbard of Valkaran symbols. A second door hides behind a heavy tapestry.
 
 ## GM Notes
 

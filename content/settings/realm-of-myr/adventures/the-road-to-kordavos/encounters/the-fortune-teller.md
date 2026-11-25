@@ -18,7 +18,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 
 ## Intro
 
-{actor: Borina Runetongue} Nearer Kordavos, the Marquis Road fills with travelers and merchants bound for the Harvest Festival. Beside it sits a stout, weathered dwarf woman, her long dark hair braided with silver beads, at a small carved table. On it rest a crystal ball and a deck of ornate tarot cards.
+{actor: Borina Runetongue} Nearer Kordavos, the Marquis Road fills with festival travelers. Beside it a stout dwarf woman, silver beads in her braids, sits at a small table with a crystal ball and a deck of tarot cards.
 
 {speaker: Borina Runetongue} Paths entwine on the road to Kordavos, travelers!
 

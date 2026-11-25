@@ -23,9 +23,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726462025424"
 
 ## Intro
 
-Late evening falls over Kordavos as the adventurers emerge from the underground chamber. A low moon casts a dim, silvery glow over the streets. Ahead, Silverhand strides purposefully through the gloom, his cloak rippling like a living shadow. His representative follows, clutching the auction prize tightly.
+Night has fallen as the adventurers leave the underground chamber. Ahead, Silverhand strides through the gloom, his representative clutching the auction prize.
 
-The hum of the city’s nightlife fades as the trail winds through the alleys, under flickering lanterns that barely light the way. Silverhand leads deeper into the city’s forgotten corners, far from the eyes of the law. Every few intersections, one of his guards pauses to glance back for tails.
+The trail winds into the city’s forgotten corners. Every few streets, a guard glances back for tails.
 
 ## GM Notes
 

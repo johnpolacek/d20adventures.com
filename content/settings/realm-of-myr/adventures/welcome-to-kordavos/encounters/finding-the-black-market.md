@@ -14,7 +14,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726450092972"
 
 ## Intro
 
-Deeper into the Lower Districts, the streets close in. Rickety buildings lean overhead, casting long shadows in the fading light. The air smells of damp stone and stagnant water. The bustle of the city fades, replaced by hushed conversations, the shuffle of cloaks, and glances from shadowy figures.
+Deeper in the Lower Districts, the streets narrow and the crowds thin. Cloaked figures watch from doorways.
 
 ## GM Notes
 

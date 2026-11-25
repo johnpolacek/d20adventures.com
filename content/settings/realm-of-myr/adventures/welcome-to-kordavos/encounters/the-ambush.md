@@ -22,15 +22,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726580775048"
 
 ## Intro
 
-The adventurers make their way back to the Dragonbone Inn through eerily quiet streets, under the pale light of a waning moon. Lanterns flicker weakly along the narrow roads, casting long, twisted shadows across the cobblestones. The late evening air is cold and still.
+The adventurers walk back to the Dragonbone Inn through quiet, moonlit streets.
 
-The sharp *thunk* of an arrow breaks the silence. It sinks into the wooden door of a shop, inches from one of the adventurers. A soft rustle comes from above. On the dark rooftops are the vague forms of hooded figures, silent watchers, barely visible.
+The sharp *thunk* of an arrow breaks the silence. It sinks into a shop door inches from one of them. Hooded figures crouch on the dark rooftops.
 
-A low, rumbling voice booms through the narrow streets, unnatural and echoing as if from all directions at once. "*You tread where you are not welcome.*" The ground shudders beneath their feet, cracks form in the nearby stone, and the air smells faintly of sulfur. On the rooftops more arrows are nocked, but none are loosed.
+A low voice booms from all directions at once. "*You tread where you are not welcome.*" The ground shudders, and the air smells of sulfur.
 
-"Cease your meddling," the voice continues with cold authority. "Turn away from what is not yours to uncover, or the consequences will be far worse than arrows in the night." Another arrow whistles down and sinks into the wall just ahead of the adventurers.
+"Cease your meddling," the voice continues. "Turn away from what is not yours to uncover, or the consequences will be far worse than arrows in the night." Another arrow sinks into the wall just ahead.
 
-The figures on the rooftops do not move. The voice speaks once more. "We are watching. We know every step you take. Keep searching, and you will find only ruin."
+"We are watching. We know every step you take. Keep searching, and you will find only ruin."
 
 ## GM Notes
 

@@ -28,17 +28,17 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726435567019"
 
 ## Intro
 
-The narrow entrance opens into the shadowy Black Market, a labyrinth of stalls and tents. Vendors whisper from behind their counters, selling the mundane and the forbidden: rare potions, stolen artifacts, magical trinkets, and enchanted weapons. Figures hidden by cloaks and masks make quiet deals in the shadows or watch the adventurers pass. Hushed bartering, the odd sharp laugh, and the shuffle of feet fill the air.
+The entrance opens into the Black Market, a maze of stalls selling the mundane and the forbidden: potions, stolen artifacts, enchanted weapons. Cloaked figures make quiet deals in the shadows.
 
-{actor: Grendar} At the first stall, a scarred, grizzled vendor with wild eyes and a crooked smile leans forward.
+{actor: Grendar} At the first stall, a scarred vendor with a crooked smile leans forward.
 
 {speaker: Grendar} Looking for something special, are we? I've got charms to ward off death... for the right price.
 
-{actor: Vera Azimov, object: blade} Nearby, a dwarven vendor in a tattered cloak holds up an intricately carved dagger.
+{actor: Vera Azimov, object: blade} A dwarven vendor holds up a carved dagger.
 
 {speaker: Vera Azimov, delivery: boasting} You won’t find craftsmanship like this above ground, love.
 
-{actor: Rae the Scarred} A young woman with a scar across her chin chuckles as she walks past.
+{actor: Rae the Scarred} A young woman with a scarred chin chuckles as she passes.
 
 {speaker: Rae the Scarred, delivery: with a smirk} New faces. Fresh meat.
 
@@ -46,7 +46,7 @@ The narrow entrance opens into the shadowy Black Market, a labyrinth of stalls a
 
 {speaker: Mizrith the Cackler} Step right up! Rarities from the far reaches of Myr! Trinkets to tempt fate, and scrolls of forgotten powers!
 
-{actor: Mizrith the Cackler} A small, hunched figure beckons the adventurers closer with a bony hand.
+{actor: Mizrith the Cackler} A small, hunched figure beckons with a bony hand.
 
 {speaker: Mizrith the Cackler} Come closer, strangers... I’ve got exactly what you need.
 

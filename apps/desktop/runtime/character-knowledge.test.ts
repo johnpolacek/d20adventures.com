@@ -224,16 +224,16 @@ test("in Covert Cargo, Silas's turn reads the intro without the hidden heroes' p
     async (store) => {
       const silas = await turnOf(store, SILAS)
       assert.match(silas, /Encounter Intro: [\s\S]*Silas glides from the shadows/)
-      assert.ok(!/Weeks of stakeouts|Wollandora sent him|Silas's instructions are explicit/.test(silas), "Silas reads no one's private paragraph")
+      assert.ok(!/Weeks of rumors|Wollandora sent him|Her task: confirm by magic/.test(silas), "Silas reads no one's private paragraph")
       const gm = await endRound(store)
-      assert.match(gm, /Weeks of stakeouts[^\n]*\(private to Poppen Quickfoot\)/)
+      assert.match(gm, /Weeks of rumors[^\n]*\(private to Poppen Quickfoot\)/)
       // Each hidden hero's opening is now a fact for that hero alone.
       const known = store.state!.adventure.knowledge ?? []
       assert.deepEqual(
         known.map((f) => f.knownBy),
         [[LYRA], [POPPEN], [THALBERN]]
       )
-      assert.match(known[1].text, /^From a tangle of undergrowth[\s\S]*Weeks of stakeouts/)
+      assert.match(known[1].text, /^Poppen Quickfoot hides[\s\S]*Weeks of rumors/)
     }
   )
 })

@@ -31,17 +31,17 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/the-r
 
 ## Intro
 
-{actor: Sister Mira} Morning on the Marquis Road, the last day's walk to Kordavos, where the road winds through wooded hills of fir under pale peaks of rock. At a wayside shrine on the verge, a priestess in worn leather over plain robes rests on the step, the silver symbol of Valkara at her throat. Travellers bound for the Harvest Festival stop here to drink from the shrine's spring before the last miles.
+{actor: Sister Mira} Morning on the Marquis Road, the last day's walk to Kordavos. At a wayside shrine, a priestess in worn leather over plain robes rests on the step, the silver symbol of Valkara at her throat.
 
-{actor: Elaraen Whisperwind} Across the road, a half-elf with a lute sits on an old milestone, trying the same few bars of a festival song until he has them right.
+{actor: Elaraen Whisperwind} Across the road, a half-elf sits on a milestone, practicing a festival song on his lute.
 
-{hero: thalbern} A lean, weathered man in a cloak of forest hues drinks at the spring, a longbow across his back. River mud still cakes his boots, and his eyes keep going back down the road toward the Mordava.
+{hero: thalbern} A lean, weathered man in a cloak of forest hues drinks at the shrine's spring, a longbow on his back and river mud on his boots.
 
-{hero: 1749159962941} A young scholar in spectacles sits on the shrine's low wall with her hood up, peeling apart the swollen pages of a book. The hem of her robe is stiff with dried river water.
+{hero: 1749159962941} A young scholar in spectacles sits on the shrine wall, peeling apart the swollen pages of a soaked book.
 
-{hero: 1749307435667} A halfling in a patchwork waistcoat chats up everyone who stops at the spring, trading a joke for every scrap of news from the city.
+{hero: 1749307435667} A halfling in a patchwork waistcoat asks everyone at the spring for news from the city.
 
-{actor: Dmitri Volkov} Up the road rolls a well-kept caravan, two covered wagons marked with a black wolf's head, pack horses at its tail and a pair of guards alongside. At its head rides a man with neatly combed white hair and beard and a keen, smiling face that misses nothing. He reins in at the shrine and looks the travellers over.
+{actor: Dmitri Volkov} A caravan rolls up, two covered wagons marked with a black wolf's head, guards alongside. At its head rides a white-haired man with a keen, smiling face. He reins in at the shrine.
 
 {speaker: Dmitri Volkov} Well met, travellers! Bound for Kordavos and the Festival, every one of you, or I'm no judge of faces. Walk a while with us, and the miles go quicker.
 

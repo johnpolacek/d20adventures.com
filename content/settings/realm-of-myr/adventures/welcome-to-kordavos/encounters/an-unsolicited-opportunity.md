@@ -19,7 +19,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093207477"
 
 ## Intro
 
-Late evening falls on the Dragonbone Inn amid the clink of mugs. Several locals eye the adventurers with interest, among them Beric, a burly dockworker with a scar across his face, and Eamon, a sharp-minded scholar.
+Evening at the Dragonbone Inn. Two locals eye the adventurers: Beric, a scarred dockworker, and Eamon, a scholar.
 
 {speaker: Beric Sonacus, delivery: gruff but respectful} Ye seem quite an assorted lot. We could use folks of varied talents like you.
 

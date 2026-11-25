@@ -19,9 +19,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"
 
 ## Intro
 
-Following Loric’s directions through a maze of warehouses and narrow alleys, the adventurers find Warehouse 14, a storage shed tucked in a shadowed corner. The air is stagnant here, away from the sea breeze.
+Following Loric’s directions, the adventurers find Warehouse 14, a shed in a shadowed corner of the docks.
 
-{actor: Alaric Fleyven} Suspicious figures lurk by the entrance, posing as workers but clearly on alert. One, a tall man with a jagged scar down his cheek, spots the adventurers and signals. His companions draw short swords from beneath their tunics.
+{actor: Alaric Fleyven} Men posing as workers watch the door. One, tall with a jagged scar, signals, and his companions draw short swords.
 
 {speaker: Alaric Fleyven, delivery: demanding} Who’re you lot? Ain’t nothing here for you. Best be on your way before you find trouble you can’t walk away from.
 

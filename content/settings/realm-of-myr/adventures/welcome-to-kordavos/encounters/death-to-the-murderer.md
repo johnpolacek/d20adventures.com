@@ -20,17 +20,17 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726789587556"
 
 ## Intro
 
-As the applause for Thaddeus’ announcement peaks, a figure in the shadows moves with purpose. Clad in the dark, hooded garb of the Covenant of the Cowl, the assassin has waited for this moment, while every eye is on the Forest Drake.
+As applause for Thaddeus peaks, a hooded assassin of the Covenant of the Cowl moves through the crowd.
 
-{actor: covenant-assassin, target: thaddeus-blackthorn, object: blade} With a sudden, calculated movement, the assassin breaks from the crowd near Thaddeus and plunges a blade into his side.
+{actor: covenant-assassin, target: thaddeus-blackthorn, object: blade} The assassin lunges and plunges a blade into Thaddeus’s side.
 
 {speaker: covenant-assassin, to: thaddeus-blackthorn, delivery: hissing} Death to the murderer of Mikhail Antonov!
 
-{actor: thaddeus-blackthorn} Thaddeus gasps, eyes wide in shock, as the poison begins to work through his veins.
+{actor: thaddeus-blackthorn} Thaddeus gasps as poison spreads through his veins.
 
-Chaos erupts. Guests scream and scatter.
+Guests scream and scatter.
 
-{actor: covenant-assassin} The assassin races for the balcony with deadly speed and vaults the bannister, a rope ready for a quick descent into the darkness below.
+{actor: covenant-assassin} The assassin races for the balcony and vaults the bannister, a rope ready for the drop.
 
 ## GM Notes
 

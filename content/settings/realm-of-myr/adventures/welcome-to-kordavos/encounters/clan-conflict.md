@@ -19,25 +19,25 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725127001688"
 
 ## Intro
 
-The festival is in full swing with music and dance. On its outskirts, two groups stare each other down, and murmurs spread as the crowd senses the hostility.
+On the festival’s edge, two groups stare each other down. The crowd goes quiet.
 
 {speaker: Barok Redbeard, to: Larya Halloway, delivery: shouting} Your people have dishonored us for the last time!
 
-{actor: Barok Redbeard, target: Larya Halloway} His hand reaches for his sword.
+{actor: Barok Redbeard, target: Larya Halloway} His hand goes to his sword.
 
-{actor: Larya Halloway, target: Barok Redbeard} The other leader is a tall woman with a scar across her cheek.
+{actor: Larya Halloway, target: Barok Redbeard} Facing him stands a tall woman with a scarred cheek.
 
 {speaker: Larya Halloway, to: Barok Redbeard, delivery: snarling in response} And we won't tolerate your insults any longer!
 
-{actor: Barok Redbeard, target: Larya Halloway} The first leader, a burly man with a red-dyed beard, steps forward. His followers move with him, rough sellswords in mismatched armor with Blackthorn ribbons tied at their sleeves. Behind them, an Asterian banner hangs over the Valkaran harvest altar at the square's edge. His eyes lock onto the scarred woman.
+{actor: Barok Redbeard, target: Larya Halloway} Barok, burly and red-bearded, steps forward. Sellswords with Blackthorn ribbons at their sleeves move with him.
 
 {speaker: Barok Redbeard, to: Larya Halloway, delivery: growling} We've been patient, but your arrogance knows no bounds, Larya.
 
-Larya's people hold their ground, Valtor elders and their kin in old Valkaran festival dress, heirloom silver at their throats.
+Larya’s people hold their ground, Valtor elders in old Valkaran festival dress.
 
 {speaker: Larya Halloway, to: Barok Redbeard, delivery: steady but filled with venom} It's you and your thugs who bring chaos wherever you go, Barok.
 
-Onlookers inch away, leaving a circle around the two sides. Vendors glance about nervously, and parents pull their children close.
+Onlookers back away, leaving a circle around the two sides.
 
 ## GM Notes
 

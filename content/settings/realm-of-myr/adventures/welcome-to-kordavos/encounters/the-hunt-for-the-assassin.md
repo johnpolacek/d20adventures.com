@@ -23,23 +23,23 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726868134486"
 
 ## Intro
 
-{actor: astrid-blackthorn} Lady Astrid, now in rugged ranger gear of dark leathers and a heavy cloak, crosses the moonlit courtyard with predatory focus. The air smells of wet earth and crushed ivy, and a cold wind whistles through the stone balustrades. She leads the adventurers along the assassin's escape route, her eyes on the churned-up soil and a discarded glove faintly glowing green with lingering poison.
+{actor: astrid-blackthorn} Lady Astrid, now in dark ranger leathers, leads the adventurers across the moonlit courtyard along the assassin's trail. A discarded glove glows faintly green with poison.
 
-A handful of Blackthorn house guards follow her with lanterns and drawn swords.
+A handful of Blackthorn house guards follow with lanterns and drawn swords.
 
-{actor: eamon} By a heavy drainage grate near the estate's ivy-choked wall waits a familiar figure: Eamon, no longer the mild-mannered scholar from the Dragonbone Inn. He stands tall, hands glowing with soft arcane light, inspecting runes etched into the grate's metal.
+{actor: eamon} At a drainage grate by the ivy-choked wall waits Eamon, the scholar from the Dragonbone Inn, his hands glowing as he studies runes on the grate.
 
-{actor: astrid-blackthorn, target: eamon} Astrid strides forward, boots crunching on gravel.
+{actor: astrid-blackthorn, target: eamon} Astrid strides forward.
 
 {speaker: astrid-blackthorn, to: eamon, delivery: low and intense} Eamon. The ward. Break it.
 
-{actor: eamon, effect: aura, element: arcane} Eamon nods and begins to unravel the seal in a steady, rhythmic murmur.
+{actor: eamon, effect: aura, element: arcane} Eamon begins to unravel the seal.
 
-{actor: astrid-blackthorn} Astrid turns to the adventurers, her gaze hard as flint.
+{actor: astrid-blackthorn} Astrid turns to the adventurers.
 
 {speaker: astrid-blackthorn} This assassin and the Covenant think they can hide behind magic and shadows. But they have murdered my brother, and they have underestimated me. Thaddeus will not die without vengeance.
 
-{actor: astrid-blackthorn} She gestures to the grate as it begins to grind open.
+{actor: astrid-blackthorn} The grate grinds open.
 
 {speaker: astrid-blackthorn} We hunt together.
 

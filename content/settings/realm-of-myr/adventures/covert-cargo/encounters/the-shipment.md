@@ -26,25 +26,23 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-A river boat bound for Kordavos lies moored at a discreet pier on a quiet fork of the Mordava River, still on the dark water.
+A river boat bound for Kordavos lies moored at a hidden pier on the Mordava.
 
-The air is cool and damp and smells of wet earth. Crickets chirp, water laps at the pier's old pylons, and wind stirs the bare willows.
+{actor: 1749159962941, private: true} Lyra stands before the crate. Her task: confirm by magic that the Valkaran artifact is genuine, then nod. She is paid well, and better for her silence.
 
-{actor: 1749159962941, private: true} Lyra stands aboard with the cargo crate before her. Silas's instructions are explicit: use her arcane talents to confirm the Valkaran artifact is genuine, give a simple nod, and her part is done. She will be paid well for her expertise and better for her discretion.
+{actor: 1749159962941, private: true} She came to see Faelendarian elves and a Valkaran relic firsthand.
 
-{actor: 1749159962941, private: true} She could not resist the chance to meet reclusive Faelendarian elves and stand near a Valkaran relic. She has studied both at length, but old tomes are not the real thing.
+{actor: 1749159962941, private: true} She barely knows her escorts. Reinhard, big and gruff, runs security. Silas, slender and quiet, recruited her at the Grand Library.
 
-{actor: 1749159962941, private: true} She knows little of her two escorts. Reinhard, large and gruff, runs security for the job. Silas recruited her after noticing her visits to the Old Valkaran Archives at the Grand Library. Where Reinhard is a stone wall, Silas is a whisper, slender and moving with a grace learned in shadows.
+{actor: 1749307435667, private: true} Poppen Quickfoot hides in the brush above the bank. Weeks of rumors led him here. This could be the score that makes his name.
 
-{actor: 1749307435667, private: true} From a tangle of undergrowth at the treeline above the bank, Poppen Quickfoot watches, perfectly still, damp leaves brushing his cheek. Weeks of stakeouts and rumors of a clandestine trade have led him to this predawn hour on this quiet fork. His instinct says this is the score that will make his name in Kordavos.
+{actor: 1749307435667, private: true} He watched three board: a hulking soldier, a robed woman, a whispering shadow. A professional crew, guarding something worth stealing.
 
-{actor: 1749307435667, private: true} His keen hazel eyes followed the three figures down the pier and aboard, and now track their shapes past the lit windows: the hulking soldier, the robed woman and the whispering shadow-man. A professional crew, not sloppy thugs. Whatever they guard matters, and Poppen thinks not only of fencing it but of the connections such a coup would bring.
+{actor: thalbern, private: true} Below the stern, Thalbern kneels in a thicket, longbow across his knee. The druid Wollandora sent him after relics stolen from the elven vaults, and this boat carries them. No one has seen him.
 
-{actor: thalbern, private: true} Neither knows of the third watcher. Farther down the bank, in a thicket below the boat's stern, Thalbern kneels with his longbow across his knee, still as the roots around him. The druid Wollandora sent him after relics taken from the elven vaults of the Valkarr woods, and after the Valkaran-made riverboat she saw carrying them toward Kordavos. He has followed the Mordava down from the Standing Stones through the trees, and here is the boat, moored where no honest boat would stop, lamps lit, strangers aboard. No one has seen him, and he has seen no one else on the bank. Whatever the boat carries is about to change hands.
+{actor: Aelar Moonglimmer} The cabin door opens. A tall elf in dark clothes steps out. A second elf, a spearman, watches from the stern.
 
-{actor: Aelar Moonglimmer} Wood creaks as the cabin door opens. A tall, lithe elf in close-fitting dark clothes steps out with silent, deliberate grace. Another elf keeps watch on deck, a spearman with a round shield by the stern.
-
-{actor: Aelar Moonglimmer, target: Silas} The lead elf steps to the crate and looks to Lyra's escorts. His voice is low and clear.
+{actor: Aelar Moonglimmer, target: Silas} The elf steps to the crate.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: low and clear} You have the arrangement?
 
@@ -52,19 +50,17 @@ The air is cool and damp and smells of wet earth. Crickets chirp, water laps at 
 
 {speaker: Silas, to: Aelar Moonglimmer} I have it here, Aelar.
 
-{actor: Silas, object: scrollcase} He draws a heavy scrollcase from its oilskin wrapping. Black wax seals its cap, pressed with the thorned branch of the Blackthorn family.
+{actor: Silas, object: scrollcase} He draws a scrollcase sealed in black wax with the Blackthorn thorn.
 
 {speaker: Aelar Moonglimmer, to: Silas} Very well.
 
-{actor: Aelar Moonglimmer} Aelar gives an order in Elvish to his guard.
-
 {speaker: Aelar Moonglimmer, to: Silas} The shipment is ready for your specialist's inspection.
 
-{actor: Reinhard, target: 1749159962941} Reinhard nods at Lyra, eager to have the matter done.
+{actor: Reinhard, target: 1749159962941} Reinhard nods at Lyra.
 
 {speaker: Reinhard, to: 1749159962941, delivery: eager} Ok, let's get on with it then.
 
-The crate stays closed. No one may see inside, so Lyra must judge it by magecraft alone.
+The crate stays shut. Lyra must judge it by magic alone.
 
 ## GM Notes
 

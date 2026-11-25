@@ -19,11 +19,11 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-{place: stones} The ancient Standing Stones rise around Thalbern, and moonlight silvers the clearing.
+{place: stones} Moonlight silvers the ancient Standing Stones.
 
 {speaker: wollandora, to: thalbern, delivery: soft} Thalbern. The forest is grateful you are here.
 
-{actor: wollandora, target: thalbern} The elf's silver hair glistens, and her deep green eyes are wise and kind, but troubled.
+{actor: wollandora, target: thalbern} The elf's green eyes are kind, but troubled.
 
 ## GM Notes
 

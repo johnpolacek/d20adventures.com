@@ -14,9 +14,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726624593921"
 
 ## Intro
 
-On the upper floors, the masquerade ball below is a distant echo. Wood creaks, and gusts of wind rattle the ornate windows.
+On the upper floors, the ball below is a distant echo.
 
-At the end of a long corridor lined with Blackthorn family portraits is a heavy door, intricately carved with twisted branches and forest creatures, symbols of the Blackthorn clan’s tie to the Valkarr Forest.
+At the end of a corridor of Blackthorn portraits is a heavy door carved with twisted branches and forest creatures.
 
 ## GM Notes
 

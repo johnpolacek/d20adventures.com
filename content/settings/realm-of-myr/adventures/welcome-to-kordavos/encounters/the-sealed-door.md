@@ -18,7 +18,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726951147257"
 
 ## Intro
 
-{actor: eamon, effect: burst, element: radiant} The seamless wall shimmers as Eamon casts a flare of light, revealing a massive, ancient door of black iron. Its glowing sigils pulse like a heartbeat. The air is freezing, the adventurers' breath white with frost, and the weight of the magic makes it hard to speak.
+{actor: eamon, effect: burst, element: radiant} Eamon casts a flare of light, and the seamless wall reveals a massive door of black iron, its sigils pulsing like a heartbeat. The air is freezing.
 
 {actor: astrid-blackthorn, object: blade} Astrid grips her sword.
 

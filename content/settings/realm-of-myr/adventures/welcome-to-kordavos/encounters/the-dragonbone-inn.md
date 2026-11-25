@@ -18,11 +18,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725037898828"
 
 ## Intro
 
-The sun sets in streaks of orange and purple, and it is time to find lodging for the night. The closest tavern is The Dragonbone Inn, known for its eclectic patrons and storied history. It promises a welcome rest from the road.
+At sunset the party seeks lodging at the closest tavern, The Dragonbone Inn, known for its eclectic patrons and storied history.
 
-Inside it is warm and smells of roasting meat, and a bard plays a jaunty tune on his lute. Merchants and travelers fill the room, with a few suspicious figures huddled in dark corners. A large fireplace dominates one wall, its flames casting dancing shadows.
+Inside it is warm and smells of roasting meat. A bard plays his lute. Merchants and travelers fill the room, and a few suspicious figures huddle in dark corners.
 
-{actor: bram} The innkeeper, a burly man named Bram, greets the adventurers heartily and ushers them to a corner table where they can talk in relative privacy. He sets down a tray of drinks.
+{actor: bram} Bram, the burly innkeeper, ushers the adventurers to a quiet corner table and sets down a tray of drinks.
 
 {speaker: bram, delivery: hearty} Ah, the road can be a harsh mistress, can't she? You lot look like you've seen some excitement. This corner will give you a bit of peace.
 

@@ -25,11 +25,11 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458036467"
 
 {speaker: auctioneer, delivery: enthusiasm faltering} Sold! To the gentleman in black!
 
-{actor: auctioneer, object: map} The auctioneer unlocks the silver chain from the lectern and hands over the case holding the ancient map.
+{actor: auctioneer, object: map} The auctioneer hands over the case holding the ancient map.
 
-{actor: silverhand-representative, object: map} Silverhand’s representative takes it in his gloved hands. Without a look back or a word to his master, he slips into the shadows near the side exit.
+{actor: silverhand-representative, object: map} Silverhand’s representative takes it and slips toward the side exit.
 
-{actor: silverhand} Silverhand rises with predatory grace, his silver gauntlet catching the candlelight before he pulls his hood lower. He follows a few paces behind, flanked by his two silent guards. They move like men who own the darkness, heading for the labyrinthine streets of the Lower Districts.
+{actor: silverhand} Silverhand rises, pulls his hood low, and follows with his two silent guards toward the Lower Districts.
 
 ## GM Notes
 

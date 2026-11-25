@@ -13,13 +13,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044853455"
 
 ## Intro
 
-Three days later, Thaddeus Blackthorn is laid to rest beneath black banners in the grand square, under the eyes of more Asterian soldiers than Kordavos has seen in a generation.
+Three days later, Thaddeus Blackthorn is laid to rest beneath black banners in the grand square, watched by more Asterian soldiers than Kordavos has seen in a generation.
 
-Lady Astrid Blackthorn, now head of her house, speaks over her brother's coffin. She names the Covenant of the Cowl murderers and traitors, and promises that the old ways that sheltered them will shelter them no longer. The Key of Ilmarin hangs at her throat on a black cord.
+Lady Astrid, now head of her house, names the Covenant of the Cowl murderers and traitors. The Key of Ilmarin hangs at her throat.
 
-Within the week the Valtor chapels are searched, curfews fall over the lower districts, and Seraphina Valtor vanishes from the city. In the taverns, people lower their voices when Blackthorn guards pass.
+Within the week the Valtor chapels are searched, curfews fall over the lower districts, and Seraphina Valtor vanishes.
 
-The March of Davos has chosen order. What that order will cost is a story for another day.
+The March of Davos has chosen order. What it will cost is a story for another day.
 
 ## GM Notes
 

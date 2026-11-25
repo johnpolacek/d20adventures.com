@@ -125,17 +125,17 @@ test("Covert Cargo opens with each hero's hide and errand known only to that her
     async (store) => {
       const gm = turnScript(store.current())
       assert.match(gm, /Wollandora sent him [^\n]*\(private to Thalbern\)/)
-      assert.match(gm, /Weeks of stakeouts [^\n]*\(private to Poppen Quickfoot\)/)
+      assert.match(gm, /Weeks of rumors [^\n]*\(private to Poppen Quickfoot\)/)
       // The premise says where each one is, and leaves their errands to their own sheets.
       const premise = packs["covert-cargo"].artifacts.manifest.premise ?? ""
       assert.ok(!/Wollandora|hope of a score/.test(premise), premise)
 
       const poppen = await aiMove(store, POPPEN)
-      assert.match(poppen, /Weeks of stakeouts/)
-      assert.ok(!/Wollandora|third watcher|Silas's instructions are explicit/.test(poppen), "Poppen reads nothing of Thalbern or Lyra's orders")
+      assert.match(poppen, /Weeks of rumors/)
+      assert.ok(!/Wollandora|third watcher|Her task: confirm by magic/.test(poppen), "Poppen reads nothing of Thalbern or Lyra's orders")
       const thalbern = await aiMove(store, THALBERN)
       assert.match(thalbern, /Wollandora sent him/)
-      assert.ok(!/Weeks of stakeouts|Silas's instructions are explicit/.test(thalbern), "Thalbern reads nothing of Poppen or Lyra's orders")
+      assert.ok(!/Weeks of rumors|Her task: confirm by magic/.test(thalbern), "Thalbern reads nothing of Poppen or Lyra's orders")
 
       // Lyra's player is offered replies from what Lyra knows.
       const turn = store.current()
@@ -151,8 +151,8 @@ test("Covert Cargo opens with each hero's hide and errand known only to that her
         },
       }
       await suggest(store.state, packs, llm, { kind: "suggest", turnId: turn._id, characterId: LYRA })
-      assert.match(offered, /Silas's instructions are explicit/)
-      assert.ok(!/Weeks of stakeouts|Wollandora/.test(offered), "Lyra reads nothing of the two watchers' hides")
+      assert.match(offered, /Her task: confirm by magic/)
+      assert.ok(!/Weeks of rumors|Wollandora/.test(offered), "Lyra reads nothing of the two watchers' hides")
     }
   )
 })

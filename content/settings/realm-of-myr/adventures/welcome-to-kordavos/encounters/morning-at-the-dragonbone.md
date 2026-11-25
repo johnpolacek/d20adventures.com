@@ -21,19 +21,19 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726111833875"
 
 ## Intro
 
-Dawn light filters through the windows of the Dragonbone Inn, and the air smells of fresh bread and coffee. The innkeeper, Bram, is busy preparing for the day.
+Dawn at the Dragonbone Inn. Bram the innkeeper readies for the day.
 
-{actor: Elara Antonov} The door creaks open and Elara steps in, pale, tired, and visibly distraught.
+{actor: Elara Antonov} The door creaks open. Elara steps in, pale and distraught.
 
-{actor: bram, target: elara} Bram goes straight to her.
+{actor: bram, target: elara} Bram goes to her.
 
 {speaker: bram, to: elara, delivery: concerned} Elara, you’re early today. Everything alright?
 
-{actor: Elara Antonov} Elara gives him a faint smile.
+{actor: Elara Antonov} Elara manages a faint smile.
 
 {speaker: Elara Antonov, delivery: faltering} I’m here to drop off those supply orders... but...
 
-{actor: bram} Bram glances at the adventurers, then back to her.
+{actor: bram} Bram glances at the adventurers.
 
 {speaker: bram, to: elara} You know, these folks here, they seem like the kind who could help you find Joran.
 

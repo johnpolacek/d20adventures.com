@@ -12,9 +12,9 @@ landmark: "kordavos/south-gate"
 
 ## Intro
 
-The gates of Kordavos come into view.
+The gates of Kordavos come into view, hung with Asterian and Valkaran banners. Festival music carries from beyond.
 
-Stone archways hung with Asterian and Valkaran banners rise over the road, and music and laughter carry from the Harvest Festival beyond. At the checkpoint, a long line of travelers, merchants and villagers waits while the city guard takes three marks a head and asks each their business in the city.
+At the checkpoint a long line waits. The guard takes three marks a head and asks each traveler's business.
 
 The story continues in Welcome to Kordavos.
 

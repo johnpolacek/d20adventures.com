@@ -14,11 +14,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726605687900"
 
 ## Intro
 
-The adventurers step through the grand entrance of the Blackthorn Mansion into the opulence of the Masquerade Ball. Marble columns trimmed with gold filigree hold up soaring ceilings. Carvings of Valkaran legends line the walls, blending with the sleek Asterian architecture that dominates the room. Crystal chandeliers cast a warm glow over polished stone floors and vibrant tapestries.
+The Masquerade Ball fills the Blackthorn Mansion with marble, gold and candlelight. Nobles and merchants in masks drift between tables of rare wine and delicacies.
 
-The ballroom is a dazzling display of wealth and power. Nobles, merchants, and influential figures from across Kordavos gather in elaborate costumes and masks. Tables of exotic delicacies, rare wines, and displays of gemstones glimmer in the soft light. The air hums with laughter, music, and whispered conversation.
-
-It is a world away from the hardship of the common Valkarans the adventurers have seen in the city outside. Here, in the heart of the Blackthorns’ domain, wealth flows freely and the outside world seems almost forgotten. Beneath the glittering surface, the adventurers sense currents of intrigue and ambition swirling among the guests.
+It is a world away from the hardship of the Valkarans outside. Beneath the glitter, intrigue moves among the guests.
 
 ## GM Notes
 

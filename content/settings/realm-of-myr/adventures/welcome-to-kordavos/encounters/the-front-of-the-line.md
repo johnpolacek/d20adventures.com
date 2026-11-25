@@ -18,7 +18,7 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 
 ## Intro
 
-{actor: garlan-ironfist} At the table beneath the arch, a burly Asterian sergeant with a stern face but kind eyes sweeps the last company's marks into his strongbox. He turns the gate book to a fresh page and looks over the strangers now standing before him.
+{actor: garlan-ironfist} At the table beneath the arch, a burly Asterian sergeant with a stern face but kind eyes turns his gate book to a fresh page.
 
 {speaker: garlan-ironfist, delivery: demanding} Next. Name and business in Kordavos, each of you, and three marks a head. Then tell me who stands with you.
 

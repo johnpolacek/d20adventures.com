@@ -26,23 +26,21 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-{place: saloon} A cold, sharp silence falls over the cabin after the arcanist's pronouncement.
+{place: saloon} A cold silence falls over the cabin.
 
-{actor: Silas, target: Aelar Moonglimmer} Silas moves first. In one fluid motion he is standing before the door, blocking the only exit, a hand crossbow aimed steadily at Aelar.
+{actor: Silas, target: Aelar Moonglimmer} Silas blocks the door, a hand crossbow aimed at Aelar.
 
 {speaker: Silas, to: Aelar Moonglimmer, delivery: silken threat} There seems to have been a misunderstanding. My employers do not appreciate being sold worthless trinkets.
 
-{actor: Reinhard, target: Aelar Moonglimmer} Reinhard growls low, his hand dropping to the heavy mace at his belt.
+{actor: Reinhard, target: Aelar Moonglimmer} Reinhard growls, a hand on his mace.
 
 {speaker: Reinhard, to: Aelar Moonglimmer, delivery: snarling} You have nerve, elf.
 
-{actor: Reinhard, target: Aelar Moonglimmer} His cold eyes promise violence as he takes a heavy step forward.
-
-{actor: Aelar Moonglimmer, target: Silas} Aelar recoils, not in fear but in indignation, his calm breaking into open fury.
+{actor: Aelar Moonglimmer, target: Silas} Aelar bristles.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: spitting} Worthless?
 
-{actor: Aelar Moonglimmer, target: 1749159962941} He flicks a contemptuous glance at the specialist.
+{actor: Aelar Moonglimmer, target: 1749159962941} He glances at Lyra.
 
 {speaker: Aelar Moonglimmer, to: Silas} Your arcanist is either a fool, or you mean to double-cross us!
 

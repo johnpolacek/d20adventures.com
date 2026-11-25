@@ -13,11 +13,9 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 ## Intro
 
-Kordavos, capital of the March of Davos, is three miles back through the forest. The Harvest Festival has filled it with visitors from far and wide, and a stranger is easy to lose among them.
+Kordavos is three miles back through the forest, crowded for the Harvest Festival. The relic was bought under the Blackthorn seal, and the Blackthorns are in the city.
 
-Whatever the elves sold at that pier was bought under the seal of the Blackthorn family, and the Blackthorns are in Kordavos. The answers are in the city, and so is the trouble.
-
-{place: road} Beyond the trees, the Marquis Road still fills with travelers bound for the festival, every one of them walking into the same city.
+{place: road} Beyond the trees, festival travelers fill the Marquis Road.
 
 The story continues in The Road to Kordavos.
 

@@ -15,11 +15,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726275316858"
 
 Neither house holds the Key of Ilmarin now. The adventurers saw to that, and both houses know it.
 
-With the Key beyond them both, the Blackthorns and the Valtors come to the table in the Old Grand Library. Sister Danica and Bishop Nicolai preside, and the talks run long into the nights. No one trusts anyone, but no one dares to strike first.
+The Blackthorns and the Valtors come to the table in the Old Grand Library, with Sister Danica and Bishop Nicolai presiding. No one trusts anyone, but no one dares strike first.
 
-Kordavos settles into a cold and watchful peace. The festival banners come down, the river barges sail again, and the Raskovs quietly go back to business.
-
-The March of Davos has chosen to wait. How long the truce can hold is a story for another day.
+Kordavos settles into a cold, watchful peace, and the Raskovs quietly go back to business. How long the truce can hold is a story for another day.
 
 ## GM Notes
 

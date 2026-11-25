@@ -30,11 +30,11 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {speaker: Silas, delivery: quiet and controlled} As agreed.
 
-{actor: Aelar Moonglimmer, target: Silas} Aelar takes it, his sharp grey eyes holding the rogue's gaze.
+{actor: Aelar Moonglimmer, target: Silas} Aelar takes it.
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: quiet and controlled} The Circle is appreciative. They trust this partnership will prove fruitful for all involved.
 
-With a final sharp nod, Aelar and his guard step off the boat and cross the rickety pier like shadows, vanishing into the treeline without a backward glance.
+Aelar and his guard step off the boat and vanish into the trees.
 
 ## GM Notes
 

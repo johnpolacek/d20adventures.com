@@ -20,13 +20,13 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726970504298"
 
 ## Intro
 
-{actor: joran-antonov} From the alcove behind the great altar, a figure steps into the party’s torchlight. He wears the robes of the Covenant, the hood thrown back.
+{actor: joran-antonov} From the alcove behind the altar, a figure in Covenant robes steps into the torchlight, hood thrown back.
 
 {speaker: astrid-blackthorn, to: joran-antonov, delivery: gasping} Joran?
 
-{actor: astrid-blackthorn} Her sword dips in shock.
+{actor: astrid-blackthorn} Her sword dips.
 
-{actor: joran-antonov, object: key} Joran Antonov stands tall, the missing Key of Ilmarin in his grasp, and eyes the adventurers with defiance and hope.
+{actor: joran-antonov, object: key} Joran Antonov stands tall, the missing Key of Ilmarin in his grasp.
 
 {speaker: joran-antonov, to: astrid-blackthorn} I am the Champion of the Covenant of the Cowl. We answer to Seraphina Valtor and the old clans, and tonight we answered Thaddeus.
 

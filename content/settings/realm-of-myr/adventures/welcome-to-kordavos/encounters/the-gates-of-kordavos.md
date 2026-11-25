@@ -14,27 +14,27 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 
 ## Intro
 
-{place: gateArch} The adventurers approach the grand gates of Kordavos, towering stone archways hung with Asterian and Valkaran banners that flutter in the breeze. Laughter, music and chatter carry from the Harvest Festival just beyond.
+{place: gateArch} The adventurers approach the grand gates of Kordavos, hung with Asterian and Valkaran banners. Music from the Harvest Festival carries from beyond.
 
-{place: ledger} Before they can join the revelry, they must wait in a long line of travelers, merchants and villagers. It snakes back from a table beneath the arch, where a burly sergeant questions each traveler in turn, and it has barely moved in an hour.
+{place: ledger} First they must wait in a long line of travelers that snakes back from a table beneath the arch. It has barely moved in an hour.
 
 {place: sergeant} The sergeant stands and bellows down the line: "Festival law! No one passes this gate alone. Travelers enter as a company, every name written in the gate book together, and each of you answers for the others while you're in the city."
 
-{place: lineBack} Grumbling runs down the line. Families and merchant trains close ranks around their own. Those who came alone are left standing near one another, a few places back from the table, sizing one another up.
+{place: lineBack} Families and merchant trains close ranks. Those who came alone are left standing near one another, a few places back from the table.
 
-{hero: branka-stoneveil} A broad dwarf with copper braids and a twice-broken nose stares up at the old gate-ward sigil carved over the arch. The same sigil is stamped on her battered breastplate, and two of the guards have noticed.
+{hero: branka-stoneveil} A broad dwarf with copper braids stares up at the old gate-ward sigil over the arch. The same sigil is stamped on her battered breastplate.
 
-{hero: milos-radan} A grey-bearded priest in undyed robes, the bronze compass-star of the Church of Valkara at his chest, shares water from his gourd with a weary pilgrim family in the line ahead.
+{hero: milos-radan} A grey-bearded priest in undyed robes, the bronze compass-star of the Church of Valkara at his chest, shares water with a weary pilgrim family.
 
-{hero: thalbern} A lean, weathered man in a cloak of forest hues stands a little apart, longbow across his back. River mud still cakes his boots, and he keeps glancing back down the road toward the Mordava.
+{hero: thalbern} A lean, weathered man in a cloak of forest hues stands apart, longbow on his back, river mud on his boots.
 
-{hero: 1749159962941} A young scholar in spectacles keeps her hood up. The hem of her robe is stained with river water, and she peels apart the swollen pages of a book, looking up sharply whenever a guard passes.
+{hero: 1749159962941} A young scholar in spectacles keeps her hood up, peeling apart the river-soaked pages of a book.
 
-{hero: 1749307435667} A halfling in a patchwork waistcoat works the line for gossip, trading a joke for every rumor, his bright hazel eyes darting toward the city as if he has lost something in it.
+{hero: 1749307435667} A halfling in a patchwork waistcoat works the line, trading a joke for every rumor.
 
-{place: ledger} Up at the table, a guard turns back a family three marks short of the fee. A string of covered wagons in Blackthorn colors rolls past the whole line, and the guards wave it through the gate without a glance. A peddler steps out of line and walks up toward the table, and two guards march him straight back to the end of it. Behind the strangers, a spice trader fans himself and tells no one in particular that he has stood here since dawn.
+{place: ledger} Up at the table, a guard turns back a family three marks short of the fee. Wagons in Blackthorn colors roll past the whole line, waved through without a glance. A peddler who walks up to the table is marched back to the end of the line. Behind the strangers, a spice trader grumbles that he has stood here since dawn.
 
-The line will not move again for a while. There is nothing to do but wait, and the only company to be had is each other.
+The line will not move for a while. The only company is each other.
 
 ## GM Notes
 

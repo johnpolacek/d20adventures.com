@@ -17,9 +17,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726797856154"
 
 ## Intro
 
-The ballroom is in chaos. Anyone who peers over the balcony feels the cool night air and glimpses the hooded figure sliding down the rope into the dark garden below.
+The ballroom is in chaos. Over the balcony, a hooded figure slides down a rope into the dark garden below.
 
-{actor: covenant-assassin} Among the lush greenery and manicured flower beds, the figure disappears through what looks like an old drainage grate hidden beneath the ivy. The grate, almost indistinguishable from the garden's stone paths, swings shut with a soft clang, its mechanism hidden beneath the vines.
+{actor: covenant-assassin} The figure slips through an old drainage grate hidden beneath the ivy. It swings shut with a soft clang.
 
 ## GM Notes
 

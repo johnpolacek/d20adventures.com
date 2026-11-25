@@ -19,9 +19,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726461696892"
 
 ## Intro
 
-The trail leads back to the docks. Evening mist rolls in from the sea over the ships and warehouses. The port is quiet now, save for creaking ropes and waves splashing against the pier. At the edge of the docks the adventurers spot their destination, an abandoned warehouse, its weathered wooden walls barely lit by a flickering lantern hung outside.
+The trail leads back to the misty docks, to an abandoned warehouse with boarded windows and a rusted door hanging loose.
 
-The building looks forgotten, its windows boarded up and its rusted metal door hanging loose on its hinges. Silverhand slips through the mist toward the hideout, his silver gauntlet catching the light before he vanishes into the shadows.
+Silverhand slips through the mist toward it, his silver gauntlet catching the light, and vanishes into the shadows.
 
 ## GM Notes
 

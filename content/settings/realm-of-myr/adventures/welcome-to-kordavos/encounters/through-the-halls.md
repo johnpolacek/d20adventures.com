@@ -14,9 +14,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726623933022"
 
 ## Intro
 
-A dimly lit hallway stretches ahead, a distant candle casting long shadows on the stone walls. The noise of the ball fades behind, replaced by the creak of wood underfoot.
+A dim hallway stretches ahead, and the noise of the ball fades behind.
 
-The hall ends at two stairways. On the left, a spiral staircase with polished, ornate bannisters rises to the upper floors, hinting at more luxurious chambers. Above, one passage leads to the family rooms and another to the master's wing. On the right, narrow steps descend into the bowels of the mansion, where the air is cooler and smells faintly of aged wine or damp stone.
+It ends at two stairways. On the left, a spiral staircase rises to the family rooms and the master's wing. On the right, narrow steps descend toward the cellars.
 
 ## GM Notes
 

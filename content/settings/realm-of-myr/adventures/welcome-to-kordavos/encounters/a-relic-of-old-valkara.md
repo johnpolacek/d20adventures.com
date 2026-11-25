@@ -22,15 +22,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455771790"
 
 ## Intro
 
-{actor: auctioneer} The crowd hushes as the auctioneer takes the stage again, eyes gleaming.
+{actor: auctioneer} The auctioneer takes the stage again.
 
 {speaker: auctioneer} What I have next is truly one of a kind. Recovered from the depths of the Valkarr Forest, a relic of Old Valkara.
 
-{actor: auctioneer, object: map} Heads turn toward the stage. With a dramatic sweep, he unveils an ancient map, its weathered parchment bearing faint, intricate markings.
+{actor: auctioneer, object: map} He unveils an ancient map, faint markings across weathered parchment.
 
 {speaker: auctioneer} This map leads to an item of unknown origin. Lost, forgotten, and waiting to be found. A mystery hidden in the wilds for centuries.
 
-{actor: auctioneer, object: map} Before anyone can get a good look at the route, he returns the map to its protective case and smiles slyly.
+{actor: auctioneer, object: map} Before anyone can study the route, he returns it to its case.
 
 {speaker: auctioneer, delivery: slyly} Now, let’s see who dares to take the first bid.
 

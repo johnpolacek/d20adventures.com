@@ -17,27 +17,25 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726464286132"
 
 ## Intro
 
-The dim hideout smells of damp wood and smoke. The ceilings are low, and the walls are lined with crates and sacks, no doubt full of illicit goods. Candlelight flickers at the far side of the cramped room, casting long shadows across the floor.
+The hideout is dim and low, its walls lined with crates of illicit goods.
 
-{actor: Silverhand} Silverhand sits at the far end of a long, weathered table, his infamous silver gauntlet gleaming on the tabletop. His bald head shines faintly, but it is his piercing eyes that hold attention: cold, calculating, and dangerous. His dark, finely cut clothes speak of wealth, and his predatory stillness of violence and control. Before him stands an uncorked bottle of rare Hammerdeep whiskey, untouched, as if daring anyone to drink. At his elbow lies the map case from the auction, shut.
+{actor: Silverhand} Silverhand sits at the end of a long table, his silver gauntlet on the tabletop, his eyes cold. Before him stands an uncorked bottle of Hammerdeep whiskey. At his elbow lies the map case from the auction, shut.
 
-{actor: Silverhand} Without standing, Silverhand locks his gaze on the adventurers as they step into the room.
+{actor: Silverhand} Without standing, he locks eyes with the adventurers.
 
 {speaker: Silverhand, delivery: cold and accusing} You’re late.
 
-{actor: Silverhand} He leans forward, his silver-clad fingers tapping the table with a metallic clink.
+{actor: Silverhand} His silver fingers tap the table.
 
 {speaker: Silverhand} I don’t like being followed. I like being interrupted even less.
 
-{actor: Silverhand} He gestures lazily toward the empty chairs. It is a command, not an offer.
+{actor: Silverhand} He gestures at the empty chairs. It is a command.
 
 {speaker: Silverhand} Sit. You’ve gone through a lot of trouble to find me, but let’s be clear.
 
-{actor: Silverhand} His silver gauntlet flexes with unsettling precision.
+{actor: Silverhand} His gauntlet flexes.
 
 {speaker: Silverhand, delivery: dropping to a growl} This is my domain. You are here because I have allowed it, and you leave when I decide.
-
-{actor: Silverhand} He pauses, eyes narrowing.
 
 {speaker: Silverhand} Now, tell me why I shouldn’t have you thrown into the harbor, or worse.
 

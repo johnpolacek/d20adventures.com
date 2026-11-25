@@ -19,9 +19,9 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726777134645"
 
 ## Intro
 
-Torchlight throws long, distorted shadows on the walls as the narrow stone staircase spirals down into the depths of the Blackthorn mansion. The air grows cooler and smells faintly of damp earth and aged wood. The hum of the masquerade ball fades, replaced by dripping water and the creak of barrels settling in the dark below.
+A narrow stone staircase spirals down into the mansion's depths. The air grows cool and damp, and the sound of the ball fades.
 
-At the bottom, a dimly lit corridor leads to the wine cellar. Old oak barrels are stacked high beside shelves of the finest vintages, some bottles thick with dust, their labels faded with age.
+At the bottom, a dim corridor leads to the wine cellar, stacked high with old oak barrels and dusty bottles.
 
 ## GM Notes
 

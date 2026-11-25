@@ -19,15 +19,15 @@ image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726609502768"
 
 ## Intro
 
-As the adventurers mingle among the masked guests, two figures make their way to them through the crowd. One is an elegantly dressed woman of regal poise. Beside her walks a tall man in ornate clerical robes, calm yet commanding. Both wear ornate masks. Reaching the adventurers, the woman removes hers, revealing striking features and piercing eyes, and the bishop lowers his to show a stern, composed face.
+Two masked figures approach through the crowd, an elegant woman and a tall man in ornate clerical robes. Reaching the adventurers, both lower their masks.
 
 {speaker: seraphina-valtor, delivery: smooth and deliberate} Good evening. I am Seraphina Valtor, and this is Bishop Nicolai Petrov.
 
-{actor: seraphina-valtor} She offers a respectful nod, and the bishop inclines his head in silent greeting.
+{actor: seraphina-valtor} She nods, and the bishop inclines his head.
 
 {speaker: seraphina-valtor} It seems you are not the typical guests here.
 
-{actor: seraphina-valtor} Her eyes sweep over the adventurers, assessing them. She gestures subtly at the opulent ballroom.
+{actor: seraphina-valtor} She gestures at the opulent ballroom.
 
 {speaker: seraphina-valtor} Such grandeur on display, while so many of our people suffer... It’s an unfortunate contrast, don’t you think?
 
@@ -35,11 +35,11 @@ As the adventurers mingle among the masked guests, two figures make their way to
 
 {speaker: bishop-nicolai, delivery: regretful but resolved} There are those who still believe in preserving what truly matters.
 
-{actor: seraphina-valtor} Seraphina meets each adventurer’s eyes in turn, her expression intent.
+{actor: seraphina-valtor} She meets each adventurer’s eyes in turn.
 
 {speaker: seraphina-valtor} The Blackthorns have ambitions, of course. But not everyone shares their vision for our future. I wonder if people such as yourselves might be interested in... a different way forward.
 
-{actor: seraphina-valtor} She pauses, lowering her voice.
+{actor: seraphina-valtor} She lowers her voice.
 
 {speaker: seraphina-valtor, delivery: low} One that respects where we came from and what we stand to lose.
 
