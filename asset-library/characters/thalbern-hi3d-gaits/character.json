@@ -1,0 +1,30 @@
+{
+  "id": "thalbern-hi3d-gaits",
+  "name": "Thalbern (Hi3D, gaits tried)",
+  "role": "Ranger of the Valkarr Woods, Hi3D's model with every free sneak, walk, run and sprint, to choose the gaits by",
+  "cast": [],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp"
+  },
+  "who": "Thalbern, a lean, weathered human ranger with short black hair and stubble, in dark studded leather",
+  "maker": "hi3d",
+  "body": "thalbern-hi3d",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Walk m2m": "m2m/walk",
+    "Walk relaxed": "m2m/walk-relaxed",
+    "Walk cautious": "m2m/walk-cautious",
+    "Sneak stealth": "m2m/walk-stealth",
+    "Sneak run": "m2m/run-stealth",
+    "Sneak crouch": "ual1:Crouch_Fwd_Loop",
+    "Sneak crouch m2m": "m2m/crouch-walk",
+    "Run jog": "ual1:Jog_Fwd_Loop",
+    "Run jog m2m": "m2m/jog",
+    "Sprint": "ual1:Sprint_Loop",
+    "Sprint m2m": "m2m/sprint"
+  }
+}

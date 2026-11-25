@@ -103,7 +103,7 @@ async function main() {
     .getRoot()
     .listAnimations()
     .filter((a) => !only || only.split(",").includes(a.getName()))
-  const walks = (name: string) => name === figure.motion?.walk || /walk|strafe/i.test(name)
+  const walks = (name: string) => name === figure.motion?.walk || /walk|strafe|sneak|run|jog|sprint|crouch fwd/i.test(name)
   const loops = (name: string) => name === figure.motion?.idle || name === figure.motion?.walk || /idle|walk|strafe/i.test(name)
   const bad: string[] = []
   console.log(`${id}: ${points.length} points in ${file}, ${figure.height} m tall, ${scale.toFixed(3)} of the file's units to a metre`)
@@ -153,7 +153,7 @@ async function main() {
 
     // The walk's own speed: how fast a planted foot goes back, and which way.
     let walk = ""
-    if (name === figure.motion?.walk) {
+    if (walks(name) && !/strafe/i.test(name)) {
       const moves: { d: number[]; dt: number }[] = []
       for (const [side, runs] of spans.entries())
         for (const [from, to] of runs) {
@@ -173,7 +173,7 @@ async function main() {
             slip = Math.max(slip, Math.hypot((p[0] - q[0]) * scale - back[0] * STRIDE * dt, (p[2] - q[2]) * scale - back[1] * STRIDE * dt))
           }
       walk = `walks ${speed.toFixed(2)} m/s, slip ${(slip * 100).toFixed(1)} cm at ${STRIDE}`
-      if (Math.abs(speed - STRIDE) / STRIDE > LIMITS.speed) bad.push(`${name} walks at ${speed.toFixed(2)} m/s, and the game moves it at ${STRIDE}: a planted foot slips ${(slip * 100).toFixed(1)} cm`)
+      if (name === figure.motion?.walk && Math.abs(speed - STRIDE) / STRIDE > LIMITS.speed) bad.push(`${name} walks at ${speed.toFixed(2)} m/s, and the game moves it at ${STRIDE}: a planted foot slips ${(slip * 100).toFixed(1)} cm`)
     }
 
     let floor = { value: -Infinity, at: 0, part: "" }

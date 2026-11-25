@@ -1,0 +1,55 @@
+{
+  "id": "thalbern-hi3d-gaits",
+  "name": "Thalbern (Hi3D, gaits tried)",
+  "role": "Ranger of the Valkarr Woods, Hi3D's model with every free sneak, walk, run and sprint, to choose the gaits by",
+  "cast": [],
+  "party": false,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 198948,
+    "cost": 2.3,
+    "made": "2026-11-25",
+    "built": "2026-11-25"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Walk m2m",
+    "Walk relaxed",
+    "Walk cautious",
+    "Sneak stealth",
+    "Sneak run",
+    "Sneak crouch",
+    "Sneak crouch m2m",
+    "Run jog",
+    "Run jog m2m",
+    "Sprint",
+    "Sprint m2m"
+  ],
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 198948,
+      "megabytes": 11.79,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19982,
+      "megabytes": 1.75,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 1.02,
+      "texture": 512
+    }
+  ]
+}
