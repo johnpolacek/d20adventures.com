@@ -1948,8 +1948,9 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // An object in a cast member's hand, handed to another when there is a receiver. As a film shows it, with no flight
   // through the air: the giver holds it out, the camera cuts to the receiver with it in their hand, and they bring it
-  // in. The cut hides the moment the hands meet. Held up with no receiver, it is shown and put away. Someone shown as a
-  // card has no hand, so the object is shown beside them (effects.ts).
+  // in. The cut hides the moment the hands meet. Held up with no receiver, it is shown and brought down. Whoever ends
+  // up with it keeps it at their side if the host says they keep it (keepObject), and puts it away if not. Someone shown
+  // as a card has no hand, so the object is shown beside them (effects.ts).
   private handing = 0
   prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
     if (!this.motion) return Promise.resolve()
@@ -1964,30 +1965,77 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       this.faceCast(r.id, holder)
     }
     const item = propMesh(kind)
+    const ends = r ? [holder, r.id] : [holder]
+    // What either kept in hand till now gives way to this.
+    for (const id of ends) {
+      this.handingNow.add(id)
+      this.keptHave.delete(id)
+    }
+    const done = () => {
+      for (const id of ends) {
+        this.handingNow.delete(id)
+        this.applyKept(id)
+      }
+    }
     if (!this.models.hold(holder, item, true)) {
+      done()
       if (r) void wait(1600).then((on) => on && this.shot(close(r, -35), { instant: true }))
       return this.effects.prop(kind, this.chest(holder), r ? this.chest(r.id) : undefined)
     }
     this.effects.announce(kind, !!r)
+    // Whoever has it at the end keeps it, or puts it away.
+    const end = (id: string, slow: boolean) => {
+      if (this.keptWant.get(id) === kind) {
+        this.models.hold(id, item, false)
+        this.keptHave.set(id, { kind, item })
+      } else this.models.letGo(id, slow, item)
+    }
     // Another hand-off begun first ends this one where it stands.
     const drop = () => {
       this.models.letGo(holder, false, item)
       if (r) this.models.letGo(r.id, false, item)
+      done()
     }
     return (async () => {
       if (r) this.shot(close(h, 35), { instant: true })
       if (!(await wait(r ? 1700 : 2600))) return drop()
-      if (!r) return this.models.letGo(holder, true, item)
+      if (!r) {
+        end(holder, true)
+        return done()
+      }
       // Out of the giver's hand and into the receiver's, held out where the giver's was, across the cut.
       this.models.letGo(holder, false, item)
-      if (!this.models.hold(r.id, item, true, true)) return
+      if (!this.models.hold(r.id, item, true, true)) return done()
       this.shot(close(r, -35), { instant: true })
       if (!(await wait(350))) return drop()
-      // Brought in to the side, and kept a moment before it is put away.
+      // Brought in to the side, and kept a moment before it is put away, unless it is kept.
       this.models.hold(r.id, item, false)
-      if (!(await wait(1900))) return drop()
-      this.models.letGo(r.id, true, item)
+      if (this.keptWant.get(r.id) !== kind && !(await wait(1900))) return drop()
+      end(r.id, true)
+      done()
     })()
+  }
+  // What a cast member keeps in hand, at their side, till the host says otherwise: what they were last handed in the
+  // encounter. Null empties the hand. One in the middle of a hand-off takes it up once the hand-off is over.
+  private keptWant = new Map<string, PropKind>()
+  private keptHave = new Map<string, { kind: PropKind; item: THREE.Object3D }>()
+  private handingNow = new Set<string>()
+  keepObject(id: string, kind: PropKind | null) {
+    if (kind) this.keptWant.set(id, kind)
+    else this.keptWant.delete(id)
+    if (!this.handingNow.has(id)) this.applyKept(id)
+  }
+  private applyKept(id: string) {
+    const want = this.keptWant.get(id)
+    const have = this.keptHave.get(id)
+    if (have?.kind === want) return
+    if (have) {
+      this.models.letGo(id, true, have.item)
+      this.keptHave.delete(id)
+    }
+    if (!want) return
+    const item = propMesh(want)
+    if (this.models.hold(id, item, false, true)) this.keptHave.set(id, { kind: want, item })
   }
   // A sound the story names, from where a cast member stands when it is theirs.
   sound(cue: SoundCue, from?: string) {

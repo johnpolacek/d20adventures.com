@@ -3,7 +3,7 @@ import { isHidden } from "@d20/gm-core/sheet/conditions"
 import { levelOwed } from "@d20/gm-core/sheet/level-owed"
 import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
 import { metres } from "@d20/gm-core/sheet/space"
-import type { FeatureBeat, Ready, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
+import type { FeatureBeat, ObjectKind, Ready, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { nameOf, rollSentence, storyNames, storyParagraphs } from "@d20/gm-core/story/render"
 import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
@@ -897,6 +897,36 @@ export function StagePlay(props: {
       stage.readyWeapon(c.id, what === "bow" || what === "blade" ? what : null)
     }
   }, [stage, readied])
+  // The object beats the stage has begun to play in this turn, and a count that changes as it does, to read them again.
+  const handedOver = useRef(new WeakSet<StoryBeat>())
+  const [, setHandings] = useState(0)
+  // An object kept in hand, as the scroll case Silas takes from Aelar: whatever each cast member was last handed in this
+  // encounter, or last held up themselves, read as far as `readied` reads. The giver's hand is empty after, and so is
+  // every hand in a new encounter.
+  const inHand = (() => {
+    if (!shown) return ""
+    const out = new Map<string, ObjectKind>()
+    const take = (b: StoryBeat) => {
+      if (b.kind !== "action" || !b.object) return
+      const actor = castOf(b.actor)
+      const to = castOf(b.object.to)
+      if (actor && to && actor !== to) out.delete(actor)
+      const holder = to ?? actor
+      if (holder) out.set(holder, b.object.kind)
+    }
+    const earlier = (save?.turns ?? []).filter((t) => t.encounterId === shown.encounterId && (t.order ?? 0) < (shown.order ?? 0))
+    for (const t of earlier.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) for (const b of t.story) take(b)
+    // In the paragraph being read, a hand-off counts once the stage has begun to play it, so the receiver does not hold
+    // the object before it is handed over.
+    if (closingNow) for (const b of shown.story) take(b)
+    else paragraphs.forEach((p, at) => p.beats.forEach((b) => b.kind === "action" && !toCome(at, sentenceOf(p.text, b.text)) && (!b.object || at < paragraph || handedOver.current.has(b)) && take(b)))
+    return JSON.stringify([...out])
+  })()
+  useEffect(() => {
+    if (!stage) return
+    const hands = new Map<string, ObjectKind>(inHand ? JSON.parse(inHand) : [])
+    for (const c of stage.cast) stage.keepObject(c.id, hands.get(c.id) ?? null)
+  }, [stage, inHand])
   // Walks the scene ties to the narration for someone already on stage, such as Thalbern on his way through the woods as
   // the story opens. They stand where the walk starts until its paragraph, then walk to where the engine has them. This
   // comes before the opening view, which frames them where the walk starts.
@@ -1182,7 +1212,11 @@ export function StagePlay(props: {
       void Promise.race([stage.shotSettled(), new Promise((r) => setTimeout(r, 2600))]).then(() => {
         if (showing.current !== here) return
         if (effect && b.effect) void stage.effect(b.effect.kind, actor, target, b.effect.element, { miss, outcome })
-        else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
+        else if (b.object) {
+          void stage.prop(b.object.kind, actor, castOf(b.object.to))
+          handedOver.current.add(b)
+          setHandings((n) => n + 1)
+        }
       })
     }
     for (const { key, cue, actor, s } of sounded.get(paragraph) ?? []) {

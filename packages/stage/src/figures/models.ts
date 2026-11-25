@@ -431,13 +431,14 @@ export class Models {
     if (m.move) Object.assign(m.move, { t: seconds, held: true })
     return true
   }
-  // An object in a figure's hand, the arm held out before it as one hands something over (`out`), or at its side. The
-  // right hand, or the left when the right is busy with a staff. `instant` puts the arm where it goes at once, as after
+  // An object in a figure's hand, the arm held out before it as one hands something over (`out`), or at its side.
+  // `instant` puts the arm where it goes at once, as after
   // a cut. False for a figure with no arm to hold it, when the host shows the object some other way.
   hold(id: string, item: THREE.Object3D, out: boolean, instant = false) {
     const m = this.on ? this.items.get(id) : undefined
     if (!m || this.standees.down.has(id) || this.standees.offstage.has(id)) return false
-    const side = m.carried ? "L" : "R"
+    // The right hand, or the left while a blade is kept ready in the right.
+    const side = this.readied.get(id) === "blade" ? "L" : "R"
     const arm = armBones(m.root, side)
     if (!arm) return false
     if (m.given?.item && m.given.item !== item) m.given.item.removeFromParent()
