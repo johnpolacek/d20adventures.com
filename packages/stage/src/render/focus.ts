@@ -1,16 +1,17 @@
 import * as THREE from "three"
 import { FullScreenQuad, Pass } from "three/addons/postprocessing/Pass.js"
 
-// Depth of field: whoever the camera looks at stays sharp, and the frame softens in front of them and behind, as a
-// real lens does. It reads the scene's own depth, so it costs no second scene pass. One gather pass over a spiral of
+// Depth of field: whoever the camera looks at stays sharp, and the frame softens behind them, as a real lens does.
+// What stands in front of them stays sharp too: a blurred bush, reeds or shoulder in the foreground read as a smear,
+// not as a lens (the owner, 2026-11-25). It reads the scene's own depth, so it costs no second scene pass. One gather pass over a spiral of
 // taps (after Dennis Gustafsson's single-pass bokeh): a tap counts toward a pixel when its own blur reaches that far,
-// so a sharp face does not smear onto the blurred wall behind it, and a blurred post in front still spills over it.
+// so a sharp face does not smear onto the blurred wall behind it.
 // It runs on the linear scene before bloom and the paint filter, which then paint over the softened frame.
 const FS = `uniform sampler2D tColor, tDepth; uniform vec2 texel; uniform float near, far, focus, band, strength, maxBlur, step; varying vec2 vUv;
 float lin(float z){ return 2.0 * near * far / (far + near - (z * 2.0 - 1.0) * (far - near)); }
-// Blur in pixels: none inside the band around the focus, then growing with |1 - focus/d|, so a wall twice as far as the
-// face is half blurred and the sky fully, at any scale of shot.
-float coc(float d){ return clamp((abs(1.0 - focus / d) - band) * strength, 0.0, 1.0) * maxBlur; }
+// Blur in pixels: none nearer than the focus or inside the band past it, then growing with 1 - focus/d, so a wall
+// twice as far as the face is half blurred and the sky fully, at any scale of shot.
+float coc(float d){ return clamp((1.0 - focus / d - band) * strength, 0.0, 1.0) * maxBlur; }
 void main(){
  float cd = lin(texture2D(tDepth, vUv).x);
  float cs = coc(cd);
@@ -49,7 +50,7 @@ export class FocusPass extends Pass {
   reach = 0.008
   // How quickly the blur grows away from the focus, at a 35° lens. A narrower lens blurs more, as a long lens does.
   amount = 1.2
-  // Share of the focus distance, either side, held sharp.
+  // Share of the focus distance, past it, held sharp.
   band = 0.08
   // Focused past this many metres the blur fades out, as the square of the distance: a wide view of a gate 95 m off
   // keeps the crowd in front of it sharp, where blurring it would read as a model village.
