@@ -91,8 +91,19 @@ const LONG_PROMPT = 600
 // Words after the language name the card. In a block marked `prompt`, a part in [CAPITALS] is a slot for the reader to fill.
 // Other code keeps its lines and scrolls sideways.
 const CODE_NAMES: Record<string, string> = { sh: "Terminal", bash: "Terminal", zsh: "Terminal", shell: "Terminal", json: "JSON", ts: "TypeScript", tsx: "TypeScript", js: "JavaScript", mjs: "JavaScript", py: "Python", python: "Python", md: "Markdown", css: "CSS", html: "HTML" }
+const escapeAttr = (text: string) => escapeHtml(text).replace(/"/g, "&quot;")
+
 const markdown = new Marked({
   renderer: {
+    // A link in a picture's alt text stays a link in its caption: the alt keeps the plain words, and the caption's HTML
+    // rides along in data-caption for figures() below.
+    image({ href, title, text, tokens }) {
+      const plain = escapeAttr(tokens?.length ? tokens.map((token) => ("text" in token ? token.text : token.raw)).join("") : text)
+      const titled = title ? ` title="${escapeAttr(title)}"` : ""
+      const linked = tokens?.some((token) => token.type === "link")
+      const caption = linked ? ` data-caption="${escapeAttr(this.parser.parseInline(tokens))}"` : ""
+      return `<img src="${href}" alt="${plain}"${titled}${caption}>`
+    },
     heading({ tokens, depth, text }) {
       const html = this.parser.parseInline(tokens)
       if (depth !== run.top) return `<h3>${html}</h3>\n`
@@ -126,10 +137,14 @@ function figures(html: string): string {
     const tag = (inParagraph ?? alone) as string
     count += 1
     const alt = attribute(tag, "alt") ?? ""
+    // A caption with a link in it is HTML already, kept in data-caption, and leaves the tag.
+    const rich = attribute(tag, "data-caption")?.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+    const words = rich ?? alt
     const tall = Number(attribute(tag, "height")) > Number(attribute(tag, "width"))
     // The first picture may be on screen at once, so only the later ones load lazily.
-    const img = count > 1 && !/\sloading=/.test(tag) ? tag.replace(/\s*\/?>$/, ' loading="lazy" decoding="async" />') : tag
-    const caption = alt ? `<figcaption><span class="up-fig-num">Fig. ${count}</span>${/[.!?]$/.test(alt) ? alt : `${alt}.`}</figcaption>` : ""
+    const bare = tag.replace(/\sdata-caption="[^"]*"/, "")
+    const img = count > 1 && !/\sloading=/.test(bare) ? bare.replace(/\s*\/?>$/, ' loading="lazy" decoding="async" />') : bare
+    const caption = words ? `<figcaption><span class="up-fig-num">Fig. ${count}</span>${/[.!?]$/.test(alt) ? words : `${words}.`}</figcaption>` : ""
     return `<figure class="up-fig${tall ? " is-tall" : ""}">${href ? `<a href="${href}">${img}</a>` : img}${caption}</figure>`
   })
 }

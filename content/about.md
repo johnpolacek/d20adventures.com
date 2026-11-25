@@ -8,7 +8,7 @@ D20 Adventures is a fantasy 5E-rules-based RPG, inspired by Baldur's Gate 3. It 
 
 Beyond that, I want it to be a platform for people to create their own adventures. Anyone can send a prompt their own agent to build an adventure plan, populated with characters, settings, encounters, maps and 3D assets.
 
-![The Realm of Myr, a river town and its cathedral at sunrise, below the mountains.](/stage/realm/realm-of-myr/realm.jpg)
+![The [Realm of Myr](/settings/realm-of-myr), a river town and its cathedral at sunrise, below the mountains.](/stage/realm/realm-of-myr/realm.jpg)
 
 I started working on D20 Adventures in January 2024. The original concept was a narrative-based rpg for play-by-post adventures with light rules (just roll a D20). I actually finished it and had a completely working version. It was a fun project but it wasn't super fun to play when compared to something like Baldur's Gate 3.
 
