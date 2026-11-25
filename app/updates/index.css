@@ -66,7 +66,7 @@ html[data-update-theme="dark"] .ul-band {
 }
 .ul-band-link {
   display: grid;
-  grid-template-columns: 136px minmax(0, 1fr) 110px;
+  grid-template-columns: 136px minmax(0, 1fr) 150px;
   gap: 32px;
   align-items: center;
   padding: 20px var(--gutter);
@@ -99,20 +99,79 @@ html[data-update-theme="dark"] .ul-band {
   font-style: italic;
   line-height: 1.5;
 }
-/* The minutes, in the serif: the display face draws a 1 as a capital I. */
-.ul-min {
+/*
+ * The tally: what a post holds, in a narrow column ruled off at its left by a hairline that fades at both ends, like a
+ * ledger's margin. The minutes sit large in the serif (the display face draws a 1 as a capital I), then a line each
+ * for words, pictures and videos, a small mark, the count in mono and its name.
+ */
+.ul-tally {
+  position: relative;
   display: grid;
-  justify-items: end;
-  text-align: right;
+  gap: 10px;
+  padding: 6px 0 6px 20px;
+}
+.ul-tally::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-left: 1px solid var(--up-line-strong);
+  -webkit-mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+}
+.ul-min {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
 }
 .ul-min-num {
   font-family: var(--up-serif);
   font-size: 28px;
-  line-height: 1.1;
+  line-height: 1;
   color: var(--up-strong);
 }
+.ul-min .vn-num {
+  font-size: 12px;
+}
+.ul-tally-rows {
+  display: grid;
+  gap: 3px;
+}
+.ul-tally-row {
+  display: grid;
+  grid-template-columns: 14px 5ch auto;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--up-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  color: var(--up-muted);
+}
+.ul-tally-row svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+.ul-tally-n {
+  text-align: right;
+  color: var(--up-text);
+}
+.ul-tally-label {
+  color: var(--up-faint);
+}
+.ul-band-link:hover .ul-tally-row svg {
+  color: var(--up-accent);
+  opacity: 1;
+}
 .ul-band.is-lead .ul-band-link {
-  grid-template-columns: 180px minmax(0, 1fr) 110px;
+  grid-template-columns: 180px minmax(0, 1fr) 150px;
   padding-top: 48px;
   padding-bottom: 48px;
 }
@@ -171,7 +230,7 @@ html[data-update-theme="dark"] .ul-band {
     width: 80px;
     height: 80px;
   }
-  .ul-min {
+  .ul-tally {
     display: none;
   }
 }

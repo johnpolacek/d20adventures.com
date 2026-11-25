@@ -53,6 +53,58 @@ function emblem(post: Update) {
   return "create"
 }
 
+/** Small line marks for the tally, drawn in the ink at the stroke of the /vision rings. */
+const marks = {
+  words: <path d="M3 4h10M3 8h10M3 12h6" />,
+  images: (
+    <>
+      <rect x="2.5" y="3" width="11" height="10" rx="1" />
+      <path d="M2.5 11l3.5-3.5 3 3 2-2 2.5 2.5" />
+      <circle cx="10.5" cy="6" r="1" />
+    </>
+  ),
+  videos: (
+    <>
+      <circle cx="8" cy="8" r="5.5" />
+      <path d="M6.75 5.75v4.5L10.5 8z" />
+    </>
+  ),
+}
+
+/**
+ * What a post holds, down the band's right side: its minutes large in the serif, then a short ledger of its words,
+ * pictures and videos, each with a small mark. A count of none is left out.
+ */
+function Tally({ post }: { post: Update }) {
+  const { minutes, words, images, videos } = renderPost(post)
+  const rows = [
+    { key: "words", n: words, one: "Word", many: "Words" },
+    { key: "images", n: images, one: "Image", many: "Images" },
+    { key: "videos", n: videos, one: "Video", many: "Videos" },
+  ] as const
+  return (
+    <span className="ul-tally">
+      <span className="ul-min">
+        <span className="ul-min-num">{minutes}</span>
+        <span className="vn-num">Min Read</span>
+      </span>
+      <span className="ul-tally-rows">
+        {rows
+          .filter((row) => row.n > 0)
+          .map((row) => (
+            <span key={row.key} className="ul-tally-row">
+              <svg viewBox="0 0 16 16" aria-hidden>
+                {marks[row.key]}
+              </svg>
+              <span className="ul-tally-n">{row.n.toLocaleString("en-US")}</span>
+              <span className="ul-tally-label">{row.n === 1 ? row.one : row.many}</span>
+            </span>
+          ))}
+      </span>
+    </span>
+  )
+}
+
 /** Each post as a full-width band, led by its emblem, the newest one larger. */
 export default async function UpdatesPage() {
   const posts = await getPosts()
@@ -72,10 +124,7 @@ export default async function UpdatesPage() {
                   <b>{post.title}</b>
                   {post.description && <small>{post.description}</small>}
                 </span>
-                <span className="ul-min">
-                  <span className="ul-min-num">{renderPost(post).minutes}</span>
-                  <span className="vn-num">Min Read</span>
-                </span>
+                <Tally post={post} />
               </Link>
             </li>
           ))}

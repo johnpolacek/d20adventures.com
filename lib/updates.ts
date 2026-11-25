@@ -19,8 +19,8 @@ export type Update = {
 /** One section of a post, for its contents list. */
 export type PostSection = { id: string; title: string }
 
-/** A post as its page draws it: the HTML, its sections and the minutes it takes to read. */
-export type RenderedPost = { html: string; sections: PostSection[]; minutes: number }
+/** A post as its page draws it: the HTML, its sections, the minutes it takes to read, and its words, pictures and videos. */
+export type RenderedPost = { html: string; sections: PostSection[]; minutes: number; words: number; images: number; videos: number }
 
 // A post names its author in its front matter, or it is by the site's one author.
 const DEFAULT_AUTHOR = "John Polacek"
@@ -163,7 +163,10 @@ export function renderPost(post: Update, { numbered = true }: { numbered?: boole
   const html = exploreFigures(tables(figures(markdown.parser(tokens)))).replace(/<a href="([^"]+)">(Play [^<]+)<\/a>/g, '<a href="$1" class="up-btn is-primary is-lg up-play">$2</a>')
   // Tags, link addresses and the lines that open and close a fenced block are not read.
   const words = post.body.replace(/<[^>]+>|\]\([^)]*\)|^```.*$/gm, " ").match(/[A-Za-z0-9$][\w'’.$-]*/g)?.length ?? 0
-  return { html, sections: run.sections, minutes: Math.max(1, Math.round(words / READING_SPEED)) }
+  // A video is an embedded player or a video tag. A picture is any image the page shows.
+  const videos = (html.match(/<iframe\b[^>]*(?:youtube|vimeo)|<video\b/g) ?? []).length
+  const images = (html.match(/<img\b/g) ?? []).length
+  return { html, sections: run.sections, minutes: Math.max(1, Math.round(words / READING_SPEED)), words, images, videos }
 }
 
 /** The post as a markdown file to download: its title, date and link, then its body. */
