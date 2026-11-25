@@ -8,7 +8,7 @@ D20 Adventures is a fantasy 5E-rules-based RPG, inspired by Baldur's Gate 3. It 
 
 Beyond that, I want it to be a platform for people to create their own adventures. Anyone can send a prompt their own agent to build an adventure plan, populated with characters, settings, encounters, maps and 3D assets.
 
-![The [Realm of Myr](/settings/realm-of-myr), a river town and its cathedral at sunrise, below the mountains.](/stage/realm/realm-of-myr/realm.jpg)
+![The [Realm of Myr](/settings/realm-of-myr), a river town and its cathedral at sunrise, below the mountains. See it in the [asset library](/settings/realm-of-myr/assets?img=%2Fstage%2Frealm%2Frealm-of-myr%2Frealm.jpg).](/stage/realm/realm-of-myr/realm.jpg)
 
 I started working on D20 Adventures in January 2024. The original concept was a narrative-based rpg for play-by-post adventures with light rules (just roll a D20). I actually finished it and had a completely working version. It was a fun project but it wasn't super fun to play when compared to something like Baldur's Gate 3.
 
@@ -64,19 +64,19 @@ There are four adventures so far, all set in the Realm of Myr. Welcome to Kordav
 
 **The Midnight Summons.** A short solo intro. A ranger heads into the Valkarr forest to answer a druid’s call. Fully ready.
 
-![The Owlbear looms out of the dark of the Valkarr forest.](/stage/art/the-midnight-summons/owlbear-confrontation.webp)
+![The [Owlbear](/settings/realm-of-myr/assets?id=owlbear) looms out of the dark of the [Valkarr forest](/settings/realm-of-myr/assets?env=valkarr-forest-trail&view=stage&scene=the-midnight-summons/owlbear-confrontation).](/stage/art/the-midnight-summons/owlbear-confrontation.webp)
 
 **Covert Cargo.** A short intro for three players. A secret shipment on a river boat bound for Kordavos. Every character is in 3D, and it’s next up for testing.
 
-![A river boat with lit windows moored at a pier on a quiet fork of the Mordava.](/stage/art/covert-cargo/the-shipment.webp)
+![A river boat with lit windows moored at [a pier on a quiet fork of the Mordava](/settings/realm-of-myr/assets?env=mordava-river-pier&view=stage).](/stage/art/covert-cargo/the-shipment.webp)
 
 **The Road to Kordavos.** A short intro where you make your own hero and meet travelers on the road. This one waits on the hero creator, which is being rebuilt on the new rules.
 
-![A traveler with a white beard rides a horse through the pines, a pack horse behind.](/stage/art/the-road-to-kordavos/well-met.webp)
+![A traveler with a white beard rides a horse through the pines on [the Marquis Road](/settings/realm-of-myr/assets?env=marquis-road&view=stage), a pack horse behind.](/stage/art/the-road-to-kordavos/well-met.webp)
 
 **Welcome to Kordavos.** The main adventure, for three to five players. The party arrives at the Gates of Kordavos during the Harvest Festival, and the city pulls them in from there. Every scene is built, but most of its 111 characters are still painted standees.
 
-![The great gate of Kordavos over a crowded market of bright awnings.](/stage/art/welcome-to-kordavos/the-gates-of-kordavos.webp)
+![[The great gate of Kordavos](/settings/realm-of-myr/assets?env=kordavos-south-gate&view=stage) over a crowded market of bright awnings.](/stage/art/welcome-to-kordavos/the-gates-of-kordavos.webp)
 
 You can play [The Midnight Summons](/), a short demo solo adventure without having to download anything. The other adventures run in the [desktop app](https://github.com/johnpolacek/d20adventures.com/releases/latest), where the Game Master is Claude or Codex running on your own machine. The host sends an invite link, and friends join from their browser with a premade hero or one of their own.
 
@@ -105,7 +105,7 @@ Until this month, every character was a flat painted standee. Now they come out 
 
 I wrote up the whole thing, every prompt included: [Turn Your Character Art into Animated 3D Figures with Hi3D and Blender](/updates/turn-your-character-art-into-animated-3d-figures-with-hi3d-and-blender).
 
-Every character, place and 3D figure lives in the [asset library](/settings/realm-of-myr/assets). Each figure has one card with every version of it, and you can open any place and fly around it.
+Every character, place and 3D figure lives in the [asset library](/settings/realm-of-myr/assets). Each figure has one card with every version of it, like [Thalbern’s](/settings/realm-of-myr/assets?id=thalbern), and you can open any place and fly around it, like [the Old Standing Stones](/settings/realm-of-myr/assets?env=old-standing-stones&view=stage).
 
 [![The asset library’s character cards marked 3D, grouped by adventure.](https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/figures.webp)](/settings/realm-of-myr/assets)
 
