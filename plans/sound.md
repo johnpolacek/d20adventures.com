@@ -18,6 +18,7 @@ Goal: one sound system in `@d20/ui`, heard the same in the website and the deskt
 ## Where it lives
 
 - `@d20/ui/sound/engine`: one context, a master at 0.45, buses `ui`, `dice`, `fx`, `ambience`, `voice`. Wakes on the first press or key. Suspends when sound is off or the tab is hidden. `play` rotates takes, `whoosh` makes air from noise.
+- Crowding, in `engine.ts`: each bus caps the sounds playing at once (`VOICES`), a cue repeated within 35 ms is staggered, one that would wait past 120 ms is dropped, and a sound too quiet to hear never plays. After Brushwild (kevintngo/procedural-rpg, MIT).
 - `@d20/ui/sound/settings`: the `d20.sound` key, with listeners.
 - `@d20/ui/sound/dice`: the dice sound, moved unchanged onto the engine.
 - `@d20/ui/sound/fx`: stage effect events to cues.
