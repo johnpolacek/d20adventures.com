@@ -61,6 +61,7 @@ export interface StageStats {
   aa: string
   ao: boolean
   bloom: boolean
+  dof: boolean
   shot: string | null
   // The director's name for the take on screen (director.ts), when a take put it there.
   take: string | null
@@ -1543,6 +1544,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     p.paint.strength = this.painted?.on ? 0 : Math.min(1, f.brush)
     p.paint.brush = Math.max(0.35, f.brush)
     p.bloom.enabled = f.bloom ?? t.bloom
+    p.focus.enabled = !!f.dof
     const aa = f.aa ?? t.aa
     p.setAA(aa)
     const cardMaterial = this.crowd.cards?.mesh.material as THREE.Material | undefined
@@ -1613,7 +1615,19 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.last = now
     this.step(Math.min(raw, 0.05), raw)
   }
+  // Depth of field focuses on what the camera was asked to look at: a shot's subject, or the point the player orbits.
+  // Measured along the lens, as the depth buffer is, and eased so a cut racks focus.
+  private aimFocus(dt: number) {
+    const f = this.pipeline.focus
+    if (!f.enabled) return
+    const at = this.tripod?.want.target ?? this.controls?.target
+    if (!at) return
+    const ahead = this.camera.getWorldDirection(new THREE.Vector3())
+    f.target = Math.max(this.camera.near * 2, ahead.dot(at.clone().sub(this.camera.position)))
+    f.settle(this.motion ? dt : 0)
+  }
   private step(dt: number, raw: number) {
+    this.aimFocus(dt)
     this.fpsT += raw
     this.fpsN++
     if (this.fpsT > 1) {
@@ -1786,6 +1800,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       aa: this.pipeline.aa,
       ao: this.pipeline.gtao.enabled,
       bloom: this.pipeline.bloom.enabled,
+      dof: this.pipeline.focus.enabled,
       shot: this.activeShot,
       take: this.take,
       point: this.tripod?.point.name ?? null,

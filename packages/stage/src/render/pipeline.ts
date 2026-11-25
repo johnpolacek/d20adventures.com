@@ -7,6 +7,7 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js"
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { CharacterMask } from "./character-mask"
+import { FocusPass } from "./focus"
 import { PaintPass } from "./paint-pass"
 
 export type AAMode = "off" | "msaa" | "fxaa"
@@ -80,6 +81,7 @@ export class Pipeline {
   gtao: ScaledGTAO
   paint: PaintPass
   mask: CharacterMask
+  focus: FocusPass
   aa: AAMode = "off"
   aoStrength = 0.55
   private sceneRender: RenderPass["render"]
@@ -120,9 +122,14 @@ export class Pipeline {
       }
       this.mask.depth = depth
       this.paint.depth = depth
+      this.focus.depth = depth
       this.gtao.gtaoMaterial.uniforms.tDepth.value = depth
     }
     this.composer.addPass(this.scenePass)
+    // Off unless the `dof` flag asks for it: an experiment.
+    this.focus = new FocusPass(camera)
+    this.focus.enabled = false
+    this.composer.addPass(this.focus)
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.18, 0.5, 1.1)
     this.composer.addPass(this.bloom)
     this.composer.addPass(new OutputPass())
@@ -164,5 +171,6 @@ export class Pipeline {
     this.gtao.dispose()
     this.paint.dispose()
     this.mask.dispose()
+    this.focus.dispose()
   }
 }

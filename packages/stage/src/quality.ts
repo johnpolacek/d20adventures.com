@@ -30,6 +30,8 @@ export interface Flags {
   aa?: AAMode
   ao?: boolean
   bloom?: boolean
+  // Depth of field on the subject (render/focus.ts). Off by default: an experiment.
+  dof?: boolean
   dpr?: number
   cardRadius?: number
   mirror?: number
