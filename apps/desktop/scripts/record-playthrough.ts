@@ -109,7 +109,8 @@ function cutVideo(raw: string, rawSound: string | null, soundLate: number, cut: 
   if (rawSound) {
     const length = (stream: string) => Number(execFileSync("ffprobe", ["-v", "error", "-select_streams", stream, "-show_entries", "stream=duration", "-of", "csv=p=0", final]).toString().trim())
     const off = Math.abs(length("v:0") - length("a:0"))
-    if (!(off <= 0.5)) {
+    // The sound may run on past the picture by as much as it started late.
+    if (!(off <= 0.5 + Math.abs(soundLate))) {
       console.log(`The cut's picture and sound differ by ${off.toFixed(2)}s, so the raw files are kept: ${raw}, ${rawSound}`)
       return
     }
