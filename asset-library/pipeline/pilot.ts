@@ -984,6 +984,68 @@ function fingersOnly(doc: Document, fist?: "L" | "R", big = 1) {
   return moved
 }
 
+// Points of a hand that the rigger hung on a bone off the arm, given to the hand's bone nearest them. Poppen's right
+// hand had a fingertip on the hips (2026-11-24): as the arm came in from the A-pose the tip stayed out where the hand had
+// been, a spike of skin a hand long. A point is the hand's when the joint nearest it is one of the hand's, within 6 cm.
+function handsOwn(doc: Document) {
+  const joints = doc.getRoot().listSkins()[0]?.listJoints() ?? []
+  const at = joints.map((j) => j.getWorldMatrix().slice(12, 15))
+  const scale = (() => {
+    const ys = at.map((p) => p[1])
+    return Math.max(...ys) - Math.min(...ys) || 1
+  })()
+  let moved = 0
+  for (const side of ["Left", "Right"]) {
+    const hand = new RegExp(`(^|:)${side}Hand(Thumb|Index|Middle|Ring|Pinky)?\\d?$`)
+    const arm = new RegExp(`(^|:)${side}(Hand|ForeArm|Arm|Shoulder)`)
+    const own = joints.map((j) => hand.test(j.getName()))
+    const onArm = joints.map((j) => arm.test(j.getName()))
+    if (!own.some(Boolean)) continue
+    for (const mesh of doc.getRoot().listMeshes())
+      for (const prim of mesh.listPrimitives()) {
+        const pos = prim.getAttribute("POSITION")
+        const sets = [
+          [prim.getAttribute("JOINTS_0"), prim.getAttribute("WEIGHTS_0")],
+          [prim.getAttribute("JOINTS_1"), prim.getAttribute("WEIGHTS_1")],
+        ].filter((s): s is [NonNullable<(typeof s)[0]>, NonNullable<(typeof s)[1]>] => !!s[0] && !!s[1])
+        if (!pos || !sets.length) continue
+        for (let i = 0; i < pos.getCount(); i++) {
+          const p = pos.getElement(i, [0, 0, 0])
+          let near = -1
+          let best = Infinity
+          at.forEach((q, b) => {
+            const d = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2])
+            if (d < best) [best, near] = [d, b]
+          })
+          // The skeleton's height stands for the figure's: 6 cm of a person 1.8 m tall.
+          if (near < 0 || !own[near] || best > (0.06 / 1.8) * scale * 1.15) continue
+          let off = 0
+          const kept = sets.map(([J, W]) => {
+            const [j, w] = [J.getElement(i, [0, 0, 0, 0]), W.getElement(i, [0, 0, 0, 0])]
+            for (let k = 0; k < 4; k++)
+              if (w[k] > 0 && !onArm[j[k]]) {
+                off += w[k]
+                w[k] = 0
+              }
+            return [j, w]
+          })
+          if (off === 0) continue
+          // The share the off-arm bones had goes to the nearest hand bone, on the slot it holds or the first empty one.
+          const [j0, w0] = kept[0]
+          const slot = [0, 1, 2, 3].find((k) => j0[k] === near && w0[k] > 0) ?? [0, 1, 2, 3].find((k) => w0[k] === 0) ?? w0.indexOf(Math.min(...w0))
+          w0[slot] = (j0[slot] === near ? w0[slot] : 0) + off
+          j0[slot] = near
+          sets.forEach(([J, W], s) => {
+            J.setElement(i, kept[s][0])
+            W.setElement(i, kept[s][1])
+          })
+          moved++
+        }
+      }
+  }
+  return moved
+}
+
 // A sixth finger taken off. Hi3D made Thalbern's hands with five fingers and a thumb, from a sheet that has four and a
 // thumb, and the rigger hung two of them on the ring finger's bones (the owner, 2026-11-23: "somehow thalbern got too
 // many fingers"). The fingers are found where they part: past the knuckles, each is a piece of skin of its own, and
@@ -2477,6 +2539,8 @@ async function rodinHyper(brief: Brief) {
   // The rigger gave Hi3D's model back with three points of its own to every triangle, 600,000 for 105,000 places and
   // 49 MB of them. With one normal to a place, points that are the same in every way are made one again.
   await doc.transform(weld())
+  const strayed = four ? 0 : handsOwn(doc)
+  if (strayed) say("hands", `${strayed} points of a hand hung on a bone off the arm, given to the hand's nearest bone`)
   // `--sixth=off` leaves a hand with a finger too many as the generator made it.
   if (!four && !args.includes("--sixth=off")) for (const line of sixth(doc)) say("sixth", line)
   // A brief that borrows its clips has no use for the rigger's stand-ins, a gun fired for a bow shot and a throw for

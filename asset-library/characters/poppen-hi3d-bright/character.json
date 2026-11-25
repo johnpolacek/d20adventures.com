@@ -1,0 +1,42 @@
+{
+  "id": "poppen-hi3d-bright",
+  "name": "Poppen Quickfoot",
+  "role": "Halfling Rogue",
+  "cast": [
+    "poppen"
+  ],
+  "height": 1.06,
+  "card": {
+    "front": "/stage/fixtures/covert-cargo/poppen-front.webp",
+    "back": "/stage/fixtures/covert-cargo/poppen-back.webp"
+  },
+  "who": "Poppen Quickfoot, a small, sturdy halfling rogue with curly ginger hair and large pointed ears, in a patchwork waistcoat with full sleeves",
+  "stow": "The dagger stays sheathed at his belt.",
+  "arms": 45,
+  "party": true,
+  "face": "close",
+  "maker": "hi3d",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Sneak": "ual1:Crouch_Fwd_Loop",
+    "Run": "ual1:Jog_Fwd_Loop",
+    "Sprint": "m2m/sprint",
+    "Swing": "ual1:Sword_Attack",
+    "Dodge": "ual1:Roll",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  },
+  "eased": {
+    "Swing": 85
+  },
+  "chin": {
+    "Sneak": 40
+  },
+  "bob": {
+    "Run": 0.3
+  },
+  "expression": "A young, round, boyish face as on the card, with soft full cheeks, smooth youthful skin and a small chin. His eyes are strikingly big: noticeably larger than an ordinary person’s, about a third bigger, wide open and round, as a storybook painter draws a halfling, so the whole iris and a rim of white show and the eyes are the first thing seen in his face. Thin upper lids pulled well up, no droop, no hooding, no creases or puffiness under them. A warm, closed-mouth smile that lifts the cheeks"
+}

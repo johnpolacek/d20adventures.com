@@ -1,0 +1,75 @@
+{
+  "id": "poppen-hi3d-bright",
+  "name": "Poppen Quickfoot",
+  "role": "Halfling Rogue",
+  "cast": [
+    "poppen"
+  ],
+  "party": true,
+  "height": 1.06,
+  "front": "front.webp",
+  "thumb": "thumb.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 199296,
+    "cost": 2.3,
+    "made": "2026-11-25",
+    "built": "2026-11-25"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Dodge",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Sneak",
+    "Run",
+    "Sprint"
+  ],
+  "motion": {
+    "gaits": {
+      "sneak": {
+        "clip": "Sneak",
+        "speed": 0.09
+      },
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.4
+      },
+      "run": {
+        "clip": "Run",
+        "speed": 2.89
+      },
+      "sprint": {
+        "clip": "Sprint",
+        "speed": 3.03
+      }
+    }
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 199296,
+      "megabytes": 11.93,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19990,
+      "megabytes": 1.67,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5986,
+      "megabytes": 0.91,
+      "texture": 512
+    }
+  ]
+}

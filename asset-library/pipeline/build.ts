@@ -63,6 +63,10 @@ interface Brief {
   // "close" goes further: the head is painted again on its own, five times the size, and fitted back onto the
   // sheet's (face.py) before the rig paints from it.
   face?: "sheet" | "close"
+  // The face the sheet is painted with, in place of a neutral one. The model's lids are made from the sheet's: Poppen's
+  // card squints and grins, and his neutral sheet came back heavy lidded and sleepy, lids that no paint could open
+  // (the owner, 2026-11-24). Keep the mouth closed: an open one models badly.
+  expression?: string
   // A beast that stands upright on two legs, painted as an animal and not a person in costume.
   creature?: boolean
   // "four": a beast that stands on four feet. Its sheets are painted on all fours, a second one of its two sides, and
@@ -126,7 +130,7 @@ const personPrompt = (
 
 ${views(b)}
 
-Pose${b.sheet === "front" ? "" : ", in both views"}: standing straight, feet a little apart, both arms held out from the body at about ${b.arms} degrees with a clear gap of background between each arm and the body, ${hands(b)} ${b.stow} Neutral face, mouth closed, looking straight ahead.
+Pose${b.sheet === "front" ? "" : ", in both views"}: standing straight, feet a little apart, both arms held out from the body at about ${b.arms} degrees with a clear gap of background between each arm and the body, ${hands(b)} ${b.stow} ${b.expression ?? "Neutral face, mouth closed"}, looking straight ahead.
 
 Keep this person's face, hair, build and proportions, and every piece of the outfit: its shapes, colours, emblems and layers. Render it as real materials: worn metal, woven cloth, mail, oiled leather, real skin and hair.${b.sheet === "front" ? " The face is in sharp focus and finely detailed: clear eyes, a natural closed mouth, real skin." : ""}
 
