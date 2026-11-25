@@ -88,11 +88,41 @@ function softTexture() {
   return t
 }
 
+// Bright down the middle and gone at both edges across its width, and uneven along its length, so a ray drawn with it
+// as it scrolls flickers and has no hard outline.
+function streakTexture() {
+  const c = document.createElement("canvas")
+  c.width = 256
+  c.height = 64
+  const g = c.getContext("2d")!
+  const r = g.createLinearGradient(0, 0, 0, 64)
+  r.addColorStop(0, "rgba(255,255,255,0)")
+  r.addColorStop(0.3, "rgba(255,255,255,0.45)")
+  r.addColorStop(0.5, "rgba(255,255,255,1)")
+  r.addColorStop(0.7, "rgba(255,255,255,0.45)")
+  r.addColorStop(1, "rgba(255,255,255,0)")
+  g.fillStyle = r
+  g.fillRect(0, 0, 256, 64)
+  // Soft gaps, blurred so no edge shows, drawn again a canvas over so the pattern runs on without a seam.
+  g.globalCompositeOperation = "destination-out"
+  g.filter = "blur(8px)"
+  for (let i = 0; i < 14; i++) {
+    const x = Math.random() * 256
+    const w = 16 + Math.random() * 40
+    g.fillStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.25})`
+    for (const dx of [-256, 0, 256]) g.fillRect(x + dx, -20, w, 104)
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
 export class Effects {
   readonly group = new THREE.Group()
   readonly light = new THREE.PointLight("#ffffff", 0, 9, 1.6)
   private live: Live[] = []
   private soft: THREE.Texture | null = null
+  private streak: THREE.Texture | null = null
   private lightOwner: Live | null = null
 
   constructor(private host: EffectHost) {
@@ -156,6 +186,7 @@ export class Effects {
   dispose() {
     this.clear()
     this.soft?.dispose()
+    this.streak?.dispose()
   }
 
   // ── Effects ──
@@ -237,32 +268,160 @@ export class Effects {
     })
   }
 
+  // A ray from the caster to the target: two soft strips turned to the camera, a white core in a coloured glow, that
+  // shoot out from in front of the caster, hold with a flicker, and draw in to the target. A frost ray sheds ice
+  // shards and cold motes along its length, and bursts into shards and mist where it lands. Another element flashes there.
   private beam(from: EffectEnd, to: EffectEnd, element?: Element) {
     const color = effectColor(element, "arcane")
-    const a = from.at.clone()
-    const b = to.at.clone()
-    const len = a.distanceTo(b)
-    const mid = a.clone().add(b).multiplyScalar(0.5)
-    const mk = (r: number, c: string, o: number) => {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10, 1, true), this.additive(c, o))
-      m.position.copy(mid)
-      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize())
+    const frost = element === "frost"
+    const D = 1.3
+    // From in front of the caster's chest to the near side of the target's, not from body to body.
+    const flat = to.at.clone().sub(from.at).setY(0)
+    const reach = flat.length()
+    flat.normalize()
+    const a = from.at.clone().addScaledVector(flat, Math.min(0.3, reach * 0.2))
+    const b = to.at.clone().addScaledVector(flat, -Math.min(0.22, reach * 0.15))
+    const dir = b.clone().sub(a)
+    const len = dir.length()
+    dir.normalize()
+    this.streak ??= streakTexture()
+    const strip = (width: number, c: string, opacity: number) => {
+      const geo = new THREE.PlaneGeometry(1, width)
+      geo.translate(0.5, 0, 0)
+      const map = this.streak!.clone()
+      map.wrapS = THREE.RepeatWrapping
+      map.repeat.set(Math.max(1, len / 1.2), 1)
+      const mat = this.additive(c, opacity)
+      mat.map = map
+      const m = new THREE.Mesh(geo, mat)
+      m.frustumCulled = false
       return m
     }
-    const core = mk(0.035, "#ffffff", 0.9)
-    const halo = mk(0.14, color, 0.45)
+    const core = strip(0.05, "#ffffff", 0.95)
+    const halo = strip(0.2, color, 0.55)
+    const flare = new THREE.Sprite(this.glow(color))
+    const tip = new THREE.Sprite(this.glow("#ffffff"))
+    const objects: THREE.Object3D[] = [core, halo, flare, tip]
+
+    // Frost: shards shed along the ray as its head passes, and more thrown from where it lands, falling as they go.
+    type Shard = { at: THREE.Vector3; v: THREE.Vector3; born: number; life: number; size: number; spin: THREE.Vector3 }
+    const shards: Shard[] = []
+    let ice: THREE.InstancedMesh | null = null
+    let motes: THREE.Points | null = null
+    let moteMat: THREE.PointsMaterial | null = null
+    const moteSeeds: { u: number; r: number; a: number; fall: number; born: number }[] = []
+    const puffs: THREE.Sprite[] = []
+    const ARRIVE = 0.18
+    if (frost) {
+      const rnd = (s: number) => (Math.random() * 2 - 1) * s
+      for (let i = 0; i < 26; i++) {
+        const u = Math.random()
+        shards.push({ at: a.clone().addScaledVector(dir, u * len), v: new THREE.Vector3(rnd(0.5), rnd(0.3) + 0.1, rnd(0.5)), born: u * ARRIVE, life: 0.5 + Math.random() * 0.4, size: 0.5 + Math.random() * 0.6, spin: new THREE.Vector3(rnd(9), rnd(9), rnd(9)) })
+      }
+      for (let i = 0; i < 18; i++) {
+        const v = new THREE.Vector3(rnd(1), rnd(1) + 0.4, rnd(1)).normalize().multiplyScalar(1 + Math.random() * 1.6).addScaledVector(dir, 0.8)
+        shards.push({ at: b.clone(), v, born: ARRIVE, life: 0.6 + Math.random() * 0.5, size: 0.7 + Math.random() * 0.8, spin: new THREE.Vector3(rnd(12), rnd(12), rnd(12)) })
+      }
+      const geo = new THREE.OctahedronGeometry(0.028)
+      geo.scale(0.55, 1.9, 0.55)
+      ice = new THREE.InstancedMesh(geo, this.additive("#ffffff", 1), shards.length)
+      ice.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(shards.length * 3), 3)
+      ice.frustumCulled = false
+      objects.push(ice)
+      for (let i = 0; i < 40; i++) moteSeeds.push({ u: Math.random(), r: Math.random() * 0.12, a: Math.random() * Math.PI * 2, fall: 0.15 + Math.random() * 0.35, born: Math.random() * 0.4 })
+      // A few that cling about the target after the ray is gone, drifting down: the cold staying on them.
+      for (let i = 0; i < 24; i++) moteSeeds.push({ u: 1.05, r: 0.1 + Math.random() * 0.3, a: Math.random() * Math.PI * 2, fall: 0.1 + Math.random() * 0.25, born: ARRIVE + Math.random() * 0.4 })
+      const pg = new THREE.BufferGeometry()
+      pg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(moteSeeds.length * 3), 3))
+      this.soft ??= softTexture()
+      moteMat = new THREE.PointsMaterial({ map: this.soft, color: "#e6f6ff", size: 0.05, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+      motes = new THREE.Points(pg, moteMat)
+      motes.frustumCulled = false
+      objects.push(motes)
+      for (let i = 0; i < 6; i++) {
+        const s = new THREE.Sprite(this.glow("#cfeaff", 0))
+        s.userData.drift = new THREE.Vector3(rnd(0.4), rnd(0.15) + 0.08, rnd(0.4))
+        puffs.push(s)
+        objects.push(s)
+      }
+    }
+
+    const toCam = new THREE.Vector3()
+    const n = new THREE.Vector3()
+    const side = new THREE.Vector3()
+    const basis = new THREE.Matrix4()
+    const p = new THREE.Vector3()
+    const q = new THREE.Quaternion()
+    const e = new THREE.Euler()
+    const m4 = new THREE.Matrix4()
+    const one = new THREE.Vector3()
+    const ic = new THREE.Color()
+    const base = new THREE.Color(color).lerp(new THREE.Color("#ffffff"), 0.35)
     let struck = false
-    return this.add(1, [core, halo], (t, _dt, self) => {
-      const k = fade(t, 0.15, 0.7)
-      const w = 0.3 + 0.7 * k
-      core.scale.set(w, 1, w)
-      halo.scale.set(w * (1 + 0.1 * Math.sin(t * 60)), 1, w)
-      ;(core.material as THREE.MeshBasicMaterial).opacity = 0.9 * k
-      ;(halo.material as THREE.MeshBasicMaterial).opacity = 0.45 * k
-      this.lamp(self, b, color, 3 * k)
-      if (!struck && t > 0.15) {
+    return this.add(D, objects, (t, _dt, self) => {
+      const s = t * D
+      const head = ease(THREE.MathUtils.clamp(s / ARRIVE, 0, 1))
+      const tail = ease(THREE.MathUtils.clamp((t - 0.55) / 0.3, 0, 1))
+      const k = 1 - THREE.MathUtils.clamp((t - 0.7) / 0.25, 0, 1)
+      const flicker = 1 + 0.12 * Math.sin(s * 47) + 0.06 * Math.sin(s * 113)
+      // The strips lie along the ray and turn about it to face the camera.
+      toCam.copy(this.host.camera.position).sub(a)
+      n.copy(toCam).addScaledVector(dir, -toCam.dot(dir)).normalize()
+      side.crossVectors(n, dir)
+      basis.makeBasis(dir, side, n)
+      const start = a.clone().addScaledVector(dir, tail * len)
+      const span = Math.max(0.001, (head - tail) * len)
+      for (const [m, w, o] of [
+        [core, 1, 0.95],
+        [halo, flicker, 0.55],
+      ] as const) {
+        m.position.copy(start)
+        m.quaternion.setFromRotationMatrix(basis)
+        m.scale.set(span, w * (0.6 + 0.4 * head), 1)
+        const mat = m.material as THREE.MeshBasicMaterial
+        mat.opacity = o * k
+        mat.map!.offset.x -= _dt * 2.2
+      }
+      flare.position.copy(a)
+      flare.scale.setScalar(0.45 * flicker * k * (1 - tail))
+      tip.position.copy(a).addScaledVector(dir, head * len)
+      tip.scale.setScalar((head < 1 ? 0.35 : 0.5 * flicker) * k)
+      this.lamp(self, tip.position, color, 3.2 * k * flicker)
+      if (!struck && head >= 1) {
         struck = true
         if (to.id) this.host.hit(to.id, color, 0.9)
+        if (!frost) void this.impact({ at: b }, element, 0.5)
+      }
+      if (ice) {
+        for (const [i, sh] of shards.entries()) {
+          const age = s - sh.born
+          const life = THREE.MathUtils.clamp(age / sh.life, 0, 1)
+          const show = age < 0 || life >= 1 ? 0 : Math.min(1, age / 0.06) * (1 - life)
+          p.copy(sh.at).addScaledVector(sh.v, Math.max(0, age)).setY(p.y - 2.2 * Math.max(0, age) ** 2)
+          q.setFromEuler(e.set(sh.spin.x * age, sh.spin.y * age, sh.spin.z * age))
+          m4.compose(p, q, one.setScalar(sh.size * (0.4 + 0.6 * show)))
+          ice.setMatrixAt(i, m4)
+          ice.setColorAt(i, ic.copy(base).multiplyScalar(show))
+        }
+        ice.instanceMatrix.needsUpdate = true
+        ice.instanceColor!.needsUpdate = true
+      }
+      if (motes && moteMat) {
+        const pos = motes.geometry.getAttribute("position") as THREE.BufferAttribute
+        for (const [i, m] of moteSeeds.entries()) {
+          const age = Math.max(0, s - m.born)
+          const at = m.u > 1 ? b : p.copy(a).addScaledVector(dir, m.u * len)
+          const r = m.r + age * 0.08
+          pos.setXYZ(i, at.x + Math.cos(m.a + age) * r, at.y - m.fall * age + (m.u > 1 ? 0.15 : 0), at.z + Math.sin(m.a + age) * r)
+        }
+        pos.needsUpdate = true
+        moteMat.opacity = 0.9 * fade(t, 0.1, 0.6)
+      }
+      for (const puff of puffs) {
+        const age = Math.max(0, s - ARRIVE)
+        puff.position.copy(b).addScaledVector(puff.userData.drift as THREE.Vector3, age)
+        puff.scale.setScalar(0.3 + 0.6 * ease(Math.min(1, age / 0.8)))
+        ;(puff.material as THREE.SpriteMaterial).opacity = s < ARRIVE ? 0 : 0.2 * (1 - Math.min(1, age / (D - ARRIVE)))
       }
     })
   }
