@@ -186,7 +186,7 @@ export function StageHud({
         <Presence show={views.length > 0} motion="rise" asChild>
           <nav className={cn("absolute flex items-center justify-between gap-6", compact ? "right-4 bottom-0 left-4 h-11" : "right-10 bottom-0 left-10 h-24")} aria-label="Perspectives">
             {!compact && <div className="hidden flex-1 lg:block" />}
-            <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
+            <div data-tour="views" className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none]">
               {views.map((v, i) => (
                 <Button
                   variant="plain"

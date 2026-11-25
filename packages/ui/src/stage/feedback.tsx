@@ -1,7 +1,7 @@
 "use client"
 
-// Feedback from inside the game: a brass button in the top bar, a callout that points at it once per session, the
-// panel it opens, and the rating row on an adventure's closing panel.
+// Feedback from inside the game: a brass button in the top bar, the panel it opens, and the rating row on an
+// adventure's closing panel.
 
 import { Star, X } from "lucide-react"
 import { type ReactNode, useEffect, useRef, useState } from "react"
@@ -17,79 +17,22 @@ import { eyebrow, Pill, panel } from "./hud"
 
 export type FeedbackStart = { kind: FeedbackDraft["kind"]; rating?: number }
 
-const CALLOUT_SEEN = "d20-feedback-callout"
-// The callout waits for the scene to settle, and lingers this long after the player's first click.
-const CALLOUT_IN_MS = 1200
-const CALLOUT_LINGER_MS = 2000
-
-/** The feedback button, and on a session's first view of the game a callout under it. `visible` is whether the top bar shows. */
-export function FeedbackButton({ active, visible, compact, onClick }: { active: boolean; visible: boolean; compact?: boolean; onClick: () => void }) {
-  const [callout, setCallout] = useState(false)
-
-  useEffect(() => {
-    if (!visible) return
-    try {
-      if (sessionStorage.getItem(CALLOUT_SEEN)) return
-    } catch {
-      return
-    }
-    const timer = setTimeout(() => {
-      try {
-        sessionStorage.setItem(CALLOUT_SEEN, "1")
-      } catch {}
-      setCallout(true)
-    }, CALLOUT_IN_MS)
-    return () => clearTimeout(timer)
-  }, [visible])
-
-  // A click anywhere sends the callout away after a moment. Its own close button and the feedback button do so at once.
-  useEffect(() => {
-    if (!callout) return
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const leave = () => {
-      timer ??= setTimeout(() => setCallout(false), CALLOUT_LINGER_MS)
-    }
-    addEventListener("pointerdown", leave)
-    return () => {
-      removeEventListener("pointerdown", leave)
-      clearTimeout(timer)
-    }
-  }, [callout])
-
+/** The feedback button. The first-look tour (./tips) points it out. `visible` and `compact` are kept for callers. */
+export function FeedbackButton({ active, onClick }: { active: boolean; visible?: boolean; compact?: boolean; onClick: () => void }) {
   return (
-    <div className="relative">
+    <div className="relative" data-tour="feedback">
       <Tip label="Give Us Feedback">
         <Button
           variant="plain"
           type="button"
           aria-label="Give Us Feedback"
           aria-pressed={active}
-          onClick={() => {
-            setCallout(false)
-            onClick()
-          }}
+          onClick={onClick}
           className="stage-stone grid h-10 w-10 place-items-center rounded-full border-0 transition-[filter,scale] duration-150 ease-snap active:scale-95"
         >
           <ThumbsUpDownSolid />
         </Button>
       </Tip>
-      <Presence show={callout} motion="drop" asChild>
-        <div className={cn(panel, "absolute right-0 z-overlay flex items-center gap-2 border-accent/60 py-2 pr-2 pl-4", compact ? "top-12" : "top-[52px]")}>
-          {/* The pointer, under the middle of the button. */}
-          <span aria-hidden="true" className="absolute -top-[7px] right-[14px] size-3 rotate-45 border-t border-l border-accent/60 bg-panel" />
-          <span className="font-display text-sm tracking-wide whitespace-nowrap text-foreground">Give Us Feedback</span>
-          <Button
-            variant="plain"
-            type="button"
-            aria-label="Dismiss"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => setCallout(false)}
-            className="grid size-6 place-items-center rounded-full text-foreground/60 transition-[color,background-color,scale] duration-150 ease-snap hover:bg-white/10 hover:text-foreground active:scale-90"
-          >
-            <X className="size-3.5" />
-          </Button>
-        </div>
-      </Presence>
     </div>
   )
 }

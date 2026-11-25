@@ -1652,7 +1652,7 @@ export function StagePlay(props: {
                 step={!auto}
                 autoMs={continueMs}
                 progress={voiced.status === "off" || busy ? undefined : voiced.progress}
-                paused={paused}
+                paused={paused || tour.open}
                 onPause={setPaused}
                 onReplay={() => {
                   setParagraph(0)
@@ -1759,7 +1759,7 @@ export function StagePlay(props: {
               </div>
             )}
           </Presence>
-          {on && tour.open && !(scene && !files.ready) && <Tour compact={compact} onDone={tour.done} />}
+          {on && tour.open && !(scene && (!files.ready || !stage)) && <Tour compact={compact} onDone={tour.done} />}
           <Presence show={on && !tour.open && Boolean(tips.tip)} motion="drop" asChild>
             {tips.tip && (
               <TipCard

@@ -103,6 +103,7 @@ export function TurnOrder({
   }, [])
   return (
     <div
+      data-tour="turns"
       className={cn("pointer-events-auto absolute left-1/2 z-20 flex -translate-x-1/2 flex-col items-center", compact ? "top-2" : "top-6", entrance("enter-drop", className))}
       style={style}
       onAnimationEnd={onAnimationEnd}
