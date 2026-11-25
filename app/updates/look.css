@@ -322,3 +322,11 @@ html[data-update-theme="dark"] .ul-band {
   max-width: 560px;
   padding-top: 48px;
 }
+
+/* A title page with no art: the ornaments and words alone on the paper, with no room kept below for a scene. */
+.vn-head.ul-head.is-plain {
+  padding: 40px 20px 36px;
+}
+.ul-head.is-plain .vn-head-inner::before {
+  display: none;
+}

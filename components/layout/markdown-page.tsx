@@ -6,15 +6,17 @@ import { renderPost } from "@/lib/updates"
 
 /**
  * A page whose words are a markdown file in `content/` (`readPage`), set like a post on /updates, with no numbers on its
- * sections. `head` takes the place of the plain title and line under it, as /about's lettering does.
+ * sections. `head` takes the place of the plain title and line under it, across the full width above the column, as
+ * /about's title page does.
  */
 export function MarkdownPage({ page, head }: { page: Update; head?: ReactNode }) {
   const { html } = renderPost(page, { numbered: false })
   return (
     <LedgerShell>
+      {head}
       <div className="up-layout">
         <article className="up-main">
-          {head ?? (
+          {!head && (
             <header className="up-title-block">
               <h1>{page.title}</h1>
               {page.description && <p className="up-dek">{page.description}</p>}

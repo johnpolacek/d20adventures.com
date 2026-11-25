@@ -16,12 +16,13 @@ export function Orn() {
 
 /**
  * A title page across the full width, over a pen and ink engraving, dressed as /vision is (app/updates/look.css). The
- * art fills the header from its top edge, and the dark look turns its ink pale. `post` sets it for a post's title.
+ * art fills the header from its top edge, and the dark look turns its ink pale. `post` sets it for a post's title. With
+ * no art, it is the ornaments and words alone on the paper.
  */
-export function TitlePage({ art, post, children }: { art: string; post?: boolean; children: ReactNode }) {
+export function TitlePage({ art, post, children }: { art?: string; post?: boolean; children: ReactNode }) {
   return (
-    <header className={`vn-head ul-head${post ? " is-post" : ""}`}>
-      <img className="ul-head-art" src={art} alt="" width={2172} height={724} />
+    <header className={`vn-head ul-head${post ? " is-post" : ""}${art ? "" : " is-plain"}`}>
+      {art && <img className="ul-head-art" src={art} alt="" width={2172} height={724} />}
       <div className="vn-head-inner">
         <Orn />
         {children}

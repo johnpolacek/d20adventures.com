@@ -16,5 +16,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
   const p = await page()
-  return <MarkdownPage page={p} head={<AboutTitle title={p.title} />} />
+  return <MarkdownPage page={p} head={<AboutTitle title={p.title} description={p.description} />} />
 }
