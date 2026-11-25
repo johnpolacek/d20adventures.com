@@ -55,6 +55,12 @@ function emblem(post: Update) {
 
 /** Small line marks for the tally, drawn in the ink at the stroke of the /vision rings. */
 const marks = {
+  minutes: (
+    <>
+      <circle cx="8" cy="8" r="5.5" />
+      <path d="M8 5v3l2 1.5" />
+    </>
+  ),
   words: <path d="M3 4h10M3 8h10M3 12h6" />,
   images: (
     <>
@@ -72,22 +78,19 @@ const marks = {
 }
 
 /**
- * What a post holds, down the band's right side: its minutes large in the serif, then a short ledger of its words,
- * pictures and videos, each with a small mark. A count of none is left out.
+ * What a post holds, down the band's right side: a short ledger of its minutes, words, pictures and videos, each with
+ * a small mark. A count of none is left out.
  */
 function Tally({ post }: { post: Update }) {
   const { minutes, words, images, videos } = renderPost(post)
   const rows = [
+    { key: "minutes", n: minutes, one: "Min Read", many: "Min Read" },
     { key: "words", n: words, one: "Word", many: "Words" },
     { key: "images", n: images, one: "Image", many: "Images" },
     { key: "videos", n: videos, one: "Video", many: "Videos" },
   ] as const
   return (
     <span className="ul-tally">
-      <span className="ul-min">
-        <span className="ul-min-num">{minutes}</span>
-        <span className="vn-num">Min Read</span>
-      </span>
       <span className="ul-tally-rows">
         {rows
           .filter((row) => row.n > 0)

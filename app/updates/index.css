@@ -101,13 +101,11 @@ html[data-update-theme="dark"] .ul-band {
 }
 /*
  * The tally: what a post holds, in a narrow column ruled off at its left by a hairline that fades at both ends, like a
- * ledger's margin. The minutes sit large in the serif (the display face draws a 1 as a capital I), then a line each
- * for words, pictures and videos, a small mark, the count in mono and its name.
+ * ledger's margin. A line each for minutes, words, pictures and videos: a small mark, the count in mono and its name.
  */
 .ul-tally {
   position: relative;
   display: grid;
-  gap: 10px;
   padding: 6px 0 6px 20px;
 }
 .ul-tally::before {
@@ -119,20 +117,6 @@ html[data-update-theme="dark"] .ul-band {
   border-left: 1px solid var(--up-line-strong);
   -webkit-mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
   mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
-}
-.ul-min {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-}
-.ul-min-num {
-  font-family: var(--up-serif);
-  font-size: 28px;
-  line-height: 1;
-  color: var(--up-strong);
-}
-.ul-min .vn-num {
-  font-size: 12px;
 }
 .ul-tally-rows {
   display: grid;
