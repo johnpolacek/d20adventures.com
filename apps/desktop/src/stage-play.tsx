@@ -605,14 +605,14 @@ export function StagePlay(props: {
   const cues = useMemo(() => {
     const entrances = stage?.staging?.entrances ?? []
     const authored = entrances.flatMap((e) =>
-      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, here: false, ...when(text, e.when) }] : []
+      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, sneak: false, here: false, ...when(text, e.when) }] : []
     )
     const told = paragraphs.flatMap((p, at) =>
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
         const here = b.kind === "action" && turn?.characters.find((c) => c.id === b.actor)?.type === "pc"
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], here, at, s: sentenceOf(p.text, b.text) }]
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], sneak: b.enters.pace === "sneak", here, at, s: sentenceOf(p.text, b.text) }]
           : []
       })
     )
@@ -646,7 +646,7 @@ export function StagePlay(props: {
         // An entrance with a shot of its own is a reveal: the camera holds on the way in a moment before they come out.
         // A rerun of this effect does not call it off. Stepping back, or a new stage, does.
         const walk = () => {
-          if (enteredOn.current === stage && entered.current.has(key)) void stage.moveCast(e.cast, to, { speed: e.speed }).then(() => stage.faceCast(e.cast, home.facing))
+          if (enteredOn.current === stage && entered.current.has(key)) void stage.moveCast(e.cast, to, { speed: e.speed, pace: e.sneak ? "sneak" : undefined }).then(() => stage.faceCast(e.cast, home.facing))
         }
         if (e.shot) setTimeout(walk, REVEAL_BEAT)
         else walk()
@@ -715,7 +715,7 @@ export function StagePlay(props: {
   // out. They stay until their paragraph. Then a runner makes for their way out and is gone, and the rest lie down.
   const exits = useMemo(() => {
     const authored = stage?.staging?.exits ?? []
-    type Exit = { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; speed: number; at: number; s: number }
+    type Exit = { run: boolean; to?: string | [number, number]; via?: (string | [number, number])[]; lands?: string | [number, number]; shot?: string; speed: number; sneak?: boolean; at: number; s: number }
     const out = new Map<string, Exit>()
     for (const e of authored)
       if (e.when)
@@ -726,6 +726,7 @@ export function StagePlay(props: {
           lands: e.lands,
           shot: e.shot,
           speed: PACE[e.pace ?? "hurry"],
+          sneak: e.pace === "sneak",
           ...when(text, e.when),
         })
     // Someone just gone, whose paragraph the effect above has still to find, waits for it: taken now, they would be
@@ -734,7 +735,7 @@ export function StagePlay(props: {
     for (const [id, how] of gone) {
       if (!(id in leftAt) && !(settled.turn === leavingKey && settled.out.has(id))) continue
       const way = authored.find((e) => e.cast === id)
-      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], at: leftAt[id] ?? -1, s: 0 })
+      if (!out.has(id)) out.set(id, { run: how === "fled", to: way?.to, via: way?.via, lands: way?.lands, shot: way?.shot, speed: PACE[way?.pace ?? "hurry"], sneak: way?.pace === "sneak", at: leftAt[id] ?? -1, s: 0 })
     }
     // An encounter that ends with someone still in it, who has a way off, sends them along it while its end is told:
     // the Owlbear that never found Thalbern walks back into the trees. They go at the first closing paragraph that
@@ -744,7 +745,7 @@ export function StagePlay(props: {
         if (e.when || !e.to || out.has(e.cast)) continue
         const name = e.cast.replace(/-/g, " ")
         const named = text.findIndex((p, i) => i < closing && p.toLowerCase().includes(name))
-        out.set(e.cast, { run: true, to: e.to, via: e.via, shot: e.shot, speed: PACE[e.pace ?? "hurry"], at: Math.max(0, named), s: named >= 0 ? sentenceOf(text[named], name) : 0 })
+        out.set(e.cast, { run: true, to: e.to, via: e.via, shot: e.shot, speed: PACE[e.pace ?? "hurry"], sneak: e.pace === "sneak", at: Math.max(0, named), s: named >= 0 ? sentenceOf(text[named], name) : 0 })
       }
     return out
   }, [stage, text, gone, leftAt, leavingKey, closingNow, closing])
@@ -784,7 +785,7 @@ export function StagePlay(props: {
           const running = () => ranOn.current === stage && ran.current.has(id)
           void (async () => {
             stage.setLow(id, false)
-            for (const leg of legs) for (const p of stage.route(id, leg, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: e.speed })
+            for (const leg of legs) for (const p of stage.route(id, leg, 40)) if (running()) await stage.moveCast(id, [p.x, p.z], { speed: e.speed, pace: e.sneak ? "sneak" : undefined })
             if (running()) stage.setOnStage(id, false)
           })()
         }
@@ -848,7 +849,7 @@ export function StagePlay(props: {
   const walks = useMemo(
     () =>
       (stage?.staging?.walks ?? [])
-        .map((w) => ({ ...w, speed: w.pace === "stroll" ? STROLL : PACE[w.pace ?? "walk"], ...when(text, w.when) }))
+        .map((w) => ({ ...w, speed: w.pace === "stroll" ? STROLL : PACE[w.pace ?? "walk"], sneak: w.pace === "sneak", ...when(text, w.when) }))
         .filter((w) => w.at >= 0),
     [stage, text]
   )
@@ -871,7 +872,7 @@ export function StagePlay(props: {
         stage.placeCast(w.cast, w.from, [legs[0].x, legs[0].z])
         const live = () => strolls.current === s && s.on.get(w.cast) === token
         void (async () => {
-          for (const leg of legs) for (const p of stage.route(w.cast, leg, 60)) if (live()) await stage.moveCast(w.cast, [p.x, p.z], { speed: w.speed })
+          for (const leg of legs) for (const p of stage.route(w.cast, leg, 60)) if (live()) await stage.moveCast(w.cast, [p.x, p.z], { speed: w.speed, pace: w.sneak ? "sneak" : undefined })
         })()
       } else if (!s.on.has(w.cast)) {
         s.on.set(w.cast, 0)

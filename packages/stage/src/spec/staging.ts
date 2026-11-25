@@ -37,6 +37,7 @@ const castMember = z
         hit: z.string().max(80).optional(),
         fall: z.string().max(80).optional(),
         walk: z.string().max(80).optional(),
+        gaits: z.partialRecord(z.enum(["sneak", "walk", "run", "sprint"]), z.object({ clip: z.string().max(80), speed: num(0.05, 20) }).strict()).optional(),
         moves: z
           .object({ melee: z.string().max(80).optional(), ranged: z.string().max(80).optional(), dodge: z.string().max(80).optional() })
           .strict()

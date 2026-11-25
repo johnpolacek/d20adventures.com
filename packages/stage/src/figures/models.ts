@@ -3,6 +3,7 @@ import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
 import { crouchClip, figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
+import { type FigureGaits, type Gait, gaitRate, gaitShares, type Pace, STRIDE } from "./gaits"
 import { carry, fingered, wield } from "./hold"
 import { holdProps } from "./props"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
@@ -27,6 +28,9 @@ export interface FigureSpec {
   fall?: string
   // Played, blended in, while the cast member walks.
   walk?: string
+  // Its gaits, each a clip and the speed it was made for (gaits.ts): a figure moves in the one for its pace and speed.
+  // One with none walks in `walk`, taken to be made for 1.2 metres a second.
+  gaits?: FigureGaits
   // How brightly the figure reflects a plain lit room of its own, so its metal and leather read: 0, or none, leaves
   // it to the stage's sky. A night wants little, or the figure glows.
   env?: number
@@ -53,8 +57,6 @@ export interface FigureSpec {
 }
 
 type Mat = THREE.MeshStandardMaterial
-// How fast the walk clip walks, in metres a second.
-const STRIDE = 1.2
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
 interface Model {
@@ -66,6 +68,8 @@ interface Model {
   hit: THREE.AnimationAction | null
   fall: THREE.AnimationAction | null
   walk: THREE.AnimationAction | null
+  // Its gaits, the walk among them, each with the speed its clip was made for and its share now.
+  gaits: { gait: Gait; action: THREE.AnimationAction; speed: number; share: number }[]
   // The crouch (clips.ts), laid over the rest, and how far into it the figure is, 0 standing to 1 low.
   crouch: THREE.AnimationAction | null
   lowT: number
@@ -255,7 +259,13 @@ export class Models {
       const a = clip && !actions.has(clip) ? action(clip, true) : null
       if (clip && a) actions.set(clip, a)
     }
-    walk?.setEffectiveWeight(0)
+    const gaits: Model["gaits"] = []
+    for (const [gait, g] of Object.entries(spec.gaits ?? {}) as [Gait, { clip: string; speed: number }][]) {
+      const a = gait === "walk" && g.clip === spec.walk ? walk : action(g.clip, false)
+      if (a) gaits.push({ gait, action: a, speed: g.speed, share: 0 })
+    }
+    if (walk && !gaits.some((g) => g.gait === "walk")) gaits.push({ gait: "walk", action: walk, speed: STRIDE, share: 0 })
+    for (const g of gaits) g.action.setEffectiveWeight(0)
     const crouch = low ? mixer.clipAction(low, undefined, THREE.AdditiveAnimationBlendMode) : null
     crouch?.play()
     crouch?.setEffectiveWeight(0)
@@ -316,6 +326,7 @@ export class Models {
       hit,
       fall,
       walk,
+      gaits,
       crouch,
       lowT: this.standees.low.has(cast.id) ? 1 : 0,
       carried,
@@ -339,11 +350,18 @@ export class Models {
     })
     this.ready(cast.id, this.readied.get(cast.id) ?? null)
   }
-  // Seconds between a figure's footfalls as it walks at `gait` metres a second: half its walk cycle, at the rate the
-  // walk plays. Null for one with no walk of its own.
-  stepSeconds(id: string, gait: number) {
-    const clip = (this.on ? this.items.get(id) : undefined)?.walk?.getClip()
-    return clip ? clip.duration / 2 / THREE.MathUtils.clamp(gait / STRIDE, 0.4, 2.2) : null
+  // Seconds between a figure's footfalls as it moves at `gait` metres a second: half the cycle of the gait it moves
+  // in most, at the rate that gait plays. Null for one with no walk of its own.
+  stepSeconds(id: string, gait: number, pace?: Pace) {
+    const m = this.on ? this.items.get(id) : undefined
+    if (!m?.gaits.length) return null
+    const shares = gaitShares(
+      m.gaits.map((g) => g.gait),
+      gait,
+      pace
+    )
+    const most = m.gaits.reduce((a, b) => ((shares[b.gait] ?? 0) > (shares[a.gait] ?? 0) ? b : a))
+    return most.action.getClip().duration / 2 / gaitRate(most.gait, most.speed, gait)
   }
   // The clip a figure plays for a kind of move, if it has one.
   moveFor(id: string, kind: "melee" | "ranged" | "dodge") {
@@ -464,13 +482,25 @@ export class Models {
           mv.action.setEffectiveWeight((1 - f) * (1 - h) * v)
         }
       }
-      // Walking takes over from standing as the cast member sets off, and gives way again as they stop.
-      const w = m.walk ? c.walk : 0
+      // Walking takes over from standing as the cast member sets off, and gives way again as they stop. They move in
+      // the gait for their pace and speed, each played at the rate that keeps its feet on the ground (gaits.ts).
+      const w = m.gaits.length ? c.walk : 0
       m.idle?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * (1 - w))
-      m.walk?.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * w)
-      // The walk is a stride of about 1.2 metres a second: a slower or faster walk plays it slower or faster, so the
-      // feet do not slide.
-      m.walk?.setEffectiveTimeScale(THREE.MathUtils.clamp((c.gait ?? STRIDE) / STRIDE, 0.4, 2.2))
+      const speed = c.gait ?? STRIDE
+      const shares = gaitShares(
+        m.gaits.map((g) => g.gait),
+        speed,
+        c.pace
+      )
+      // A gait coming in takes up the stride where the one going out has it, so the feet do not jump.
+      const lead = m.gaits.find((g) => g.share > 0)
+      for (const g of m.gaits) {
+        const share = shares[g.gait] ?? 0
+        if (share > 0 && g.share === 0 && lead && lead !== g) g.action.time = (lead.action.time / lead.action.getClip().duration) * g.action.getClip().duration
+        g.share = share
+        g.action.setEffectiveWeight((1 - f) * (1 - h) * (1 - v) * w * share)
+        g.action.setEffectiveTimeScale(gaitRate(g.gait, g.speed, speed))
+      }
       if (m.hit) {
         m.hit.time = m.hitT ?? 0
         m.hit.setEffectiveWeight((1 - f) * h)

@@ -2,6 +2,7 @@ import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
 import type { MaskSource } from "../render/character-mask"
 import { served } from "../served"
+import type { Pace } from "./gaits"
 import type { FigureSpec } from "./models"
 
 // Named characters (PCs and staged NPCs) as world-style standees: a painted card with front and back art, lit through a
@@ -27,6 +28,8 @@ export interface CastMember {
   walking: boolean
   // How fast they walk, in metres a second, while they do: a figure's steps keep time with it.
   gait?: number
+  // The pace the story gives the move, when it is not just a speed: a sneak (gaits.ts).
+  pace?: Pace
   walk: number
   stride: number
   // Lying where they fell when the scene opens (a body).

@@ -9,9 +9,9 @@
 //   seam    how far any joint is from where it started, at the last frame of a clip that loops
 //   knee    the most a knee bends the wrong way: behind the line from hip to ankle, while bent
 //   hips    how far the hips rise and fall
-// And for the walk, the speed it walks at. The game moves every figure at 1.2 metres a second for the walk at its own
-// pace (STRIDE in packages/stage/src/figures/models.ts), so a walk made for another speed skates: `slip` is how far a
-// planted foot slides in a step at the game's speed.
+// And for each gait, a walk, a sneak, a run or a sprint, the speed it goes at (gait.ts). The game plays a gait at the
+// speed `motion.gaits` in figure.json gives it, and a walk with none at 1.2 metres a second: `slip` is how far a planted
+// foot slides in a step at that speed.
 //
 // The limits were set here, 2026-11-24, from how the game shows a figure: about 160 pixels tall, so 2 cm is two pixels.
 // A foot is planted while it is within 3 cm of the lowest it goes in the clip.
@@ -19,17 +19,17 @@
 import { readFile } from "node:fs/promises"
 import { NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
+import { type Gaits, gaitSpeed, plantedSpans } from "./gait"
 import { angle, mul, posed, skinPoint } from "./pose"
 
 const LIMITS = { slide: 2, floor: 2, seam: 1, knee: 2, speed: 0.15 }
 const STRIDE = 1.2
 const FRAMES = 60
-const PLANTED = 0.03
 // A clip whose hips go farther than this from where they start moves the figure about: its feet are not held to the
 // ground, and the slide is not counted.
 const STANDS = 0.1
 
-type Figure = { height: number; lods: { file: string }[]; motion?: { idle?: string; walk?: string } }
+type Figure = { height: number; lods: { file: string }[]; motion?: { idle?: string; walk?: string; gaits?: Gaits } }
 
 async function main() {
   const [id, only] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
@@ -131,21 +131,7 @@ async function main() {
     const heights = poses.map(({ of }) => of(hips)[1])
 
     // The spans each foot is planted for, as runs of frames.
-    const spans = feet.map((foot) => {
-      const least = Math.min(...foot.map((p) => p[1]))
-      const runs: [number, number][] = []
-      let from = -1
-      foot.forEach((p, f) => {
-        const down = p[1] < least + PLANTED
-        if (down && from < 0) from = f
-        if ((!down || f === foot.length - 1) && from >= 0) {
-          const to = down ? f : f - 1
-          if (to > from) runs.push([from, to])
-          from = -1
-        }
-      })
-      return runs
-    })
+    const spans = feet.map((foot) => plantedSpans(foot.map((p) => p[1])))
     const flat = (a: number[], b: number[]) => Math.hypot(a[0] - b[0], a[2] - b[2])
     let slide = 0
     for (const [side, runs] of spans.entries())
@@ -154,26 +140,21 @@ async function main() {
     // The walk's own speed: how fast a planted foot goes back, and which way.
     let walk = ""
     if (walks(name) && !/strafe/i.test(name)) {
-      const moves: { d: number[]; dt: number }[] = []
-      for (const [side, runs] of spans.entries())
-        for (const [from, to] of runs) {
-          const [a, b] = [feet[side][from], feet[side][to]]
-          moves.push({ d: [b[0] - a[0], b[2] - a[2]], dt: frames[to] - frames[from] })
-        }
-      const sum = moves.reduce((s, m) => [s[0] + m.d[0], s[1] + m.d[1], s[2] + m.dt], [0, 0, 0])
-      const speed = (Math.hypot(sum[0], sum[1]) * scale) / (sum[2] || 1)
-      const back = [sum[0] / (Math.hypot(sum[0], sum[1]) || 1), sum[1] / (Math.hypot(sum[0], sum[1]) || 1)]
-      // At the game's speed the ground goes back under the figure at STRIDE: a planted foot should go back as fast.
+      const { speed, back } = gaitSpeed(frames, feet, spans, scale)
+      // At the speed the game plays it at, the ground goes back under the figure as fast: a planted foot should too.
+      const kept = Object.values(figure.motion?.gaits ?? {}).find((g) => g?.clip === name)
+      const plays = kept?.speed ?? STRIDE
       let slip = 0
       for (const [side, runs] of spans.entries())
         for (const [from, to] of runs)
           for (let f = from; f <= to; f++) {
             const dt = frames[f] - frames[from]
             const [p, q] = [feet[side][f], feet[side][from]]
-            slip = Math.max(slip, Math.hypot((p[0] - q[0]) * scale - back[0] * STRIDE * dt, (p[2] - q[2]) * scale - back[1] * STRIDE * dt))
+            slip = Math.max(slip, Math.hypot((p[0] - q[0]) * scale - back[0] * plays * dt, (p[2] - q[2]) * scale - back[1] * plays * dt))
           }
-      walk = `walks ${speed.toFixed(2)} m/s, slip ${(slip * 100).toFixed(1)} cm at ${STRIDE}`
-      if (name === figure.motion?.walk && Math.abs(speed - STRIDE) / STRIDE > LIMITS.speed) bad.push(`${name} walks at ${speed.toFixed(2)} m/s, and the game moves it at ${STRIDE}: a planted foot slips ${(slip * 100).toFixed(1)} cm`)
+      walk = `walks ${speed.toFixed(2)} m/s, slip ${(slip * 100).toFixed(1)} cm at ${plays}`
+      if ((kept || name === figure.motion?.walk) && Math.abs(speed - plays) / plays > LIMITS.speed)
+        bad.push(`${name} walks at ${speed.toFixed(2)} m/s, and the game plays it as ${plays}${kept ? "" : ", having no motion.gaits: rebuild it"}: a planted foot slips ${(slip * 100).toFixed(1)} cm`)
     }
 
     let floor = { value: -Infinity, at: 0, part: "" }

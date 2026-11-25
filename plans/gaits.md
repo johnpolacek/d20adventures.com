@@ -40,11 +40,21 @@ Begun 2026-11-24, from `pnpm assets:legs` (`asset-library/pipeline/legcheck.ts`,
 - The runs are too fast to play at a hurry's 2.4 without slowing to half speed. The figure would then hang in the air between steps. Traced by hand, the jog's planted foot goes 54 cm back in 0.09 s: it is on the ground a short while and sweeps back fast. So the measure is right, and the clip was made for a speed the story never asks.
 - What to decide by eye on the trial: which sneak, which run and which sprint read best on this body. A gait that is slowed or sped past about half or one and a half times reads wrong, so a run may be better let skate a little than slowed to match.
 
+## Built, 2026-11-24
+
+- The owner chose a run that skates a little over one slowed to match the ground: slowed to a hurry's 2.4, the jog hangs in the air between steps.
+- `asset-library/pipeline/gait.ts` measures each gait. `pnpm assets:pilot` writes `motion.gaits` into `figure.json`: for each of `sneak`, `walk`, `run` and `sprint` the figure has, its clip (`Sneak`, `Walk`, `Run`, `Sprint` in the brief's `borrowed`) and its speed.
+- `packages/stage/src/figures/gaits.ts` chooses. A pace of `sneak` is the sneak, when the figure has one. Otherwise speed: walk to 1.8 m/s, run to 3.6, sprint past it, each pair blended over half a metre a second. A walk or a sneak plays at the rate that holds its feet, 0.4 to 2.2 times its own. A run or a sprint plays at 0.7 to 1.3 times its own, so a hurry's run is played at 0.7 and skates.
+- A gait coming in takes up the stride where the one going out has it.
+- `moveCast` takes a `pace`. The desktop app passes `sneak` for an entrance, an exit or a staging's walk the story calls a sneak. A beat's `move` has a speed alone.
+- A figure with no `motion.gaits` walks as before, its walk taken to be made for 1.2 m/s.
+- Thalbern (`thalbern-hi3d`) has them, with the clips chosen for now: Sneak `m2m/walk-stealth`, Run `ual1:Jog_Fwd_Loop`, Sprint `ual1:Sprint_Loop`. At its own speed his walk slips 8.7 cm a step, from 20.8 at 1.2. The sneak slips 20 cm at its own: its foot rolls heel to toe, and the measure follows the middle of the foot.
+- Not yet seen on the stage.
+
 ## Next
 
-- [ ] The owner chooses the sneak, the run and the sprint on the trial.
-- [ ] `motion.gaits` written by the build: each gait's clip and its speed.
-- [ ] `models.ts` plays the gait for a pace and a speed, blending by speed.
-- [ ] `moveCast` takes the pace. The desktop app and beats pass it.
-- [ ] The gaits borrowed by every shipped figure, each rebuilt (free), and the owner runs `pnpm assets:sync <id>` and `pnpm assets:archive <id>`.
-- [ ] A beast keeps its one hunched walk, at its own stride.
+- [ ] The owner chooses the sneak, the run and the sprint on the trial, and watches Thalbern sneak, walk and hurry in the app.
+- [ ] The owner runs `pnpm assets:sync thalbern-hi3d` and `pnpm assets:archive thalbern-hi3d`.
+- [ ] The chosen gaits borrowed by every other shipped figure, each rebuilt (free), then synced and archived.
+- [ ] A beast keeps its one hunched walk, at its own stride: a rebuild gives it `motion.gaits.walk`.
+- [ ] Sprint is in no pace yet: only a beat's `move` faster than 3.3 m/s reaches it.

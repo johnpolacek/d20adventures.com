@@ -58,6 +58,7 @@ import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
 import { facing } from "./facing"
+import { measureGaits } from "./gait"
 import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qunit, qup } from "./quat"
 import { type Part, reader, retarget } from "./retarget"
 
@@ -2564,6 +2565,15 @@ async function main() {
 
   const lods = await thin()
   say("lods", lods.map((l) => `${l.file} ${l.triangles} triangles, ${l.megabytes} MB`).join(", "))
+  // How fast each gait goes, measured on the lightest copy: the stage plays each at its own speed (gait.ts).
+  await MeshoptDecoder.ready
+  const light = await new NodeIO()
+    .registerExtensions(ALL_EXTENSIONS)
+    .registerDependencies({ "meshopt.decoder": MeshoptDecoder })
+    .read(`${dir}/${lods[lods.length - 1].file}`)
+  const gaits = measureGaits(light, brief.height)
+  if (Object.keys(gaits).length) say("gaits", Object.entries(gaits).map(([gait, g]) => `${gait} ${g?.speed} m/s`).join(", "))
+  const moves = Object.keys(gaits).length ? { ...((motion as object | undefined) ?? {}), gaits } : motion
   const figure = {
     name: brief.name,
     role: brief.role,
@@ -2576,8 +2586,8 @@ async function main() {
     source: { generator: made.generator, triangles: lods[0].triangles, cost: Math.round(made.cost * 100) / 100, made: before?.source?.made ?? today, built: today },
     rig: { bones: 0, weights: made.weights },
     clips: made.clips,
-    // How it moves in the game, set by hand: kept through a rebuild.
-    ...(motion ? { motion } : {}),
+    // How it moves in the game, set by hand and kept through a rebuild, with its gaits' speeds measured.
+    ...(moves ? { motion: moves } : {}),
     lods,
   }
   await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)

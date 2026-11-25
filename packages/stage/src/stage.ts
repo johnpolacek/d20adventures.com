@@ -6,6 +6,7 @@ import type { Footprint } from "./builders/types"
 import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
+import type { Pace } from "./figures/gaits"
 import { Models } from "./figures/models"
 import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
@@ -236,7 +237,7 @@ export class Stage {
   readonly loops = new Map<string, QueueLoop>()
   private coinMesh: THREE.Mesh | null = null
   // `unseen`: not walked, but put there once the picture has dipped.
-  private moves = new Map<string, { tx: number; tz: number; speed: number; resolve: () => void; unseen?: boolean }>()
+  private moves = new Map<string, { tx: number; tz: number; speed: number; pace?: Pace; resolve: () => void; unseen?: boolean }>()
   // Who the current shot is on, and the walkers the camera follows, by where it last saw them. A walker is followed
   // when the shot is on them, or when they set off in view.
   private framed = new Set<string>()
@@ -1163,8 +1164,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     return c
   }
   // Walk a cast member to a mark or point, facing the way they go, stopping `stop` metres short (beside someone rather
-  // than on them). Resolves on arrival.
-  moveCast(id: string, to: string | [number, number], { speed = 1.1, stop = 0 } = {}) {
+  // than on them), in the gait for `pace` and `speed` (figures/gaits.ts). Resolves on arrival.
+  moveCast(id: string, to: string | [number, number], { speed = 1.1, stop = 0, pace }: { speed?: number; stop?: number; pace?: Pace } = {}) {
     const c = this.member(id)
     let p = this.point(to)
     if (stop > 0) {
@@ -1182,7 +1183,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     // No card is seen to walk (see PEOPLE_STILL).
     if (this.still(id)) {
       return new Promise<void>((resolve) => {
-        this.moves.set(id, { tx: p.x, tz: p.z, speed, resolve, unseen: true })
+        this.moves.set(id, { tx: p.x, tz: p.z, speed, pace, resolve, unseen: true })
         this.putUnseen(id)
       })
     }
@@ -1204,6 +1205,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         tx: p.x,
         tz: p.z,
         speed,
+        pace,
         resolve: () => {
           clearTimeout(timer)
           resolve()
@@ -1448,9 +1450,10 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       c.ry = Math.atan2(dx, dz)
       c.walking = true
       c.gait = m.speed
+      c.pace = m.pace
       // A footfall each time a foot of the figure's walk comes down, the first half a step in. One with no walk of
       // its own steps as someone of its height would: further for the tall and for the quick.
-      const every = this.models.stepSeconds(id, m.speed) ?? (c.height * (0.16 + 0.18 * Math.min(m.speed, 3))) / m.speed
+      const every = this.models.stepSeconds(id, m.speed, m.pace) ?? (c.height * (0.16 + 0.18 * Math.min(m.speed, 3))) / m.speed
       const since = (this.trod.get(id) ?? every / 2) + dt
       this.trod.set(id, since >= every ? 0 : since)
       if (since >= every && this.isOnStage(id)) this.body(id, "step", m.speed)
