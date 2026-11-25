@@ -1229,6 +1229,8 @@ export function StagePlay(props: {
       const standing = standingOf(c, sheets[c.id])
       return { id: c.id, name: c.name, role: `${c.race} ${c.archetype}${c.controlledBy === "ai" ? " · AI" : ""}`, portrait: portrait(c), ...(standing ? { standing } : {}) }
     })
+  // A hero the player plays down to a quarter of their hit points, or down, reddens the picture's edges.
+  const danger = (turn?.characters ?? []).some((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && !isDead(c) && (isDown(c) || (c.healthPercent ?? 100) <= 25))
   // Heroes the AI plays take their turns like NPCs, through Continue.
   const aiActor = actor?.type === "pc" && actor.controlledBy === "ai"
   const cardActor = aiActor || !actor || !props.controls(actor) ? null : (party.find((c) => c.id === actor.id) ?? null)
@@ -1425,6 +1427,7 @@ export function StagePlay(props: {
       hidden={hidden || !save || props.overlay}
       map={city && <CityMapInset className="h-[112px] w-[200px]" map={city.map} trail={city.trail} onOpen={() => setOpen("map")} />}
       compact={compact}
+      danger={danger}
       actions={
         <>
           {props.actions}

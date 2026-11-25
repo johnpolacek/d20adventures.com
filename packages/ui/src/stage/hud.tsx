@@ -110,8 +110,11 @@ export function StageHud({
   compact,
   backdrop,
   map,
+  danger,
   children,
 }: {
+  // A hero the player plays is low or dying: the picture's edges redden.
+  danger?: boolean
   containerRef: RefObject<HTMLDivElement | null>
   title: { eyebrow: string; text: string }
   // The name of the place, under the map.
@@ -139,6 +142,11 @@ export function StageHud({
         className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap", hidden && "opacity-0")}
         style={{ background: "linear-gradient(180deg,rgba(28,18,12,.42),transparent 18%,transparent 58%,rgba(22,13,9,.84))" }}
       />
+      <Presence show={Boolean(danger) && !hidden} motion="fade" asChild>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="stage-danger absolute inset-0" />
+        </div>
+      </Presence>
       <div inert={hidden} className={cn("pointer-events-none absolute inset-0 transition-opacity duration-200 ease-snap [&>*]:pointer-events-auto", hidden && "opacity-0 [&>*]:pointer-events-none")}>
         <header className={cn("absolute flex items-center justify-between", compact ? "top-3 right-4 left-4" : "top-7 right-10 left-10")}>
           <div className="flex min-w-0 items-center gap-3.5">

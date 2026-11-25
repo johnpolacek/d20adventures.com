@@ -136,6 +136,10 @@ const PEOPLE_STILL = true
 // view fitted to the edge of its painting stays on the paint.
 const DRIFT_SECONDS = 7
 const DRIFT_PUSH = 0.03
+// A blow that lands holds the figures and the effects all but still for an instant, so it reads as weight. Seconds,
+// from the take's shake: a plain hit about 0.05, a crit 0.08. The camera's jolt plays on through it. After Brushwild
+// (kevintngo/procedural-rpg, MIT).
+const HOLD = { base: 0.02, per: 0.06, max: 0.12, rate: 0.06 }
 type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number; ease: Ease }
 // A take's move once the camera has arrived (see director.ts): `start` on the stage's clock when it began, null until
 // the camera arrives, and `done` the share of it already made.
@@ -248,6 +252,8 @@ export class Stage {
   private waiting: (Impact & { until: number }) | null = null
   private jolts: { shake: number; punch: number; at: number; seed: number }[] = []
   private joltTimers: ReturnType<typeof setTimeout>[] = []
+  // Seconds left of a blow's hold (HOLD).
+  private stop = 0
   // What the current take is, by the director's name for it.
   take: string | null = null
   private insets = { right: 0, bottom: 0 }
@@ -430,6 +436,7 @@ export class Stage {
         if (w && e.type === "effect" && e.phase === "land" && e.struck && performance.now() < w.until) {
           this.waiting = null
           this.jolt(w.shake, w.punch ?? 0)
+          this.hold(HOLD.base + HOLD.per * w.shake)
         }
         for (const l of this.effectListeners) l(e)
       },
@@ -930,6 +937,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   jolt(shake: number, punch = 0) {
     if (!this.motion || (shake <= 0 && punch <= 0)) return
     this.jolts.push({ shake: THREE.MathUtils.clamp(shake, 0, 1), punch: THREE.MathUtils.clamp(punch, 0, 1), at: this.shared.time.value, seed: Math.random() * 100 })
+  }
+  // Holds the figures and effects for a blow (HOLD). Holds do not add up: the longest asked for wins.
+  private hold(seconds: number) {
+    if (!this.motion) return
+    this.stop = Math.max(this.stop, Math.min(seconds, HOLD.max))
   }
   // How far along the take's move is, 0..1, easing out.
   private moveShare(m: Moving) {
@@ -1658,9 +1670,15 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     }
     this.lightRoom(dt)
     this.hearPlace(dt)
-    if (this.motion) this.effects.update(dt)
-    this.standees.update(dt, this.camera)
-    this.models.update(dt, this.motion, this.camera)
+    // While a blow is held, the figures and effects all but stop. The camera does not.
+    let held = dt
+    if (this.stop > 0) {
+      this.stop -= dt
+      held = dt * HOLD.rate
+    }
+    if (this.motion) this.effects.update(held)
+    this.standees.update(held, this.camera)
+    this.models.update(held, this.motion, this.camera)
     this.crowd.updateLOD(this.camera)
     // A fade takes a third of a second, or none with motion off.
     this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)

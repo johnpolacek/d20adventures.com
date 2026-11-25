@@ -145,6 +145,47 @@ export function nextTake(urls: string[]) {
   return urls[n % urls.length]
 }
 
+// ── Crowding ──
+// A busy moment, a volley or a fireball on five, must not stack into one loud smear. Each bus has a cap on the sounds
+// sounding at once, and a sound past it is skipped. The same cue fired twice in a moment is staggered a little rather
+// than stacked, and one that would have to wait too long is dropped. A sound too quiet to hear takes no voice.
+// After Brushwild's audio (kevintngo/procedural-rpg, MIT).
+const VOICES: Record<Bus, number> = { ui: 8, dice: 12, fx: 16, ambience: 8, voice: 4 }
+// Seconds kept between two starts of one cue, and the longest a repeat may wait for its turn.
+const REPEAT_GAP = 0.035
+const MAX_STAGGER = 0.12
+const QUIET = 0.0004
+const sounding = new Map<Bus, number>()
+const nextFree = new Map<string, number>()
+// A voice on a bus, or null when the bus is full. Call the release when the sound ends.
+function voice(to: Bus): (() => void) | null {
+  const n = sounding.get(to) ?? 0
+  if (n >= VOICES[to]) return null
+  sounding.set(to, n + 1)
+  let held = true
+  return () => {
+    if (!held) return
+    held = false
+    sounding.set(to, Math.max(0, (sounding.get(to) ?? 1) - 1))
+  }
+}
+// Seconds a cue keyed `key` should wait so it does not land on itself, or null to drop it.
+function stagger(c: AudioContext, key: string, delay: number): number | null {
+  const at = c.currentTime + delay
+  const wait = Math.max(0, (nextFree.get(key) ?? 0) - at)
+  if (wait > MAX_STAGGER) return null
+  nextFree.set(key, at + wait + REPEAT_GAP)
+  return wait
+}
+// Holds a voice for a made sound that ends near `end` on the context's clock.
+function hold(c: AudioContext, to: Bus, peak: number, end: number) {
+  if (!(peak > QUIET)) return false
+  const release = voice(to)
+  if (!release) return false
+  setTimeout(release, Math.max(0, end - c.currentTime) * 1000 + 50)
+  return true
+}
+
 export interface PlayOptions {
   gain?: number
   // Seconds from now.
@@ -159,13 +200,20 @@ export interface PlayOptions {
 export async function play(urls: string[], to: Bus, o: PlayOptions = {}) {
   const c = audio()
   if (!c) return
+  const gain = o.gain ?? 1
+  if (!(gain > QUIET)) return
   const buffer = await load(c, nextTake(urls)).catch(() => null)
   if (!buffer || c.state !== "running") return
+  const wait = stagger(c, urls[0], o.delay ?? 0)
+  if (wait === null) return
+  const release = voice(to)
+  if (!release) return
   const src = c.createBufferSource()
+  src.onended = release
   src.buffer = buffer
   src.playbackRate.value = (o.rate ?? 1) * (1 + (Math.random() * 2 - 1) * (o.vary ?? 0.04))
   const g = c.createGain()
-  g.gain.value = o.gain ?? 1
+  g.gain.value = gain
   let tail: AudioNode = g
   if (o.muffle) {
     const low = c.createBiquadFilter()
@@ -176,7 +224,7 @@ export async function play(urls: string[], to: Bus, o: PlayOptions = {}) {
   }
   src.connect(g)
   tail.connect(bus(to))
-  src.start(c.currentTime + (o.delay ?? 0))
+  src.start(c.currentTime + (o.delay ?? 0) + wait)
 }
 // Starts loading files the player is about to hear, so the first one is not late. Before the first touch there is no
 // context to decode with, so they wait for it.
@@ -213,6 +261,7 @@ export function envelope(c: AudioContext, to: Bus, t: number, peak: number, deca
 // A low thump: a tone that drops from `from` to `to` Hz as it dies away, as a weight coming down does. Far below any
 // note and gone in a fifth of a second, so it is felt as weight and never heard as a chime.
 export function thump(c: AudioContext, to: Bus, t: number, o: { peak: number; from: number; to: number; length: number }) {
+  if (!hold(c, to, o.peak, t + o.length + 0.05)) return
   const osc = c.createOscillator()
   osc.type = "sine"
   osc.frequency.setValueAtTime(o.from, t)
@@ -223,6 +272,7 @@ export function thump(c: AudioContext, to: Bus, t: number, o: { peak: number; fr
 }
 // Noise through a band that slides from `from` to `to` Hz: air moving. No pitch, so never a chime.
 export function whoosh(c: AudioContext, to: Bus, t: number, o: { peak: number; from: number; to: number; length: number; attack?: number; q?: number }) {
+  if (!hold(c, to, o.peak, t + o.length + 0.05)) return
   const src = c.createBufferSource()
   src.buffer = noise(c)
   const band = c.createBiquadFilter()

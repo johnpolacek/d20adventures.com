@@ -448,6 +448,20 @@
   background-image: var(--tex-black-paper, url("/images/app/backgrounds/black-paper.png"));
   background-size: 260px;
 }
+/* The stage's edges, reddened while a hero the player plays is low or dying (StageHud's `danger`). It breathes slowly,
+   and holds still with reduced motion. After Brushwild (kevintngo/procedural-rpg, MIT). */
+@utility stage-danger {
+  background: radial-gradient(ellipse at center, transparent 55%, rgb(150 22 14 / 0.38) 100%);
+  animation: stage-danger 2.4s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+@keyframes stage-danger {
+  50% {
+    opacity: 0.55;
+  }
+}
 @utility stage-stone {
   border-color: rgb(0 0 0 / 0.66);
   background-color: #2563eb;
