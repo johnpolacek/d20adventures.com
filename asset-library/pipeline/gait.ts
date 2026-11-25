@@ -47,8 +47,9 @@ export function gaitSpeed(frames: number[], feet: number[][][], spans: [number, 
   return { speed: (Math.hypot(x, z) * scale) / (dt || 1), back: [x / long, z / long] }
 }
 
-// Each gait clip the figure has, with its speed, for a figure `height` metres tall.
-export function measureGaits(doc: Document, height: number): Gaits {
+// Each gait clip the figure has, with its speed, for a figure `height` metres tall. `walk` names its walk when that is
+// not Walk: the owlbear's is Walk Heavy.
+export function measureGaits(doc: Document, height: number, walk?: string): Gaits {
   const skin = doc.getRoot().listSkins()[0]
   const joints = skin?.listJoints() ?? []
   const bind = skin?.getInverseBindMatrices()
@@ -74,7 +75,8 @@ export function measureGaits(doc: Document, height: number): Gaits {
   }
   const scale = height / (most - least || 1)
   const out: Gaits = {}
-  for (const [gait, name] of Object.entries(GAITS) as [Gait, string][]) {
+  for (const [gait, named] of Object.entries(GAITS) as [Gait, string][]) {
+    const name = gait === "walk" && walk ? walk : named
     const clip = doc
       .getRoot()
       .listAnimations()

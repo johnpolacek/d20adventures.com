@@ -2601,7 +2601,7 @@ async function main() {
     .registerExtensions(ALL_EXTENSIONS)
     .registerDependencies({ "meshopt.decoder": MeshoptDecoder })
     .read(`${dir}/${lods[lods.length - 1].file}`)
-  const gaits = measureGaits(light, brief.height)
+  const gaits = measureGaits(light, brief.height, (motion as { walk?: string } | undefined)?.walk)
   if (Object.keys(gaits).length) say("gaits", Object.entries(gaits).map(([gait, g]) => `${gait} ${g?.speed} m/s`).join(", "))
   const moves = Object.keys(gaits).length ? { ...((motion as object | undefined) ?? {}), gaits } : motion
   const figure = {

@@ -14,7 +14,7 @@
     "triangles": 200000,
     "cost": 2.3,
     "made": "2026-11-20",
-    "built": "2026-11-24"
+    "built": "2026-11-25"
   },
   "rig": {
     "bones": 0,
@@ -27,7 +27,10 @@
     "Swing",
     "Sidestep",
     "Hit",
-    "Fall"
+    "Fall",
+    "Sneak",
+    "Run",
+    "Sprint"
   ],
   "motion": {
     "idle": "Idle",
@@ -42,25 +45,43 @@
     "lands": {
       "Swing": 0.4,
       "Shoot": 1.5
+    },
+    "gaits": {
+      "sneak": {
+        "clip": "Sneak",
+        "speed": 0.51
+      },
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.87
+      },
+      "run": {
+        "clip": "Run",
+        "speed": 6.74
+      },
+      "sprint": {
+        "clip": "Sprint",
+        "speed": 6.11
+      }
     }
   },
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 200000,
-      "megabytes": 11.06,
+      "megabytes": 11.19,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19998,
-      "megabytes": 1.45,
+      "megabytes": 1.58,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 0.74,
+      "megabytes": 0.87,
       "texture": 512
     }
   ]

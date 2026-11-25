@@ -19,6 +19,9 @@
   "borrowed": {
     "Idle": "ual1:Idle_Loop",
     "Walk": "m2m/walk-female",
+    "Sneak": "ual1:Crouch_Fwd_Loop",
+    "Run": "ual1:Jog_Fwd_Loop",
+    "Sprint": "m2m/sprint",
     "Shoot": "m2m/bow-pull@0-1.5 > m2m/bow-release@0-0.6",
     "Swing": "ual1:Sword_Attack",
     "Sidestep": "m2m/dodge-left",
@@ -32,5 +35,11 @@
     "Shoot": {
       "until": 1.5
     }
+  },
+  "chin": {
+    "Sneak": 40
+  },
+  "bob": {
+    "Run": 0.3
   }
 }

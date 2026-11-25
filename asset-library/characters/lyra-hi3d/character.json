@@ -20,9 +20,18 @@
   "borrowed": {
     "Idle": "ual1:Idle_Loop",
     "Walk": "m2m/walk-female",
+    "Sneak": "ual1:Crouch_Fwd_Loop",
+    "Run": "ual1:Jog_Fwd_Loop",
+    "Sprint": "m2m/sprint",
     "Sidestep": "m2m/dodge-left",
     "Hit": "ual1:Hit_Chest",
     "Fall": "ual1:Death01",
     "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit"
+  },
+  "chin": {
+    "Sneak": 40
+  },
+  "bob": {
+    "Run": 0.3
   }
 }

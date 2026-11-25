@@ -57,12 +57,12 @@ Begun 2026-11-24, from `pnpm assets:legs` (`asset-library/pipeline/legcheck.ts`,
 - Sneak crouch (`ual1:Crouch_Fwd_Loop`) is the sneak, with the head lifted to look ahead: `"chin": { "Sneak": 40 }`. It looked 39° under level.
 - Both jogs bad, Quaternius's "too bouncy". On the trial, Run calm and Run calmer are that jog with the hips' rise and fall kept to a half and to three tenths (`"bob"` in a brief, `bob` in `pilot.ts`).
 - Sprint m2m good, Sprint ok: `m2m/sprint` is the sprint.
-- Thalbern has the sneak and the sprint, and no run until one is chosen: a hurry is his walk at 2.2 times its rate.
+- The run is Run calmer: Quaternius's jog with its hips kept to three tenths of their rise and fall, `"bob": { "Run": 0.3 }`.
+- Every person in the game has the four gaits, rebuilt free: Thalbern, Lyra, Poppen, Reinhard, Silas, Aelar, the two elves and Wollandora. The owlbear keeps its one walk, measured at 0.35 m/s (`measureGaits` takes a figure's walk by its own name).
+- Poppen's sneak measures 0.09 m/s, a quarter of his walk where everyone else's is about half: the halfling's short legs in a deep crouch, or the measure missing his steps. At a sneak's 0.8 it plays at its most, 2.2 times, and skates.
 
 ## Next
 
-- [ ] The owner judges Run calm and Run calmer on the trial, and watches Thalbern sneak, walk and hurry in the app.
-- [ ] The owner runs `pnpm assets:sync thalbern-hi3d` and `pnpm assets:archive thalbern-hi3d`.
-- [ ] The chosen gaits borrowed by every other shipped figure, each rebuilt (free), then synced and archived.
-- [ ] A beast keeps its one hunched walk, at its own stride: a rebuild gives it `motion.gaits.walk`.
+- [ ] The owner syncs and archives the rebuilt figures, and watches them sneak, walk and hurry in the app.
+- [ ] Poppen's sneak looked at.
 - [ ] Sprint is in no pace yet: only a beat's `move` faster than 3.3 m/s reaches it.
