@@ -32,7 +32,7 @@
     "Combo": "ual2:Sword_Regular_Combo",
     "Strafe": "m2m/strafe-left",
     "Reel": "ual2:Idle_Shield_Break",
-    "Stumble": "m2m/dizzy@0-1.5"
+    "Stumble": "m2m/drunk-walk"
   },
   "eased": {
     "Swing": 85
