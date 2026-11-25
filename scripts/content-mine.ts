@@ -148,7 +148,7 @@ const NOISE_PREFIXES = [
   "Caveat:",
 ]
 
-function cleanPrompt(raw: string): string | null {
+export function cleanPrompt(raw: string): string | null {
   const text = raw
     .replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "")
     .replace(/<user-rules>[\s\S]*?<\/user-rules>/g, "")
@@ -160,7 +160,7 @@ function cleanPrompt(raw: string): string | null {
   return text
 }
 
-function textOf(content: unknown, kinds: string[]): string {
+export function textOf(content: unknown, kinds: string[]): string {
   if (typeof content === "string") return content
   if (!Array.isArray(content)) return ""
   return content
@@ -169,7 +169,7 @@ function textOf(content: unknown, kinds: string[]): string {
     .join("\n")
 }
 
-function readLines(file: string): unknown[] {
+export function readLines(file: string): unknown[] {
   const rows: unknown[] = []
   for (const line of fs.readFileSync(file, "utf8").split("\n")) {
     if (!line) continue

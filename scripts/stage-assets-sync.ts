@@ -12,7 +12,8 @@ import { readdir, readFile } from "node:fs/promises"
 import { extname, join, relative } from "node:path"
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 
-const ALL = ["public/stage", "public/stage-lab", "public/images/app/backgrounds"]
+// public/images/updates holds the pictures inside posts, uploaded once John has checked a draft.
+const ALL = ["public/stage", "public/stage-lab", "public/images/app/backgrounds", "public/images/updates"]
 const only = process.argv.slice(2).filter((a) => !a.startsWith("--"))
 for (const d of only) if (!ALL.some((root) => d === root || d.startsWith(`${root}/`))) throw new Error(`${d} is not inside ${ALL.join(", ")}`)
 const DIRS = only.length ? only : ALL

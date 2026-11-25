@@ -8,6 +8,9 @@
  *   pnpm content:posts --rejudge  judge ideas that already have a verdict too
  *   pnpm content:posts --draft <slug>   skip judging and draft that idea
  *
+ * The drafter reads the commits, the code, and a dossier of the idea's sessions (scrubbed) with every picture in them,
+ * and puts the pictures it uses in public/images/updates/<post>/ for pnpm stage:sync to upload once John checks it.
+ *
  * Each judged idea gets an "Update verdict" section, so it isn't judged twice. A drafted idea becomes status draft
  * with post set, and ideas folded into it become shelved with into set. Nothing is committed, published or posted.
  */
@@ -17,6 +20,7 @@ import path from "node:path"
 import { briefFor } from "../lib/content-queue/brief"
 import { listQueue, readItem, writeItem, type QueueItem } from "../lib/content-queue/store"
 import { syncQueue } from "../lib/content-queue/sync"
+import { buildDossier } from "./content-dossier"
 import { CONTEXT, claude, parseJsonArray, titleGuide } from "./content-mine"
 
 const REPO = path.resolve(__dirname, "..")
@@ -94,9 +98,9 @@ Ideas:
 ${JSON.stringify(ideas, null, 1)}`
 }
 
-// The drafting agent reads the repo and writes one file. Its sessions are left out: raw logs could hold keys, and
-// only the miner's scrubbed quotes in the idea reach the model.
-function draftPrompt(lead: QueueItem, folded: QueueItem[], verdict: Verdict, slug: string): string {
+// The drafting agent reads the repo and the idea's dossier: its sessions, scrubbed, and the pictures in them. It never
+// gets the raw session logs, which could hold keys.
+function draftPrompt(lead: QueueItem, folded: QueueItem[], verdict: Verdict, slug: string, dossier: string): string {
   const merged: QueueItem = {
     ...lead,
     title: verdict.title || lead.title,
@@ -108,24 +112,30 @@ function draftPrompt(lead: QueueItem, folded: QueueItem[], verdict: Verdict, slu
       body: [s.body, ...folded.map((f) => part(f, s.name))].filter(Boolean).join("\n\n"),
     })),
   }
-  const quotes = [lead, ...folded].map((i) => part(i, "John said")).filter((q) => q && q !== "(no quote)")
+  const pictures = `public/images/updates/${slug}`
   return `${briefFor(merged)}
-
-What John said while building it, already scrubbed:
-${quotes.join("\n\n") || "(none)"}
 
 Why it was picked for /updates: ${verdict.reason}
 
 For this run:
-- Read the commits with git show and git log, and the code they touch. Don't read agent session logs.
-- Write exactly one file, content/updates/${slug}.md, with date: ${new Date().toISOString().slice(0, 10)} and draft: true.
-- Don't make pictures in this run. Right after the frontmatter, put an HTML comment listing each picture and clip the post needs, where it goes, and how to make it. Leave the image frontmatter field out until a picture exists.
-- Don't commit, publish or post. When done, reply with one line: the file you wrote.`
+- Read the commits with git show and git log, and the code they touch.
+- Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold the reasons, what went wrong and what he wanted. Use his words for the human moments, and quote him only verbatim.
+- Look at the pictures listed in ${dossier}/images.md. Open each that might fit with Read. Pasted ones are what John saw and shared, screenshots are what the agent checked.
+- Use the pictures that show what a paragraph says: a before and after, a bug, the result. Skip near duplicates, half-loaded pages and plain terminal text.
+- Never use a picture that shows anything private: email, messages, other apps or tabs, names of real people besides John, keys, account pages, or a desktop. When unsure, leave it out.
+- For each picture you use, convert it into ${pictures}/ with a short kebab-case name: \`mkdir -p ${pictures}\`, then \`cwebp -q 85 -resize <w> 0 <src> -o ${pictures}/<name>.webp\`, at most 1600 wide. Measure it with \`sips -g pixelWidth -g pixelHeight\`. Reference it as https://d20-public.s3.us-east-1.amazonaws.com/images/updates/${slug}/<name>.webp with its real width and height, and set the frontmatter image to the strongest one.
+- Write exactly one post, content/updates/${slug}.md, with date: ${new Date().toISOString().slice(0, 10)} and draft: true.
+- Right after the frontmatter, put an HTML comment listing what is still missing: pictures or clips the post wants that the dossier didn't have, and how to make them.
+- Don't upload, commit, publish or post. When done, reply with one line: the post and how many pictures it uses.`
 }
 
-function draftAgent(prompt: string): Promise<string> {
-  const dirs = fs.existsSync(SHARED_WRITING) ? ["--add-dir", SHARED_WRITING] : []
-  const allowed = "Read Grep Glob Write Edit Bash(git show:*) Bash(git log:*) Bash(git diff:*) Bash(curl -s https://johnpolacek.com/voice.md)"
+function draftAgent(prompt: string, dossier: string): Promise<string> {
+  const dirs = ["--add-dir", dossier, ...(fs.existsSync(SHARED_WRITING) ? ["--add-dir", SHARED_WRITING] : [])]
+  const allowed = [
+    "Read Grep Glob Write Edit",
+    "Bash(git show:*) Bash(git log:*) Bash(git diff:*) Bash(curl -s https://johnpolacek.com/voice.md)",
+    "Bash(mkdir -p public/images/updates/*) Bash(cwebp:*) Bash(sips -g:*)",
+  ].join(" ")
   return new Promise((resolve, reject) => {
     const child = spawn(
       "claude",
@@ -170,13 +180,17 @@ async function draft(lead: QueueItem, folded: QueueItem[], verdict: Verdict) {
   while (fs.existsSync(path.join(UPDATES, `${slug}.md`))) slug += "-2"
   console.log(`drafting ${slug}${folded.length ? `, with ${folded.map((f) => f.slug).join(", ")}` : ""}`)
   const t = Date.now()
-  const reply = await draftAgent(draftPrompt(lead, folded, verdict, slug))
+  const group = [lead, ...folded]
+  const d = buildDossier(slug, [...new Set(group.flatMap((i) => i.sessions))], [...new Set(group.flatMap((i) => i.commits))])
+  console.log(`  dossier: ${d.turns} turns, ${d.images} pictures at ${d.dir}`)
+  const reply = await draftAgent(draftPrompt(lead, folded, verdict, slug, d.dir), d.dir)
   const file = path.join(UPDATES, `${slug}.md`)
   if (!fs.existsSync(file)) throw new Error(`no draft written for ${slug}: ${reply.slice(0, 400)}`)
   if (!/^draft:\s*true/m.test(fs.readFileSync(file, "utf8"))) console.warn(`  ${slug}.md is missing draft: true, check it before pushing`)
   writeItem({ ...setVerdict(readItem(lead.slug), `post. ${verdict.reason}`), status: "draft", post: slug })
   for (const f of folded) writeItem({ ...setVerdict(readItem(f.slug), `folded into ${slug}.`), status: "shelved", into: lead.slug })
-  console.log(`  wrote content/updates/${slug}.md (${Math.round((Date.now() - t) / 1000)}s)`)
+  console.log(`  wrote content/updates/${slug}.md (${Math.round((Date.now() - t) / 1000)}s): ${reply.trim().slice(0, 200)}`)
+  console.log(`  after checking it: pnpm stage:sync public/images/updates/${slug}`)
 }
 
 async function main() {
