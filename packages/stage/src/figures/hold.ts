@@ -282,6 +282,44 @@ export function wield(root: THREE.Object3D): Armed {
   }
 }
 
+// A hand to hold something handed over in (models.ts, hold): a seat across the palm under the knuckles, carried by
+// the wrist, where a tube `thick` metres round lies with its length across the hand, as a sword's grip does, and the
+// fingers closed round it by `close`, over whatever the clip left them at, by a share. `open` puts them back as they
+// were modelled, for a hand whose clip does not move its fingers. Call with the figure at rest.
+export interface Grasp {
+  seat: THREE.Object3D
+  close: (share: number) => void
+  open: () => void
+}
+export function grasp(root: THREE.Object3D, side: "L" | "R", thick: number): Grasp | null {
+  root.updateWorldMatrix(true, true)
+  const h = hand(skeleton(root), side)
+  if (!h) return null
+  const seat = new THREE.Group()
+  seat.name = `grasp${side}`
+  const y = h.across.clone()
+  const z = h.palm.clone()
+  const x = new THREE.Vector3().crossVectors(y, z).normalize()
+  z.crossVectors(x, y).normalize()
+  seat.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
+  seat.position.copy(h.knuckle).addScaledVector(h.along, -0.012).addScaledVector(h.palm, thick + 0.016)
+  const turns = round(h, seat.position, thick)
+  h.wrist.attach(seat)
+  const clip = h.joints.map(() => new THREE.Quaternion())
+  return {
+    seat,
+    close: (share) => {
+      if (share <= 0) return
+      h.joints.forEach((j, i) => clip[i].copy(j.bone.quaternion))
+      grip(h, turns)
+      h.joints.forEach((j, i) => j.bone.quaternion.copy(clip[i].slerp(j.bone.quaternion, Math.min(1, share))))
+    },
+    open: () => {
+      for (const j of h.joints) j.bone.quaternion.copy(j.rest)
+    },
+  }
+}
+
 const Y = new THREE.Vector3(0, 1, 0)
 
 // The staff a figure with such hands carries, as its skeleton says (props.ts `heldBy`: pilot.ts leaves the brief's

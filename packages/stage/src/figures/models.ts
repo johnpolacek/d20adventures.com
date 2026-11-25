@@ -4,7 +4,7 @@ import type { MaskSource } from "../render/character-mask"
 import { crouchClip, figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
 import { type FigureGaits, type Gait, gaitRate, gaitShares, type Pace, STRIDE } from "./gaits"
-import { carry, fingered, wield } from "./hold"
+import { carry, fingered, type Grasp, grasp, wield } from "./hold"
 import { holdProps } from "./props"
 import { reachArm } from "./weapons"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
@@ -69,13 +69,16 @@ interface Given {
   w: number
   // Seconds since it began to be put away, shrinking, or null while held.
   gone: number | null
+  opened?: boolean
 }
 // How long an arm takes to go out or come back, and an object to shrink away once put away.
 const REACH_S = 0.5
 const STOW_S = 0.3
 // The objects are made half again their size, to read beside a figure across the stage (effects.ts). In a hand they are
 // seen close, at their own size.
-const HELD = 0.62
+const HELD = 0.45
+// How thick, about, what is handed over is where a hand closes on it, in metres: a scroll case at that size.
+const GRASPED = 0.03
 
 // An arm's bones under the shared skeleton's names or Mixamo's, or null when the figure has no such arm.
 function armBones(root: THREE.Object3D, side: "L" | "R") {
@@ -120,6 +123,8 @@ interface Model {
   carried: { update: (weight?: number) => void; dispose: () => void } | null
   // An object in its hand, given or being given (hold), and how far its arm is out to give it: 0 at its side, 1 held out.
   given: Given | null
+  // Where a hand with fingers holds what it is given, each side, or null for a hand that is one bone.
+  grasps: Record<"L" | "R", Grasp | null> | null
   // Seconds into the hit clip, or null when not struck; seconds into the fall clip, 0 standing.
   hitT: number | null
   fallT: number
@@ -256,6 +261,7 @@ export class Models {
     // The weapons its moves need, seated in its hands at rest and hidden till a move shows them. A figure that brings
     // its own clips and has fingers holds them in a closed hand (hold.ts).
     const hands = !rigged && fingered(root)
+    const grasps = hands ? { L: grasp(root, "L", GRASPED), R: grasp(root, "R", GRASPED) } : null
     const armed =
       rigged && bind
         ? arm(
@@ -366,6 +372,7 @@ export class Models {
       carried,
       move: null,
       given: null,
+      grasps,
       aim: null,
       ready: null,
       shown: null,
@@ -465,12 +472,25 @@ export class Models {
       // The figure's own +x is its left and +z ahead: the hand a little in toward the middle, below the shoulder and
       // well out before it, the elbow down and out.
       const sx = g.side === "L" ? 1 : -1
-      const wrist = s.clone().add(new THREE.Vector3(-sx * 0.15, -0.3, 0.88).multiplyScalar(arm))
+      const wrist = s.clone().add(new THREE.Vector3(-sx * 0.05, -0.3, 0.88).multiplyScalar(arm))
       reachArm(root, g.side, wrist, new THREE.Vector3(sx, -1, -0.4), k, g.arm)
       root.updateWorldMatrix(true, true)
     }
     if (g.gone !== null) g.gone += dt
-    if (g.item) {
+    const held = m.grasps?.[g.side]
+    if (g.item && held) {
+      // In a closed hand, across the palm. The seat is carried by the wrist, which is scaled as the skeleton is.
+      if (g.item.parent !== held.seat) held.seat.add(g.item)
+      g.item.position.set(0, 0, 0)
+      g.item.rotation.set(0, 0, Math.PI / 2)
+      const size = HELD * (g.gone === null ? 1 : Math.max(0.001, 1 - g.gone / STOW_S))
+      g.item.scale.setScalar(size / held.seat.getWorldScale(new THREE.Vector3()).x)
+      held.close(1)
+      if (g.gone !== null && g.gone >= STOW_S) {
+        g.item.removeFromParent()
+        g.item = null
+      }
+    } else if (g.item) {
       const hand = handBone.getWorldPosition(new THREE.Vector3())
       const fore = forearm.getWorldPosition(new THREE.Vector3())
       // In the palm, a little on from the wrist along the hand, lying across it as the figure faces.
@@ -484,6 +504,11 @@ export class Models {
         g.item.removeFromParent()
         g.item = null
       }
+    }
+    // Let go, the fingers open once: a clip that does not move them would leave them closed on nothing.
+    if (!g.item && held && !g.opened) {
+      held.open()
+      g.opened = true
     }
     if (!g.item && g.w === 0) m.given = null
   }
