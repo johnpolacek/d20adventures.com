@@ -448,7 +448,7 @@ function FigureRoom({ figure, address, params }: { figure: Figure; address: { id
         <div className="font-mono text-4xs opacity-55">
           {figure.source.generator} · {count(figure.source.triangles)} tris · ${figure.source.cost.toFixed(2)} · {day(figure.source.made)}
         </div>
-        <div className="text-4xs opacity-55">Drag to turn · scroll to zoom · W S nearer and farther · A D round · Q E down and up · Shift faster</div>
+        <div className="text-4xs opacity-55">Drag to turn · scroll to zoom · W S nearer and farther · A D round · Q E down and up · Shift faster · H hides the panels</div>
       </div>
     </>
   )
@@ -696,7 +696,7 @@ function PlaceView({ place, params }: { place: Place; params: Params }) {
           {env.room ? ` · ${env.room[0].toFixed(1)} × ${env.room[1].toFixed(1)} m` : ""}
         </div>
         <div className="text-4xs opacity-55">
-          {painting ? "Drag to look around · scroll to zoom · the camera stands where the paintings were made" : "Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character"}
+          {painting ? "Drag to look around · scroll to zoom · the camera stands where the paintings were made" : "Drag to turn · scroll to zoom · right-drag to slide · W A S D to fly · click a character"} · H hides the panels
         </div>
       </div>
     </>
@@ -874,6 +874,18 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
     measure()
     return () => watch.disconnect()
   }, [])
+  // H hides the bar and the panels over an open asset, for a clean look or a screenshot, and shows them again.
+  const [bare, setBare] = useState(false)
+  useEffect(() => {
+    if (!open) return setBare(false)
+    const key = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "h" || e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement | null)?.closest?.("input, textarea, select")) return
+      e.preventDefault()
+      setBare((b) => !b)
+    }
+    window.addEventListener("keydown", key)
+    return () => window.removeEventListener("keydown", key)
+  }, [open])
   const was = useRef(!!open)
   useLayoutEffect(() => {
     if (was.current && !open) window.scrollTo(0, back.current)
@@ -974,7 +986,7 @@ export function AssetLibrary({ library, config, params: given }: { library: Libr
   return (
     <Config.Provider value={provided}>
       <div className="up-lib min-h-screen" style={{ paddingTop: top }}>
-        <div className={open ? "up-lib-open" : "contents"} style={open ? { top } : undefined}>
+        <div className={open ? `up-lib-open${bare ? " is-bare" : ""}` : "contents"} style={open && !bare ? { top } : undefined}>
           <div className={`up-lib-bar ${open ? "shrink-0" : "sticky top-12 z-20"}`} style={open ? undefined : { top }}>
             <div className="up-desk space-y-2">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">

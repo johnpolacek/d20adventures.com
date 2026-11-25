@@ -67,6 +67,14 @@
   flex-direction: column;
   background: var(--up-bg);
 }
+/* H bares an open asset: no bar, no panels, and over the site's header. */
+.up-lib-open.is-bare {
+  z-index: 40;
+}
+.up-lib-open.is-bare .up-lib-bar,
+.up-lib-open.is-bare .up-lib-panel {
+  display: none;
+}
 .up-lib-dark {
   background: #100d0a;
 }
