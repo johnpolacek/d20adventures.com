@@ -1,6 +1,6 @@
 /* The title of /about, and the first paragraph after it as the lede. Classes begin `ab-`. */
 .updates-page .vn-head h1.ab-t {
-  max-width: 880px;
+  max-width: 760px;
   margin: 0 auto;
 }
 /* The lettering is drawn on white, so multiply leaves only the ink on the paper. */
@@ -35,5 +35,19 @@ html[data-update-theme="dark"] .ab-t img {
   }
   .ul-head:has(.ab-t) + .up-layout .up-prose > p:first-child {
     font-size: 20px;
+  }
+}
+/* The lettering stands taller than a line of type, so the art keeps its own shape along the header's bottom, under the
+   words rather than cropped behind them, and fades in at its top edge where the paper takes over. */
+@media (min-width: 761px) {
+  .vn-head.ul-head:has(.ab-t) {
+    padding-bottom: max(200px, calc(33vw - 170px));
+  }
+  .ul-head:has(.ab-t) .ul-head-art {
+    top: auto;
+    bottom: 0;
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 25%);
+    mask-image: linear-gradient(to bottom, transparent, #000 25%);
   }
 }
