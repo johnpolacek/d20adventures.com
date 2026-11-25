@@ -76,11 +76,14 @@ function playTake(stage: Stage, t: (typeof TAKES)[number]) {
   })
 }
 
-// An object handed from the staging's first cast member to its second: &prop=<kind> picks it, scrollcase if not.
-function handOff(stage: Stage) {
+// An object handed from one cast member to another, picked beside the button: the staging's first two unless chosen.
+// &prop=<kind> picks the object, scrollcase if not.
+function handOff(stage: Stage, from: string, to: string) {
   const [a, b] = stage.cast.filter((c) => stage.isOnStage(c.id) && !stage.isDown(c.id)).map((c) => c.id)
-  if (!a || !b) return
-  void stage.prop((new URLSearchParams(location.search).get("prop") ?? "scrollcase") as PropKind, a, b)
+  const giver = from || a
+  const receiver = to || b
+  if (!giver || !receiver || giver === receiver) return
+  void stage.prop((new URLSearchParams(location.search).get("prop") ?? "scrollcase") as PropKind, giver, receiver)
 }
 
 function flagsFrom(p: Props["params"]): Partial<Flags> {
@@ -89,6 +92,7 @@ function flagsFrom(p: Props["params"]): Partial<Flags> {
   if (p.aa === "off" || p.aa === "fxaa" || p.aa === "msaa") f.aa = p.aa
   if (p.ao === "on" || p.ao === "off") f.ao = p.ao === "on"
   if (p.bloom === "on" || p.bloom === "off") f.bloom = p.bloom === "on"
+  if (p.dof === "on" || p.dof === "off") f.dof = p.dof === "on"
   if (p.paint === "uniform" || p.paint === "depth") f.paint = p.paint
   if (p.dpr && Number(p.dpr) > 0) f.dpr = Number(p.dpr)
   if (p.cardr && Number(p.cardr) > 0) f.cardRadius = Number(p.cardr)
@@ -115,6 +119,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     } catch {}
   }, [])
   const [speaker, setSpeaker] = useState<Speaker | null>(null)
+  // Who hands the object over and who takes it, for the hand-off button.
+  const [giver, setGiver] = useState("")
+  const [receiver, setReceiver] = useState("")
   const bubbleRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -272,9 +279,26 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 {t.key}
               </Button>
             ))}
-            <Button variant="plain" className={pill(false)} onClick={() => set((s) => handOff(s))}>
+            <Button variant="plain" className={pill(false)} onClick={() => set((s) => handOff(s, giver, receiver))}>
               hand-off
             </Button>
+            {(
+              [
+                [giver, setGiver, "from"],
+                [receiver, setReceiver, "to"],
+              ] as const
+            ).map(([value, choose, label]) => (
+              <select key={label} value={value} onChange={(e) => choose(e.target.value)} className="rounded border border-[#e6c89640] bg-[#0e0a06] px-1 text-[#e9dcc3]">
+                <option value="">{label}</option>
+                {stage.cast
+                  .filter((c) => stage.isOnStage(c.id))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+              </select>
+            ))}
             {stats?.take && <span className="self-center opacity-60">{stats.take}</span>}
           </div>
           <details
@@ -326,6 +350,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 </Button>
                 <Button variant="plain" className={pill(!!stats?.bloom)} onClick={() => set((s) => s.setFlags({ bloom: !s.pipeline.bloom.enabled }))}>
                   bloom
+                </Button>
+                <Button variant="plain" className={pill(!!stats?.dof)} onClick={() => set((s) => s.setFlags({ dof: !s.pipeline.focus.enabled }))}>
+                  dof
                 </Button>
                 <Button variant="plain" className={pill(stage.flags.figures)} onClick={() => set((s) => s.setFlags({ figures: !s.flags.figures }))}>
                   figures
