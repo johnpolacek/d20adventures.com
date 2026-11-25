@@ -3,7 +3,7 @@
 // Client half of /dev/stage: builds the set with the Stage runtime and shows a dense HUD for shots, tiers, the
 // quality switches and render stats. three.js loads inside the effect, so nothing WebGL touches the server bundle.
 
-import type { Flags, PropKind, Stage, StageStats, TierName } from "@d20/stage"
+import type { Element, Flags, PropKind, Stage, StageStats, TierName } from "@d20/stage"
 import { compose, type Moment, planTakes } from "@d20/stage/director"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@d20/ui/button"
@@ -26,9 +26,11 @@ interface Speaker {
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 
-// The director's takes, played on the staging's first two cast members (a acts, b is acted on), with the effect or the
-// fall the moment would bring, so the impact and the move can be judged as they play.
-type Play = "slash" | "bolt" | "burst" | "fall" | null
+// The director's takes, played by whoever is picked in the from and to lists, or the staging's first two cast members
+// (a acts, b is acted on), with the effect or the fall the moment would bring, so the impact and the move can be judged
+// as they play. A bolt, a ray and a burst take the element picked beside them, or their own when none is.
+type Play = "slash" | "bolt" | "beam" | "burst" | "fall" | null
+const ELEMENTS: Element[] = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"]
 const TAKES: { key: string; moment: (a: string, b: string, s: Stage) => Moment; play: Play }[] = [
   { key: "establish", moment: (a, b) => ({ kind: "establish", party: [a, b] }), play: null },
   { key: "calm", moment: (a, b) => ({ kind: "line", speaker: a, listener: b, tone: "calm" }), play: null },
@@ -43,6 +45,7 @@ const TAKES: { key: string; moment: (a: string, b: string, s: Stage) => Moment; 
   { key: "miss", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "miss" }), play: null },
   { key: "fumble", moment: (a, b) => ({ kind: "strike", actor: a, target: b, outcome: "fumble" }), play: null },
   { key: "bolt", moment: (a, b) => ({ kind: "spell", actor: a, target: b, outcome: "hit" }), play: "bolt" },
+  { key: "ray", moment: (a, b) => ({ kind: "spell", actor: a, target: b, outcome: "hit" }), play: "beam" },
   { key: "burst", moment: (a) => ({ kind: "spell", actor: a, area: true, outcome: "hit" }), play: "burst" },
   { key: "kill", moment: (a, b) => ({ kind: "kill", victim: b, killer: a }), play: "fall" },
   { key: "death save", moment: (a) => ({ kind: "deathSave", hero: a, success: false }), play: null },
@@ -58,17 +61,21 @@ const TAKES: { key: string; moment: (a: string, b: string, s: Stage) => Moment; 
   },
 ]
 let takeCount = 0
-function playTake(stage: Stage, t: (typeof TAKES)[number]) {
-  const [a, b] = stage.cast.filter((c) => stage.isOnStage(c.id)).map((c) => c.id)
-  if (!a || !b) return
+function playTake(stage: Stage, t: (typeof TAKES)[number], from: string, to: string, element: Element | "") {
+  const [first, second] = stage.cast.filter((c) => stage.isOnStage(c.id)).map((c) => c.id)
+  const a = from || (to === first ? second : first)
+  const b = to || (a === first ? second : first)
+  if (!a || !b || a === b) return
   for (const id of [a, b]) if (stage.isDown(id)) stage.setDown(id, false, true)
   const [plan] = planTakes([t.moment(a, b, stage)], `dev:${takeCount++}`)
   const take = plan && compose(plan, { cast: stage.cast.filter((c) => stage.isOnStage(c.id)), clear: (from, at) => !stage.reach(from.id, at, 4).short })
   if (!take) return
   stage.shot(take.shot, { instant: take.cut, follow: take.follow, duration: take.duration, ease: take.ease, move: take.move, impact: take.impact, take: take.label })
   void stage.shotSettled().then(() => {
-    if (t.play === "slash" || t.play === "bolt") void stage.effect(t.play, a, b, t.play === "bolt" ? "lightning" : undefined)
-    if (t.play === "burst") void stage.effect("burst", a, undefined, "fire")
+    if (t.play === "slash") void stage.effect("slash", a, b)
+    if (t.play === "bolt") void stage.effect("bolt", a, b, element || "lightning")
+    if (t.play === "beam") void stage.effect("beam", a, b, element || "frost")
+    if (t.play === "burst") void stage.effect("burst", a, undefined, element || "fire")
     if (t.play === "fall") {
       void stage.effect("slash", a, b)
       setTimeout(() => stage.setDown(b, true), 900)
@@ -119,9 +126,11 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
     } catch {}
   }, [])
   const [speaker, setSpeaker] = useState<Speaker | null>(null)
-  // Who hands the object over and who takes it, for the hand-off button.
+  // Who hands the object over and who takes it, for the hand-off button, and who acts and who is acted on in a take.
+  // The element a bolt, a ray or a burst takes.
   const [giver, setGiver] = useState("")
   const [receiver, setReceiver] = useState("")
+  const [element, setElement] = useState<Element | "">("")
   const bubbleRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -275,7 +284,7 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
           </div>
           <div className="flex flex-wrap gap-1">
             {TAKES.map((t) => (
-              <Button variant="plain" key={t.key} className={pill(false)} onClick={() => set((s) => playTake(s, t))}>
+              <Button variant="plain" key={t.key} className={pill(false)} onClick={() => set((s) => playTake(s, t, giver, receiver, element))}>
                 {t.key}
               </Button>
             ))}
@@ -299,6 +308,14 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                   ))}
               </select>
             ))}
+            <select value={element} onChange={(e) => setElement(e.target.value as Element | "")} className="rounded border border-[#e6c89640] bg-[#0e0a06] px-1 text-[#e9dcc3]">
+              <option value="">element</option>
+              {ELEMENTS.map((el) => (
+                <option key={el} value={el}>
+                  {el}
+                </option>
+              ))}
+            </select>
             {stats?.take && <span className="self-center opacity-60">{stats.take}</span>}
           </div>
           <details
