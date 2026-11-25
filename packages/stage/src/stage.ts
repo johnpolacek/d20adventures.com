@@ -3,7 +3,7 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
-import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, type SoundCue } from "./effects"
+import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { Crowd } from "./figures/crowd"
 import type { Pace } from "./figures/gaits"
@@ -1929,10 +1929,48 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     }
     return this.effects.play(kind, start, end, element)
   }
-  // An object in a cast member's hand, passed to another when there is a receiver.
+  // An object in a cast member's hand, handed to another when there is a receiver. As a film shows it, with no flight
+  // through the air: the giver holds it out, the camera cuts to the receiver with it in their hand, and they bring it
+  // in. The cut hides the moment the hands meet. Held up with no receiver, it is shown and put away. Someone shown as a
+  // card has no hand, so the object is shown beside them (effects.ts).
+  private handing = 0
   prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
     if (!this.motion) return Promise.resolve()
-    return this.effects.prop(kind, this.chest(holder), receiver ? this.chest(receiver) : undefined)
+    const turn = ++this.handing
+    const wait = (ms: number) => new Promise<boolean>((r) => setTimeout(() => r(turn === this.handing), ms))
+    const h = this.member(holder)
+    const r = receiver ? this.member(receiver) : undefined
+    // Each on the same side of the line between the two, so the cut keeps who stands where on screen.
+    const close = (c: CastMember, angle: number): StagingShot => ({ subject: c.id, distance: 2.6, angle, height: c.height * 0.85 + (c.y ?? 0), lookHeight: c.height * 0.68 + (c.y ?? 0), fov: 38 })
+    if (r) {
+      this.faceCast(holder, r.id)
+      this.faceCast(r.id, holder)
+    }
+    const item = propMesh(kind)
+    if (!this.models.hold(holder, item, true)) {
+      if (r) void wait(1600).then((on) => on && this.shot(close(r, -35), { instant: true }))
+      return this.effects.prop(kind, this.chest(holder), r ? this.chest(r.id) : undefined)
+    }
+    this.effects.announce(kind, !!r)
+    // Another hand-off begun first ends this one where it stands.
+    const drop = () => {
+      this.models.letGo(holder, false, item)
+      if (r) this.models.letGo(r.id, false, item)
+    }
+    return (async () => {
+      if (r) this.shot(close(h, 35), { instant: true })
+      if (!(await wait(r ? 1700 : 2600))) return drop()
+      if (!r) return this.models.letGo(holder, true, item)
+      // Out of the giver's hand and into the receiver's, held out where the giver's was, across the cut.
+      this.models.letGo(holder, false, item)
+      if (!this.models.hold(r.id, item, true, true)) return
+      this.shot(close(r, -35), { instant: true })
+      if (!(await wait(350))) return drop()
+      // Brought in to the side, and kept a moment before it is put away.
+      this.models.hold(r.id, item, false)
+      if (!(await wait(1900))) return drop()
+      this.models.letGo(r.id, true, item)
+    })()
   }
   // A sound the story names, from where a cast member stands when it is theirs.
   sound(cue: SoundCue, from?: string) {

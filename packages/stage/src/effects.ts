@@ -408,14 +408,11 @@ export class Effects {
   }
 
   // ── Objects ──
-  // An object in someone's hand, held toward the camera, and when it has a receiver carried across to theirs.
-  prop(kind: PropKind, holder: EffectEnd, receiver?: EffectEnd): Promise<void> {
-    this.host.event?.({ type: "prop", kind, passed: !!receiver })
-    const mesh = propMesh(kind)
-    const halo = new THREE.Sprite(this.glow(kind === "relic" || kind === "gem" ? "#bfe6ff" : "#ffe2b0", 0.35))
-    halo.scale.setScalar(0.55)
-    const item = new THREE.Group()
-    item.add(mesh, halo)
+  // An object held up before someone shown as a card, with no hand to hold it. Handed on, it is shown beside them,
+  // then beside the receiver from `handed` seconds, as the camera cuts between the two (stage.ts, prop).
+  prop(kind: PropKind, holder: EffectEnd, receiver?: EffectEnd, handed = 1.6): Promise<void> {
+    this.announce(kind, !!receiver)
+    const item = propMesh(kind)
     const hand = (end: EffectEnd, out: THREE.Vector3) => {
       const toCam = this.host.camera.position.clone().sub(end.at).setY(0).normalize()
       const side = new THREE.Vector3(toCam.z, 0, -toCam.x)
@@ -423,18 +420,19 @@ export class Effects {
     }
     const a = hand(holder, new THREE.Vector3())
     const b = receiver ? hand(receiver, new THREE.Vector3()) : a
+    const seconds = receiver ? handed + 2.4 : 3
     const lit = kind === "lantern" || kind === "torch"
-    return this.add(receiver ? 4 : 3, [item], (t, dt, self) => {
-      const time = t * (receiver ? 4 : 3)
-      const travel = receiver ? ease(THREE.MathUtils.clamp((time - 1.2) / 0.9, 0, 1)) : 0
-      item.position.lerpVectors(a, b, travel)
-      item.position.y += Math.sin(Math.PI * travel) * 0.25
-      mesh.rotation.y += dt * 1.1
-      const k = fade(t, 0.12, 0.82)
-      item.scale.setScalar(0.4 + 0.6 * k)
+    return this.add(seconds, [item], (t, _dt, self) => {
+      item.position.copy(t * seconds < handed ? a : b)
+      const k = fade(t, 0.06, 0.9)
+      item.scale.setScalar(k)
       item.visible = k > 0.02
       if (lit) this.lamp(self, item.position, "#ffb35c", 1.8 * k)
     })
+  }
+  // An object taken in hand or handed over, for the host to sound.
+  announce(kind: PropKind, passed: boolean) {
+    this.host.event?.({ type: "prop", kind, passed })
   }
 }
 
@@ -444,7 +442,7 @@ const PARCHMENT = "#e9dab4"
 const LEATHER = "#6e4a2e"
 
 // Each object at a size that reads beside a figure: about half again its real size.
-function propMesh(kind: PropKind): THREE.Object3D {
+export function propMesh(kind: PropKind): THREE.Object3D {
   const g = new THREE.Group()
   const add = (geo: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) => {
     const mesh = new THREE.Mesh(geo, m)

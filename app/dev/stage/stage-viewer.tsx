@@ -3,7 +3,7 @@
 // Client half of /dev/stage: builds the set with the Stage runtime and shows a dense HUD for shots, tiers, the
 // quality switches and render stats. three.js loads inside the effect, so nothing WebGL touches the server bundle.
 
-import type { Flags, Stage, StageStats, TierName } from "@d20/stage"
+import type { Flags, PropKind, Stage, StageStats, TierName } from "@d20/stage"
 import { compose, type Moment, planTakes } from "@d20/stage/director"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@d20/ui/button"
@@ -74,6 +74,13 @@ function playTake(stage: Stage, t: (typeof TAKES)[number]) {
       setTimeout(() => stage.setDown(b, true), 900)
     }
   })
+}
+
+// An object handed from the staging's first cast member to its second: &prop=<kind> picks it, scrollcase if not.
+function handOff(stage: Stage) {
+  const [a, b] = stage.cast.filter((c) => stage.isOnStage(c.id) && !stage.isDown(c.id)).map((c) => c.id)
+  if (!a || !b) return
+  void stage.prop((new URLSearchParams(location.search).get("prop") ?? "scrollcase") as PropKind, a, b)
 }
 
 function flagsFrom(p: Props["params"]): Partial<Flags> {
@@ -265,6 +272,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 {t.key}
               </Button>
             ))}
+            <Button variant="plain" className={pill(false)} onClick={() => set((s) => handOff(s))}>
+              hand-off
+            </Button>
             {stats?.take && <span className="self-center opacity-60">{stats.take}</span>}
           </div>
           <details

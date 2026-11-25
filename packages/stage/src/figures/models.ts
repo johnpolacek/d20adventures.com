@@ -6,6 +6,7 @@ import { type Armed, arm } from "./fight"
 import { type FigureGaits, type Gait, gaitRate, gaitShares, type Pace, STRIDE } from "./gaits"
 import { carry, fingered, wield } from "./hold"
 import { holdProps } from "./props"
+import { reachArm } from "./weapons"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
@@ -59,6 +60,37 @@ export interface FigureSpec {
 type Mat = THREE.MeshStandardMaterial
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
+interface Given {
+  item: THREE.Object3D | null
+  side: "L" | "R"
+  // The bone the upper arm hangs from, the upper arm, the forearm and the hand.
+  arm: THREE.Object3D[]
+  out: boolean
+  w: number
+  // Seconds since it began to be put away, shrinking, or null while held.
+  gone: number | null
+}
+// How long an arm takes to go out or come back, and an object to shrink away once put away.
+const REACH_S = 0.5
+const STOW_S = 0.3
+// The objects are made half again their size, to read beside a figure across the stage (effects.ts). In a hand they are
+// seen close, at their own size.
+const HELD = 0.62
+
+// An arm's bones under the shared skeleton's names or Mixamo's, or null when the figure has no such arm.
+function armBones(root: THREE.Object3D, side: "L" | "R") {
+  const bones = new Map<string, THREE.Object3D>()
+  root.traverse((o) => {
+    const name = o.name.replace(/^mixamorig:?/i, "")
+    if (!bones.has(name)) bones.set(name, o)
+  })
+  const long = side === "L" ? "Left" : "Right"
+  const arm = bones.get(`upperarm${side}`) ? [`upperarm${side}`, `forearm${side}`, `hand${side}`] : [`${long}Arm`, `${long}ForeArm`, `${long}Hand`]
+  const found = arm.map((n) => bones.get(n))
+  if (!found.every(Boolean) || !found[0]?.parent) return null
+  return [found[0].parent, ...found] as THREE.Object3D[]
+}
+
 interface Model {
   cast: CastMember
   spec: FigureSpec
@@ -86,6 +118,8 @@ interface Model {
   armed: Armed | null
   // What it holds, bent to its hand after each frame's clip.
   carried: { update: (weight?: number) => void; dispose: () => void } | null
+  // An object in its hand, given or being given (hold), and how far its arm is out to give it: 0 at its side, 1 held out.
+  given: Given | null
   // Seconds into the hit clip, or null when not struck; seconds into the fall clip, 0 standing.
   hitT: number | null
   fallT: number
@@ -331,6 +365,7 @@ export class Models {
       lowT: this.standees.low.has(cast.id) ? 1 : 0,
       carried,
       move: null,
+      given: null,
       aim: null,
       ready: null,
       shown: null,
@@ -388,6 +423,69 @@ export class Models {
     const m = this.items.get(id) as Model
     if (m.move) Object.assign(m.move, { t: seconds, held: true })
     return true
+  }
+  // An object in a figure's hand, the arm held out before it as one hands something over (`out`), or at its side. The
+  // right hand, or the left when the right is busy with a staff. `instant` puts the arm where it goes at once, as after
+  // a cut. False for a figure with no arm to hold it, when the host shows the object some other way.
+  hold(id: string, item: THREE.Object3D, out: boolean, instant = false) {
+    const m = this.on ? this.items.get(id) : undefined
+    if (!m || this.standees.down.has(id) || this.standees.offstage.has(id)) return false
+    const side = m.carried ? "L" : "R"
+    const arm = armBones(m.root, side)
+    if (!arm) return false
+    if (m.given?.item && m.given.item !== item) m.given.item.removeFromParent()
+    m.given = { item, side, arm, out, w: instant ? (out ? 1 : 0) : (m.given?.w ?? 0), gone: null }
+    this.group.add(item)
+    return true
+  }
+  // Put away what a figure holds: it shrinks from its hand, or is gone at once, and the arm comes back to its side.
+  // With `only`, it lets go of that object alone, not one it was given since.
+  letGo(id: string, slow = true, only?: THREE.Object3D) {
+    const g = this.items.get(id)?.given
+    if (!g || (only && g.item !== only)) return
+    g.out = false
+    if (slow && g.item) g.gone = 0
+    else {
+      g.item?.removeFromParent()
+      g.item = null
+    }
+  }
+  // The arm out, or coming back, and the object put in its hand, after the clip and the figure have been placed.
+  private holding(m: Model, dt: number) {
+    const g = m.given as Given
+    g.w = THREE.MathUtils.clamp(g.w + ((g.out ? 1 : -1) * dt) / REACH_S, 0, 1)
+    const k = THREE.MathUtils.smootherstep(g.w, 0, 1)
+    const root = m.root
+    root.updateWorldMatrix(true, true)
+    const [, upper, forearm, handBone] = g.arm
+    if (k > 0) {
+      const local = (o: THREE.Object3D) => root.worldToLocal(o.getWorldPosition(new THREE.Vector3()))
+      const s = local(upper)
+      const arm = s.distanceTo(local(forearm)) + local(forearm).distanceTo(local(handBone))
+      // The figure's own +x is its left and +z ahead: the hand a little in toward the middle, below the shoulder and
+      // well out before it, the elbow down and out.
+      const sx = g.side === "L" ? 1 : -1
+      const wrist = s.clone().add(new THREE.Vector3(-sx * 0.15, -0.3, 0.88).multiplyScalar(arm))
+      reachArm(root, g.side, wrist, new THREE.Vector3(sx, -1, -0.4), k, g.arm)
+      root.updateWorldMatrix(true, true)
+    }
+    if (g.gone !== null) g.gone += dt
+    if (g.item) {
+      const hand = handBone.getWorldPosition(new THREE.Vector3())
+      const fore = forearm.getWorldPosition(new THREE.Vector3())
+      // In the palm, a little on from the wrist along the hand, lying across it as the figure faces.
+      const at = hand.clone().addScaledVector(hand.clone().sub(fore).normalize(), 0.07 * (m.cast.height / 1.8))
+      g.item.position.copy(this.group.worldToLocal(at))
+      // Held out, it lies across the hand as one offers it. At the side, it points ahead in the fist.
+      g.item.quaternion.setFromEuler(new THREE.Euler(0, (m.yaw ?? m.cast.ry) + (1 - k) * (Math.PI / 2), 0))
+      g.item.scale.setScalar(HELD * (g.gone === null ? 1 : Math.max(0.001, 1 - g.gone / STOW_S)))
+      g.item.visible = root.visible
+      if (g.gone !== null && g.gone >= STOW_S) {
+        g.item.removeFromParent()
+        g.item = null
+      }
+    }
+    if (!g.item && g.w === 0) m.given = null
   }
   // Keep a weapon in hand between moves, the bow its shot uses or the blade its cut does, or put it away. False when
   // the figure has no move that wields it.
@@ -544,6 +642,7 @@ export class Models {
       m.yaw = m.yaw === null || !motion ? want : m.yaw + wrap(want - m.yaw) * (1 - Math.exp(-dt * 4.5))
       m.root.rotation.set(m.fall ? 0 : -(m.fallT / length) * (Math.PI / 2 - 0.04), m.yaw, 0, "YXZ")
       m.root.visible = !this.standees.offstage.has(c.id)
+      if (m.given) this.holding(m, motion ? dt : 1)
       const flash = this.hits.get(c.id)
       if (flash) {
         flash.t += dt
@@ -561,6 +660,7 @@ export class Models {
       m.mixer.stopAllAction()
       m.carried?.dispose()
       m.armed?.dispose()
+      m.given?.item?.removeFromParent()
       for (const mesh of m.meshes) mesh.geometry.dispose()
       for (const mat of m.materials) {
         mat.map?.dispose()

@@ -282,8 +282,10 @@ export function weaponIn(root: THREE.Object3D, what: "sword" | "bow", hand: "L" 
 // The arm of `side` brought to reach its wrist to `wrist`, its elbow bent out toward `pole`, both in the figure's own
 // space, over whatever pose the clip gave it by `weight`. Two bones and their lengths: the elbow lies where they meet,
 // on the side of the line from shoulder to wrist that the pole is (as props.ts bends the arm that holds a staff).
-export function reachArm(root: THREE.Object3D, side: "L" | "R", wrist: THREE.Vector3, pole: THREE.Vector3, weight: number) {
-  const [chest, upper, fore, hand] = ["chest", `upperarm${side}`, `forearm${side}`, `hand${side}`].map((n) => root.getObjectByName(n))
+// `bones` are the arm's own when they are not the shared skeleton's: the bone the upper arm hangs from, then the upper
+// arm, forearm and hand.
+export function reachArm(root: THREE.Object3D, side: "L" | "R", wrist: THREE.Vector3, pole: THREE.Vector3, weight: number, bones?: THREE.Object3D[]) {
+  const [chest, upper, fore, hand] = bones ?? ["chest", `upperarm${side}`, `forearm${side}`, `hand${side}`].map((n) => root.getObjectByName(n))
   if (!chest || !upper || !fore || !hand || weight <= 0) return
   root.updateWorldMatrix(true, true)
   const own = root.getWorldQuaternion(new THREE.Quaternion()).invert()
