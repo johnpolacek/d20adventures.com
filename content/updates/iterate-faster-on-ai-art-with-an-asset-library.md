@@ -4,6 +4,7 @@ date: 2026-11-22
 description: "How an asset library made iterating on AI-generated characters and places faster: every version on one card, the same pictures every time, a blind judge, and every place built live in the browser."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/asset-library/gates-arrival.webp"
 draft: true
+header: /images/updates/iterate-faster-on-ai-art-with-an-asset-library.webp
 ---
 
 AI art comes in piles. Every new try at a character is another model, another set of textures, another folder. Thalbern, the ranger in [The Midnight Summons](https://d20adventures.com), had eight 3D figures before I could tell you which one was in the game.

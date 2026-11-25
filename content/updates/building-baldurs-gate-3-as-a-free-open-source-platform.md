@@ -3,6 +3,7 @@ title: "Building Baldur’s Gate 3 as a Free Open Source Platform"
 date: 2026-11-24
 description: "The goal for D20 Adventures: the gameplay, rules, 3D worlds, battles, stories and multiplayer of Baldur’s Gate 3, as a free open source platform for your own adventures."
 draft: true
+header: /images/updates/building-baldurs-gate-3-as-a-free-open-source-platform.webp
 ---
 
 I want to build [Baldur’s Gate 3](https://baldursgate3.game) as a platform.

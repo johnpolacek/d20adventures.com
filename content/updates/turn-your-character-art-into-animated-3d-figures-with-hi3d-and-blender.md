@@ -3,6 +3,7 @@ title: "Turn Your Character Art into Animated 3D Figures with Hi3D and Blender"
 date: 2026-11-23
 description: "How I turned painted character cards into rigged, animated 3D figures for about $2.30 each, with the prompts, the tools and everything that went wrong."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/gameplay-11-21.webp"
+header: /images/updates/turn-your-character-art-into-animated-3d-figures-with-hi3d-and-blender.webp
 ---
 
 Until this week, characters in [The Midnight Summons](https://d20adventures.com) and other adventures were flat painted standee art. 

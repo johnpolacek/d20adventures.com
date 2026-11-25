@@ -12,6 +12,8 @@ export type Update = {
   description: string
   author: string
   image?: string
+  /** The engraving across the top of the post's page, by its address. Without one, the post wears the list's. */
+  header?: string
   draft: boolean
   body: string
 }
@@ -51,6 +53,7 @@ async function readPost(file: string, dir = UPDATES_DIR): Promise<Update> {
     description: data.description ?? "",
     author: data.author || DEFAULT_AUTHOR,
     image: data.image || undefined,
+    header: data.header || undefined,
     draft: data.draft === "true",
     body: match ? content.slice(match[0].length) : content,
   }
