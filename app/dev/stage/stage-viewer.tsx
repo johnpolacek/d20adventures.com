@@ -114,6 +114,8 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
   const [status, setStatus] = useState("Loading")
   const [ready, setReady] = useState(false)
   const [title, setTitle] = useState("")
+  // Whether the staged set has a played look, so its cast can stand as the adventure's figures (&look=play).
+  const [playable, setPlayable] = useState(false)
   const [shots, setShots] = useState<[string, string | undefined][]>([])
   const [stats, setStats] = useState<StageStats | null>(null)
   // &panel=0 starts with the panel put away, as h does: for a page that frames this one.
@@ -152,7 +154,9 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
       const tier = TIERS.includes(params.tier as TierName) ? (params.tier as TierName) : "auto"
       // &look=play: the game's own stage in the set's played look, as components/stage/use-stage.ts builds it.
       const { builtPlay, playedLook } = await import("@/asset-library/play")
-      const look = params.look === "play" && stagedSet === key ? playedLook(key) : null
+      const played = stagedSet === key ? playedLook(key) : null
+      setPlayable(!!played)
+      const look = params.look === "play" ? played : null
       const built = look ? await builtPlay(set, staging, look) : null
       stage = await createStage({
         container,
@@ -371,7 +375,19 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                 <Button variant="plain" className={pill(!!stats?.dof)} onClick={() => set((s) => s.setFlags({ dof: !s.pipeline.focus.enabled }))}>
                   dof
                 </Button>
-                <Button variant="plain" className={pill(stage.flags.figures)} onClick={() => set((s) => s.setFlags({ figures: !s.flags.figures }))}>
+                <Button
+                  variant="plain"
+                  className={pill(stage.flags.figures)}
+                  onClick={() => {
+                    // The adventure's figures are dressed on as the stage is built, so they come and go by reloading in
+                    // the played look. A set with none turns the flag alone.
+                    if (!playable) return set((s) => s.setFlags({ figures: !s.flags.figures }))
+                    const url = new URL(location.href)
+                    if (stage.flags.figures) url.searchParams.delete("look")
+                    else url.searchParams.set("look", "play")
+                    location.assign(url)
+                  }}
+                >
                   figures
                 </Button>
                 <Button variant="plain" className={pill(stage.motion)} onClick={() => set((s) => (s.motion = !s.motion))}>
