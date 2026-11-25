@@ -77,9 +77,9 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Written Adventures",
-        note: "Four adventures, 69 encounters, about 46,000 words.",
+        note: "Four adventures, 70 encounters, about 46,000 words.",
         milestones: [
-          yes("4 adventures written: 69 encounters, about 46,000 words", 8),
+          yes("4 adventures written: 70 encounters, about 46,000 words", 8),
           yes("Every encounter has GM notes, or is an ending", 3),
           no("No leftovers from the old adventure format"),
           no("150 encounters in all", 3),
@@ -150,7 +150,7 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Many Ways Through a Scene",
-        note: "Only 21 of 69 encounters branch, and The Road to Kordavos has none.",
+        note: "Only 21 of 70 encounters branch, and The Road to Kordavos has none.",
         milestones: [
           no("A test that drives one scene to 3 different outcomes"),
           no("Every encounter’s GM notes say what talking, sneaking and fighting each do", 3),
@@ -271,13 +271,15 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Learn by Playing",
-        note: "Baldur’s Gate 3 teaches its game in the Nautiloid prologue. D20 Adventures has no tutorial yet.",
+        note: "The Midnight Summons opens at Thalbern’s home, where a squirrel brings the note, with tips the first time.",
         milestones: [
-          no("An opening scene that teaches the game as it is played, like the Nautiloid", 3),
-          no("It walks through typing an action, a check, an attack and a spell", 3),
-          no("Short tips the first time a player meets a new screen or rule", 3),
-          no("Players who know the game can skip it"),
+          yes("An opening scene that teaches the game as it is played, like the Nautiloid", 3),
+          yes("It walks through typing an action, a check and a spell", 3),
+          yes("Short tips the first time a player types, rolls, attacks, reacts or meets the sheet", 3),
+          yes("Players who know the game can skip it"),
           no("A test that plays a new player through it from start to end"),
+          no("A practice fight in the opening, before the Owlbear", 3),
+          no("Every new player starts in it, whichever adventure they pick", 3),
         ],
       },
       {

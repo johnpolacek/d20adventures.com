@@ -20,6 +20,7 @@ import { hasBooleanProp, hasNumberProp } from "@/lib/utils"
 import type { TurnCharacter } from "@/types/adventure"
 import LoadingAnimation from "@d20/ui/loading-animation"
 import { Presence, Swap } from "@d20/ui/presence"
+import { TipCard, useTip } from "@d20/ui/stage/tips"
 import { DEMO_LIMIT_MESSAGE, demoLimitReached } from "@/lib/demo-limit"
 
 type TurnNarrativeReplyProps = {
@@ -284,9 +285,14 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
 
   // One part at a time: the reply box, the roll, the wait after sending, or nothing once the reply is in.
   const view = showDiceRoll ? "roll" : loading ? "sending" : hasSubmitted ? "sent" : "compose"
+  // A first-time tip for what the box asks: typing an action, a roll or an attack.
+  const tips = useTip(view === "roll" ? [asked && ("attack" in asked || "cast" in asked) ? "attack" : "roll"] : view === "compose" ? ["act"] : [])
 
   return (
     <form onSubmit={handleReply} className="min-h-[100px]">
+      <Presence show={Boolean(tips.tip)} motion="drop" asChild>
+        {tips.tip && <TipCard key={tips.tip} tip={tips.tip} className="mx-auto mb-4" onSeen={() => tips.tip && tips.seen(tips.tip)} onNone={tips.none} />}
+      </Presence>
       <Swap id={view} motion="rise" exit="fade" className="flex flex-col gap-4">
         {view === "compose" && (
           <>

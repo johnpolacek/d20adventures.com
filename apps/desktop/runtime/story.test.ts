@@ -49,6 +49,7 @@ async function playing(run: (store: LocalStore, step: (next: string, patch?: Rec
 // The Midnight Summons played to its end, with a find along the way.
 async function midnight(store: LocalStore, step: (next: string, patch?: Record<string, unknown>) => Promise<void>) {
   await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
+  await step("broken-silence")
   await step("owlbear-confrontation")
   // The Owlbear drops Thalbern to 0, all 11 of his hit points, and poisons him. The round's end takes him to the rescue.
   const thalbern = store.current().characters.find((c) => c.id === THALBERN)!

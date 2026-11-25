@@ -90,6 +90,17 @@
       "Branka tells the crowd to go home, then asks the party where they mean to sleep tonight."
     ]
   },
+  "summons-squirrel": {
+    "adventure": "the-midnight-summons",
+    "encounter": "the-squirrels-note",
+    "rounds": 4,
+    "replies": [
+      "Thalbern crouches by the door, holds out a hand and speaks softly to the squirrel.",
+      "Thalbern casts Speak with Animals and asks the squirrel who sent it.",
+      "Thalbern unrolls the note and reads it.",
+      "Thalbern takes his bow and sets out for the Old Standing Stones."
+    ]
+  },
   "summons-hide": {
     "adventure": "the-midnight-summons",
     "encounter": "broken-silence",

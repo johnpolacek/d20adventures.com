@@ -106,6 +106,7 @@ const ENCOUNTER_PLANS: Record<string, () => Promise<unknown>> = {
   "the-shipment": () => import("./encounters/the-shipment.json").then((m) => m.default),
   "the-silver-serpent-tavern": () => import("./encounters/the-silver-serpent-tavern.json").then((m) => m.default),
   "the-speech": () => import("./encounters/the-speech.json").then((m) => m.default),
+  "the-squirrels-note": () => import("./encounters/the-squirrels-note.json").then((m) => m.default),
   "the-transaction": () => import("./encounters/the-transaction.json").then((m) => m.default),
   "the-wine-cellar": () => import("./encounters/the-wine-cellar.json").then((m) => m.default),
   "the-winning-bid": () => import("./encounters/the-winning-bid.json").then((m) => m.default),

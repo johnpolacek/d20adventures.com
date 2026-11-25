@@ -36,6 +36,7 @@ import { rollSeconds } from "@d20/ui/stage/roll-result"
 import { featureView, type RollView, rollView } from "@d20/ui/stage/roll-view"
 import { Bubbles, Plate } from "@d20/ui/stage/stage-dialogue"
 import { passedOver, passedWords, standingOf } from "@d20/ui/stage/standing"
+import { type TipId, TipCard, useTip } from "@d20/ui/stage/tips"
 import { TurnOrder } from "@d20/ui/stage/turn-order"
 import { useStage } from "@d20/ui/stage/use-stage"
 import { Button } from "@d20/ui/button"
@@ -1478,6 +1479,13 @@ export function StagePlay(props: {
   const offerHero = reaction && latest?.characters.find((c) => c.id === reaction.offer.to)
   const offerShown = Boolean(reaction && !offerExpired && !busy && !held && turn === latest && (!reading || paragraph >= text.length - 1))
   const offerMine = Boolean(offerHero && offerHero.type === "pc" && offerHero.controlledBy !== "ai" && props.controls(offerHero) && props.onReact)
+  // A first-time tip for what the card asks of the player: typing an action (then the hero's sheet), a roll, an
+  // attack, or a reaction offered to their hero.
+  const tipsWanted: TipId[] = []
+  if (offerShown && offerMine) tipsWanted.push("reaction")
+  else if (mode?.kind === "roll" && !held && !reading) tipsWanted.push(mode.roll.kind === "attack" ? "attack" : "roll")
+  else if (mode?.kind === "hold" && !reading) tipsWanted.push("act", "sheet")
+  const tips = useTip(tipsWanted)
   const react = (take: boolean) => {
     if (latest && reaction) void props.onReact?.(latest._id, reaction.offer.to, take)
   }
@@ -1740,6 +1748,18 @@ export function StagePlay(props: {
                   }}
                 />
               </div>
+            )}
+          </Presence>
+          <Presence show={on && Boolean(tips.tip)} motion="drop" asChild>
+            {tips.tip && (
+              <TipCard
+                key={tips.tip}
+                tip={tips.tip}
+                compact={compact}
+                className={`absolute left-1/2 z-raised -translate-x-1/2 ${compact ? "top-16" : "top-28"}`}
+                onSeen={() => tips.tip && tips.seen(tips.tip)}
+                onNone={tips.none}
+              />
             )}
           </Presence>
           <Presence show={on && Boolean(reaction && offerShown)} motion="rise" asChild>

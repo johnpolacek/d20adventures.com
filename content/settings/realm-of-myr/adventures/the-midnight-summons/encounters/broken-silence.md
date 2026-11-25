@@ -14,10 +14,6 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Thalbern, a solitary ranger of the Valkarr woods, trusts the wilds more than men. Raised by the forest's elves, he lives on the edge of Kordavos and keeps clear of its politics.
-
-Tonight a red squirrel brought him a note from Wollandora, an elven druid and trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
-
 {actor: thalbern, place: trailNorth, pace: sneak} Midnight is near. Thalbern moves quietly through the dark undergrowth.
 
 {place: treeLine} A sharp crack breaks the hush. Something large has stepped on a branch.
