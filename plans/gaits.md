@@ -63,6 +63,7 @@ Begun 2026-11-24, from `pnpm assets:legs` (`asset-library/pipeline/legcheck.ts`,
 
 ## Next
 
-- [ ] The owner syncs and archives the rebuilt figures, and watches them sneak, walk and hurry in the app.
+- [x] The owner synced and archived the rebuilt figures, 2026-11-24.
+- [ ] The owner watches them sneak, walk and hurry in the app.
 - [ ] Poppen's sneak looked at.
 - [ ] Sprint is in no pace yet: only a beat's `move` faster than 3.3 m/s reaches it.
