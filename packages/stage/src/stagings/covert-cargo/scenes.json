@@ -3,7 +3,7 @@
     "set": "realm-of-myr/mordava-river-pier",
     "staging": "the-shipment",
     "location": "Mordava pier",
-    "where": "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit saloon before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern. Neither hide can be seen from the other.",
+    "where": "Before dawn, a riverboat lies moored beside a rickety pier on a quiet, misty fork of the Mordava. Lyra stands in its lamplit cabin before the crate, Reinhard beside her and Silas by the only door. Elves guard the deck. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern. Neither hide can be seen from the other.",
     "party": [
       "lyra",
       "poppen",
@@ -13,8 +13,8 @@
   "the-transaction": {
     "set": "realm-of-myr/mordava-river-pier",
     "staging": "the-transaction",
-    "location": "Riverboat saloon",
-    "where": "The riverboat's lamplit saloon at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "location": "Riverboat Cabin",
+    "where": "The riverboat's lamplit cabin at the rickety pier, the crate in the middle and the only door opening forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
     "party": [
       "lyra",
       "poppen",
@@ -46,8 +46,8 @@
   "the-fake": {
     "set": "realm-of-myr/mordava-river-pier",
     "staging": "the-fake",
-    "location": "Riverboat saloon",
-    "where": "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "location": "Riverboat Cabin",
+    "where": "The riverboat's lamplit cabin. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
     "party": [
       "lyra",
       "poppen",
@@ -57,8 +57,8 @@
   "battle-on-the-boat": {
     "set": "realm-of-myr/mordava-river-pier",
     "staging": "battle-on-the-boat",
-    "location": "Riverboat saloon",
-    "where": "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+    "location": "Riverboat Cabin",
+    "where": "The riverboat's lamplit cabin. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
     "party": [
       "lyra",
       "poppen",
@@ -79,8 +79,8 @@
   "the-crate": {
     "set": "realm-of-myr/mordava-river-pier",
     "staging": "the-crate",
-    "location": "Riverboat saloon",
-    "where": "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope.",
+    "location": "Riverboat Cabin",
+    "where": "The riverboat's cabin, quiet now. The heavy iron-banded crate sits in the middle under hanging rope.",
     "party": [
       "lyra",
       "poppen",
