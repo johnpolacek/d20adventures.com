@@ -10,10 +10,6 @@ adventureId: "covert-cargo"
 landmark: "valkarr-woods/forest-pier"
 roundBudget: 3
 npcs:
-  - id: "npcs-1749243735467"
-    behavior: "Will back up the Fighter, her bow drawn."
-    side: "none"
-    initialInitiative: 0
   - id: "npcs-1749243869357"
     behavior: "Will take the lead in investigating the cause of the disturbance. If he finds Poppen or Thalbern, he will aggressively tell him to go away."
     side: "none"
@@ -38,9 +34,9 @@ A sudden disturbance throws the clandestine meeting off course.
 
 ## GM Notes
 
-Aelar will order his two elves to investigate. Everyone else will stay with the shipment. The elves search where the disturbance came from. They find only the watcher who caused it, unless the other gives himself away too.
+Aelar will order his guard to investigate. Everyone else will stay with the shipment. The guard searches where the disturbance came from. He finds only the watcher who caused it, unless the other gives himself away too.
 
-The elves mean to drive a found watcher off, not to kill him. They threaten with spear and bow and strike only if he attacks or rushes the boat. One who goes back into the trees is let go. One who surrenders, or stops to tend someone hurt, is made to leave once he is done.
+The guard means to drive a found watcher off, not to kill him. He threatens with his spear and strikes only if the watcher attacks or rushes the boat. One who goes back into the trees is let go. One who surrenders, or stops to tend someone hurt, is made to leave once he is done.
 
 Silas and Reinhard stay at the pier and wait on the trade. They do not cast off or cut the lines in this scene. Silas still pays on Lyra's word or once the watcher is gone. He will not wait on her for long: if she has given no word by the end of the second round, he pays anyway, wanting the deal done before the light comes up. The payment is the sealed scrollcase, not coin. Once he means to pay, the scene ends there: the handover and the elves' leaving are told in The Transaction, so do not tell them here.
 
@@ -50,7 +46,7 @@ Once anyone attacks in earnest, or a hero is struck, it is a fight: move on to B
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. While one stays hidden, the other learns of him only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where a voice or a noise came from. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure. One who shows himself is hidden no more, as when he shoots, shouts, steps onto the pier or the boat, or stands in the lamplight: the other sees him plainly with no check, still a stranger with no name until they speak.
 
-Aelar and his elves are here only to trade the crate. A quarrel inside Silas's crew is none of theirs: they step back with hands near their weapons, wait to be paid, and strike only if struck. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+Aelar and his guard are here only to trade the crate. A quarrel inside Silas's crew is none of theirs: they step back with hands near their weapons, wait to be paid, and strike only if struck. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
 
 ## Transitions
 

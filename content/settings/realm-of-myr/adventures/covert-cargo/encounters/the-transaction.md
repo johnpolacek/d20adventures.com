@@ -30,7 +30,7 @@ image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/cover
 
 {speaker: Aelar Moonglimmer, to: Silas, delivery: quiet and controlled} The Circle is appreciative. They trust this partnership will prove fruitful for all involved.
 
-With a final sharp nod, Aelar and his kin step off the boat and cross the rickety pier like shadows, vanishing into the treeline without a backward glance.
+With a final sharp nod, Aelar and his guard step off the boat and cross the rickety pier like shadows, vanishing into the treeline without a backward glance.
 
 ## GM Notes
 

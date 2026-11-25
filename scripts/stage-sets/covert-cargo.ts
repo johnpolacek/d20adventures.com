@@ -58,7 +58,6 @@ const CAST = {
   reinhard: { id: "npcs-1749163978757", name: "Reinhard", role: "Enforcer", height: 1.92, art: art("reinhard") },
   silas: { id: "npcs-1749181492795", name: "Silas", role: "Rogue, the brains of the mission", height: 1.78, art: art("silas") },
   aelar: { id: "npcs-1749184389465", name: "Aelar Moonglimmer", role: "Elf operative", height: 1.86, art: art("aelar") },
-  archer: { id: "npcs-1749243735467", name: "Elven Archer", role: "Wood elf archer", height: 1.8, art: art("elf-archer") },
   fighter: { id: "npcs-1749243869357", name: "Elven Fighter", role: "Elf fighter", height: 1.88, art: art("elf-fighter") },
   // The third hero, with his standee from The Midnight Summons.
   thalbern: {
@@ -651,10 +650,10 @@ function pierSet() {
   })
   // The meeting, as the story needs it: the crate is too heavy to move, so Lyra checks it where it sits in the saloon.
   // Neither side trusts the other, so Reinhard stays beside her and Silas by the only door. Aelar comes out of his cabin
-  // aft. His two elves guard the deck, one at the gangway and one at the stern, and Poppen watches the lit windows from
+  // aft. His one elf guards the deck from the stern, and Poppen watches the lit windows from
   // the bushes at the treeline, too far for elven ears. Thalbern watches the port side from his thicket below the stern.
   // Neither watcher can see the other's hide.
-  const crew = [on("archer", [4.2, 4.9], "pierEnd"), on("fighter", "stern", "bank")]
+  const crew = [on("fighter", "stern", "bank")]
   const boat: V2 = [5.2, 0.5]
   const poppen = on("poppen", [-5.0, 4.3], boat)
   const thalbern = on("thalbern", THICKET, boat)
@@ -690,7 +689,6 @@ function pierSet() {
       on("aelar", [3.95, -0.55], "silas"),
       poppen,
       thalbern,
-      on("archer", [4.2, 4.9], "cabinDoor"),
       on("fighter", "pierEnd", "cabinDoor"),
     ],
     {
@@ -701,11 +699,10 @@ function pierSet() {
     },
     "handover",
     // Paid, the elves leave: out of the saloon, down the gangway and up the bank trail, away from both watchers. The
-    // two on deck have come to the gangway to wait for Aelar.
+    // one on deck has come to the gangway to wait for Aelar.
     {
       exits: [
         { cast: CAST.aelar.id, via: ["foredeck", "pierEnd", "pier"] },
-        { cast: CAST.archer.id, via: ["pierEnd", "pier"] },
         { cast: CAST.fighter.id, via: ["pier"] },
       ].map((e) => ({ ...e, via: [...e.via, ...trailPts.slice(0, 3)], when: "step off the boat", to: "trail" })),
     }
@@ -715,7 +712,6 @@ function pierSet() {
     "mordava-river-pier",
     [
       on("fighter", [-3.3, 5.0], "poppen"),
-      on("archer", [-2.0, 6.2], "poppen"),
       on("reinhard", [6.15, 0.45], [5.2, -1.3]),
       on("lyra", [5.0, 0.15], [5.2, 3.3]),
       on("silas", [5.0, 3.4], "treeline"),
@@ -724,9 +720,9 @@ function pierSet() {
       thalbern,
     ],
     {
-      search: { subjects: [CAST.fighter.id, CAST.archer.id, CAST.poppen.id], offset: [2.43, 2.2, -3.57], target: [-0.3, 0.9, 0], fov: 50, label: "The search" },
+      search: { subjects: [CAST.fighter.id, CAST.poppen.id], offset: [2.43, 2.2, -3.57], target: [-0.3, 0.9, 0], fov: 50, label: "The search" },
       poppen: peeking,
-      archer: close("archer", 3, -20),
+      fighter: close("fighter", 3, -20),
     },
     "search"
   )

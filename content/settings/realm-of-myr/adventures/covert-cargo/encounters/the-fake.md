@@ -54,7 +54,7 @@ The deal does not fall through. Silas wants the relic, and Aelar will not take t
 
 Poppen and Thalbern hide in different places and do not know of each other. Poppen is in the bushes at the treeline above the gangway. Thalbern is in a thicket on the bank below the stern. While one stays hidden, the other learns of him only by passing a check. Ask for a Perception check, DC 15, when one of them searches or watches the bank or the woods, or looks for where a voice or a noise came from. With no check or a failed one, he notices nothing of the other, and the narration shows nothing passing between them. A passed check shows a stranger with no name: a shape in the leaves, a bow, a small figure. One who shows himself is hidden no more, as when he shoots, shouts, steps onto the pier or the boat, or stands in the lamplight: the other sees him plainly with no check, still a stranger with no name until they speak.
 
-Aelar and his elves are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+Aelar and his guard are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
 
 ## Transitions
 

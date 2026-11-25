@@ -450,7 +450,7 @@ test("hosted: the worker waits on an offer, a guest's answer plays the turn on, 
 test("the stage sends the elves off when they are paid, and lays out the fight's losers", () => {
   const exits = (id: string) => (sceneFor(id)!.staging as { exits?: { cast: string; when?: string; to?: string; via?: unknown[]; lands?: unknown; shot?: string }[] }).exits ?? []
   const paid = exits("the-transaction")
-  assert.deepEqual(paid.map((e) => e.cast).sort(), ["npcs-1749184389465", "npcs-1749243735467", "npcs-1749243869357"])
+  assert.deepEqual(paid.map((e) => e.cast).sort(), ["npcs-1749184389465", "npcs-1749243869357"])
   const intro = pack.artifacts.encounters["the-transaction"].sections.intro ?? ""
   for (const e of paid) {
     assert.ok(intro.includes(e.when!), "the cue is a line of the intro")
@@ -502,7 +502,7 @@ test("the fight is written to end with Lyra in the river, on a pier the tug has 
     assert.deepEqual(metresOf("Thalbern"), [-1.4, -6.4])
     const where = standingWords(placed, floor) ?? ""
     assert.match(where, /- Lyra Silvanus, /)
-    assert.doesNotMatch(where, /the tug's saloon/)
+    assert.doesNotMatch(where, /the tug's main cabin/)
   })
 })
 

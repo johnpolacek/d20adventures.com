@@ -5,7 +5,6 @@
   "where": "Before dawn at the riverboat's pier. Something stirred on the bank. Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
   "cast": [
     { "id": "npcs-1749243869357", "name": "Elven Fighter", "x": -3.3, "z": 5 },
-    { "id": "npcs-1749243735467", "name": "Elven Archer", "x": -2, "z": 6.2 },
     { "id": "npcs-1749163978757", "name": "Reinhard", "x": 6.15, "z": 0.45 },
     { "id": "lyra", "name": "Lyra Silvanus", "x": 5, "z": 0.15 },
     { "id": "npcs-1749181492795", "name": "Silas", "x": 5, "z": 3.4 },

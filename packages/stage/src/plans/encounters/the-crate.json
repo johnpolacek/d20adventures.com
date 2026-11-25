@@ -1,8 +1,8 @@
 {
   "encounterId": "the-crate",
   "set": "realm-of-myr/mordava-river-pier",
-  "location": "Riverboat saloon",
-  "where": "The riverboat's saloon, quiet now. The heavy iron-banded crate sits in the middle under hanging rope.",
+  "location": "Riverboat Cabin",
+  "where": "The riverboat's cabin, quiet now. The heavy iron-banded crate sits in the middle under hanging rope.",
   "cast": [
     { "id": "lyra", "name": "Lyra Silvanus", "x": 4.65, "z": -0.2 },
     { "id": "poppen", "name": "Poppen Quickfoot", "x": 6.3, "z": -0.9 },

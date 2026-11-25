@@ -1,8 +1,8 @@
 {
   "encounterId": "battle-on-the-boat",
   "set": "realm-of-myr/mordava-river-pier",
-  "location": "Riverboat saloon",
-  "where": "The riverboat's lamplit saloon. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
+  "location": "Riverboat Cabin",
+  "where": "The riverboat's lamplit cabin. The crate sits in the middle, and the only door opens forward onto the deck. Outside, Poppen hides in the bushes at the treeline above the gangway, and Thalbern in a thicket on the bank below the stern.",
   "cast": [
     { "id": "npcs-1749163978757", "name": "Reinhard", "x": 6.2, "z": -0.35 },
     { "id": "lyra", "name": "Lyra Silvanus", "x": 4.85, "z": 0.75 },

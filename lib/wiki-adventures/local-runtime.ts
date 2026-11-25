@@ -64,8 +64,6 @@ export const LOCAL_WIKI_ADVENTURES = [
       "content/settings/realm-of-myr/npcs/npcs-1749181492795.md",
       "content/settings/realm-of-myr/npcs/npcs-1749184389465.json",
       "content/settings/realm-of-myr/npcs/npcs-1749184389465.md",
-      "content/settings/realm-of-myr/npcs/npcs-1749243735467.json",
-      "content/settings/realm-of-myr/npcs/npcs-1749243735467.md",
       "content/settings/realm-of-myr/npcs/npcs-1749243869357.json",
       "content/settings/realm-of-myr/npcs/npcs-1749243869357.md",
     ],

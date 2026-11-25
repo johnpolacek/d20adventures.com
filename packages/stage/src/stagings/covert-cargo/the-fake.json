@@ -107,22 +107,6 @@
       ]
     },
     {
-      "id": "npcs-1749243735467",
-      "name": "Elven Archer",
-      "role": "Wood elf archer",
-      "height": 1.8,
-      "art": {
-        "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
-        "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp",
-        "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
-      },
-      "at": [
-        4.2,
-        4.9
-      ],
-      "facing": "pierEnd"
-    },
-    {
       "id": "npcs-1749243869357",
       "name": "Elven Fighter",
       "role": "Elf fighter",

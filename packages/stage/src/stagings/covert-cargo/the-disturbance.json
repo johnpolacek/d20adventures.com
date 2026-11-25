@@ -21,22 +21,6 @@
       "facing": "poppen"
     },
     {
-      "id": "npcs-1749243735467",
-      "name": "Elven Archer",
-      "role": "Wood elf archer",
-      "height": 1.8,
-      "art": {
-        "front": "/stage/fixtures/covert-cargo/elf-archer-front.webp",
-        "back": "/stage/fixtures/covert-cargo/elf-archer-back.webp",
-        "portrait": "/stage/fixtures/covert-cargo/elf-archer-portrait.jpg"
-      },
-      "at": [
-        -2,
-        6.2
-      ],
-      "facing": "poppen"
-    },
-    {
       "id": "npcs-1749163978757",
       "name": "Reinhard",
       "role": "Enforcer",
@@ -146,7 +130,6 @@
     "search": {
       "subjects": [
         "npcs-1749243869357",
-        "npcs-1749243735467",
         "poppen"
       ],
       "offset": [
@@ -171,12 +154,12 @@
       "fov": 44,
       "label": "Poppen"
     },
-    "archer": {
-      "subject": "npcs-1749243735467",
+    "fighter": {
+      "subject": "npcs-1749243869357",
       "distance": 3,
       "angle": -20,
       "height": 1.6,
-      "lookHeight": 1.476,
+      "lookHeight": 1.5415999999999999,
       "fov": 44,
       "label": "Elven"
     }

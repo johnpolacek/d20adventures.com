@@ -35,7 +35,7 @@ Poppen and Thalbern do not know of each other. Neither has seen or heard the oth
 
 Silas, Reinhard and the elves do not know Poppen or Thalbern, or that anyone is watching. If either is noticed he is a stranger to them, an unknown voice or a figure with no name.
 
-Aelar and his elves are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
+Aelar and his guard are here only to trade the crate. Once Silas hands over the payment they leave the boat, go up the bank trail into the woods and do not come back. They take no side in anything that happens after.
 
 ## Authoring Notes
 
