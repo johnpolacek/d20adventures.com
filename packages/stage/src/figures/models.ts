@@ -8,6 +8,7 @@ import { carry, fingered, type Grasp, grasp, wield } from "./hold"
 import { holdProps } from "./props"
 import { reachArm } from "./weapons"
 import { type CastMember, PALETTE_GRADE, type Standees } from "./standees"
+import type { MoveKind } from "./uses"
 
 // A cast member as a rigged, animated glTF figure in place of their standee (the `figures` flag, one figure so far: an
 // experiment for the owner to judge against the cards). The standee stays built underneath: it keeps who is down and
@@ -41,8 +42,10 @@ export interface FigureSpec {
   // A colour its own is multiplied by: a pale model darkened to sit in a night, as the card it replaces was painted.
   tint?: string
   // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
-  // way, thrown back by a critical hit, stumbling after a fumble. One it has none for, it does not make.
-  moves?: { melee?: string; ranged?: string; dodge?: string; reel?: string; stumble?: string }
+  // way, thrown back by a critical hit, stumbling after a fumble, and the moves every weapon and spell shares (uses.ts:
+  // a thrust, a two-handed blow, a staff's blow, a throw, a spell cast at someone or over a place). One it has none
+  // for, it does not make.
+  moves?: Partial<Record<MoveKind | "dodge" | "reel" | "stumble", string>>
   // When each of its own clips lands, in seconds into it. A written clip's is in clips.ts (STRIKE).
   lands?: Record<string, number>
   // Nodes of the model left out: the weapons and shields a pack ships on every character.
@@ -405,11 +408,14 @@ export class Models {
     const most = m.gaits.reduce((a, b) => ((shares[b.gait] ?? 0) > (shares[a.gait] ?? 0) ? b : a))
     return most.action.getClip().duration / 2 / gaitRate(most.gait, most.speed, gait)
   }
-  // The clip a figure plays for a kind of move, if it has one.
-  moveFor(id: string, kind: keyof NonNullable<FigureSpec["moves"]>) {
+  // The clip a figure plays for a kind of move, if it has one: the first of several it has, when given several.
+  moveFor(id: string, kind: keyof NonNullable<FigureSpec["moves"]> | readonly (keyof NonNullable<FigureSpec["moves"]>)[]) {
     const m = this.on ? this.items.get(id) : undefined
-    const clip = m?.spec.moves?.[kind]
-    return clip && m?.actions.has(clip) ? clip : null
+    for (const k of typeof kind === "string" ? [kind] : kind) {
+      const clip = m?.spec.moves?.[k]
+      if (clip && m?.actions.has(clip)) return clip
+    }
+    return null
   }
   // Plays a move once, turned toward `toward` while it plays. Resolves to the seconds until it lands (clips.ts
   // STRIKE), or null when the figure is not standing, or has no such clip.

@@ -130,6 +130,9 @@ export const STRIKE: Record<string, number> = { Swing: 0.45, Shoot: 1.05, Claw: 
 // the top of the overhand cast (ual2's OverhandThrow, borrowed as Sling), where the hand is fastest. What flies is a
 // stone, not an arrow (stage.ts).
 export const SLUNG: Record<string, number> = { Sling: 0.38 }
+// The moves that throw what they hold (hold.ts), and when in each it leaves the hand, in seconds: after that the
+// hand is empty, and a knife flies where an arrow would (stage.ts).
+export const THROWN: Record<string, number> = { Throw: 0.42 }
 // Every move a rigged figure can be made to play (models.ts act).
 export const MOVE_NAMES = ["Swing", "Shoot", "Dodge", "Claw", "Roar"]
 // What each move has in hand while it plays (weapons.ts): the prop's name and the hand it is in.

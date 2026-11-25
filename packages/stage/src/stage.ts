@@ -3,12 +3,13 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
-import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type SoundCue } from "./effects"
+import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type Shot, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { SLUNG } from "./figures/clips"
 import { Crowd } from "./figures/crowd"
 import type { Pace } from "./figures/gaits"
 import { Models } from "./figures/models"
+import { movesFor, WEAPON_MOVES } from "./figures/uses"
 import { type CastMember, Standees } from "./figures/standees"
 import { V } from "./kit/geometry"
 import { createRand, hashSeed } from "./kit/rng"
@@ -1885,8 +1886,9 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // An attack or spell from one cast member at another, or at a place, or about themselves with no target. A miss lands
   // beside the target and strikes nobody. Resolves when it has played. With motion off it does not play.
-  // A figure (models.ts) that has a move for it makes it first, turned toward the target: a cut for a blade or a blow,
-  // a shot for an arrow. The effect starts as the move lands. A figure an attack misses gets out of its way. A critical
+  // A figure (models.ts) that has a move for it makes it first, turned toward the target: a cut, a thrust or a blow for
+  // a weapon struck close, a shot or a throw for an arrow, a cast for a spell (uses.ts). `using` is what the attack was
+  // made with, as the rules name it, and picks among them. The effect starts as the move lands. A figure an attack misses gets out of its way. A critical
   // hit throws its target back as it lands, and a fumble leaves the attacker stumbling, each in a figure that has the
   // move for it: one with none takes them as a plain hit and a plain miss.
   async effect(
@@ -1894,14 +1896,14 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     from: string,
     to?: string | [number, number],
     element?: Element,
-    { miss = false, outcome }: { miss?: boolean; outcome?: "crit" | "fumble" } = {}
+    { miss = false, outcome, using }: { miss?: boolean; outcome?: "crit" | "fumble"; using?: string } = {}
   ): Promise<void> {
     if (!this.motion) return
-    const range = kind === "arrow" ? "ranged" : kind === "slash" || kind === "impact" ? "melee" : null
-    const move = range ? this.models.moveFor(from, range) : null
+    const kinds = movesFor(kind, using)
+    const move = this.models.moveFor(from, kinds)
     const toward = typeof to === "string" ? (this.cast.some((c) => c.id === to) ? this.castAt(to) : undefined) : to ? this.point(to) : undefined
     const lands = move ? this.models.act(from, move, toward) : null
-    if (range) this.body(from, "strike")
+    if (WEAPON_MOVES.includes(kinds[0])) this.body(from, "strike")
     if (lands) await new Promise((r) => setTimeout(r, lands * 1000))
     if (miss && typeof to === "string") {
       const dodge = this.models.moveFor(to, "dodge")
@@ -1912,8 +1914,9 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     }
     const crit = !miss && outcome === "crit" && typeof to === "string" && to !== from
     if (crit) this.reeling.set(to, from)
-    // A figure that casts a sling lets fly a stone where an arrow would fly.
-    await this.fire(kind, from, to, element, miss, move !== null && SLUNG[move] !== undefined)
+    // A figure that casts a sling lets fly a stone where an arrow would fly, and one that throws, a knife.
+    const shot = move !== null && SLUNG[move] !== undefined ? "stone" : kinds[0] === "throw" ? "knife" : undefined
+    await this.fire(kind, from, to, element, miss, shot)
     if (crit) this.reeling.delete(to)
     const stumble = miss && outcome === "fumble" ? this.models.moveFor(from, "stumble") : null
     if (stumble) this.models.act(from, stumble, toward)
@@ -1930,7 +1933,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     const at = typeof toward === "string" ? this.castAt(toward) : toward ? this.point(toward) : undefined
     return this.models.act(id, clip, at)
   }
-  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean, stone = false): Promise<void> {
+  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean, shot?: Shot): Promise<void> {
     const start = this.chest(from)
     let end = to === undefined ? undefined : this.endOf(to)
     if (end && miss) {
@@ -1944,7 +1947,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
           .setY(end.at.y * 0.8),
       }
     }
-    return this.effects.play(kind, start, end, element, stone)
+    return this.effects.play(kind, start, end, element, shot)
   }
   // An object in a cast member's hand, handed to another when there is a receiver. As a film shows it, with no flight
   // through the air: the giver holds it out, the camera cuts to the receiver with it in their hand, and they bring it

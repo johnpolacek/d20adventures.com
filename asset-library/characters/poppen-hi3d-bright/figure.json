@@ -31,7 +31,9 @@
     "Sneak",
     "Run",
     "Sprint",
-    "Sling"
+    "Sling",
+    "Stab",
+    "Throw"
   ],
   "motion": {
     "idle": "Idle",
@@ -39,13 +41,17 @@
     "hit": "Hit",
     "fall": "Fall",
     "moves": {
-      "melee": "Swing",
+      "melee": "Stab",
       "ranged": "Sling",
-      "dodge": "Sidestep"
+      "dodge": "Sidestep",
+      "stab": "Stab",
+      "throw": "Throw"
     },
     "lands": {
       "Swing": 0.4,
-      "Sling": 0.38
+      "Sling": 0.38,
+      "Stab": 0.6,
+      "Throw": 0.42
     },
     "gaits": {
       "sneak": {
@@ -70,19 +76,19 @@
     {
       "file": "lod0.glb",
       "triangles": 199296,
-      "megabytes": 11.97,
+      "megabytes": 12.07,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19990,
-      "megabytes": 1.72,
+      "megabytes": 1.81,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5986,
-      "megabytes": 0.95,
+      "megabytes": 1.05,
       "texture": 512
     }
   ]

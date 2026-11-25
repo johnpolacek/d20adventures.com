@@ -37,7 +37,10 @@
     "Combo",
     "Strafe",
     "Reel",
-    "Stumble"
+    "Stumble",
+    "Stab",
+    "Throw",
+    "Cast"
   ],
   "motion": {
     "idle": "Idle",
@@ -49,11 +52,17 @@
       "ranged": "Shoot",
       "dodge": "Sidestep",
       "reel": "Reel",
-      "stumble": "Stumble"
+      "stumble": "Stumble",
+      "stab": "Stab",
+      "throw": "Throw",
+      "cast": "Cast"
     },
     "lands": {
       "Swing": 0.4,
-      "Shoot": 1.5
+      "Shoot": 1.5,
+      "Stab": 0.6,
+      "Throw": 0.42,
+      "Cast": 0.65
     },
     "gaits": {
       "sneak": {
@@ -78,19 +87,19 @@
     {
       "file": "lod0.glb",
       "triangles": 198948,
-      "megabytes": 12.01,
+      "megabytes": 12.16,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.98,
+      "megabytes": 2.12,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 1.25,
+      "megabytes": 1.39,
       "texture": 512
     }
   ]

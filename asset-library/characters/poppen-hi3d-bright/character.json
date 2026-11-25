@@ -28,7 +28,9 @@
     "Dodge": "ual1:Roll",
     "Sidestep": "m2m/dodge-left",
     "Hit": "ual1:Hit_Chest",
-    "Fall": "ual1:Death01"
+    "Fall": "ual1:Death01",
+    "Stab": "m2m/dagger-stab",
+    "Throw": "m2m/knife-throw"
   },
   "eased": {
     "Swing": 85

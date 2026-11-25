@@ -1,4 +1,4 @@
-// A sword, a bow and a sling put in a rigged figure's hand while it plays a move that uses them (clips.ts IN_HAND).
+// A sword, a bow, a sling and a dagger put in a rigged figure's hand while it plays a move that uses them (clips.ts IN_HAND).
 //
 // A generated figure wears its weapons as part of its one mesh: Thalbern's bow is slung on his back and his blades
 // are in their sheaths, and none of them can be drawn. So what a move needs is built here and stood in the hand: seated
@@ -99,6 +99,36 @@ export function sword() {
   const peen = new THREE.Mesh(new THREE.SphereGeometry(0.006, 8, 6), iron())
   peen.position.y = -0.128
   g.add(blade, guard, block, ...ends, grip, wheel, peen)
+  return { group: g, update: () => {} }
+}
+
+// A dagger along +y from the middle of its grip, as the sword is: a short blade of four faces drawn in to a point from
+// its broad base, a small straight guard across +x, a wrapped grip and a round pommel.
+export function dagger() {
+  const g = new THREE.Group()
+  g.name = "weapon:dagger"
+  const [long, wide, thick] = [0.21, 0.019, 0.0048]
+  const rings: number[][][] = []
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    const w = wide * (1 - u ** 1.2) + 0.0008
+    const t = thick * (1 - 0.7 * u)
+    const y = u * long
+    rings.push([
+      [w, y, 0],
+      [0, y, t],
+      [-w, y, 0],
+      [0, y, -t],
+    ])
+  }
+  const blade = new THREE.Mesh(skin(rings), steel())
+  blade.position.y = 0.062
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.011, 0.016), iron())
+  guard.position.y = 0.058
+  const grip = wrapped(0.1, 0.0125)
+  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.0135, 12, 8), iron())
+  pommel.position.y = -0.062
+  g.add(blade, guard, grip, pommel)
   return { group: g, update: () => {} }
 }
 
@@ -230,7 +260,7 @@ export function sling() {
 }
 
 export interface Weapon {
-  what: "sword" | "bow" | "sling"
+  what: "sword" | "bow" | "sling" | "dagger"
   hand: "L" | "R"
   group: THREE.Group
   // Through a hand made round a rod, and kept there: it is never hidden, and it is aimed by turning the hand.

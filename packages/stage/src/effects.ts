@@ -9,6 +9,8 @@ export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
 export const PROP_KINDS = ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
 export type EffectKind = (typeof EFFECT_KINDS)[number]
+// What flies where an arrow would: a stone from a sling, or a thrown knife.
+export type Shot = "stone" | "knife"
 export type Element = (typeof ELEMENTS)[number]
 export type PropKind = (typeof PROP_KINDS)[number]
 // Sounds a story asks for by name, with nothing seen: a door, a lid, a body into water, wood split, a rope parting.
@@ -38,7 +40,7 @@ export interface EffectEnd {
 // comes from someone), the camera going into a room or out of one, with the beds that play there, and how near the
 // camera is to open water, 0 to 1.
 export type EffectEvent =
-  | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean; stone?: boolean }
+  | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean; shot?: Shot }
   | { type: "prop"; kind: PropKind; passed: boolean }
   | { type: "sound"; cue: SoundCue; near?: number }
   | { type: "room"; ambience?: string[] }
@@ -190,14 +192,14 @@ export class Effects {
   }
 
   // ── Effects ──
-  // `stone`: what an arrow's flight carries is a stone from a sling (stage.ts).
-  play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element, stone = false): Promise<void> {
+  // `shot`: what an arrow's flight carries instead, a stone from a sling or a thrown knife (stage.ts).
+  play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element, shot?: Shot): Promise<void> {
     const target = to ?? from
-    const slung = stone && kind === "arrow"
-    this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id, ...(slung ? { stone: true } : {}) })
+    const flies = kind === "arrow" ? shot : undefined
+    this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id, ...(flies ? { shot: flies } : {}) })
     switch (kind) {
       case "arrow":
-        return this.missile(from, target, element, slung ? "stone" : "arrow")
+        return this.missile(from, target, element, flies ?? "arrow")
       case "bolt":
         return this.missile(from, target, element, "bolt")
       case "beam":
@@ -217,7 +219,7 @@ export class Effects {
     }
   }
 
-  private missile(from: EffectEnd, to: EffectEnd, element: Element | undefined, kind: "arrow" | "bolt" | "stone") {
+  private missile(from: EffectEnd, to: EffectEnd, element: Element | undefined, kind: "arrow" | "bolt" | Shot) {
     const a = from.at.clone()
     const b = to.at.clone()
     const d = a.distanceTo(b)
@@ -246,6 +248,19 @@ export class Effects {
       const streak = new THREE.Sprite(this.glow(element ? color : "#fff4dc", element ? 0.9 : 0.25))
       streak.scale.set(0.18, 0.18, 1)
       body.add(stone, streak)
+    } else if (kind === "knife") {
+      // A knife turning end over end as it flies: a short bright blade on a dark grip, spun about its width.
+      const spin = new THREE.Group()
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.005, 0.17), new THREE.MeshStandardMaterial({ color: "#c9ccd1", metalness: 0.9, roughness: 0.25 }))
+      blade.position.z = 0.06
+      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.1, 6), new THREE.MeshStandardMaterial({ color: "#2b2019", roughness: 0.8 }))
+      grip.rotation.x = Math.PI / 2
+      grip.position.z = -0.07
+      spin.add(blade, grip)
+      spin.name = "spin"
+      const streak = new THREE.Sprite(this.glow(element ? color : "#fff4dc", element ? 0.9 : 0.25))
+      streak.scale.set(0.2, 0.2, 1)
+      body.add(spin, streak)
     } else {
       const core = new THREE.Sprite(this.glow("#ffffff"))
       core.scale.set(0.22, 0.22, 1)
@@ -259,7 +274,8 @@ export class Effects {
         objects.push(s)
       }
     }
-    const speed = kind === "arrow" ? 30 : kind === "stone" ? 24 : 15
+    const speed = kind === "arrow" ? 30 : kind === "stone" ? 24 : kind === "knife" ? 18 : 15
+    const spin = body.getObjectByName("spin")
     const p = new THREE.Vector3()
     const ahead = new THREE.Vector3()
     const flight = this.add(Math.max(0.2, d / speed), objects, (t, _dt, self) => {
@@ -267,12 +283,14 @@ export class Effects {
       body.position.copy(p)
       pointAt(Math.min(1, t + 0.02), ahead)
       if (ahead.distanceToSquared(p) > 1e-6) body.lookAt(ahead)
+      // Three turns a second through the air.
+      if (spin) spin.rotation.x = t * Math.max(0.2, d / speed) * Math.PI * 6
       trail.forEach((s, i) => pointAt(Math.max(0, t - (i + 1) * 0.035), s.position))
       if (kind === "bolt") this.lamp(self, p, color, 2.4)
     })
     return flight.then(() => {
-      this.host.event?.({ type: "effect", kind: kind === "bolt" ? "bolt" : "arrow", element, phase: "land", struck: !!to.id, ...(kind === "stone" ? { stone: true } : {}) })
-      return kind === "bolt" ? this.burst(to, element, 0.55) : this.impact(to, element, kind === "stone" ? 0.5 : 0.6)
+      this.host.event?.({ type: "effect", kind: kind === "bolt" ? "bolt" : "arrow", element, phase: "land", struck: !!to.id, ...(kind === "stone" || kind === "knife" ? { shot: kind } : {}) })
+      return kind === "bolt" ? this.burst(to, element, 0.55) : this.impact(to, element, kind === "arrow" ? 0.6 : 0.5)
     })
   }
 

@@ -29,7 +29,8 @@
     "Sneak",
     "Run",
     "Sprint",
-    "Cast"
+    "Cast",
+    "Area"
   ],
   "motion": {
     "idle": "Idle",
@@ -37,7 +38,9 @@
     "hit": "Hit",
     "fall": "Fall",
     "moves": {
-      "dodge": "Sidestep"
+      "dodge": "Sidestep",
+      "cast": "Cast",
+      "area": "Area"
     },
     "gaits": {
       "sneak": {
@@ -56,25 +59,29 @@
         "clip": "Sprint",
         "speed": 5.6
       }
+    },
+    "lands": {
+      "Cast": 0.65,
+      "Area": 0.65
     }
   },
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 199351,
-      "megabytes": 11.03,
+      "megabytes": 11.08,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19999,
-      "megabytes": 1.53,
+      "megabytes": 1.58,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5997,
-      "megabytes": 0.81,
+      "megabytes": 0.86,
       "texture": 512
     }
   ]

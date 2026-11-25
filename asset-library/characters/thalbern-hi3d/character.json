@@ -32,7 +32,10 @@
     "Combo": "ual2:Sword_Regular_Combo",
     "Strafe": "m2m/strafe-left",
     "Reel": "ual2:Idle_Shield_Break",
-    "Stumble": "m2m/drunk-walk"
+    "Stumble": "m2m/drunk-walk",
+    "Stab": "m2m/dagger-stab",
+    "Throw": "m2m/knife-throw",
+    "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit"
   },
   "eased": {
     "Swing": 85

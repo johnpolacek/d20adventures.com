@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { deg, idName, num, size, vec2, vec3 } from "../builders/types"
+import { MOVE_KINDS } from "../figures/uses"
 
 // Staging spec v1 (`d20.stage.staging`), minimal for phase 2: which set, who stands where, and the shots that frame
 // them. Scripts, ambient loops and beats come later (Stageview phases 3–4).
@@ -38,16 +39,7 @@ const castMember = z
         fall: z.string().max(80).optional(),
         walk: z.string().max(80).optional(),
         gaits: z.partialRecord(z.enum(["sneak", "walk", "run", "sprint"]), z.object({ clip: z.string().max(80), speed: num(0.05, 20) }).strict()).optional(),
-        moves: z
-          .object({
-            melee: z.string().max(80).optional(),
-            ranged: z.string().max(80).optional(),
-            dodge: z.string().max(80).optional(),
-            reel: z.string().max(80).optional(),
-            stumble: z.string().max(80).optional(),
-          })
-          .strict()
-          .optional(),
+        moves: z.partialRecord(z.enum([...MOVE_KINDS, "dodge", "reel", "stumble"]), z.string().max(80)).optional(),
         lands: z.record(z.string().max(80), num(0, 10)).optional(),
         env: num(0, 2).optional(),
         rim: z

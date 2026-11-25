@@ -26,7 +26,8 @@
     "Sidestep": "m2m/dodge-left",
     "Hit": "ual1:Hit_Chest",
     "Fall": "ual1:Death01",
-    "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit"
+    "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit",
+    "Area": "ual1:Spell_Simple_Enter > m2m/two-hand-blast > ual1:Spell_Simple_Exit"
   },
   "chin": {
     "Sneak": 40

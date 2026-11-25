@@ -150,8 +150,9 @@ export function effectSound(e: EffectEvent) {
   if (phase === "start") {
     switch (kind) {
       case "arrow":
-        // A stone from a sling: no string, only a short low whirr of air.
-        if (e.stone) return swish(0.05 + Math.random() * 0.02, 1500 + Math.random() * 300, 600, 0.14)
+        // A stone from a sling: no string, only a short low whirr of air. A thrown knife: a soft, slightly higher one.
+        if (e.shot === "stone") return swish(0.05 + Math.random() * 0.02, 1500 + Math.random() * 300, 600, 0.14)
+        if (e.shot === "knife") return swish(0.06 + Math.random() * 0.02, 2000 + Math.random() * 300, 800, 0.13)
         // The string let go, then the shaft's air. Its three takes come round in turn, each a little higher or lower
         // and louder or softer, so no two shots sound the same.
         void play(FX.bowstring, "fx", { gain: (0.5 + Math.random() * 0.2) * LEVEL, vary: 0.09 })
