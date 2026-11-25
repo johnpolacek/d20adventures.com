@@ -58,3 +58,6 @@ export function enduringTraitLeft(character: Bearer & { featureUses?: Record<str
 /** The species trait that gives a hero Heroic Inspiration as a Long Rest ends, by name (a Human's Resourceful), or none. */
 export const longRestInspiration = (character: Bearer): string | undefined =>
   speciesOf(character)?.traits.find((trait) => trait.heroicInspiration === "long-rest" && (trait.level ?? 1) <= (character.sheet?.level ?? 1))?.name
+
+/** Whether a hero moves through the space of any creature a size larger, and may not stop there: a Halfling's Nimbleness (SRD 5.2.1). */
+export const movesThroughLarger = (character: Bearer): boolean => !!speciesOf(character)?.traits.some((trait) => trait.name === "Halfling Nimbleness" && (trait.level ?? 1) <= (character.sheet?.level ?? 1))

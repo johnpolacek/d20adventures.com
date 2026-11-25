@@ -1,12 +1,15 @@
 import type { Size } from "@d20/srd"
-import { isAway } from "../utils/turn-actors"
+import { isAway, isDown, isIncapacitated } from "../utils/turn-actors"
 import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import { floorAreas, floorInPlay, roughGround, sightBlocked } from "./floor-areas"
 import type { EncounterFloor } from "./placement"
+import { sameSide } from "./sides"
+import { movesThroughLarger } from "./species-traits"
 import {
   BASE_REACH,
   between,
+  type Crowd,
   climbOf,
   heightOf,
   inWater,
@@ -96,6 +99,15 @@ export function takeMove(args: {
   const climb = climbOf(args.mover)
   // Across water at swimming's cost, unless they have a Swim Speed. They go into it only to reach a place or someone in it.
   const speed = swimsFree(args.mover)
+  // The rest who stand in the way (SRD 5.2.1, Moving around Other Creatures): the one closed with is not, and one who is down
+  // or away is in no one's way. A foe of near size bars the way, and other creatures' spaces are Difficult Terrain.
+  const crowd = (except?: string): Crowd[] =>
+    args.others.flatMap((other) =>
+      other.position && !isAway(other) && !isDown(other) && other.id !== except
+        ? [{ at: other.position, size: sizeOf(other), ally: sameSide(args.mover, other), incapacitated: isIncapacitated(other) }]
+        : []
+    )
+  const walker = { size: sizeOf(args.mover), nimble: movesThroughLarger(args.mover) }
   const someone = (id: string | undefined) => (id ? args.others.find((other) => other.id === id && other.position) : undefined)
   const place = ask.to ? args.floor.places.find((entry) => entry.id === ask.to) : undefined
   if (args.hide) {
@@ -103,7 +115,7 @@ export function takeMove(args: {
     const enemies = args.others.flatMap((other) => (args.hide?.from.includes(other.id) && other.position && !isAway(other) ? [other.position] : []))
     const areas = floorAreas(everyone)
     // The place named, when the move gets them all the way there and it hides them: the story said they hide there.
-    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) } }) : undefined
+    const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) }, walker, crowd: crowd() }) : undefined
     const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 && hidingCover({ floor, at: rounded(there.at), size, enemies, areas }) ? there : undefined
     const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas, ...(speed ? { swims: true } : {}) })
     return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
@@ -111,7 +123,7 @@ export function takeMove(args: {
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
   let walked: ReturnType<typeof walk> | undefined
-  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) } })
+  if (place) walked = walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) }, walker, crowd: crowd() })
   else if (toward?.position) {
     const reach = args.close && args.close.target === toward.id ? args.close.reach : 5
     walked = walk(floor, from, toward.position, budget, {
@@ -120,8 +132,10 @@ export function takeMove(args: {
       rough,
       climb,
       swim: { speed, into: inWater(floor.water, toward.position) },
+      walker,
+      crowd: crowd(toward.id),
     })
-  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb, swim: { speed } })
+  } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb, swim: { speed }, walker, crowd: crowd() })
   if (!walked || walked.used < 0.5) return undefined
   return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
 }

@@ -5,6 +5,7 @@ import { attacksOf, meleeReachOf } from "../../src/sheet/attack"
 import type { Sheet } from "../../src/sheet/sheet"
 import {
   attackReach,
+  between,
   caughtIn,
   climbCost,
   coverBetween,
@@ -16,6 +17,7 @@ import {
   greaterCover,
   inArea,
   inWater,
+  mayPassThrough,
   metres,
   movementBudget,
   movementBudgetOf,
@@ -450,4 +452,65 @@ test("a walk over water stops at its edge, or swims it for 1 extra foot a foot u
   const round = { ...floor, waypoints: [{ x: 5, y: 60 }, { x: 25, y: 60 }] }
   assert.deepEqual(routeThrough(round, { x: 0, y: 0 }, { x: 30, y: 0 }, undefined, { water: floor.water ?? [], shut: true }), [{ x: 5, y: 60 }, { x: 25, y: 60 }, { x: 30, y: 0 }])
   assert.equal(routeThrough(floor, { x: 0, y: 0 }, { x: 30, y: 0 }, undefined, { water: floor.water ?? [], shut: true }), undefined)
+})
+
+test("a walker passes through the space of an ally, an Incapacitated or Tiny creature, or one two sizes off, and no other", () => {
+  const foe = { at: at(5, 0), ally: false, incapacitated: false }
+  assert.equal(mayPassThrough({}, foe), false)
+  assert.equal(mayPassThrough({}, { ...foe, size: "Small" }), false)
+  assert.equal(mayPassThrough({}, { ...foe, size: "Large" }), false)
+  assert.equal(mayPassThrough({}, { ...foe, ally: true }), true)
+  assert.equal(mayPassThrough({}, { ...foe, incapacitated: true }), true)
+  assert.equal(mayPassThrough({}, { ...foe, size: "Tiny" }), true)
+  assert.equal(mayPassThrough({}, { ...foe, size: "Huge" }), true)
+  // A Small walker passes a Large foe, two sizes up, and not a Medium one. A Large walker passes a Small foe.
+  assert.equal(mayPassThrough({ size: "Small" }, { ...foe, size: "Large" }), true)
+  assert.equal(mayPassThrough({ size: "Small" }, foe), false)
+  assert.equal(mayPassThrough({ size: "Large" }, { ...foe, size: "Small" }), true)
+  // A Halfling's Nimbleness adds a creature a size larger, and none a size smaller.
+  assert.equal(mayPassThrough({ size: "Small", nimble: true }, foe), true)
+  assert.equal(mayPassThrough({ size: "Medium", nimble: true }, { ...foe, size: "Small" }), false)
+})
+
+test("a foe of near size bars a doorway, and other creatures' spaces are Difficult Terrain unless Tiny or an ally's", () => {
+  // A closed passage 5 feet wide, so a creature standing in it leaves no way round, as in a cabin doorway.
+  const door: Floor = {
+    solids: [
+      { kind: "rect", x: 0, y: -3.5, halfWidth: 100, halfDepth: 1, turn: 0 },
+      { kind: "rect", x: 0, y: 3.5, halfWidth: 100, halfDepth: 1, turn: 0 },
+      { kind: "rect", x: -101, y: 0, halfWidth: 1, halfDepth: 5, turn: 0 },
+      { kind: "rect", x: 101, y: 0, halfWidth: 1, halfDepth: 5, turn: 0 },
+    ],
+    doors: [],
+  }
+  const target = at(40, 0)
+  const walkTo = (floor: Floor, crowd: Parameters<typeof walk>[4]["crowd"], walker?: Parameters<typeof walk>[4]["walker"]) => walk(floor, o, target, 60, { crowd, walker })
+  const stands = { at: at(20, 0), ally: false, incapacitated: false }
+  // Silas, Medium, hostile, in the doorway: no way through, and the walk stops short of him.
+  const blocked = walkTo(door, [stands])
+  assert.deepEqual([blocked.at, blocked.used], [at(17.5, 0), 17.5])
+  // With no one there, 40 feet to the goal.
+  assert.deepEqual([walkTo(door, []).at, walkTo(door, []).used], [target, 40])
+  // An ally is passed through, and is no Difficult Terrain.
+  assert.deepEqual([walkTo(door, [{ ...stands, ally: true }]).at, walkTo(door, [{ ...stands, ally: true }]).used], [target, 40])
+  // An Incapacitated foe is passed through, and his 5-foot space costs double: 5 feet more.
+  const down = walkTo(door, [{ ...stands, incapacitated: true }])
+  assert.deepEqual([down.at, down.used], [target, 45])
+  // A Tiny foe is passed through at no extra cost.
+  const tiny = walkTo(door, [{ ...stands, size: "Tiny" }])
+  assert.deepEqual([tiny.at, tiny.used], [target, 40])
+  // A Huge foe is two sizes larger: passed through, his 15 feet of space costing 15 more.
+  const huge = walkTo(door, [{ ...stands, size: "Huge" }])
+  assert.deepEqual([huge.at, huge.used], [target, 55])
+  // A Large foe bars a Medium walker, and a Small one passes him, his 10 feet costing double.
+  assert.ok(walkTo(door, [{ ...stands, size: "Large" }]).at.x <= 15)
+  assert.deepEqual(walkTo(door, [{ ...stands, size: "Large" }], { size: "Small" }).used, 50)
+  // A Halfling's Nimbleness takes a Small walker through a Medium foe, a size larger, at his 5 feet doubled.
+  const nimble = walkTo(door, [stands], { size: "Small", nimble: true })
+  assert.deepEqual([nimble.at, nimble.used], [target, 45])
+  // In the open the walk goes round a foe, and so costs more than the straight 40 feet, with no step inside his space.
+  const open = walk({ solids: [], doors: [] }, o, target, 80, { crowd: [stands] })
+  assert.deepEqual(open.at, target)
+  assert.ok(open.used > 40)
+  for (const step of open.path) assert.ok(between(step, stands.at) >= 2.5)
 })

@@ -719,6 +719,45 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
   return to
 }
 
+/** Another creature in a walker's way: where it stands, its size, whether it is the walker's ally, and whether it is Incapacitated. */
+export type Crowd = { at: Point; size?: Size; ally: boolean; incapacitated: boolean }
+
+/** The walker, as moving around other creatures reads them: their size, and whether they have Halfling Nimbleness. */
+export type Walker = { size?: Size; nimble?: boolean }
+
+const SIZES: readonly Size[] = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"]
+
+/**
+ * Whether a walker may pass through another creature's space during a move (SRD 5.2.1, Moving around Other Creatures):
+ * that of an ally, of a creature that is Incapacitated, of a Tiny one, or of one two sizes larger or smaller. A
+ * Halfling's Nimbleness adds one a size larger. Any other creature bars the way: a Medium walker may not pass a Medium
+ * or Large foe, nor a Small one, but may pass a Huge one.
+ */
+export function mayPassThrough(walker: Walker, other: Crowd): boolean {
+  if (other.ally || other.incapacitated || other.size === "Tiny") return true
+  const apart = SIZES.indexOf(other.size ?? "Medium") - SIZES.indexOf(walker.size ?? "Medium")
+  return Math.abs(apart) >= 2 || (!!walker.nimble && apart === 1)
+}
+
+// A creature's space as a round solid thing on the floor, the whole of it.
+const spaceSolid = (other: Crowd): Solid => ({ kind: "circle", x: other.at.x, y: other.at.y, radius: spaceOf(other.size) / 2 })
+
+/**
+ * The creatures that bar a walker's way, as solid things to route round, and the ground their spaces make of the rest
+ * they may pass through: Difficult Terrain unless the creature is Tiny or an ally (SRD 5.2.1, Moving around Other
+ * Creatures). A Medium walker with a Medium foe in a 5-foot doorway has no way through, and one with a Huge foe in it
+ * walks through at double cost.
+ */
+export function crowdGround(walker: Walker, crowd: readonly Crowd[]): { solids: Solid[]; rough: Rough[] } {
+  const solids: Solid[] = []
+  const rough: Rough[] = []
+  for (const other of crowd) {
+    if (!mayPassThrough(walker, other)) solids.push(spaceSolid(other))
+    else if (!other.ally && other.size !== "Tiny") rough.push({ shape: spaceSolid(other), cost: 2 })
+  }
+  return { solids, rough }
+}
+
 /**
  * A character's walk over a floor: toward a goal by the way `routeThrough` finds, as far as the feet given, stopping
  * at the first solid thing when no way is clear. `stopShort` halts that many feet short of the goal, for closing with
@@ -731,21 +770,38 @@ export function standingRoom(solids: readonly Solid[], others: readonly Point[],
  * One that sets out in water, or is bound for a goal in water (`swim.into`), swims instead, each foot costing
  * `SWIM_EXTRA` more unless they have a Swim Speed (`swim.speed`). Backing straight away from a fight on the Mordava's
  * bank stops at the water, and a walk to someone in the river swims out to them.
+ *
+ * Other creatures (`crowd`, each but the one closed with) are met as the SRD has it (`crowdGround`): a foe of near size
+ * bars the way and is gone round, or the walk stops short of it where no way round is clear, as at a doorway. A
+ * creature the walker may pass through but is not an ally or Tiny is Difficult Terrain.
  */
 export function walk(
   floor: Floor,
   from: Point,
   to: Point,
   feet: number,
-  options: { stopShort?: number; others?: readonly Point[]; rough?: readonly Rough[]; climb?: Climb; swim?: { speed?: boolean; into?: boolean } } = {}
+  options: {
+    stopShort?: number
+    others?: readonly Point[]
+    rough?: readonly Rough[]
+    climb?: Climb
+    swim?: { speed?: boolean; into?: boolean }
+    walker?: Walker
+    crowd?: readonly Crowd[]
+  } = {}
 ): { at: Point; used: number; path: Point[] } {
+  const ground = crowdGround(options.walker ?? {}, options.crowd ?? [])
+  const rougher = [...(options.rough ?? []), ...ground.rough]
+  // The floor as the walker meets it, with the creatures that bar the way as solid things. Where they stand clear of one is read on the plain floor.
+  const plain = floor
+  if (ground.solids.length) floor = { ...floor, solids: [...floor.solids, ...ground.solids] }
   const short = options.stopShort ?? 0
   const gap = between(from, to)
   const others = options.others ?? []
   const climb = options.climb
   const water = floor.water?.length ? floor.water : undefined
   const wading: Swim | undefined = water ? { water, shut: !(options.swim?.into || inWater(water, from)), speed: options.swim?.speed } : undefined
-  const clear = (a: Point, b: Point) => !walkOver(floor.solids, a, b, Number.POSITIVE_INFINITY, [], climb).blocked
+  const clear = (a: Point, b: Point) => !walkOver(plain.solids, a, b, Number.POSITIVE_INFINITY, [], climb).blocked
   const length = (way: readonly Point[]) => way.reduce((sum, point, index) => sum + between(index ? way[index - 1] : from, point), 0)
   // Already within the distance asked, with nothing solid between: no step is taken.
   if (short && gap <= short && clear(from, to)) return { at: { ...from }, used: 0, path: [] }
@@ -772,7 +828,7 @@ export function walk(
   let left = Math.max(0, feet)
   const path: Point[] = []
   for (const point of way ?? [goal]) {
-    const leg = walkOver(floor.solids, at, point, left, options.rough, climb, wading)
+    const leg = walkOver(floor.solids, at, point, left, rougher, climb, wading)
     if (leg.used > 0) path.push(leg.at)
     left -= leg.used
     at = leg.at
