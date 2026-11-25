@@ -179,18 +179,18 @@ test("a strike meets the target's Vulnerability", () => {
 })
 
 test("a Rogue's Sneak Attack adds its dice to a hit made with Advantage and a Finesse or Ranged weapon", () => {
-  // Poppen, a level 1 Rogue: Dex 16 (+3). His Shortbow is +5 for 1d6 + 3 Piercing, and his Sneak Attack is 1d6.
+  // Poppen, a level 1 Rogue: Dex 16 (+3). His Sling is +5 for 1d4 + 3 Bludgeoning, and his Sneak Attack is 1d6.
   // A Bandit has Armor Class 12 and 11 hit points.
   const poppen = { name: "Poppen", type: "pc", sheet: hero("covert-cargo/characters/1749307435667.json").sheet }
   const bandit = { name: "Bandit", type: "npc", statBlock: "bandit" }
-  // With Advantage, 4 and 9: the 9 makes 14 and hits. A 2 on the bow's d6 and 3, and a 4 on the Sneak Attack's d6: 9.
-  const sneak = strike({ attacker: poppen, target: bandit, weapon: "shortbow", dice: [4, 9], mode: "advantage", roll: falls(2, 4) })
+  // With Advantage, 4 and 9: the 9 makes 14 and hits. A 2 on the sling's d4 and 3, and a 4 on the Sneak Attack's d6: 9.
+  const sneak = strike({ attacker: poppen, target: bandit, weapon: "sling", dice: [4, 9], mode: "advantage", roll: falls(2, 4) })
   assert.deepEqual(sneak.features, ["Sneak Attack"])
   assert.equal(sneak.taken, 9)
   assert.equal(sneak.hitPoints.after, 2)
-  assert.match(strikeFacts("Poppen", "Bandit", sneak), /HITS with a Sneak Attack \(14 against Armor Class 12\) for 9 piercing damage/)
-  // The same shot with no Advantage is the bow alone: 2 and 3 is 5.
-  const plain = strike({ attacker: poppen, target: bandit, weapon: "shortbow", dice: [9], roll: falls(2) })
+  assert.match(strikeFacts("Poppen", "Bandit", sneak), /HITS with a Sneak Attack \(14 against Armor Class 12\) for 9 bludgeoning damage/)
+  // The same shot with no Advantage is the sling alone: 2 and 3 is 5.
+  const plain = strike({ attacker: poppen, target: bandit, weapon: "sling", dice: [9], roll: falls(2) })
   assert.equal(plain.features, undefined)
   assert.equal(plain.taken, 5)
   // Its other way in: an ally within 5 feet of the target, on their feet, and no Disadvantage. Lyra stands 5 feet
@@ -198,21 +198,21 @@ test("a Rogue's Sneak Attack adds its dice to a hit made with Advantage and a Fi
   const here = { ...poppen, id: "poppen", position: { x: 0, y: 0 } }
   const there = { ...bandit, id: "bandit", position: { x: 30, y: 0 } }
   const lyra = { id: "lyra", name: "Lyra", type: "pc", hitPoints: 6, position: { x: 30, y: 5 } }
-  const flanked = strike({ attacker: here, target: there, weapon: "shortbow", dice: [9], roll: falls(2, 4), present: [here, there, lyra] })
+  const flanked = strike({ attacker: here, target: there, weapon: "sling", dice: [9], roll: falls(2, 4), present: [here, there, lyra] })
   assert.deepEqual([flanked.features, flanked.taken], [["Sneak Attack"], 9])
   // Not with Lyra 10 feet off, nor down at 0 hit points, nor with Disadvantage on the roll, nor with another Bandit there.
   const alone = (present: (typeof lyra)[], mode?: "disadvantage") =>
-    strike({ attacker: here, target: there, weapon: "shortbow", dice: mode ? [9, 12] : [9], mode, roll: falls(2), present: [here, there, ...present] }).features
+    strike({ attacker: here, target: there, weapon: "sling", dice: mode ? [9, 12] : [9], mode, roll: falls(2), present: [here, there, ...present] }).features
   assert.equal(alone([{ ...lyra, position: { x: 30, y: 10 } }]), undefined)
   assert.equal(alone([{ ...lyra, hitPoints: 0 }]), undefined)
   assert.equal(alone([lyra], "disadvantage"), undefined)
   assert.equal(alone([{ ...lyra, type: "npc" }]), undefined)
   // A hit from within 5 feet on a Paralyzed target is a Critical Hit, and one from 30 feet is not, whatever the weapon.
   const held = { ...there, conditions: [{ id: "paralyzed" as const }] }
-  assert.equal(strike({ attacker: here, target: held, weapon: "shortbow", dice: [9], roll: falls(2, 2) }).roll.critical, false)
-  assert.equal(strike({ attacker: { ...here, position: { x: 26, y: 0 } }, target: held, weapon: "shortbow", dice: [9], roll: falls(2, 2) }).roll.critical, true)
-  // A Critical Hit doubles the Sneak Attack's dice too: 2 and 5 on the bow, 3, then 4 and 6: 20, more than the Bandit has.
-  assert.equal(strike({ attacker: poppen, target: bandit, weapon: "shortbow", dice: [20, 3], mode: "advantage", roll: falls(2, 5, 4, 6) }).taken, 20)
+  assert.equal(strike({ attacker: here, target: held, weapon: "sling", dice: [9], roll: falls(2, 2) }).roll.critical, false)
+  assert.equal(strike({ attacker: { ...here, position: { x: 26, y: 0 } }, target: held, weapon: "sling", dice: [9], roll: falls(2, 2) }).roll.critical, true)
+  // A Critical Hit doubles the Sneak Attack's dice too: 2 and 4 on the sling, 3, then 4 and 6: 19, more than the Bandit has.
+  assert.equal(strike({ attacker: poppen, target: bandit, weapon: "sling", dice: [20, 3], mode: "advantage", roll: falls(2, 4, 4, 6) }).taken, 19)
   // Thalbern is no Rogue: Advantage adds no Sneak Attack to his Longbow, only his Savage Attacker's second d8.
   assert.deepEqual(strike({ attacker: { type: "pc", sheet: thalbern }, target: bandit, weapon: "longbow", dice: [4, 9], mode: "advantage", roll: falls(5, 1) }).features, ["Savage Attacker"])
 })

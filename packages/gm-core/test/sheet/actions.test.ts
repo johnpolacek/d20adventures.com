@@ -33,7 +33,7 @@ type Character = {
 const thalbern: Character = { id: "thalbern", name: "Thalbern", type: "pc", sheet: sheet("the-midnight-summons/characters/thalbern.json"), hitPoints: 11 }
 // Branka, a Fighter: proficient in Perception, Insight, Athletics and Intimidation, and not in Stealth.
 const branka: Character = { id: "branka", name: "Branka", type: "pc", sheet: sheet("welcome-to-kordavos/characters/branka-stoneveil.json"), hitPoints: 14 }
-// Poppen, a level 1 Rogue with Dexterity 16: Stealth with Expertise is 3 + 2 + 2, and a Shortbow is +5 for 1d6 + 3.
+// Poppen, a level 1 Rogue with Dexterity 16: Stealth with Expertise is 3 + 2 + 2, and a Sling is +5 for 1d4 + 3.
 const poppen: Character = { id: "poppen", name: "Poppen", type: "pc", sheet: sheet("covert-cargo/characters/1749307435667.json"), hitPoints: 10 }
 const owlbear: Character = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear", hitPoints: 59 }
 // A Bandit: Armor Class 12 and 11 hit points.
@@ -114,14 +114,14 @@ test("Hide: Stealth against 15 for Invisible, which gives the next attack Advant
   // Unseen, her attack has Advantage and one against her Disadvantage.
   assert.deepEqual(attackModesFrom(unseen, bandit, false), [{ mode: "advantage", from: "Invisible" }])
   assert.deepEqual(modes(attackModesFrom(bandit, unseen, true)), ["disadvantage"])
-  // Shortbow +5 with Advantage: a 4 and a 12 keep the 12, 17 against Armor Class 12. With Advantage and a Ranged
-  // weapon it is a Sneak Attack: 1d6 + 3 rolling 4 is 7, and 1d6 more rolling 5 makes 12. The Bandit's 11 are gone.
+  // Sling +5 with Advantage: a 4 and a 12 keep the 12, 17 against Armor Class 12. With Advantage and a Ranged
+  // weapon it is a Sneak Attack: 1d4 + 3 rolling 4 is 7, and 1d6 more rolling 5 makes 12. The Bandit's 11 are gone.
   const dice = [4, 5]
-  const shot = strike({ attacker: unseen, target: bandit, weapon: "shortbow", dice: [4, 12], mode: "advantage", roll: () => dice.shift() as number })
+  const shot = strike({ attacker: unseen, target: bandit, weapon: "sling", dice: [4, 12], mode: "advantage", roll: () => dice.shift() as number })
   assert.deepEqual([shot.roll.total, shot.features, shot.taken, shot.fate], [17, ["Sneak Attack"], 12, "dies"])
   // The shot gives her away.
-  const shortbow = { attack: { weapon: "shortbow", target: "bandit" }, rollType: "Shortbow", difficulty: 12, modifier: 5, mode: "advantage" as const }
-  assert.equal(find(afterRoll([unseen, bandit], "poppen", shortbow), "poppen").conditions, undefined)
+  const sling = { attack: { weapon: "sling", target: "bandit" }, rollType: "Sling", difficulty: 12, modifier: 5, mode: "advantage" as const }
+  assert.equal(find(afterRoll([unseen, bandit], "poppen", sling), "poppen").conditions, undefined)
 })
 
 test("Dash and Disengage are taken and change no roll, and nothing an action left outlasts the encounter", () => {

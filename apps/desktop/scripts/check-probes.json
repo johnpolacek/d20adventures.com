@@ -983,10 +983,10 @@
       ]
     },
     "narrative": "Reinhard draws his blade and comes at them across the bank. He has not seen Poppen in the bushes.",
-    "action": "I shoot Reinhard low in the leg from the bushes to knock him off his feet.",
+    "action": "I sling a stone low at Reinhard's leg from the bushes to knock him off his feet.",
     "checks": ["attack"],
     "attack": {
-      "weapon": "shortbow",
+      "weapon": "sling",
       "target": "npcs-1749163978757"
     },
     "cunning": "trip"
@@ -1000,10 +1000,10 @@
       "level": 2
     },
     "narrative": "Reinhard draws his blade and comes at them across the bank. The fight is on.",
-    "action": "I loose an arrow at Reinhard, then duck straight back down behind the crates out of his sight.",
+    "action": "I sling a stone at Reinhard, then duck straight back down behind the crates out of his sight.",
     "checks": ["attack"],
     "attack": {
-      "weapon": "shortbow",
+      "weapon": "sling",
       "target": "npcs-1749163978757"
     },
     "bonus": {
@@ -1020,10 +1020,10 @@
       "subclass": "thief"
     },
     "narrative": "Reinhard draws his blade and comes at them across the bank. The fight is on.",
-    "action": "I stay perfectly still in the bushes, steady my bow and take careful aim before I shoot Reinhard.",
+    "action": "I stay perfectly still in the bushes, steady my sling and take careful aim before I let fly at Reinhard.",
     "checks": ["attack"],
     "attack": {
-      "weapon": "shortbow",
+      "weapon": "sling",
       "target": "npcs-1749163978757"
     },
     "bonus": {
@@ -1110,13 +1110,13 @@
     "encounter": "the-transaction",
     "hero": "1749307435667",
     "narrative": "Reinhard is down in the mud of the bank, senseless but still breathing. Silas has backed off toward the water.",
-    "action": "I put an arrow into Reinhard where he lies, so he never gets up again.",
+    "action": "I sling a stone at Reinhard's head where he lies, so he never gets up again.",
     "hitPointsOn": {
       "npcs-1749163978757": 0
     },
     "checks": ["attack"],
     "attack": {
-      "weapon": "shortbow",
+      "weapon": "sling",
       "target": "npcs-1749163978757"
     }
   },
@@ -1132,7 +1132,7 @@
     },
     "checks": ["attack"],
     "attack": {
-      "weapon": "shortbow",
+      "weapon": "sling",
       "target": "npcs-1749181492795"
     }
   },

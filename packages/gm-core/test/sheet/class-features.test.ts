@@ -231,7 +231,7 @@ test("Cunning Action and Steady Aim are a Rogue's Bonus Actions", () => {
   assert.equal(used.use?.fact, "Poppen takes the Hide action as a Bonus Action.")
   // A Hide taken with Cunning Action is the Stealth check after the turn's own roll: Stealth with Expertise, +4 + 6, against 15.
   const her = pc("poppen", "Poppen", rogue5)
-  const shot: RequiredRoll = { attack: { weapon: "shortbow", target: "bandit" }, rollType: "Shortbow", difficulty: 12, modifier: 7, mode: "normal", after: { hide: true } }
+  const shot: RequiredRoll = { attack: { weapon: "sling", target: "bandit" }, rollType: "Sling", difficulty: 12, modifier: 7, mode: "normal", after: { hide: true } }
   const hide = followingRoll({ character: her, made: shot, present: [her, npc("bandit", "Bandit", "bandit")] })
   assert.deepEqual(hide && "check" in hide && [hide.check, hide.difficulty, hide.modifier], [{ kind: "skill", skill: "stealth" }, 15, 10])
 })
@@ -239,7 +239,7 @@ test("Cunning Action and Steady Aim are a Rogue's Bonus Actions", () => {
 test("Steady Aim gives the attack Advantage, and Grappler gives it on one the attacker holds", () => {
   const her = pc("poppen", "Poppen", rogue5)
   const bandit = npc("bandit", "Bandit", "bandit")
-  const made = attackRequirement({ character: her, target: bandit, attack: weaponAttack(rogue5, "shortbow"), present: [her, bandit], modes: [{ mode: "advantage", from: "Steady Aim" }] })
+  const made = attackRequirement({ character: her, target: bandit, attack: weaponAttack(rogue5, "sling"), present: [her, bandit], modes: [{ mode: "advantage", from: "Steady Aim" }] })
   assert.deepEqual("roll" in made && [made.roll.mode, made.roll.reasons, made.roll.difficulty, made.roll.modifier], ["advantage", ["Steady Aim"], 12, 7])
   const grappler: Sheet = { ...fighter5, abilityScores: { ...fighter5.abilityScores, str: 17 }, advancements: [{ level: 4, feat: "grappler", abilities: { str: 1 } }] }
   assert.deepEqual(sheetProblems(grappler), [])
@@ -249,23 +249,23 @@ test("Steady Aim gives the attack Advantage, and Grappler gives it on one the at
 })
 
 test("Cunning Strike's Trip takes a Sneak Attack die, and the target saves with Dexterity against 15 or falls Prone", () => {
-  // With Advantage the 15 makes 22 against the Owlbear's 13. The Shortbow's d6, 3, and 4, and the Sneak Attack's 3d6
+  // With Advantage the 15 makes 22 against the Owlbear's 13. The Sling's d4, 3, and 4, and the Sneak Attack's 3d6
   // less one: 4 and 5. 16 in all, from 59 to 43. The Owlbear is Large: its Dexterity save, a 6 and +1, is 7 against
   // 8 + 4 + 3, 15. It falls Prone.
   const owlbear: Body = { id: "owlbear", name: "Owlbear", type: "npc", statBlock: "owlbear" }
-  const blow = strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 6), choices: { cunning: "trip" } })
+  const blow = strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "sling", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 6), choices: { cunning: "trip" } })
   assert.deepEqual([blow.taken, blow.hitPoints.after, blow.damage?.parts.map((part) => part.dice)], [16, 43, [[3], [4, 5]]])
   assert.deepEqual([blow.riders?.[0]?.save?.total, blow.riders?.[0]?.save?.dc, blow.riders?.[0]?.took, blow.conditions], [7, 15, true, [{ target: "owlbear", condition: "prone" }]])
   // Prone lasts until its bearer's own turn begins.
   assert.deepEqual(blow.target.conditions, [{ id: "prone", turns: 1 }])
   // A 14 on the save makes 15: it stays standing.
   assert.equal(
-    strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 14), choices: { cunning: "trip" } }).riders?.[0]
+    strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "sling", dice: [4, 15], mode: "advantage", roll: falls(3, 4, 5, 14), choices: { cunning: "trip" } }).riders?.[0]
       ?.took,
     false
   )
   // With no Sneak Attack there is no Cunning Strike.
-  assert.equal(strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "shortbow", dice: [15], roll: falls(3), choices: { cunning: "trip" } }).riders, undefined)
+  assert.equal(strike({ attacker: { type: "pc", sheet: rogue5 }, target: owlbear, weapon: "sling", dice: [15], roll: falls(3), choices: { cunning: "trip" } }).riders, undefined)
 })
 
 test("Uncanny Dodge halves a hit's damage, by default when it matters", () => {

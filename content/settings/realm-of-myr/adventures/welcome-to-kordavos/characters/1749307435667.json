@@ -16,10 +16,10 @@
       "name": "Two Daggers"
     },
     {
-      "name": "Shortbow"
+      "name": "Sling"
     },
     {
-      "name": "Quiver with 20 Arrows"
+      "name": "Pouch with 20 Sling Bullets"
     },
     {
       "name": "Thieves' Tools"
@@ -68,7 +68,7 @@
     "classSkills": ["acrobatics", "deception", "perception", "persuasion"],
     "expertise": ["stealth", "sleight-of-hand"],
     "armor": "leather-armor",
-    "weapons": ["dagger", "shortbow"],
-    "weaponMasteries": ["shortbow", "dagger"]
+    "weapons": ["dagger", "sling"],
+    "weaponMasteries": ["sling", "dagger"]
   }
 }
