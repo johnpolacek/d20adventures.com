@@ -158,7 +158,7 @@ test("the gate keeps first-name figures, Clan Conflict, the Dragonbone Inn, the 
       ["shadowing-silverhand", ["aldith", "kaelen", "silverhand", "silverhand-representative"], 4, /old lanes[\s\S]*the archway under the bridge-house/],
       ["the-hideout", ["aldith", "kaelen"], 2, /abandoned warehouse[\s\S]*the hideout's door/],
       ["face-to-face-with-silverhand", ["silverhand"], 1, /back room[\s\S]*Silverhand's end of the table/],
-      ["the-ambush", ["bram", "liora", "silas"], 2, /hooded archer[\s\S]*the door with the arrow in it/],
+      ["the-ambush", ["bram", "cowl-archer", "liora"], 2, /hooded archer[\s\S]*the door with the arrow in it/],
     ] as const) {
       await advance(run.store, encounter)
       const here = run.store.current()

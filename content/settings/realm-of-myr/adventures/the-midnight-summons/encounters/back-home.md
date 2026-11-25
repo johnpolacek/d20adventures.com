@@ -18,7 +18,7 @@ The next morning Thalbern is home in the forest. Wollandora's words stay with hi
 
 He turned her down. He dislikes the city, but the relics nag at him.
 
-By nightfall he has decided. He will follow the Mordava downstream and see this boat for himself.
+By nightfall he has decided. He will follow the Mordava down to the old smugglers' pier Wollandora named and see this boat for himself.
 
 The story continues in Covert Cargo.
 

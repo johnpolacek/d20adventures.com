@@ -64,6 +64,8 @@ Kazimir wishes to avoid any direct confrontation with the Covenant. His instinct
 
 **A hero he owes.** If a hero came to Kordavos to collect coin Silverhand owes them, he remembers it as an old job and does not deny the debt. He pays nothing tonight. He offers to clear it in full for word of Lev, and says so once.
 
+**A hero who watched the pier.** If the story so far puts a hero at the Mordava pier, Silverhand wants to hear how the Blackthorns brought their crate in, and asks once. A hero who tells it well, Poppen above all, gets an offer of work with his crew after the Festival. He says so once and asks no answer tonight.
+
 **Ending the meeting.** Once the party has asked its questions, and by the end of the fourth round at the latest, Silverhand ends it once: "We're done. Varchk, see them out." Varchk walks them to the door, and the night air takes them back toward the inn.
 
 ## Transitions

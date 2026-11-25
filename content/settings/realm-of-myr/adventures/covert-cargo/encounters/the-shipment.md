@@ -38,7 +38,7 @@ A river boat bound for Kordavos lies moored at a hidden pier on the Mordava.
 
 {actor: 1749307435667, private: true} He watched three board: a hulking soldier, a robed woman, a whispering shadow. A professional crew, guarding something worth stealing.
 
-{actor: thalbern, private: true} Below the stern, Thalbern kneels in a thicket, longbow across his knee. The druid Wollandora sent him after relics stolen from the elven vaults, and this boat carries them. No one has seen him.
+{actor: thalbern, private: true} Below the stern, Thalbern kneels in a thicket, longbow across his knee. The druid Wollandora sent him after relics stolen from the elven vaults, and told him to watch this pier. The boat she saw is here. No one has seen him.
 
 {actor: Aelar Moonglimmer} The cabin door opens. A tall elf in dark clothes steps out. A second elf, a spearman, watches from the stern.
 

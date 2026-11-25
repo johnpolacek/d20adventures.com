@@ -8,7 +8,7 @@
     { "id": "cassia-verane", "name": "Cassia Verane", "x": 0.3, "z": -5.8 },
     { "id": "yeva-softstep", "name": "Yeva Softstep", "x": -1.7, "z": -4.4 },
     { "id": "milos-radan", "name": "Milos Radan", "x": 1.2, "z": -4.9 },
-    { "id": "silas", "name": "A hooded archer", "x": 3.5, "z": -12.2, "raised": 12 },
+    { "id": "cowl-archer", "name": "A hooded archer", "x": 3.5, "z": -12.2, "raised": 12 },
     { "id": "liora", "name": "A hooded archer", "x": -3.5, "z": -1.4, "raised": 12 }
   ],
   "party": [

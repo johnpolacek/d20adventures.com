@@ -440,11 +440,11 @@
       "kind": "npcSheet"
     },
     {
-      "path": "content/settings/realm-of-myr/npcs/silas.md",
+      "path": "content/settings/realm-of-myr/npcs/cowl-archer.md",
       "kind": "npc"
     },
     {
-      "path": "content/settings/realm-of-myr/npcs/silas.json",
+      "path": "content/settings/realm-of-myr/npcs/cowl-archer.json",
       "kind": "npcSheet"
     },
     {
@@ -1583,11 +1583,11 @@
     },
     {
       "source": "AdventurePlan.npcs.silas",
-      "destination": "content/settings/realm-of-myr/npcs/silas.json"
+      "destination": "content/settings/realm-of-myr/npcs/cowl-archer.json"
     },
     {
       "source": "AdventurePlan.npcs.silas",
-      "destination": "content/settings/realm-of-myr/npcs/silas.md"
+      "destination": "content/settings/realm-of-myr/npcs/cowl-archer.md"
     },
     {
       "source": "AdventurePlan.npcs.liora",

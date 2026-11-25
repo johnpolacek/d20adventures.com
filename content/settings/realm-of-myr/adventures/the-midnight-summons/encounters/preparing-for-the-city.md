@@ -20,7 +20,7 @@ The next morning Thalbern is home in the forest. Wollandora's words stay with hi
 
 {actor: thalbern, place: pathOut} As the sun climbs, he sets out.
 
-He does not take the road. Wollandora saw the boat on the river, Valkaran-made and riding low. Thalbern follows the Mordava downstream.
+He does not take the road. Wollandora saw the boat on the river, Valkaran-made and riding low. Thalbern follows the Mordava downstream, toward the old smugglers' pier on its quiet fork.
 
 The story continues in Covert Cargo.
 

@@ -32,7 +32,7 @@ This is a prelude. The heroes meet on the Marquis Road, the last day's walk to K
 
 The heroes travel alone, each on their own business, and have never met. They do not know each other's names, errands or pasts, only what they can see of each other on the road. That changes only as the story shows them talking, introducing themselves or hearing a name said aloud.
 
-Heroes who come on together from the adventure just before this one, as the story so far tells, already know each other and walk the road together. They know nothing of the other heroes, who know nothing of them.
+Heroes who come on together from the adventure just before this one, as the story so far tells, already know each other and walk the road together. They come up from the river the same morning, three miles from the gates, with the fight at the pier only hours behind them. They know nothing of the other heroes, who know nothing of them.
 
 Thalbern, Lyra and Poppen, played without the story so far, each come alone, as their own pasts say. Each knows only what they saw at the smugglers' pier on the Mordava. None of them knows the other two were there.
 

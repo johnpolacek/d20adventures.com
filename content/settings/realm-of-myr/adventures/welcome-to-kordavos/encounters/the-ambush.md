@@ -10,7 +10,7 @@ adventureId: "welcome-to-kordavos"
 landmark: "kordavos/ambush-lane"
 roundBudget: 3
 npcs:
-  - id: "silas"
+  - id: "cowl-archer"
     behavior: "Cold, calculating, and merciless. Looses the warning arrows from the rooftops, then withdraws with the others when the voice falls silent, and does not come back this night."
   - id: "liora"
     behavior: "Stoic, deadly, and fiercely loyal to The Cowl. Watches from the rooftops while the voice speaks, then melts away with the others and does not come back this night."

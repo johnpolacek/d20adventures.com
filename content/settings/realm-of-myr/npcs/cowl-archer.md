@@ -1,9 +1,9 @@
 ---
-id: "silas"
+id: "cowl-archer"
 type: "npc"
 title: "Cowled Rogue"
 settingId: "realm-of-myr"
-sheet: "silas.json"
+sheet: "cowl-archer.json"
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1"
 ---
 

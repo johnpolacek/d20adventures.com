@@ -81,7 +81,7 @@
       ]
     },
     {
-      "id": "silas",
+      "id": "cowl-archer",
       "name": "A hooded archer",
       "role": "Cowl rogue",
       "height": 1.8,
@@ -143,8 +143,8 @@
       "fov": 54,
       "label": "Party"
     },
-    "silas": {
-      "subject": "silas",
+    "cowl-archer": {
+      "subject": "cowl-archer",
       "distance": 4.2,
       "angle": 10,
       "height": 1.2,
@@ -165,7 +165,7 @@
   "shot": "lanes",
   "exits": [
     {
-      "cast": "silas",
+      "cast": "cowl-archer",
       "when": "melt away",
       "to": [
         6.8,
