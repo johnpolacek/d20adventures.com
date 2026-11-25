@@ -1,5 +1,5 @@
 import type { Size } from "@d20/srd"
-import { isAway, isDown, isIncapacitated } from "../utils/turn-actors"
+import { isAway, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import { movementEffects } from "./actions"
 import type { Afflicted } from "./conditions"
 import { floorAreas, floorInPlay, roughGround, sightBlocked } from "./floor-areas"
@@ -99,12 +99,12 @@ export function takeMove(args: {
   const climb = climbOf(args.mover)
   // Across water at swimming's cost, unless they have a Swim Speed. They go into it only to reach a place or someone in it.
   const speed = swimsFree(args.mover)
-  // The rest who stand in the way (SRD 5.2.1, Moving around Other Creatures): the one closed with is not, and one who is down
-  // or away is in no one's way. A foe of near size bars the way, and other creatures' spaces are Difficult Terrain.
+  // The rest who stand in the way (SRD 5.2.1, Moving around Other Creatures): the one closed with is not, and the dead or one away
+  // is in no one's way. One down and alive is Unconscious, so Incapacitated: passed through, at Difficult Terrain's cost. A foe of near size bars the way, and other creatures' spaces are Difficult Terrain.
   const crowd = (except?: string): Crowd[] =>
     args.others.flatMap((other) =>
-      other.position && !isAway(other) && !isDown(other) && other.id !== except
-        ? [{ at: other.position, size: sizeOf(other), ally: sameSide(args.mover, other), incapacitated: isIncapacitated(other) }]
+      other.position && !isAway(other) && !isDead(other) && other.id !== except
+        ? [{ at: other.position, size: sizeOf(other), ally: sameSide(args.mover, other), incapacitated: isIncapacitated(other) || isDown(other) }]
         : []
     )
   const walker = { size: sizeOf(args.mover), nimble: movesThroughLarger(args.mover) }
