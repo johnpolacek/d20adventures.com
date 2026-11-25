@@ -461,3 +461,45 @@ html[data-update-theme="dark"] .is-edge .vn-row {
 .vn-row li .vn-progress {
   gap: 24px;
 }
+
+/* A feature's milestones: a short checklist under its note. Done ones take the ring and check, open ones a faint ring. */
+.vn-row li .vn-steps {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+.vn-row li .vn-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 0;
+  font-family: var(--up-ui);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--up-faint);
+}
+.vn-row li .vn-steps li::before {
+  display: none;
+}
+.vn-row li .vn-steps li.is-done {
+  color: var(--up-text);
+}
+.vn-tick {
+  position: relative;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border: 1.5px solid var(--up-line-strong);
+  border-radius: 50%;
+}
+.vn-tick.is-done {
+  border-color: var(--up-accent);
+}
+.vn-tick .vn-ink-check {
+  inset: -6%;
+  transform: translate(15%, -19%);
+  filter: none;
+}

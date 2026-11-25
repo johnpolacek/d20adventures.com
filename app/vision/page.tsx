@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger } from "@d20/ui/accordion"
 import { LedgerShell } from "@/components/layout/ledger-page"
 import { share } from "@/lib/share"
-import { themeProgress, visionThemes, type VisionFeature, type VisionTheme } from "@/lib/vision"
+import { featureProgress, themeProgress, visionThemes, type VisionFeature, type VisionTheme } from "@/lib/vision"
 import { Gauge } from "./marks"
 import "./vision.css"
 
@@ -18,8 +18,17 @@ function Chevron() {
   )
 }
 
-const done = (t: VisionTheme) => t.features.filter((f) => f.pct >= 100).length
-const byProgress = (fs: VisionFeature[]) => [...fs].sort((a, b) => b.pct - a.pct)
+const milestones = (t: VisionTheme) => t.features.flatMap((f) => f.milestones)
+const byProgress = (fs: VisionFeature[]) => [...fs].sort((a, b) => featureProgress(b) - featureProgress(a))
+
+/** A milestone's mark: a small ring, closed with the check when it is done. */
+function Tick({ done }: { done: boolean }) {
+  return (
+    <span className={`vn-tick${done ? " is-done" : ""}`} aria-hidden>
+      {done && <span className="vn-ink-check" />}
+    </span>
+  )
+}
 
 /**
  * The feature table, on UI SDK's Accordion: a row per theme, led by its engraved emblem, with its count and progress.
@@ -42,7 +51,7 @@ function FeatureTable() {
                 </span>
                 <span className="vn-count">
                   <span className="vn-num">
-                    {done(t)} of {t.features.length}
+                    {milestones(t).filter((x) => x.done).length} of {milestones(t).length}
                   </span>
                 </span>
                 <Gauge pct={pct} label={`${t.name} progress`} size={44} />
@@ -57,9 +66,20 @@ function FeatureTable() {
                     <span className="vn-name">
                       <b>{f.name}</b>
                       <small>{f.note}</small>
+                      <ul className="vn-steps" aria-label={`${f.name} milestones`}>
+                        {f.milestones.map((x) => (
+                          <li key={x.text} className={x.done ? "is-done" : undefined}>
+                            <Tick done={x.done} />
+                            <span>
+                              {x.text}
+                              <span className="sr-only">{x.done ? ", done" : ", not done yet"}</span>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </span>
                     <span />
-                    <Gauge pct={f.pct} label={`${f.name} progress`} size={32} />
+                    <Gauge pct={featureProgress(f)} label={`${f.name} progress`} size={32} />
                     <span />
                   </li>
                 ))}
