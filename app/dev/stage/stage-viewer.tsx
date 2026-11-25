@@ -26,6 +26,21 @@ interface Speaker {
 const TIERS: TierName[] = ["mobile", "balanced", "high", "ultra"]
 const pill = (on: boolean) => `rounded border px-1.5 py-0.5 ${on ? "border-[#f2c97a] bg-[#f2c97a33] text-[#f2c97a]" : "border-[#e6c89640] text-[#e9dcc3b0] hover:border-[#f2c97a99]"}`
 
+const pick = "rounded border border-[#e6c89640] bg-[#0e0a06] px-1 text-[#e9dcc3]"
+// Keys such as covert-cargo/battle-on-the-boat, grouped by what comes before the slash.
+function byAdventure(keys: string[]) {
+  const groups: Record<string, string[]> = {}
+  for (const k of keys) (groups[k.split("/")[0]] ??= []).push(k)
+  return groups
+}
+// To another staging or set, keeping the played look when it is on, so the cast stay figures.
+function go(to: { staging: string; set?: string }) {
+  if (!to.staging && !to.set) return
+  const q = new URLSearchParams(to.set ? { set: to.set, staging: to.staging } : { staging: to.staging })
+  if (new URLSearchParams(location.search).get("look") === "play") q.set("look", "play")
+  location.assign(`/dev/stage?${q}`)
+}
+
 // The director's takes, played by whoever is picked in the from and to lists, or the staging's first two cast members
 // (a acts, b is acted on), with the effect or the fall the moment would bring, so the impact and the move can be judged
 // as they play. A bolt, a ray and a burst take the element picked beside them, or their own when none is.
@@ -275,7 +290,32 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
         <div className="absolute top-3 left-3 z-20 max-w-[520px] space-y-1.5 rounded-md border border-[#e6c89640] bg-[#0e0a06b0] px-3 py-2 text-3xs leading-snug backdrop-blur-sm">
           <div className="flex items-baseline gap-2">
             <span className="text-sm tracking-wide text-[#f2c97a]">{title}</span>
-            <span className="opacity-60">{stagingKey ?? setKey}</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <select value={stagingKey ?? ""} onChange={(e) => go({ staging: e.target.value })} className={`${pick} max-w-[280px]`}>
+              <option value="">staging</option>
+              {Object.entries(byAdventure(stagings)).map(([adventure, keys]) => (
+                <optgroup key={adventure} label={adventure}>
+                  {keys.map((k) => (
+                    <option key={k} value={k}>
+                      {k.slice(adventure.length + 1)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <select value={stagingKey ? "" : setKey} onChange={(e) => go({ set: e.target.value, staging: "none" })} className={`${pick} max-w-[200px]`}>
+              <option value="">set alone</option>
+              {Object.entries(byAdventure(sets)).map(([world, keys]) => (
+                <optgroup key={world} label={world}>
+                  {keys.map((k) => (
+                    <option key={k} value={k}>
+                      {k.slice(world.length + 1)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
           <div className="flex flex-wrap gap-1">
             {shots.map(([k, label], i) => (
@@ -415,18 +455,6 @@ export function StageViewer({ setKey, stagingKey, params, sets, stagings }: Prop
                   {stats.programs} programs
                 </div>
               )}
-              <div className="flex flex-wrap gap-2 opacity-60">
-                {sets.map((k) => (
-                  <a key={k} href={`/dev/stage?set=${k}&staging=none`} className={k === setKey && !stagingKey ? "underline" : ""}>
-                    {k}
-                  </a>
-                ))}
-                {stagings.map((k) => (
-                  <a key={k} href={`/dev/stage?staging=${k}`} className={k === stagingKey ? "underline" : ""}>
-                    {k}
-                  </a>
-                ))}
-              </div>
             </div>
           </details>
         </div>
