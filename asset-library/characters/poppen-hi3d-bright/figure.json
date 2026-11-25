@@ -33,6 +33,17 @@
     "Sprint"
   ],
   "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "moves": {
+      "melee": "Swing",
+      "dodge": "Sidestep"
+    },
+    "lands": {
+      "Swing": 0.4
+    },
     "gaits": {
       "sneak": {
         "clip": "Sneak",

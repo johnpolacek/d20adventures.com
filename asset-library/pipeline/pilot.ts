@@ -2667,7 +2667,12 @@ async function main() {
     .read(`${dir}/${lods[lods.length - 1].file}`)
   const gaits = measureGaits(light, brief.height, (motion as { walk?: string } | undefined)?.walk)
   if (Object.keys(gaits).length) say("gaits", Object.entries(gaits).map(([gait, g]) => `${gait} ${g?.speed} m/s`).join(", "))
-  const moves = Object.keys(gaits).length ? { ...((motion as object | undefined) ?? {}), gaits } : motion
+  // A new figure stands, walks, flinches and falls by its clips of those names. Without them the stage plays the
+  // written clips, which its own skeleton cannot follow, and it stands in its rest pose (Poppen's, 2026-11-25).
+  const named = (name: string) => (made.clips.includes(name) ? { [name.toLowerCase()]: name } : {})
+  const first = motion ? undefined : { ...named("Idle"), ...named("Walk"), ...named("Hit"), ...named("Fall") }
+  const base = (motion as object | undefined) ?? (first && Object.keys(first).length ? first : undefined)
+  const moves = Object.keys(gaits).length ? { ...(base ?? {}), gaits } : base
   const figure = {
     name: brief.name,
     role: brief.role,
