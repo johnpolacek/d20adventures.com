@@ -15,10 +15,7 @@
         "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
       },
       "at": "thalbern",
-      "facing": [
-        1.5,
-        6
-      ]
+      "facing": "wolf"
     },
     {
       "id": "wolf",
@@ -32,8 +29,8 @@
         "portrait": "/stage/fixtures/the-midnight-summons/wolf-portrait.jpg"
       },
       "at": [
-        1.5,
-        6
+        0.8,
+        3.4
       ],
       "facing": "thalbern"
     }
@@ -45,13 +42,13 @@
         "wolf"
       ],
       "offset": [
-        -6,
-        2.6,
-        -3
+        5,
+        3.6,
+        1.5
       ],
       "target": [
         0,
-        0.8,
+        0.7,
         0
       ],
       "fov": 50,

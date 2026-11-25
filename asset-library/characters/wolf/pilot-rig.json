@@ -1,0 +1,100 @@
+{
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab3f1a7/cv4Lk34Y8T9LOo42-1K4T_source.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "source.glb",
+    "file_size": 7351300
+  },
+  "rigged_character_glb": {
+    "url": "https://v3b.fal.media/files/b/0ab3f1a7/_mEQ2Fkm3jZTKnauWAk_8_rigged_character.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "rigged_character.glb",
+    "file_size": 7287528
+  },
+  "animations": [
+    {
+      "action_id": "canine_000000",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/iAaZPDqJzNTLgLSGIry96_animation_1.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_1.glb",
+        "file_size": 7294460
+      }
+    },
+    {
+      "action_id": "canine_000001",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/2rc8hYU9-d4HH5tiwgywH_animation_2.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_2.glb",
+        "file_size": 7294568
+      }
+    },
+    {
+      "action_id": "canine_000002",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/Ns1WHlGAM2Axc3I-oLd_u_animation_3.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_3.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000007",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/QKaFNGY_XGxfrAVlJR31c_animation_4.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_4.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000013",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/6yUGGUK51PCgkV0iwxKuD_animation_5.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_5.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000014",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/riS_WCFJiqwQMkIQWak0d_animation_6.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_6.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000015",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/6mEA7vfYDWOVIXaF8xEMq_animation_7.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_7.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000018",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/hbqMAnXtDXqV4Seji8JAS_animation_8.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_8.glb",
+        "file_size": 7294656
+      }
+    },
+    {
+      "action_id": "canine_000021",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab3f1a7/igx5UHgdie5hrMvbibjVi_animation_9.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_9.glb",
+        "file_size": 7294656
+      }
+    }
+  ],
+  "fbx_file": null,
+  "additional_files": [],
+  "textures": []
+}

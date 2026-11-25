@@ -3,7 +3,7 @@
   "set": "realm-of-myr/thalberns-forest-home",
   "location": "Thalbern's home",
   "where": "Late afternoon light falls on Thalbern's cottage at the edge of the woods. A thin grey wolf has come out of the trees toward his gear.",
-  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -2.1, "z": -1.6 }, { "id": "wolf", "name": "Wolf", "x": 1.5, "z": 6 }],
+  "cast": [{ "id": "thalbern", "name": "Thalbern", "x": -2.1, "z": -1.6 }, { "id": "wolf", "name": "Wolf", "x": 0.8, "z": 3.4 }],
   "party": [{ "id": "thalbern", "x": -2.1, "z": -1.6 }],
   "spare": []
 }
