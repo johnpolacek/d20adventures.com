@@ -126,6 +126,10 @@ const WRITTEN: Written[] = [
 // The moment in each move that lands, in seconds: the cut, the loosing of the arrow, the swipe. An attack's effect
 // starts there (stage.ts).
 export const STRIKE: Record<string, number> = { Swing: 0.45, Shoot: 1.05, Claw: 0.5 }
+// The moves that let fly a stone from a sling (hold.ts), and when in each the stone leaves the pouch, in seconds: at
+// the top of the overhand cast (ual2's OverhandThrow, borrowed as Sling), where the hand is fastest. What flies is a
+// stone, not an arrow (stage.ts).
+export const SLUNG: Record<string, number> = { Sling: 0.38 }
 // Every move a rigged figure can be made to play (models.ts act).
 export const MOVE_NAMES = ["Swing", "Shoot", "Dodge", "Claw", "Roar"]
 // What each move has in hand while it plays (weapons.ts): the prop's name and the hand it is in.

@@ -38,7 +38,7 @@ export interface EffectEnd {
 // comes from someone), the camera going into a room or out of one, with the beds that play there, and how near the
 // camera is to open water, 0 to 1.
 export type EffectEvent =
-  | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean }
+  | { type: "effect"; kind: EffectKind; element?: Element; phase: "start" | "land"; struck: boolean; stone?: boolean }
   | { type: "prop"; kind: PropKind; passed: boolean }
   | { type: "sound"; cue: SoundCue; near?: number }
   | { type: "room"; ambience?: string[] }
@@ -190,12 +190,14 @@ export class Effects {
   }
 
   // ── Effects ──
-  play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element): Promise<void> {
+  // `stone`: what an arrow's flight carries is a stone from a sling (stage.ts).
+  play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element, stone = false): Promise<void> {
     const target = to ?? from
-    this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id })
+    const slung = stone && kind === "arrow"
+    this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id, ...(slung ? { stone: true } : {}) })
     switch (kind) {
       case "arrow":
-        return this.missile(from, target, element, "arrow")
+        return this.missile(from, target, element, slung ? "stone" : "arrow")
       case "bolt":
         return this.missile(from, target, element, "bolt")
       case "beam":
@@ -215,11 +217,11 @@ export class Effects {
     }
   }
 
-  private missile(from: EffectEnd, to: EffectEnd, element: Element | undefined, kind: "arrow" | "bolt") {
+  private missile(from: EffectEnd, to: EffectEnd, element: Element | undefined, kind: "arrow" | "bolt" | "stone") {
     const a = from.at.clone()
     const b = to.at.clone()
     const d = a.distanceTo(b)
-    const color = effectColor(element, kind === "arrow" ? "steel" : "arcane")
+    const color = effectColor(element, kind === "bolt" ? "arcane" : "steel")
     const lift = d * 0.05
     const pointAt = (t: number, out: THREE.Vector3) => out.lerpVectors(a, b, t).setY(THREE.MathUtils.lerp(a.y, b.y, t) + Math.sin(Math.PI * t) * lift)
     const body = new THREE.Group()
@@ -238,6 +240,12 @@ export class Effects {
       const streak = new THREE.Sprite(this.glow(element ? color : "#fff4dc", element ? 0.9 : 0.35))
       streak.scale.set(0.25, 0.25, 1)
       body.add(shaft, head, fletch, streak)
+    } else if (kind === "stone") {
+      // A grey stone the size of a walnut, too quick to see but for a faint streak.
+      const stone = new THREE.Mesh(new THREE.IcosahedronGeometry(0.03, 1), new THREE.MeshStandardMaterial({ color: "#8a8478", roughness: 0.9 }))
+      const streak = new THREE.Sprite(this.glow(element ? color : "#fff4dc", element ? 0.9 : 0.25))
+      streak.scale.set(0.18, 0.18, 1)
+      body.add(stone, streak)
     } else {
       const core = new THREE.Sprite(this.glow("#ffffff"))
       core.scale.set(0.22, 0.22, 1)
@@ -251,7 +259,7 @@ export class Effects {
         objects.push(s)
       }
     }
-    const speed = kind === "arrow" ? 30 : 15
+    const speed = kind === "arrow" ? 30 : kind === "stone" ? 24 : 15
     const p = new THREE.Vector3()
     const ahead = new THREE.Vector3()
     const flight = this.add(Math.max(0.2, d / speed), objects, (t, _dt, self) => {
@@ -263,8 +271,8 @@ export class Effects {
       if (kind === "bolt") this.lamp(self, p, color, 2.4)
     })
     return flight.then(() => {
-      this.host.event?.({ type: "effect", kind, element, phase: "land", struck: !!to.id })
-      return kind === "arrow" ? this.impact(to, element, 0.6) : this.burst(to, element, 0.55)
+      this.host.event?.({ type: "effect", kind: kind === "bolt" ? "bolt" : "arrow", element, phase: "land", struck: !!to.id, ...(kind === "stone" ? { stone: true } : {}) })
+      return kind === "bolt" ? this.burst(to, element, 0.55) : this.impact(to, element, kind === "stone" ? 0.5 : 0.6)
     })
   }
 

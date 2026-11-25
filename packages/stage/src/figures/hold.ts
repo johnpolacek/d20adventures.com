@@ -1,4 +1,4 @@
-// A sword and a bow in the hands of a figure rigged with finger bones under Mixamo's names (asset-library's pilot.ts:
+// A sword, a bow and a sling in the hands of a figure rigged with finger bones under Mixamo's names (asset-library's pilot.ts:
 // Rodin's model rigged by Hyper3D or Meshy), moved by clips borrowed from a library (retarget.ts). And a staff, which
 // such a figure carries at all times (`carry`, at the foot of this file).
 //
@@ -6,17 +6,18 @@
 // written turns, so the arms are put where a shot wants them after the clip has played. Here the clip is a whole
 // move already and the hand has its fingers. So the weapon is seated across the palm under the knuckles, the fingers
 // are closed round it while it shows, a bow is stood upright along the arrow's line, and its string goes back with the
-// hand that draws it until the clip looses it.
+// hand that draws it until the clip looses it. A sling's cords are held in the fist and its pouch swings from them.
 
 import * as THREE from "three"
-import { IN_HAND } from "./clips"
+import { IN_HAND, SLUNG } from "./clips"
 import type { Armed } from "./fight"
 import { heldBy, staff, wayThrough } from "./props"
-import { sword as armingSword, bow as longbow, type Weapon } from "./weapons"
+import { sword as armingSword, bow as longbow, sling as slingOf, type Weapon } from "./weapons"
 
-// The clips a weapon shows in, beside the game's own two: the library's other sword clips.
-const HOLDS: Record<string, { what: "sword" | "bow"; hand: "L" | "R" }> = {
+// The clips a weapon shows in, beside the game's own two: the library's other sword clips, and a sling's cast.
+const HOLDS: Record<string, { what: "sword" | "bow" | "sling"; hand: "L" | "R" }> = {
   ...IN_HAND,
+  Sling: { what: "sling", hand: "R" },
   Combo: { what: "sword", hand: "R" },
   Block: { what: "sword", hand: "R" },
   "Sword Idle": { what: "sword", hand: "R" },
@@ -31,7 +32,12 @@ const GRIP = [72, 84, 46]
 const HOOK = [18, 78, 52]
 const THUMB = [26, 30, 18]
 // How thick a grip is at its middle, in metres (weapons.ts), and half of how thick a finger is.
-const ROUND = { sword: 0.0142, bow: 0.0192 }
+const ROUND = { sword: 0.0142, bow: 0.0192, sling: 0.006 }
+// How long a sling's cords are from the fist to the pouch, in metres, and how much of its swing the air takes each
+// second.
+const CORDS = 0.3
+const DRAG = 1.6
+const FALL = new THREE.Vector3(0, -9.8, 0)
 const FINGER = 0.009
 
 const plain = (name: string) => name.replace(/^mixamorig:?/i, "")
@@ -167,15 +173,17 @@ export function wield(root: THREE.Object3D): Armed {
   const weapons = new Map<string, Weapon>()
   const strings = new Map<Weapon, { update: (to: THREE.Vector3 | null, share: number) => void; seated: THREE.Quaternion }>()
   const grips = new Map<string, Map<string, [number, number, number]>>()
+  // Each sling's pouch: where it is in the world and where it was a step before, swung on its cords from the fist.
+  const pouches = new Map<Weapon, { lay: (at: THREE.Vector3, loaded: boolean) => void; at: THREE.Vector3 | null; was: THREE.Vector3; hand: THREE.Vector3; clock: number }>()
   for (const need of Object.values(HOLDS)) {
     const h = hands[need.hand]
     if (!h || weapons.has(need.what)) continue
-    const made = need.what === "sword" ? armingSword() : longbow()
+    const made = need.what === "sword" ? armingSword() : need.what === "bow" ? longbow() : slingOf()
     const g = made.group
     // Across the palm under the knuckles, where closed fingers have it. Its length runs out of the hand on the thumb's
     // side. A sword's flat faces out of the palm. A bow is bowed out toward the fingers, its string toward the wrist.
     const y = h.across.clone()
-    const z = (need.what === "bow" ? h.along : h.palm).clone()
+    const z = (need.what === "sword" ? h.palm : h.along).clone()
     const x = new THREE.Vector3().crossVectors(y, z).normalize()
     z.crossVectors(x, y).normalize()
     g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z))
@@ -206,7 +214,8 @@ export function wield(root: THREE.Object3D): Armed {
       },
     }
     weapons.set(need.what, weapon)
-    strings.set(weapon, { update: made.update as (to: THREE.Vector3 | null, share: number) => void, seated: g.quaternion.clone() })
+    if ("update" in made) strings.set(weapon, { update: made.update as (to: THREE.Vector3 | null, share: number) => void, seated: g.quaternion.clone() })
+    else pouches.set(weapon, { lay: made.lay, at: null, was: new THREE.Vector3(), hand: new THREE.Vector3(), clock: 0 })
   }
   const at = (name: string) => bones.get(name)?.getWorldPosition(new THREE.Vector3()) ?? null
 
@@ -250,6 +259,38 @@ export function wield(root: THREE.Object3D): Armed {
     string.update(behind ? to : null, 1)
   }
 
+  // The pouch swung on its cords as the fist moves: it falls, keeps going the way it was going less what the air takes,
+  // and is held to the cords' length from the fist, which can pull it but not push it. Stepped by the clock and not
+  // the clip, so it swings on as the figure stands ready, and in small steps, as a cast whips it round fast.
+  const whirl = (weapon: Weapon, loaded: boolean) => {
+    const p = pouches.get(weapon)
+    if (!p) return
+    weapon.group.updateWorldMatrix(true, false)
+    const fist = weapon.group.getWorldPosition(new THREE.Vector3())
+    const now = performance.now() / 1000
+    const dt = now - p.clock
+    p.clock = now
+    if (!p.at || dt > 0.25) {
+      p.at = fist.clone().add(new THREE.Vector3(0, -CORDS, 0))
+      p.was.copy(p.at)
+      p.hand.copy(fist)
+    }
+    const steps = Math.max(1, Math.ceil(Math.min(dt, 0.1) / (1 / 240)))
+    const h = Math.min(dt, 0.1) / steps
+    const from = p.hand.clone()
+    const going = new THREE.Vector3()
+    for (let i = 1; i <= steps; i++) {
+      const hold = from.clone().lerp(fist, i / steps)
+      going.subVectors(p.at, p.was).multiplyScalar(Math.max(0, 1 - DRAG * h))
+      p.was.copy(p.at)
+      p.at.add(going).addScaledVector(FALL, h * h)
+      const out = p.at.clone().sub(hold)
+      if (out.length() > CORDS) p.at.copy(hold).addScaledVector(out.normalize(), CORDS)
+    }
+    p.hand.copy(fist)
+    p.lay(weapon.group.worldToLocal(p.at.clone()), loaded)
+  }
+
   let shown: Weapon | null = null
   return {
     weapons,
@@ -257,6 +298,8 @@ export function wield(root: THREE.Object3D): Armed {
       const need = clip ? holds(clip) : undefined
       shown = need ? (weapons.get(need.what) ?? null) : null
       for (const w of weapons.values()) w.group.visible = w === shown
+      // A sling put away hangs straight when it is next taken up.
+      for (const [w, p] of pouches) if (w !== shown) p.at = null
       return shown
     },
     after: (clip, t) => {
@@ -266,6 +309,7 @@ export function wield(root: THREE.Object3D): Armed {
       if (!weapon || !h || weapon !== shown) return
       grip(h, grips.get(weapon.what) ?? new Map())
       if (weapon.what === "bow") shoot(weapon, t, LOOSED[clip] ?? Number.POSITIVE_INFINITY)
+      if (weapon.what === "sling") whirl(weapon, t < (SLUNG[clip] ?? Number.POSITIVE_INFINITY))
     },
     // Closed on as it hangs, the bow loosed and its string straight, the other hand easy.
     rest: (clip) => {
@@ -275,6 +319,8 @@ export function wield(root: THREE.Object3D): Armed {
       if (!weapon || !h || weapon !== shown) return
       grip(h, grips.get(weapon.what) ?? new Map())
       if (weapon.what === "bow") shoot(weapon, Number.POSITIVE_INFINITY, 0)
+      // Kept ready, a stone is in the pouch.
+      if (weapon.what === "sling") whirl(weapon, true)
     },
     dispose: () => {
       for (const w of weapons.values()) w.dispose()

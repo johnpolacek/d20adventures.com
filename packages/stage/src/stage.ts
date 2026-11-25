@@ -5,6 +5,7 @@ import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
 import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
+import { SLUNG } from "./figures/clips"
 import { Crowd } from "./figures/crowd"
 import type { Pace } from "./figures/gaits"
 import { Models } from "./figures/models"
@@ -1911,7 +1912,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     }
     const crit = !miss && outcome === "crit" && typeof to === "string" && to !== from
     if (crit) this.reeling.set(to, from)
-    await this.fire(kind, from, to, element, miss)
+    // A figure that casts a sling lets fly a stone where an arrow would fly.
+    await this.fire(kind, from, to, element, miss, move !== null && SLUNG[move] !== undefined)
     if (crit) this.reeling.delete(to)
     const stumble = miss && outcome === "fumble" ? this.models.moveFor(from, "stumble") : null
     if (stumble) this.models.act(from, stumble, toward)
@@ -1928,7 +1930,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     const at = typeof toward === "string" ? this.castAt(toward) : toward ? this.point(toward) : undefined
     return this.models.act(id, clip, at)
   }
-  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean): Promise<void> {
+  private fire(kind: EffectKind, from: string, to: string | [number, number] | undefined, element: Element | undefined, miss: boolean, stone = false): Promise<void> {
     const start = this.chest(from)
     let end = to === undefined ? undefined : this.endOf(to)
     if (end && miss) {
@@ -1942,7 +1944,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
           .setY(end.at.y * 0.8),
       }
     }
-    return this.effects.play(kind, start, end, element)
+    return this.effects.play(kind, start, end, element, stone)
   }
   // An object in a cast member's hand, handed to another when there is a receiver. As a film shows it, with no flight
   // through the air: the giver holds it out, the camera cuts to the receiver with it in their hand, and they bring it

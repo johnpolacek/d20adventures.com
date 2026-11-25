@@ -1,4 +1,4 @@
-// A sword and a bow put in a rigged figure's hand while it plays a move that uses them (clips.ts IN_HAND).
+// A sword, a bow and a sling put in a rigged figure's hand while it plays a move that uses them (clips.ts IN_HAND).
 //
 // A generated figure wears its weapons as part of its one mesh: Thalbern's bow is slung on his back and his blades
 // are in their sheaths, and none of them can be drawn. So what a move needs is built here and stood in the hand: seated
@@ -190,8 +190,47 @@ export function bow(length = 1.44, thick = 0.02) {
   }
 }
 
+// A sling from where its two cords are held, in the sling's own space: each cord a plaited length of leather that runs
+// from the fist to one side of a cupped pouch, and in the pouch a stone. `lay` puts the pouch at a point in the sling's
+// own space, its cords taut to it, and shows the stone or not. hold.ts swings the pouch on its cords as the hand moves.
+export function sling() {
+  const g = new THREE.Group()
+  g.name = "weapon:sling"
+  const strap = () => new THREE.MeshStandardMaterial({ color: "#5a3d26", roughness: 0.85 })
+  const cords = [0, 1].map(() => new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 1, 5), strap()))
+  // The pouch: a shallow cup of leather, wider across the cords than along them.
+  const pouch = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 6, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.55), leather())
+  pouch.geometry.scale(1.35, 0.7, 0.9)
+  ;(pouch.material as THREE.MeshStandardMaterial).side = THREE.DoubleSide
+  const stone = new THREE.Mesh(new THREE.IcosahedronGeometry(0.014, 1), new THREE.MeshStandardMaterial({ color: "#8a8478", roughness: 0.9 }))
+  stone.geometry.scale(1, 0.85, 0.95)
+  g.add(...cords, pouch, stone)
+  const up = new THREE.Vector3(0, 1, 0)
+  const run = new THREE.Vector3()
+  const side = new THREE.Vector3()
+  const end = new THREE.Vector3()
+  const lay = (at: THREE.Vector3, loaded: boolean) => {
+    // Hung from the fist: the pouch's cup opens toward the hand, its width square to the cords and level as it can be.
+    run.copy(at).normalize()
+    side.set(0, 0, 1).cross(run)
+    if (side.lengthSq() < 1e-6) side.set(1, 0, 0)
+    side.normalize()
+    pouch.position.copy(at)
+    pouch.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side, run.clone().negate(), side.clone().cross(run.clone().negate())))
+    stone.position.copy(at).addScaledVector(run, -0.006)
+    stone.visible = loaded
+    for (const [i, cord] of cords.entries()) {
+      end.copy(at).addScaledVector(side, (i ? 1 : -1) * 0.03).addScaledVector(run, -0.004)
+      cord.position.copy(end).multiplyScalar(0.5)
+      cord.scale.y = end.length()
+      cord.quaternion.setFromUnitVectors(up, end.clone().normalize())
+    }
+  }
+  return { group: g, lay }
+}
+
 export interface Weapon {
-  what: "sword" | "bow"
+  what: "sword" | "bow" | "sling"
   hand: "L" | "R"
   group: THREE.Group
   // Through a hand made round a rod, and kept there: it is never hidden, and it is aimed by turning the hand.

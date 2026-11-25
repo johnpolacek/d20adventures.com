@@ -30,7 +30,8 @@
     "Fall",
     "Sneak",
     "Run",
-    "Sprint"
+    "Sprint",
+    "Sling"
   ],
   "motion": {
     "idle": "Idle",
@@ -39,10 +40,12 @@
     "fall": "Fall",
     "moves": {
       "melee": "Swing",
+      "ranged": "Sling",
       "dodge": "Sidestep"
     },
     "lands": {
-      "Swing": 0.4
+      "Swing": 0.4,
+      "Sling": 0.38
     },
     "gaits": {
       "sneak": {
@@ -67,19 +70,19 @@
     {
       "file": "lod0.glb",
       "triangles": 199296,
-      "megabytes": 11.93,
+      "megabytes": 11.97,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19990,
-      "megabytes": 1.67,
+      "megabytes": 1.72,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5986,
-      "megabytes": 0.91,
+      "megabytes": 0.95,
       "texture": 512
     }
   ]

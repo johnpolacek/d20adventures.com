@@ -24,6 +24,7 @@
     "Run": "ual1:Jog_Fwd_Loop",
     "Sprint": "m2m/sprint",
     "Swing": "ual1:Sword_Attack",
+    "Sling": "ual2:OverhandThrow",
     "Dodge": "ual1:Roll",
     "Sidestep": "m2m/dodge-left",
     "Hit": "ual1:Hit_Chest",
