@@ -2,6 +2,9 @@
  * The vision: what players love most about Baldur's Gate 3, one theme each, with the features D20 Adventures builds
  * toward it. /vision shows it.
  *
+ * The goal is not to match Baldur's Gate 3 feature for feature. It is to have everything players like about it. A
+ * milestone names what players get from a feature, and "like Baldur's Gate 3" marks the scale, not a design to copy.
+ *
  * Each feature is a list of milestones a reader could check (a file, a count, a behavior you can trigger). A milestone
  * is done only when it is true in the code on main today. An unchecked milestone is open work anyone can pick up.
  *
@@ -438,7 +441,7 @@ export const visionThemes: VisionTheme[] = [
           no("Every choice explains what it does in play as you pick it", 3),
           no("Pick your hero’s voice at creation", 3),
           no("Acting to your background earns Inspiration", 3),
-          no("Rebuild a hero’s class and scores mid-campaign, as Withers does", 3),
+          no("Rebuild a hero’s class and scores mid-campaign", 3),
         ],
       },
       {
