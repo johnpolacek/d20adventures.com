@@ -21,6 +21,8 @@ import { Pill } from "@d20/ui/stage/hud"
 import { Gamepad2Icon, HomeIcon, UsersIcon, XIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cardVariants } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger } from "@d20/ui/accordion"
+import { Progress, ProgressIndicator, ProgressTrack } from "@d20/ui/progress"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle, DrawerTrigger } from "@d20/ui/drawer"
 import { FileInput, FileInputItem, FileInputList, FileInputTrigger, formatFileSize } from "@d20/ui/file-input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@d20/ui/dialog"
@@ -904,6 +906,37 @@ const tiles: Tile[] = [
           <p className="pt-2 text-sm text-white/80">Longsword, rope, two torches.</p>
         </CollapsiblePanel>
       </Collapsible>
+    ),
+  },
+  {
+    name: "Accordion",
+    demo: (
+      <Accordion multiple className="flex flex-col gap-1">
+        {[
+          ["pack", "Pack", "Bedroll, rations, a tinderbox."],
+          ["purse", "Purse", "Twelve silver and a copper ring."],
+        ].map(([value, label, text]) => (
+          <AccordionItem key={value} value={value}>
+            <AccordionHeader className="m-0">
+              <AccordionTrigger className={buttonClassName("ghost")}>{label}</AccordionTrigger>
+            </AccordionHeader>
+            <AccordionPanel>
+              <p className="pt-1 pb-2 text-sm text-white/80">{text}</p>
+            </AccordionPanel>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    ),
+  },
+  {
+    name: "Progress",
+    demo: (
+      <Progress value={55} aria-label="Quest progress" className="flex w-48 flex-col gap-1">
+        <span className="text-xs text-white/70">Quest progress, 55%</span>
+        <ProgressTrack className="h-2 overflow-hidden rounded-full bg-white/15">
+          <ProgressIndicator className="h-full rounded-full bg-amber-300" />
+        </ProgressTrack>
+      </Progress>
     ),
   },
   {
