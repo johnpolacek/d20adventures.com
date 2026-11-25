@@ -611,7 +611,7 @@
                   "enum": ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
                 "ready": {
-                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away or put away something they hold",
                   "type": "string",
                   "enum": ["bow", "blade", "away"]
                 },
@@ -896,7 +896,7 @@
                   "enum": ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
                 "ready": {
-                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away or put away something they hold",
                   "type": "string",
                   "enum": ["bow", "blade", "away"]
                 },
@@ -1007,7 +1007,7 @@
                   "enum": ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
                 "ready": {
-                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away or put away something they hold",
                   "type": "string",
                   "enum": ["bow", "blade", "away"]
                 },
@@ -1334,7 +1334,7 @@
                   "enum": ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"]
                 },
                 "ready": {
-                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away",
+                  "description": "action: a weapon the actor takes in hand and keeps ready, or away when they put it away or put away something they hold",
                   "type": "string",
                   "enum": ["bow", "blade", "away"]
                 },

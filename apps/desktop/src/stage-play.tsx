@@ -900,15 +900,18 @@ export function StagePlay(props: {
   // The object beats the stage has begun to play in this turn, and a count that changes as it does, to read them again.
   const handedOver = useRef(new WeakSet<StoryBeat>())
   const [, setHandings] = useState(0)
-  // An object kept in hand, as the scroll case Silas takes from Aelar: whatever each cast member was last handed in this
-  // encounter, or last held up themselves, read as far as `readied` reads. The giver's hand is empty after, and so is
-  // every hand in a new encounter.
+  // An object kept in hand, as the scroll case Aelar takes from Silas: whatever each cast member was last handed in this
+  // encounter, or last held up themselves, till they put it away (ready: away), read as far as `readied` reads. The
+  // giver's hand is empty after, and so is every hand in a new encounter.
   const inHand = (() => {
     if (!shown) return ""
     const out = new Map<string, ObjectKind>()
     const take = (b: StoryBeat) => {
-      if (b.kind !== "action" || !b.object) return
+      if (b.kind !== "action") return
       const actor = castOf(b.actor)
+      // Put away, as a letter tucked into a coat, or a weapon sheathed: the hand is empty.
+      if (b.ready === "away" && actor) out.delete(actor)
+      if (!b.object) return
       const to = castOf(b.object.to)
       if (actor && to && actor !== to) out.delete(actor)
       const holder = to ?? actor

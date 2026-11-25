@@ -190,7 +190,7 @@ export const storyOutputSchema = z
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),
-      ready: menu(READIES, "action: a weapon the actor takes in hand and keeps ready, or away when they put it away"),
+      ready: menu(READIES, "action: a weapon the actor takes in hand and keeps ready, or away when they put it away or put away something they hold"),
       sound: menu(SOUNDS, "narration and action: a sound it makes that is not an attack or spell, only when the text says it happens: a door opening, closing or creaking, a chest's lid, someone falling into water, wood splitting, a rope cut"),
       delivery: z.string().optional().describe("line: how it is said, in one or two words, such as quietly or with a growl"),
       private: z.boolean().optional().catch(undefined).describe("action and line: true when only the one acting or speaking and the one it is aimed at can see or hear it"),
