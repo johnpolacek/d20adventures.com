@@ -72,6 +72,18 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
    - Pictures go by public URL, so an asset is in the public bucket first.
    - Writes the Buffer id, then the posted URL, back to the draft.
 
+## Update posts
+
+Owner decision, 2026-11-25: after each mining run, decide which ideas earn an `/updates` post, and draft those.
+
+- `pnpm content:posts` judges each new idea against one bar: a stranger doing similar work walks away with a technique, a number or a fix, with 500 words of real material. Refactors, single fixes and adventure content stay social posts or nothing.
+- It drafts up to one post a run (`--max` raises it), matching the 7 to 10 day rhythm. A yes past the limit waits for the next run.
+- Each judged idea gets an Update verdict section with the reason, so it isn't judged twice. `--rejudge` asks again, `--dry` writes nothing, `--draft <slug>` skips judging.
+- The drafter is `claude -p` in the repo with read tools, git and Write. It reads commits and code, never raw session logs. It writes `content/updates/<slug>.md` with `draft: true` and a comment listing the pictures to make.
+- A drafted idea becomes status draft with `post` set. Ideas folded into it become shelved with `into` set.
+- Nothing commits, publishes or posts. John reviews the draft, then it goes through the usual post steps.
+- The weekly run is `pnpm content:mine && pnpm content:posts`.
+
 ## Gameplay videos
 
 Owner decision, 2026-11-21: keep a record of when each gameplay video is recorded, and draft its posts from the commits made since the one before.
