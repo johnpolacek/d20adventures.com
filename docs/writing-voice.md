@@ -38,6 +38,6 @@ The first one, before and after:
 
 ## Social posts
 
-- Social posts go to X only.
+- Social posts go to X and Bluesky, the same thread on each (John, 2026-11-25).
 - A thread for an `/updates` post follows the post, with its pictures. One post per section, in order, each carrying that section’s image, and the last post links the writeup. John, 2026-11-21: “i was expecting the x post to match the content of the update and use the same images.”
 - Drafts don’t add @mentions. The queue page suggests the checked handles in `lib/content-queue/handles.json` for John to click in.
