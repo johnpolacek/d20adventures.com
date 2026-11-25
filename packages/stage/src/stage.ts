@@ -1544,7 +1544,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     p.paint.strength = this.painted?.on ? 0 : Math.min(1, f.brush)
     p.paint.brush = Math.max(0.35, f.brush)
     p.bloom.enabled = f.bloom ?? t.bloom
-    p.focus.enabled = !!f.dof
+    p.focus.enabled = f.dof ?? t.dof
     const aa = f.aa ?? t.aa
     p.setAA(aa)
     const cardMaterial = this.crowd.cards?.mesh.material as THREE.Material | undefined

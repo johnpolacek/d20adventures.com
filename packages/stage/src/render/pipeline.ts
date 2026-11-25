@@ -126,7 +126,7 @@ export class Pipeline {
       this.gtao.gtaoMaterial.uniforms.tDepth.value = depth
     }
     this.composer.addPass(this.scenePass)
-    // Off unless the `dof` flag asks for it: an experiment.
+    // On at the high and ultra tiers (quality.ts), or as the `dof` flag says.
     this.focus = new FocusPass(camera)
     this.focus.enabled = false
     this.composer.addPass(this.focus)
