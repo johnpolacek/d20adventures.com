@@ -13,7 +13,7 @@ const charmed = (spell: string) => ({ id: "reinhard", name: "Reinhard", type: "n
 const hurt = (spell: string, by?: string) => {
   const was = charmed(spell)
   const settled = settleConcentration({ before: [lyra, thalbern, silas, was], after: [lyra, thalbern, silas, { ...was, hitPoints: 8 }], bonus: () => 0, d20: () => 10, by })
-  return settled.characters.find((character) => character.id === "reinhard")?.conditions?.length ?? 0
+  return (settled.characters.find((character) => character.id === "reinhard") as { conditions?: readonly unknown[] } | undefined)?.conditions?.length ?? 0
 }
 
 test("a charm ends on damage from its caster's side, not a foe's", () => {

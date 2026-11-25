@@ -484,7 +484,7 @@ test("a foe of near size bars a doorway, and other creatures' spaces are Difficu
     doors: [],
   }
   const target = at(40, 0)
-  const walkTo = (floor: Floor, crowd: Parameters<typeof walk>[4]["crowd"], walker?: Parameters<typeof walk>[4]["walker"]) => walk(floor, o, target, 60, { crowd, walker })
+  const walkTo = (floor: Floor, crowd: NonNullable<Parameters<typeof walk>[4]>["crowd"], walker?: NonNullable<Parameters<typeof walk>[4]>["walker"]) => walk(floor, o, target, 60, { crowd, walker })
   const stands = { at: at(20, 0), ally: false, incapacitated: false }
   // Silas, Medium, hostile, in the doorway: no way through, and the walk stops short of him.
   const blocked = walkTo(door, [stands])
