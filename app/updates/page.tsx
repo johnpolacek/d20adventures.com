@@ -99,7 +99,7 @@ function Tally({ post }: { post: Update }) {
               <svg viewBox="0 0 16 16" aria-hidden>
                 {marks[row.key]}
               </svg>
-              <span className="ul-tally-n">{row.n.toLocaleString("en-US")}</span>
+              <span className="ul-tally-n">{row.n}</span>
               <span className="ul-tally-label">{row.n === 1 ? row.one : row.many}</span>
             </span>
           ))}

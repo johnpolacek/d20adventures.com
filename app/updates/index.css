@@ -124,7 +124,7 @@ html[data-update-theme="dark"] .ul-band {
 }
 .ul-tally-row {
   display: grid;
-  grid-template-columns: 14px 5ch auto;
+  grid-template-columns: 14px 4ch auto;
   gap: 8px;
   align-items: center;
   font-family: var(--up-mono);
@@ -136,6 +136,7 @@ html[data-update-theme="dark"] .ul-band {
 .ul-tally-row svg {
   width: 14px;
   height: 14px;
+  margin-right: 6px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.25;
