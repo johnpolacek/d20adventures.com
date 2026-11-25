@@ -30,25 +30,39 @@
     "Run jog",
     "Run jog m2m",
     "Sprint",
-    "Sprint m2m"
+    "Sprint m2m",
+    "Run calm",
+    "Run calmer"
   ],
+  "motion": {
+    "gaits": {
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.87
+      },
+      "sprint": {
+        "clip": "Sprint",
+        "speed": 8.79
+      }
+    }
+  },
   "lods": [
     {
       "file": "lod0.glb",
       "triangles": 198948,
-      "megabytes": 11.79,
+      "megabytes": 11.86,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.75,
+      "megabytes": 1.82,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 1.02,
+      "megabytes": 1.1,
       "texture": 512
     }
   ]

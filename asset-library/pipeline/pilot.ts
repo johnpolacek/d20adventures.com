@@ -549,6 +549,30 @@ function ease(doc: Document, name: string, limit: number) {
   return most
 }
 
+// The hips' rise and fall in a clip, kept to a share of it about its middle. Quaternius's jog bobs the hips 27 cm and
+// reads as bouncing (the owner, 2026-11-24: "too bouncy"). Returns the rise and fall before and after, in the clip's
+// units, or null with no hips keyed in it.
+function bob(doc: Document, name: string, share: number) {
+  const clip = doc
+    .getRoot()
+    .listAnimations()
+    .find((a) => a.getName() === name)
+  const out = clip
+    ?.listChannels()
+    .find((c) => c.getTargetPath() === "translation" && /hips$/i.test(c.getTargetNode()?.getName() ?? ""))
+    ?.getSampler()
+    ?.getOutput()
+  if (!out || out.getElementSize() !== 3 || !out.getCount()) return null
+  const ys = Array.from({ length: out.getCount() }, (_, i) => out.getElement(i, [0, 0, 0])[1])
+  const [least, most] = [Math.min(...ys), Math.max(...ys)]
+  const middle = (least + most) / 2
+  for (let i = 0; i < out.getCount(); i++) {
+    const v = out.getElement(i, [0, 0, 0])
+    out.setElement(i, [v[0], middle + (v[1] - middle) * share, v[2]])
+  }
+  return [most - least, (most - least) * share]
+}
+
 // A head held higher in a clip, by so many degrees and never past level. The hunched stand and walk a beast borrows
 // hang the head with the back, and a head as large as an owlbear's then shows its crown and no face (the owner's
 // owlbear from Hi3D, 2026-11-20: in the game its eyes did not show). The line the face looks along is turned up
@@ -1816,6 +1840,8 @@ interface Brief {
   eased?: Record<string, number>
   // The head held higher in a clip, in degrees and never past level: { "Idle Heavy": 30 }.
   chin?: Record<string, number>
+  // A clip's hips kept to that share of their rise and fall: { "Run": 0.5 }.
+  bob?: Record<string, number>
   // What is lit from within: texels of a hue between two, in degrees, giving off their colour so many times over.
   // An owlbear's amber eyes are { "hue": [20, 55], "strength": 3 }.
   lit?: { hue: [number, number]; strength: number }
@@ -2486,6 +2512,10 @@ async function rodinHyper(brief: Brief) {
   for (const [name, degrees] of Object.entries(brief.chin ?? {})) {
     const lifted = chin(doc, name, degrees)
     say("chin", lifted ? `${name}: the face looked ${lifted[0].toFixed(0)}° under level at its lowest, and is lifted by up to ${lifted[1].toFixed(0)}°` : `${name}: no such clip, or no neck and head keyed in it`)
+  }
+  for (const [name, share] of Object.entries(brief.bob ?? {})) {
+    const calmed = bob(doc, name, share)
+    say("bob", calmed ? `${name}: the hips rose and fell ${(calmed[0] * 100).toFixed(1)}, now ${(calmed[1] * 100).toFixed(1)}, in the clip's units by the hundred` : `${name}: no such clip, or no hips keyed in it`)
   }
   // `--elbows=off` leaves each elbow as its clip has it, and `--hang=off` each finger as it was modelled.
   const bent = four || args.includes("--elbows=off") ? null : elbows(doc)

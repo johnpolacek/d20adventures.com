@@ -25,6 +25,15 @@
     "Run jog": "ual1:Jog_Fwd_Loop",
     "Run jog m2m": "m2m/jog",
     "Sprint": "ual1:Sprint_Loop",
-    "Sprint m2m": "m2m/sprint"
+    "Sprint m2m": "m2m/sprint",
+    "Run calm": "ual1:Jog_Fwd_Loop",
+    "Run calmer": "ual1:Jog_Fwd_Loop"
+  },
+  "chin": {
+    "Sneak crouch": 40
+  },
+  "bob": {
+    "Run calm": 0.5,
+    "Run calmer": 0.3
   }
 }

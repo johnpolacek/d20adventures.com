@@ -30,7 +30,6 @@
     "Hit",
     "Fall",
     "Sneak",
-    "Run",
     "Sprint",
     "Sword Idle",
     "Block",
@@ -54,19 +53,15 @@
     "gaits": {
       "sneak": {
         "clip": "Sneak",
-        "speed": 0.76
+        "speed": 0.43
       },
       "walk": {
         "clip": "Walk",
         "speed": 0.87
       },
-      "run": {
-        "clip": "Run",
-        "speed": 5.77
-      },
       "sprint": {
         "clip": "Sprint",
-        "speed": 8.79
+        "speed": 6.27
       }
     }
   },
@@ -74,19 +69,19 @@
     {
       "file": "lod0.glb",
       "triangles": 198948,
-      "megabytes": 11.9,
+      "megabytes": 11.88,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.87,
+      "megabytes": 1.85,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 1.14,
+      "megabytes": 1.12,
       "texture": 512
     }
   ]

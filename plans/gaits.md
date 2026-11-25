@@ -51,9 +51,17 @@ Begun 2026-11-24, from `pnpm assets:legs` (`asset-library/pipeline/legcheck.ts`,
 - Thalbern (`thalbern-hi3d`) has them, with the clips chosen for now: Sneak `m2m/walk-stealth`, Run `ual1:Jog_Fwd_Loop`, Sprint `ual1:Sprint_Loop`. At its own speed his walk slips 8.7 cm a step, from 20.8 at 1.2. The sneak slips 20 cm at its own: its foot rolls heel to toe, and the measure follows the middle of the foot.
 - Not yet seen on the stage.
 
+## The owner's picks, 2026-11-24
+
+- Walk and Walk m2m good: `ual1:Walk_Loop` stays. Walk relaxed, Walk cautious, Sneak stealth and Sneak run bad.
+- Sneak crouch (`ual1:Crouch_Fwd_Loop`) is the sneak, with the head lifted to look ahead: `"chin": { "Sneak": 40 }`. It looked 39° under level.
+- Both jogs bad, Quaternius's "too bouncy". On the trial, Run calm and Run calmer are that jog with the hips' rise and fall kept to a half and to three tenths (`"bob"` in a brief, `bob` in `pilot.ts`).
+- Sprint m2m good, Sprint ok: `m2m/sprint` is the sprint.
+- Thalbern has the sneak and the sprint, and no run until one is chosen: a hurry is his walk at 2.2 times its rate.
+
 ## Next
 
-- [ ] The owner chooses the sneak, the run and the sprint on the trial, and watches Thalbern sneak, walk and hurry in the app.
+- [ ] The owner judges Run calm and Run calmer on the trial, and watches Thalbern sneak, walk and hurry in the app.
 - [ ] The owner runs `pnpm assets:sync thalbern-hi3d` and `pnpm assets:archive thalbern-hi3d`.
 - [ ] The chosen gaits borrowed by every other shipped figure, each rebuilt (free), then synced and archived.
 - [ ] A beast keeps its one hunched walk, at its own stride: a rebuild gives it `motion.gaits.walk`.
