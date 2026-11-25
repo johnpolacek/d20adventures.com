@@ -1,8 +1,10 @@
+import type { ReactNode } from "react"
 import type { Metadata } from "next"
 import { share } from "@/lib/share"
 import { ConfigCard } from "@/components/admin/config-card"
 import { ContactForm } from "@/components/contact/contact-form"
-import { LedgerPage } from "@/components/layout/ledger-page"
+import { LedgerShell } from "@/components/layout/ledger-page"
+import { TitlePage } from "@/components/updates/title-page"
 
 export const metadata: Metadata = {
   ...share({ title: "Contact", description: "Questions, bugs or ideas? Send a note." }),
@@ -41,11 +43,11 @@ export default async function ContactPage() {
 
   if (!isConfigured && process.env.NODE_ENV !== "development") {
     return (
-      <LedgerPage title="Contact">
+      <ContactShell>
         <div className="up-prose">
           <p>The contact form is unavailable right now. Please try again later.</p>
         </div>
-      </LedgerPage>
+      </ContactShell>
     )
   }
 
@@ -86,10 +88,26 @@ export default async function ContactPage() {
   return <ContactPageContent />
 }
 
+/** The page in the dress of /updates: a title page over a messenger post, then the form in the reading column. */
+function ContactShell({ children }: { children: ReactNode }) {
+  return (
+    <LedgerShell>
+      <TitlePage art="/images/updates/contact.webp">
+        <p className="up-label">Send Word</p>
+        <h1>Contact</h1>
+        <p className="vn-head-as">Questions, bugs or ideas? Send a note and we’ll write back.</p>
+      </TitlePage>
+      <div className="up-layout">
+        <div className="up-main ul-contact">{children}</div>
+      </div>
+    </LedgerShell>
+  )
+}
+
 function ContactPageContent() {
   return (
-    <LedgerPage title="Contact">
+    <ContactShell>
       <ContactForm requireCaptcha={true} />
-    </LedgerPage>
+    </ContactShell>
   )
 }

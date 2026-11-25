@@ -65,7 +65,6 @@ export function ContactForm({ subject = "Contact Message", requireCaptcha = fals
         <ContactSent name={draft.name} />
       ) : (
         <form onSubmit={onSubmit}>
-          <p className="up-dek">Questions, bugs or ideas? Send a note and we’ll write back.</p>
           <div className="up-form">
             <div className="up-form-row">
               <Label plain htmlFor="name" className="up-label">

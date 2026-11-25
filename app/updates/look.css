@@ -316,3 +316,9 @@ html[data-update-theme="dark"] .ul-band {
 .ul-byline + .vn-orn {
   margin: 18px auto 0;
 }
+
+/* The Contact page: the form sits in a narrow column under the title page. */
+.ul-contact {
+  max-width: 560px;
+  padding-top: 48px;
+}

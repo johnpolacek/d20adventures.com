@@ -1,5 +1,7 @@
 import type { ReactNode } from "react"
 import type { RenderedPost } from "@/lib/updates"
+import "@/app/vision/vision.css"
+import "@/app/updates/look.css"
 
 /** The /vision ornament: a rule each side of a small diamond. */
 export function Orn() {
