@@ -123,7 +123,6 @@ export default function VisionPage() {
       <div className="vn-wrap is-edge">
         <FeatureTable />
         <div className="vn-outro">
-          <p>The aim isn’t a copy of Baldur’s Gate 3. It’s everything players love about it, done in our own way.</p>
           <p>This is a work in progress, and the numbers are honest guesses that change as the work goes. It’s a big goal, and help is welcome.</p>
           <p>
             Everything is open source on <a href="https://github.com/johnpolacek/d20adventures.com">Github</a>.
