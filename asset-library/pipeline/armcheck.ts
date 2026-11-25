@@ -23,36 +23,12 @@
 import { readFile } from "node:fs/promises"
 import { type Accessor, type Node, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
+import { angle, local, type Mat, mul } from "./pose"
 import { reader } from "./retarget"
 
 const LIMITS = { elbow: [10, 152], raise: 105, stretch: 2, crush: 3 }
 const FRAMES = 30
-type Mat = number[]
 
-const mul = (a: Mat, b: Mat): Mat => {
-  const out = new Array(16).fill(0)
-  for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) out[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k]
-  return out
-}
-const local = (t: number[], [x, y, z, w]: number[], s: number[]): Mat => [
-  (1 - 2 * (y * y + z * z)) * s[0],
-  2 * (x * y + w * z) * s[0],
-  2 * (x * z - w * y) * s[0],
-  0,
-  2 * (x * y - w * z) * s[1],
-  (1 - 2 * (x * x + z * z)) * s[1],
-  2 * (y * z + w * x) * s[1],
-  0,
-  2 * (x * z + w * y) * s[2],
-  2 * (y * z - w * x) * s[2],
-  (1 - 2 * (x * x + y * y)) * s[2],
-  0,
-  t[0],
-  t[1],
-  t[2],
-  1,
-]
-const angle = (a: number[], b: number[]) => (Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (Math.hypot(...a) * Math.hypot(...b) || 1)))) * 180) / Math.PI
 
 async function main() {
   const [id, only] = process.argv.slice(2).filter((a) => !a.startsWith("--"))
