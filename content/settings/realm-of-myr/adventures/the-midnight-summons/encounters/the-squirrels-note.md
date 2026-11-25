@@ -26,7 +26,7 @@ It chatters at him and will not come any closer.
 
 This is the first scene of the game, and it teaches a new player how to play while the story starts. Keep every reply short and plain. Do not explain the rules or the screen. End each reply by naming one or two things Thalbern could do next, in the story's own words, so a new player sees what they might type.
 
-Thalbern wants the note. He can coax the squirrel, which is an easy Animal Handling check, DC 10. On a success it hops to him and lets him take the note. On a failure it drops the note on the step and darts up the oak, scolding him. Either way he gets the note.
+Thalbern wants the note. Coaxing the squirrel is an easy Animal Handling check, DC 10. This scene has that one check and no other roll. On a success it hops to him and lets him take the note. On a failure it drops the note at his feet and darts up the oak, scolding him, and he picks it up. Either way he has the note, and taking it, picking it up or reading it never calls for a roll.
 
 He can cast Speak with Animals instead. The squirrel says a druid who smells of moss sent it, that she looked worried, and that it was promised acorns.
 
