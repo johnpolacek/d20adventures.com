@@ -13,6 +13,8 @@ Free. Open source. Write and build your own adventures then play them with your 
 
 That’s what [d20adventures.com](https://d20adventures.com) is becoming.
 
+I’m keeping track of how far along each part is [here](/vision).
+
 It is a crazy goal. I’ll probably fail.
 
 It will be fun to try.

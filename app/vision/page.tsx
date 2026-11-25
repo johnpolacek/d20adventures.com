@@ -127,6 +127,9 @@ export default function VisionPage() {
           <p>
             Everything is open source on <a href="https://github.com/johnpolacek/d20adventures.com">Github</a>.
           </p>
+          <p>
+            Read why in <a href="/updates/building-baldurs-gate-3-as-a-free-open-source-platform">Building Baldur’s Gate 3 as a Free Open Source Platform</a>.
+          </p>
         </div>
       </div>
     </LedgerShell>
