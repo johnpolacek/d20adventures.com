@@ -514,7 +514,7 @@ function pierSet() {
         exposure: 1.15,
         lights: [
           { at: [5.15, 2.3, -2.2], color: "#ffb466", intensity: 14, distance: 3.4 },
-          { at: [4.3, 1.7, -0.4], color: "#ffa850", intensity: 3, distance: 3.2 },
+          { at: [4.3, 1.7, -0.4], color: "#ffa850", intensity: 1.5, distance: 3.2 },
           { at: [3.75, 1.7, -3.4], color: "#ffa850", intensity: 3, distance: 3.2 },
           { at: [6.7, 1.45, -0.01], color: "#ffa850", intensity: 3, distance: 3 },
           { at: [3.7, 1.45, -1.1], color: "#ffa850", intensity: 2.5, distance: 3 },
@@ -664,7 +664,7 @@ function pierSet() {
   staging(
     "the-shipment",
     "mordava-river-pier",
-    [on("lyra", [5.0, 0.15], [5.2, -1.3]), on("reinhard", [6.15, 0.45], [5.2, -1.3]), on("silas", [4.45, 2.15], [5.0, 0.0]), on("aelar", [3.95, -0.55], "lyra"), poppen, thalbern, ...crew],
+    [on("lyra", [5.0, 0.15], [5.2, -1.3]), on("reinhard", [6.15, 0.45], [5.2, -1.3]), on("silas", [4.45, 2.15], [5.0, 0.0]), on("aelar", [3.6, 0.0], "lyra"), poppen, thalbern, ...crew],
     {
       exchange: { subjects: [CAST.lyra.id, CAST.aelar.id, CAST.silas.id, CAST.reinhard.id], offset: [1.31, 2.0, -3.95], target: [-0.29, 1.1, 0.45], fov: 56, label: "The meeting" },
       // From aft, over the crate before her, Silas and the open door beyond.
@@ -686,7 +686,7 @@ function pierSet() {
       on("lyra", [5.55, 0.3], "silas"),
       on("reinhard", [6.35, 0.75], "silas"),
       on("silas", [4.65, 0.6], "aelar"),
-      on("aelar", [3.95, -0.55], "silas"),
+      on("aelar", [3.6, 0.0], "silas"),
       poppen,
       thalbern,
       on("fighter", "pierEnd", "cabinDoor"),
@@ -730,7 +730,7 @@ function pierSet() {
   staging(
     "the-fake",
     "mordava-river-pier",
-    [on("silas", [5.2, 2.35], "aelar"), on("aelar", [3.95, -0.55], "silas"), on("reinhard", [4.8, 0.4], "aelar"), on("lyra", [5.95, 0.1], "aelar"), poppen, thalbern, ...crew],
+    [on("silas", [5.2, 2.35], "aelar"), on("aelar", [3.6, 0.0], "silas"), on("reinhard", [4.8, 0.4], "aelar"), on("lyra", [5.95, 0.1], "aelar"), poppen, thalbern, ...crew],
     {
       // From aft over the crate: Aelar, Reinhard stepping toward him, and Silas in the doorway beyond.
       standoff: { subjects: [CAST.silas.id, CAST.aelar.id, CAST.reinhard.id], offset: [0.35, 2.0, -4.03], target: [-0.15, 1.2, 0.27], fov: 56, label: "The standoff" },
