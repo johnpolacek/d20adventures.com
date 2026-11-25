@@ -78,12 +78,15 @@ function cuts(spans: [number, number][], start: number) {
     .filter(([a, b]) => b > a)
 }
 
-// The cut video, from the raw picture and sound: the waits out, and nothing after until seconds when given. The sound is
-// cut by trimming its kept pieces and joining them, since aselect passes every sample through.
+// The cut video, from the raw picture and sound: the waits out, and nothing after until seconds when given. Picture and
+// sound are each cut into the same kept pieces by their own timestamps and joined, so both keep the clock they were
+// recorded on. The screen is captured at a varying rate, fewer frames while the app stalls, so the picture is set to 30
+// frames a second only after the cut (fps), holding a frame through a stall. Renumbering its frames instead
+// (N/FRAME_RATE) ran the picture ahead of the sound wherever frames were missing. A gap in the sound is filled with
+// silence (aresample async) so it too keeps time. The raw files are kept when the cut's picture and sound differ in
+// length by more than half a second, so a bad cut can be made again.
 function cutVideo(raw: string, rawSound: string | null, soundLate: number, cut: (readonly [number, number])[], final: string, until?: number) {
   const end = until ?? Infinity
-  const drop = cut.map(([a, b]) => `between(t,${a.toFixed(2)},${b.toFixed(2)})`).join("+")
-  const keep = drop ? `not(${drop})` : "1"
   const pieces: [number, number][] = []
   let from = 0
   for (const [a, b] of cut) {
@@ -92,17 +95,25 @@ function cutVideo(raw: string, rawSound: string | null, soundLate: number, cut: 
     from = b
   }
   if (from < end) pieces.push([from, end])
-  const trim = ([a, b]: [number, number]) => `atrim=start=${a.toFixed(3)}${Number.isFinite(b) ? `:end=${b.toFixed(3)}` : ""},asetpts=PTS-STARTPTS`
-  const sound = rawSound
-    ? `;[1:a]asplit=${pieces.length}${pieces.map((_, i) => `[s${i}]`).join("")};${pieces.map((p, i) => `[s${i}]${trim(p)}[k${i}]`).join(";")};${pieces.map((_, i) => `[k${i}]`).join("")}concat=n=${pieces.length}:v=0:a=1[a]`
-    : ""
-  const filter = `[0:v]select='${keep}',setpts=N/FRAME_RATE/TB,scale=1920:-2[v]${sound}`
+  const span = ([a, b]: [number, number]) => `start=${a.toFixed(3)}${Number.isFinite(b) ? `:end=${b.toFixed(3)}` : ""}`
+  const join = (kind: "v" | "a", split: string, trim: string) =>
+    `${split}=${pieces.length}${pieces.map((_, i) => `[${kind}s${i}]`).join("")};${pieces.map((p, i) => `[${kind}s${i}]${trim}=${span(p)},${kind === "v" ? "setpts" : "asetpts"}=PTS-STARTPTS[${kind}k${i}]`).join(";")};${pieces.map((_, i) => `[${kind}k${i}]`).join("")}concat=n=${pieces.length}:v=${kind === "v" ? 1 : 0}:a=${kind === "a" ? 1 : 0}`
+  const picture = `[0:v]${join("v", "split", "trim")},fps=30,scale=1920:-2[v]`
+  const sound = rawSound ? `;[1:a]aresample=async=1000:first_pts=0,${join("a", "asplit", "atrim")}[a]` : ""
   const limit = until === undefined ? [] : ["-t", until.toFixed(2)]
   execFileSync(
     "ffmpeg",
-    ["-hide_banner", "-y", ...limit, "-i", raw, ...(rawSound ? ["-itsoffset", soundLate.toFixed(3), ...limit, "-i", rawSound] : []), "-filter_complex", filter, "-map", "[v]", ...(rawSound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
+    ["-hide_banner", "-y", ...limit, "-i", raw, ...(rawSound ? ["-itsoffset", soundLate.toFixed(3), ...limit, "-i", rawSound] : []), "-filter_complex", picture + sound, "-map", "[v]", ...(rawSound ? ["-map", "[a]", "-c:a", "aac", "-b:a", "192k"] : []), "-c:v", "h264_videotoolbox", "-b:v", "12M", "-movflags", "+faststart", final],
     { stdio: "inherit" }
   )
+  if (rawSound) {
+    const length = (stream: string) => Number(execFileSync("ffprobe", ["-v", "error", "-select_streams", stream, "-show_entries", "stream=duration", "-of", "csv=p=0", final]).toString().trim())
+    const off = Math.abs(length("v:0") - length("a:0"))
+    if (!(off <= 0.5)) {
+      console.log(`The cut's picture and sound differ by ${off.toFixed(2)}s, so the raw files are kept: ${raw}, ${rawSound}`)
+      return
+    }
+  }
   rmSync(raw, { force: true })
   if (rawSound) rmSync(rawSound, { force: true })
 }
