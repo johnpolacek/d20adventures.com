@@ -962,19 +962,22 @@ export function StagePlay(props: {
   // the roll's outcome shows the attack itself. After a roll in the same step, an effect misses when its actor failed
   // the roll or its target made it. No one walks by a beat: where everyone stands is the engine's.
   const staged = useMemo(() => {
-    const out = new Map<number, { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean; s: number }[]>()
+    type Entry = { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean; outcome?: "crit" | "fumble" }
+    const out = new Map<number, (Entry & { s: number })[]>()
     const all = paragraphs.flatMap((p, i) => p.beats.map((beat) => ({ beat, at: i })))
     const same = (a: StoryBeat, b: StoryBeat) => a.by.step === b.by.step && a.by.character === b.by.character
-    type Entry = { key: string; beat: Extract<StoryBeat, { kind: "action" }>; effect: boolean; miss: boolean }
     // At the sentence that tells it, in its own paragraph. One played after a roll plays as that paragraph opens.
     const add = (at: number, own: number, entry: Entry) =>
       out.set(at, [...(out.get(at) ?? []), { ...entry, s: at === own ? sentenceOf(paragraphs[at].text, entry.beat.text) : 0 }])
+    // A crit or a fumble on the actor's own roll shows in the blow.
+    const outcomeOf = (roll: RollBeat) => (roll.success && roll.attack?.critical ? "crit" : !roll.success && roll.natural === 1 ? "fumble" : undefined)
     // Where a beat's effect plays, and whether it misses: undefined when it does not play yet, or not at all.
-    const effectAt = (beat: Extract<StoryBeat, { kind: "action" }>, at: number, i: number): { at: number; miss: boolean } | undefined => {
+    const effectAt = (beat: Extract<StoryBeat, { kind: "action" }>, at: number, i: number): Pick<Entry, "miss" | "outcome"> & { at: number } | undefined => {
       let j = i - 1
       while (j >= 0 && same(all[j].beat, beat) && all[j].beat.kind !== "roll") j--
       const before = j >= 0 && same(all[j].beat, beat) ? all[j].beat : undefined
-      if (before?.kind === "roll") return { at, miss: before.character === beat.actor ? !before.success : before.character === beat.target && before.success }
+      if (before?.kind === "roll")
+        return before.character === beat.actor ? { at, miss: !before.success, outcome: outcomeOf(before) } : { at, miss: before.character === beat.target && before.success }
       if (beat.by.step !== "reply") return { at, miss: false }
       let k = i + 1
       while (k < all.length && same(all[k].beat, beat)) k++
@@ -985,7 +988,7 @@ export function StagePlay(props: {
           const o = all[m].beat
           if (o.kind === "action" && o.actor === beat.actor && o.effect) return undefined
         }
-        return { at: all[k + 1]?.at ?? all[k].at, miss: !roll.success }
+        return { at: all[k + 1]?.at ?? all[k].at, miss: !roll.success, outcome: outcomeOf(roll) }
       }
       // A roll the player has still to make decides it later.
       if (k >= all.length && turn?.characters.find((c) => c.id === beat.actor)?.rollRequired) return undefined
@@ -996,7 +999,7 @@ export function StagePlay(props: {
       const key = `${turn?._id}:${i}`
       if (beat.object) add(at, at, { key: `${key}:own`, beat, effect: false, miss: false })
       const fx = beat.effect ? effectAt(beat, at, i) : undefined
-      if (fx) add(fx.at, at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss })
+      if (fx) add(fx.at, at, { key: `${key}:fx`, beat, effect: true, miss: fx.miss, outcome: fx.outcome })
     }
     return out
   }, [paragraphs, turn?._id, turn?.characters])
@@ -1091,7 +1094,7 @@ export function StagePlay(props: {
     const here = reading && turn ? `${turn._id}:${paragraph}` : ""
     showing.current = here
     if (!stage || !here || !turn || stageRef.current !== stage) return
-    for (const { key, beat: b, effect, miss, s } of staged.get(paragraph) ?? []) {
+    for (const { key, beat: b, effect, miss, outcome, s } of staged.get(paragraph) ?? []) {
       if (played.current.has(key) || heard < s) continue
       const actor = castOf(b.actor)
       if (!actor || !stage.isOnStage(actor)) continue
@@ -1100,7 +1103,7 @@ export function StagePlay(props: {
       // Once the camera has arrived, so the effect is seen from where the paragraph frames it.
       void Promise.race([stage.shotSettled(), new Promise((r) => setTimeout(r, 2600))]).then(() => {
         if (showing.current !== here) return
-        if (effect && b.effect) void stage.effect(b.effect.kind, actor, target, b.effect.element, { miss })
+        if (effect && b.effect) void stage.effect(b.effect.kind, actor, target, b.effect.element, { miss, outcome })
         else if (b.object) void stage.prop(b.object.kind, actor, castOf(b.object.to))
       })
     }

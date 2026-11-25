@@ -35,7 +35,9 @@
     "Sword Idle",
     "Block",
     "Combo",
-    "Strafe"
+    "Strafe",
+    "Reel",
+    "Stumble"
   ],
   "motion": {
     "idle": "Idle",
@@ -45,7 +47,9 @@
     "moves": {
       "melee": "Swing",
       "ranged": "Shoot",
-      "dodge": "Sidestep"
+      "dodge": "Sidestep",
+      "reel": "Reel",
+      "stumble": "Stumble"
     },
     "lands": {
       "Swing": 0.4,
@@ -74,19 +78,19 @@
     {
       "file": "lod0.glb",
       "triangles": 198948,
-      "megabytes": 11.92,
+      "megabytes": 12.01,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.88,
+      "megabytes": 1.97,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 6000,
-      "megabytes": 1.16,
+      "megabytes": 1.25,
       "texture": 512
     }
   ]

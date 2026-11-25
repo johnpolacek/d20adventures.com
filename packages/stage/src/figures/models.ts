@@ -40,8 +40,8 @@ export interface FigureSpec {
   // A colour its own is multiplied by: a pale model darkened to sit in a night, as the card it replaces was painted.
   tint?: string
   // The moves it makes in a fight, by the clip each plays: a blow struck close, a shot from afar, getting out of the
-  // way. One it has none for, it does not make.
-  moves?: { melee?: string; ranged?: string; dodge?: string }
+  // way, thrown back by a critical hit, stumbling after a fumble. One it has none for, it does not make.
+  moves?: { melee?: string; ranged?: string; dodge?: string; reel?: string; stumble?: string }
   // When each of its own clips lands, in seconds into it. A written clip's is in clips.ts (STRIKE).
   lands?: Record<string, number>
   // Nodes of the model left out: the weapons and shields a pack ships on every character.
@@ -364,7 +364,7 @@ export class Models {
     return most.action.getClip().duration / 2 / gaitRate(most.gait, most.speed, gait)
   }
   // The clip a figure plays for a kind of move, if it has one.
-  moveFor(id: string, kind: "melee" | "ranged" | "dodge") {
+  moveFor(id: string, kind: keyof NonNullable<FigureSpec["moves"]>) {
     const m = this.on ? this.items.get(id) : undefined
     const clip = m?.spec.moves?.[kind]
     return clip && m?.actions.has(clip) ? clip : null
@@ -400,11 +400,12 @@ export class Models {
     m.ready = clip && m.actions.has(clip) ? clip : null
     return !what || !!m.ready
   }
-  hit(id: string, color: string, strength = 1) {
+  // A flash, and the hit clip unless a move it makes instead answers the blow.
+  hit(id: string, color: string, strength = 1, flinch = true) {
     const m = this.items.get(id)
     if (!m) return
     this.hits.set(id, { color: new THREE.Color(color), strength: THREE.MathUtils.clamp(strength, 0, 1.5), t: 0 })
-    m.hitT = 0
+    if (flinch) m.hitT = 0
   }
   // Put down, or stood up, at once: for someone already down when the scene shows, and with motion off. And put low,
   // or up, at once.

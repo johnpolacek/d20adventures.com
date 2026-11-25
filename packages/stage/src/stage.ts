@@ -279,6 +279,8 @@ export class Stage {
   private trod = new Map<string, number>()
   private cameOn = new Set<string>()
   private sinking = new Set<string>()
+  // Who a critical hit is on its way to, and who from: they reel from it as it lands.
+  private reeling = new Map<string, string>()
   // What is underfoot anywhere in the set, for the sound of a step there.
   private floor: Floor
 
@@ -1868,8 +1870,16 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // An attack or spell from one cast member at another, or at a place, or about themselves with no target. A miss lands
   // beside the target and strikes nobody. Resolves when it has played. With motion off it does not play.
   // A figure (models.ts) that has a move for it makes it first, turned toward the target: a cut for a blade or a blow,
-  // a shot for an arrow. The effect starts as the move lands. A figure an attack misses gets out of its way.
-  async effect(kind: EffectKind, from: string, to?: string | [number, number], element?: Element, { miss = false } = {}): Promise<void> {
+  // a shot for an arrow. The effect starts as the move lands. A figure an attack misses gets out of its way. A critical
+  // hit throws its target back as it lands, and a fumble leaves the attacker stumbling, each in a figure that has the
+  // move for it: one with none takes them as a plain hit and a plain miss.
+  async effect(
+    kind: EffectKind,
+    from: string,
+    to?: string | [number, number],
+    element?: Element,
+    { miss = false, outcome }: { miss?: boolean; outcome?: "crit" | "fumble" } = {}
+  ): Promise<void> {
     if (!this.motion) return
     const range = kind === "arrow" ? "ranged" : kind === "slash" || kind === "impact" ? "melee" : null
     const move = range ? this.models.moveFor(from, range) : null
@@ -1884,7 +1894,12 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         this.body(to, "dodge")
       }
     }
-    return this.fire(kind, from, to, element, miss)
+    const crit = !miss && outcome === "crit" && typeof to === "string" && to !== from
+    if (crit) this.reeling.set(to, from)
+    await this.fire(kind, from, to, element, miss)
+    if (crit) this.reeling.delete(to)
+    const stumble = miss && outcome === "fumble" ? this.models.moveFor(from, "stumble") : null
+    if (stumble) this.models.act(from, stumble, toward)
   }
   // Keep a weapon in a figure's hand between its moves, as an arrow nocked or a sword drawn, or put it away. A card
   // shows nothing of it.
@@ -1925,10 +1940,15 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     const near = c ? this.camera.position.distanceTo(V(c.x, (c.y ?? 0) + c.height / 2, c.z)) : undefined
     for (const l of this.effectListeners) l({ type: "sound", cue, near })
   }
-  // A flash and a shake on a cast member's card, as when struck.
+  // A flash and a shake on a cast member's card, as when struck. A figure flinches, or reels when a critical hit is
+  // landing on it, turned toward whoever struck it.
   hit(id: string, color = "#ff5a3c", strength = 1) {
-    if (this.models.active(id)) this.models.hit(id, color, strength)
-    else this.standees.hit(id, color, strength)
+    if (!this.models.active(id)) return this.standees.hit(id, color, strength)
+    const from = this.reeling.get(id)
+    const reel = from ? this.models.moveFor(id, "reel") : null
+    this.reeling.delete(id)
+    this.models.hit(id, color, strength, !reel)
+    if (reel && from) this.models.act(id, reel, this.castAt(from))
   }
   clearEffects() {
     this.effects.clear()
