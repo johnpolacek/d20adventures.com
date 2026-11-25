@@ -101,6 +101,17 @@
       "Thalbern takes his bow and sets out for the Old Standing Stones."
     ]
   },
+  "summons-wolf": {
+    "adventure": "the-midnight-summons",
+    "encounter": "the-woodpile-wolf",
+    "rounds": 5,
+    "replies": [
+      "Thalbern snatches up his longbow and shoots at the wolf.",
+      "Thalbern draws his longsword and cuts at the wolf.",
+      "Thalbern keeps fighting the wolf with his sword.",
+      "Thalbern shouts and waves his sword to drive it off."
+    ]
+  },
   "summons-hide": {
     "adventure": "the-midnight-summons",
     "encounter": "broken-silence",

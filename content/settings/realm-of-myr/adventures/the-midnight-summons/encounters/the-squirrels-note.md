@@ -32,10 +32,13 @@ He can cast Speak with Animals instead. The squirrel says a druid who smells of 
 
 The note is in the hand of Wollandora, an elven druid and his trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
-Once he has the note, he has time before he must leave. He can ready his gear, look over his bow, sword and dagger, or rest. Nothing here harms him.
+Once he has read the note, whatever he does next, a hungry wolf comes out of the trees: that is the next scene. Do not tell of the wolf here.
 
-If the player sets out for the stones before reading the note, he takes the note with him and reads it on the way. A player who knows the game can leave at once.
+The Old Standing Stones are deeper in the Valkarr woods, not toward Kordavos.
+
+If the player sets out for the stones before reading the note, he takes the note with him and reads it on the way, and the wolf never comes. A player who knows the game can leave at once.
 
 ## Transitions
 
-- To [[encounter:broken-silence]] when Thalbern sets out for the Old Standing Stones.
+- To [[encounter:the-woodpile-wolf]] when Thalbern has the note and has read it, and does anything more: readies his gear, looks over his weapons, rests or sets out.
+- To [[encounter:broken-silence]] when Thalbern sets out for the Old Standing Stones before he has read the note.

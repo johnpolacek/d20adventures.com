@@ -77,9 +77,9 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Written Adventures",
-        note: "Four adventures, 70 encounters, about 46,000 words.",
+        note: "Four adventures, 71 encounters, about 46,000 words.",
         milestones: [
-          yes("4 adventures written: 70 encounters, about 46,000 words", 8),
+          yes("4 adventures written: 71 encounters, about 46,000 words", 8),
           yes("Every encounter has GM notes, or is an ending", 3),
           no("No leftovers from the old adventure format"),
           no("150 encounters in all", 3),
@@ -150,7 +150,7 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Many Ways Through a Scene",
-        note: "Only 21 of 70 encounters branch, and The Road to Kordavos has none.",
+        note: "Only 21 of 71 encounters branch, and The Road to Kordavos has none.",
         milestones: [
           no("A test that drives one scene to 3 different outcomes"),
           no("Every encounter’s GM notes say what talking, sneaking and fighting each do", 3),
@@ -271,14 +271,14 @@ export const visionThemes: VisionTheme[] = [
       },
       {
         name: "Learn by Playing",
-        note: "The Midnight Summons opens at Thalbern’s home, where a squirrel brings the note, with tips the first time.",
+        note: "The Midnight Summons opens at Thalbern’s home: a squirrel brings the note, then a wolf, the first fight.",
         milestones: [
           yes("An opening scene that teaches the game as it is played, like the Nautiloid", 3),
           yes("It walks through typing an action, a check and a spell", 3),
           yes("Short tips the first time a player types, rolls, attacks, reacts or meets the sheet", 3),
           yes("Players who know the game can skip it"),
           no("A test that plays a new player through it from start to end"),
-          no("A practice fight in the opening, before the Owlbear", 3),
+          yes("A practice fight in the opening, before the Owlbear", 3),
           no("Every new player starts in it, whichever adventure they pick", 3),
         ],
       },

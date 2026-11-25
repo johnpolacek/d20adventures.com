@@ -1,0 +1,71 @@
+{
+  "format": "d20.stage.staging",
+  "version": 1,
+  "id": "the-midnight-summons/the-woodpile-wolf",
+  "set": "realm-of-myr/thalberns-forest-home",
+  "cast": [
+    {
+      "id": "thalbern",
+      "name": "Thalbern",
+      "role": "Ranger of the Valkarr woods",
+      "height": 1.82,
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/thalbern-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/thalbern-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg"
+      },
+      "at": "thalbern",
+      "facing": [
+        1.5,
+        6
+      ]
+    },
+    {
+      "id": "wolf",
+      "name": "Wolf",
+      "role": "Hungry wolf of the Valkarr woods",
+      "height": 0.85,
+      "voice": "beast",
+      "art": {
+        "front": "/stage/fixtures/the-midnight-summons/wolf-front.webp",
+        "back": "/stage/fixtures/the-midnight-summons/wolf-back.webp",
+        "portrait": "/stage/fixtures/the-midnight-summons/wolf-portrait.jpg"
+      },
+      "at": [
+        1.5,
+        6
+      ],
+      "facing": "thalbern"
+    }
+  ],
+  "shots": {
+    "standoff": {
+      "subjects": [
+        "thalbern",
+        "wolf"
+      ],
+      "offset": [
+        -6,
+        2.6,
+        -3
+      ],
+      "target": [
+        0,
+        0.8,
+        0
+      ],
+      "fov": 50,
+      "label": "Standoff"
+    },
+    "ranger": {
+      "subject": "thalbern",
+      "distance": 3.2,
+      "angle": 20,
+      "height": 1.7,
+      "lookHeight": 1.2,
+      "fov": 46,
+      "label": "Thalbern"
+    }
+  },
+  "shot": "standoff"
+}

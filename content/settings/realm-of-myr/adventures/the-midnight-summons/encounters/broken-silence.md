@@ -9,6 +9,7 @@ settingId: "realm-of-myr"
 location: "valkarr-forest"
 adventureId: "the-midnight-summons"
 landmark: "valkarr-woods/dark-trail"
+revive: true
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/broken-silence-2.png"
 ---
 

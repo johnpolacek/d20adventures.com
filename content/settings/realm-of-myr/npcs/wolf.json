@@ -1,0 +1,14 @@
+{
+  "id": "wolf",
+  "type": "npc",
+  "name": "Wolf",
+  "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/app/avatar/npc.png?v=1",
+  "archetype": "Beast",
+  "race": "Wolf",
+  "appearance": "A lean grey timber wolf with a darker saddle along its back, a pale throat and pale amber eyes. Thin from a hard season.",
+  "personality": "Hungry, wary, bold only when cornered or starving.",
+  "motivation": "Find food.",
+  "behavior": "Goes for an easy meal. Fights what stands in its way, and runs once it is hurt badly.",
+  "attributes": {},
+  "statBlock": "wolf"
+}

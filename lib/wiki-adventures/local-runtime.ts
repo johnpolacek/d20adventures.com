@@ -44,6 +44,8 @@ export const LOCAL_WIKI_ADVENTURES = [
       "content/settings/realm-of-myr/adventures/the-midnight-summons",
       "content/settings/realm-of-myr/npcs/owlbear.json",
       "content/settings/realm-of-myr/npcs/owlbear.md",
+      "content/settings/realm-of-myr/npcs/wolf.json",
+      "content/settings/realm-of-myr/npcs/wolf.md",
       "content/settings/realm-of-myr/npcs/wollandora.json",
       "content/settings/realm-of-myr/npcs/wollandora.md",
     ],

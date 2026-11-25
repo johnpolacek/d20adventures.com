@@ -1,0 +1,25 @@
+{
+  "id": "wolf",
+  "name": "Wolf",
+  "role": "Hungry wolf of the Valkarr woods",
+  "cast": [
+    "wolf"
+  ],
+  "height": 0.85,
+  "card": {
+    "front": "/stage/fixtures/the-midnight-summons/wolf-front.webp",
+    "back": "/stage/fixtures/the-midnight-summons/wolf-back.webp"
+  },
+  "who": "a grey timber wolf, lean and rangy, the size of a large dog, with thick grey fur, a darker brown-grey saddle along its back, a pale cream throat and belly, long legs, big paws and pale amber eyes",
+  "stow": "Its long bushy tail hangs down and a little out behind it, clear of the hind legs, its tip just above the ground. Its ears stand up.",
+  "arms": 0,
+  "creature": true,
+  "stance": "four",
+  "maker": "lowpoly",
+  "low": {
+    "faces": 10000
+  },
+  "rig": "quadruped",
+  "stock": "canine",
+  "gloss": 0.5
+}

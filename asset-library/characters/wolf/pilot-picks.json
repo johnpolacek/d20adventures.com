@@ -1,0 +1,11 @@
+{
+  "Idle": "canine_000001",
+  "Walk": "canine_000007",
+  "Run": "canine_000002",
+  "Sneak": "canine_000021",
+  "Snarl": "canine_000014",
+  "Bite": "canine_000015",
+  "Hit": "canine_000013",
+  "Fall": "canine_000018",
+  "Cower": "canine_000000"
+}
