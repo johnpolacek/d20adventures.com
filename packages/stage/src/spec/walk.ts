@@ -19,14 +19,35 @@ export function onFootprint(footprints: readonly Footprint[], x: number, z: numb
   return false
 }
 
-// How far someone can walk from `from` toward `to` in a straight line: stops at the first solid footprint or at `budget`
-// metres. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
+// How far a ground point is from the nearest solid footprint, 0 when on one.
+export function footprintGap(footprints: readonly Footprint[], x: number, z: number) {
+  let gap = Number.POSITIVE_INFINITY
+  for (const f of footprints) {
+    if (f.kind === "circle") {
+      gap = Math.min(gap, Math.max(0, Math.hypot(x - f.x, z - f.z) - f.r))
+      continue
+    }
+    const dx = x - f.x
+    const dz = z - f.z
+    const c = Math.cos(f.ry)
+    const s = Math.sin(f.ry)
+    gap = Math.min(gap, Math.hypot(Math.max(0, Math.abs(dx * c - dz * s) - f.hw), Math.max(0, Math.abs(dx * s + dz * c) - f.hd)))
+  }
+  return gap
+}
+
+// How far a standing figure's middle keeps from anything solid, so no body stands in a wall or a rail.
+export const BODY = 0.3
+
+// How far someone can walk from `from` toward `to` in a straight line: to the first solid footprint or `budget` metres.
+// Cut short by something solid, they stop a body's width back from it, so no one ends a walk standing in a wall or a
+// rail. Returns where they would stop, the distance walked, and whether something or the budget cut it short.
 export function reachOver(footprints: readonly Footprint[], from: { x: number; z: number }, to: { x: number; z: number }, budget: number) {
   const dx = to.x - from.x
   const dz = to.z - from.z
   const want = Math.hypot(dx, dz)
   const limit = Math.min(want, budget)
-  const step = 0.2
+  const step = 0.1
   let d = 0
   let blocked = false
   while (d + step <= limit) {
@@ -37,20 +58,24 @@ export function reachOver(footprints: readonly Footprint[], from: { x: number; z
     }
     d += step
   }
-  if (!blocked && limit - d > 1e-3 && !onFootprint(footprints, from.x + (dx * limit) / Math.max(want, 1e-6), from.z + (dz * limit) / Math.max(want, 1e-6))) d = limit
+  if (!blocked && limit - d > 1e-3) {
+    if (onFootprint(footprints, from.x + (dx * limit) / Math.max(want, 1e-6), from.z + (dz * limit) / Math.max(want, 1e-6))) blocked = true
+    else d = limit
+  }
+  if (blocked) d = Math.max(0, d - BODY)
   const t = d / Math.max(want, 1e-6)
   return { x: from.x + dx * t, z: from.z + dz * t, distance: d, blocked, short: blocked || want > budget }
 }
 
 // Where someone walking to `to` stands: the point itself while no one else is there, else the nearest clear spot around
-// it on the walker's side, `gap` metres from everyone and not through anything solid.
+// it on the walker's side, `gap` metres from everyone, a body's width from anything solid and not through it.
 export function standingRoom(footprints: readonly Footprint[], others: readonly Point[], walker: Point, to: Point, gap = 0.8): Point {
-  const free = (p: Point) => others.every((c) => Math.hypot(c.x - p.x, c.z - p.z) >= gap - 1e-6)
+  const free = (p: Point) => others.every((c) => Math.hypot(c.x - p.x, c.z - p.z) >= gap - 1e-6) && footprintGap(footprints, p.x, p.z) >= BODY
   if (free(to)) return to
-  const inside = onFootprint(footprints, to.x, to.z)
-  for (const r of [gap, gap * 2, gap * 3]) {
+  const inside = footprintGap(footprints, to.x, to.z) < BODY
+  for (const r of [gap / 2, gap, gap * 2, gap * 3]) {
     const ring = Array.from({ length: 12 }, (_, i) => ({ x: to.x + Math.sin((i * Math.PI) / 6) * r, z: to.z + Math.cos((i * Math.PI) / 6) * r })).filter(
-      (p) => free(p) && !onFootprint(footprints, p.x, p.z) && (inside || !reachOver(footprints, to, p, r + 0.01).short)
+      (p) => free(p) && (inside || !reachOver(footprints, to, p, r + 0.01).short)
     )
     if (ring.length) return ring.reduce((a, b) => (Math.hypot(a.x - walker.x, a.z - walker.z) <= Math.hypot(b.x - walker.x, b.z - walker.z) ? a : b))
   }
