@@ -28,19 +28,35 @@ function seenNow(): string[] {
   }
 }
 
+// Every hook on the page hears a mark, so a tour finished in one place lets the tips in another show.
+const MARKED = "d20-tips-marked"
+function mark(id: string) {
+  const next = [...new Set([...seenNow(), id])]
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next))
+  } catch {}
+  dispatchEvent(new Event(MARKED))
+}
+
+/** What has been seen on this device. Before the page has read it, everything counts as seen, so a page drawn on the
+ * server and the one in the browser agree. */
+function useSeen() {
+  const [seen, setSeen] = useState<string[]>([ALL])
+  useEffect(() => {
+    const read = () => setSeen(seenNow())
+    read()
+    addEventListener(MARKED, read)
+    return () => removeEventListener(MARKED, read)
+  }, [])
+  return seen
+}
+
 /**
  * The first of `wanted` the player has not seen yet, in the order given, and the way to mark it seen. Mark one seen
  * and the next waiting tip takes its place.
  */
 export function useTip(wanted: TipId[]) {
-  const [seen, setSeen] = useState(seenNow)
-  const mark = useCallback((id: string) => {
-    const next = [...new Set([...seenNow(), id])]
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next))
-    } catch {}
-    setSeen(next)
-  }, [])
+  const seen = useSeen()
   const tip = seen.includes(ALL) ? null : (wanted.find((id) => !seen.includes(id)) ?? null)
   return { tip, seen: (id: TipId) => mark(id), none: () => mark(ALL) }
 }
@@ -83,28 +99,24 @@ export const TOUR: TourStop[] = [
 
 /** Whether the tour has yet to be seen on this device, and the way to mark it seen. */
 export function useTour() {
-  const [seen, setSeen] = useState(() => {
-    const s = seenNow()
-    return s.includes(ALL) || s.includes("tour")
-  })
-  const done = useCallback(() => {
-    const next = [...new Set([...seenNow(), "tour"])]
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next))
-    } catch {}
-    setSeen(true)
-  }, [])
-  return { open: !seen, done }
+  const seen = useSeen()
+  const done = useCallback(() => mark("tour"), [])
+  return { open: !seen.includes(ALL) && !seen.includes("tour"), done }
 }
 
-const findStop = (at: string) => document.querySelector<HTMLElement>(`[data-tour="${at}"]`)
+// The first mark on screen for a stop: a page may mark two places for one part, one of them hidden at its width.
+const findStop = (at: string) =>
+  [...document.querySelectorAll<HTMLElement>(`[data-tour="${at}"]`)].find((el) => {
+    const r = el.getBoundingClientRect()
+    return r.width > 0 && r.height > 0
+  }) ?? null
 
 /** The tour itself, over the play screen. `onDone` is called when it is finished or skipped. */
-export function Tour({ onDone, compact }: { onDone: () => void; compact?: boolean }) {
+export function Tour({ onDone, compact, stops: given = TOUR }: { onDone: () => void; compact?: boolean; stops?: TourStop[] }) {
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
   // The stops, from the welcome on. One whose part is not on screen when it comes up is taken out, so the count is true.
-  const [stops, setStops] = useState(TOUR)
+  const [stops, setStops] = useState(given)
   const stop = stops[step]
   const last = step === stops.length - 1
   const next = useCallback(() => (step >= stops.length - 1 ? onDone() : setStep((n) => n + 1)), [step, stops.length, onDone])
@@ -118,6 +130,8 @@ export function Tour({ onDone, compact }: { onDone: () => void; compact?: boolea
       const r = el?.getBoundingClientRect()
       return r && r.width > 0 && r.height > 0 ? r : null
     }
+    // A part below the fold, on a page that scrolls, is brought into view first.
+    findStop(at)?.scrollIntoView({ block: "center", behavior: "smooth" })
     const first = measure()
     if (!first) {
       setRect(null)
@@ -141,7 +155,8 @@ export function Tour({ onDone, compact }: { onDone: () => void; compact?: boolea
   const card = rect
     ? {
         left: Math.min(Math.max(16, rect.left + rect.width / 2 - width / 2), innerWidth - width - 16),
-        ...(below ? { top: rect.bottom + pad + 10 } : { bottom: innerHeight - rect.top + pad + 10 }),
+        // Kept on screen beside a part taller than the window.
+        ...(below ? { top: Math.min(rect.bottom + pad + 10, innerHeight - 260) } : { bottom: Math.min(innerHeight - rect.top + pad + 10, innerHeight - 260) }),
       }
     : null
   const count = stops.length - 1

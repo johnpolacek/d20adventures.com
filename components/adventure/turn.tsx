@@ -5,6 +5,7 @@ import StoryviewRailPanel from "@/components/adventure/storyview/storyview-rail-
 import { WEB_NARRATION } from "@/lib/narration"
 import { FloorPlanButton, FloorPlanRailPanel } from "@/components/floorplan/floor-plan-panel"
 import { Presence } from "@d20/ui/presence"
+import { Tour, type TourStop, TOUR, useTour } from "@d20/ui/stage/tips"
 import { useLiveFloor } from "@/components/floorplan/use-live-floor"
 import type { FloorView } from "@/components/floorplan/view"
 import { useTurn } from "@/lib/context/TurnContext"
@@ -14,11 +15,23 @@ import GameChat from "./game-chat"
 import TurnCharacterList from "./turn-character-list"
 import TurnNarrative from "./turn-narrative"
 
+// The web demo's first-look tour: the welcome, then its own parts. It has no feedback button, so it ends at the chat or
+// the map.
+const WEB_TOUR: TourStop[] = [
+  TOUR[0],
+  { at: "story", title: "The Story", text: "The game master tells what happens here. Each turn adds to the story, and the newest is at the bottom." },
+  { at: "heroes", title: "Who Acts", text: "Everyone in the scene, in the order they act. Click one to open their sheet." },
+  { at: "reply", title: "Your Turn", text: "When it is your hero’s turn, type what they do here, as you would tell a friend at the table." },
+  { at: "map", title: "Map", text: "Where everyone stands in the scene." },
+  { at: "chat", title: "Chat", text: "Talk with the other players at the table." },
+]
+
 export default function Turn({ nextAdventure, encounter, floor: initialFloor, isSolo }: { nextAdventure?: string; encounter?: AdventureEncounter | null; floor?: FloorView | null; isSolo?: boolean }) {
   // The plan follows the live turn: its characters as they move, and its encounter's floor.
   const turn = useTurn()
   const floor = useLiveFloor(initialFloor, turn?.encounterId)
   const characters = turn?.characters ?? []
+  const tour = useTour()
 
   // The map is titled by the place it depicts; fall back to the encounter title
   // for plans that don't declare locations.
@@ -49,12 +62,12 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
       {/* Left rail: character list. The negative margin + padding keeps the initiative
           badges (which hang outside the cards) from being clipped by the scroll area.
           -mt-18 lifts the rail to align with the narrative's "It is your turn!" bar. */}
-      <div className="lg:sticky lg:top-20 lg:-ml-6 lg:-mt-18 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 lg:pl-6 lg:pr-1">
+      <div data-tour="heroes" className="lg:sticky lg:top-20 lg:-ml-6 lg:-mt-18 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 lg:pl-6 lg:pr-1">
         <TurnCharacterList />
       </div>
 
       {/* Center: narrative */}
-      <div className="flex min-w-0 flex-col gap-6">
+      <div data-tour="story" className="flex min-w-0 flex-col gap-6">
         <TurnNarrative nextAdventure={nextAdventure} />
       </div>
 
@@ -63,13 +76,13 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
           -mt-18 aligns the rail top with the narrative's "It is your turn!" bar. */}
       <aside className={cn("hidden xl:sticky xl:top-20 xl:-mt-18 xl:flex xl:flex-col xl:gap-4", !chatHeight && !isSolo && "xl:h-[calc(100vh-7rem)]")}>
         {floor && (
-          <div ref={mapCardRef} className="enter-right flex-none">
+          <div ref={mapCardRef} data-tour="map" className="enter-right flex-none">
             <FloorPlanRailPanel floor={floor} characters={characters} title={mapTitle} />
           </div>
         )}
         {WEB_NARRATION && <StoryviewRailPanel className="enter-right flex-none [--i:1]" />}
         {!isSolo && (
-          <div className={cn("enter-right min-h-0 [--i:2]", chatHeight ? "flex-none" : "flex-1")} style={chatHeight ? { height: chatHeight } : undefined}>
+          <div data-tour="chat" className={cn("enter-right min-h-0 [--i:2]", chatHeight ? "flex-none" : "flex-1")} style={chatHeight ? { height: chatHeight } : undefined}>
             <GameChat variant="rail" className="h-full" />
           </div>
         )}
@@ -78,10 +91,19 @@ export default function Turn({ nextAdventure, encounter, floor: initialFloor, is
       {/* Below xl: floating buttons (the rail is hidden) */}
       <div className="fixed right-4 top-20 z-overlay flex items-center gap-3 xl:hidden">
         <Presence show={Boolean(floor)} motion="pop" as="span" className="inline-flex">
-          {floor && <FloorPlanButton floor={floor} characters={characters} title={mapTitle} />}
+          {floor && (
+            <span data-tour="map" className="inline-flex">
+              <FloorPlanButton floor={floor} characters={characters} title={mapTitle} />
+            </span>
+          )}
         </Presence>
-        {!isSolo && <GameChat />}
+        {!isSolo && (
+          <span data-tour="chat" className="inline-flex">
+            <GameChat />
+          </span>
+        )}
       </div>
+      {turn && tour.open && <Tour stops={WEB_TOUR} onDone={tour.done} />}
     </div>
   )
 }
