@@ -32,7 +32,7 @@
   pointer-events: none;
 }
 html[data-update-theme="dark"] .vn-head-art {
-  filter: invert(1) sepia(0.35);
+  filter: invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
   opacity: 0.6;
 }
@@ -294,7 +294,7 @@ html[data-update-theme="dark"] .vn-head-art {
   mix-blend-mode: multiply;
 }
 html[data-update-theme="dark"] .vn-emblem {
-  filter: invert(1) sepia(0.35);
+  filter: invert(1) hue-rotate(180deg);
   mix-blend-mode: screen;
   opacity: 0.8;
 }
