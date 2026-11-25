@@ -21,7 +21,7 @@ export type Milestone = { text: string; done: boolean; size: Size }
 export type VisionFeature = { name: string; note: string; milestones: Milestone[] }
 export type VisionTheme = { id: string; name: string; why: string; features: VisionFeature[] }
 
-export const visionUpdated = "2026-11-24"
+export const visionUpdated = "2026-11-25"
 
 const yes = (text: string, size: Size = 1): Milestone => ({ text, done: true, size })
 const no = (text: string, size: Size = 1): Milestone => ({ text, done: false, size })
@@ -435,6 +435,10 @@ export const visionThemes: VisionTheme[] = [
           no("Every species the rules know is offered", 3),
           no("More than the SRD’s 4 backgrounds", 3),
           no("Backstories the story reacts to all game long, like Baldur’s Gate 3’s tags", 8),
+          no("Every choice explains what it does in play as you pick it", 3),
+          no("Pick your hero’s voice at creation", 3),
+          no("Acting to your background earns Inspiration", 3),
+          no("Rebuild a hero’s class and scores mid-campaign, as Withers does", 3),
         ],
       },
       {
