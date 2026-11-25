@@ -270,6 +270,17 @@ export const visionThemes: VisionTheme[] = [
         ],
       },
       {
+        name: "Learn by Playing",
+        note: "Baldur’s Gate 3 teaches its game in the Nautiloid prologue. D20 Adventures has no tutorial yet.",
+        milestones: [
+          no("An opening scene that teaches the game as it is played, like the Nautiloid", 3),
+          no("It walks through typing an action, a check, an attack and a spell", 3),
+          no("Short tips the first time a player meets a new screen or rule", 3),
+          no("Players who know the game can skip it"),
+          no("A test that plays a new player through it from start to end"),
+        ],
+      },
+      {
         name: "Rolls You Can See",
         note: "A 3D die with sound in the desktop app. The web demo shows a flat die.",
         milestones: [
