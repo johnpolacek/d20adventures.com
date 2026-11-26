@@ -13,6 +13,7 @@ import { browserNarrator, onVoiceDownload, voiceDownload } from "@d20/ui/sound/n
 import { withCharacters } from "@d20/ui/sound/pronunciations"
 import { onSoundSetting, setSoundOn, soundOn } from "@d20/ui/sound/settings"
 import { useNarrator, useNarratorVoice } from "@d20/ui/sound/use-narrator"
+import { useTour } from "@d20/ui/stage/tips"
 import { Switch } from "@d20/ui/switch"
 import { Tip } from "@d20/ui/tooltip"
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
@@ -99,13 +100,15 @@ export default function TurnSound() {
     const c = line?.kind === "line" ? characters.find((c) => c.id === line.speaker) : undefined
     return c ? spokenGender(c) : undefined
   }
+  // The story is not read while the first-look tour is up.
+  const touring = useTour().open
   const heard = useNarrator({
     key: `${turnId}:${at}`,
     text: paragraphs[at]?.text,
     next: paragraphs[at + 1]?.text,
     speaker: speakerOf(at),
     nextSpeaker: speakerOf(at + 1),
-    on: !disableSSE && ready && sound,
+    on: !disableSSE && ready && sound && !touring,
   })
   useEffect(() => {
     if (heard.status !== "done" || !turnId) return

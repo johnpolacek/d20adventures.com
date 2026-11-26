@@ -518,9 +518,11 @@ export function StagePlay(props: {
   useEffect(() => setPaused(false), [turn?._id])
   // What the stage shows keeps time with the narrator. A paragraph read aloud plays nothing until its first words are
   // heard, and a cue tied to a later sentence ("the cabin door opened") waits for that sentence. `heard` is the sentence
-  // being heard in the paragraph on screen: -1 before the first, and all of them when nothing is read aloud.
+  // being heard in the paragraph on screen: -1 before the first, and all of them when nothing is read aloud. While the
+  // first-look tour is on screen nothing has been heard: no one moves, no sound plays and the camera holds until it ends.
   const speaking = voiced.status === "waiting" || voiced.status === "speaking"
-  const heard = voiced.status === "waiting" ? -1 : voiced.status === "speaking" ? voiced.sentence : Number.POSITIVE_INFINITY
+  const touring = tour.open && !hidden && !props.overlay
+  const heard = touring || voiced.status === "waiting" ? -1 : voiced.status === "speaking" ? voiced.sentence : Number.POSITIVE_INFINITY
   const started = heard >= 0
   // Whether the reader has reached a cue at sentence `s` of paragraph `at`, or has still to.
   const reached = (at: number, s: number) => reading && paragraph === at && heard >= s
