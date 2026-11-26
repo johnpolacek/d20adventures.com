@@ -106,6 +106,9 @@ export function clearView(ask: ViewAsk): { shot: ResolvedShot; moved: boolean; c
   const cost = (position: Position) => {
     const [x, y, z] = position
     if (figures.some((f) => Math.hypot(x - f.x, z - f.z) <= Math.min(1.5, 0.6 + f.height * 0.5)) || !roomAt(sight, x, y, z)) return undefined
+    // Nor inside anyone else's body, below the top of their head: a view of Thalbern on the ground put the lens in the
+    // Owlbear standing over him, and the picture was all feathers.
+    if (cast.some((m) => present(m) && !own.has(m.id) && y < (m.y ?? 0) + m.height && Math.hypot(x - m.x, z - m.z) <= 0.35 + m.height * 0.15)) return undefined
     const lens = lensAt(position)
     return weigh(viewCost(sight, lens, all), extra.length ? viewCost(sight, lens, extra) : null) + crowding(x, y, z)
   }

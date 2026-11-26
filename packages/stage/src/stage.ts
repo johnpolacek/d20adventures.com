@@ -768,6 +768,25 @@ export class Stage {
     }
     return true
   }
+  // Someone who walks into the lens after a shot is taken, as the Owlbear did coming to stand over a fallen Thalbern,
+  // fills the picture with feathers. Four times a second the camera checks, and if anyone standing is inside the round
+  // of their body it takes its last shot again from where they now are: the view swings clear of them (spec/view.ts).
+  // Not while a glide runs or a painted tripod holds the view, and at most once a second and a half.
+  private lensCheck = 0
+  private lensRetook = 0
+  private keepLensClear(dt: number) {
+    this.lensCheck += dt
+    if (this.lensCheck < 0.25 || this.transition || this.painted?.on || !this.asked) return
+    this.lensCheck = 0
+    const now = performance.now()
+    if (now - this.lensRetook < 1500) return
+    const p = this.camera.position
+    const inside = this.cast.some((m) => this.isOnStage(m.id) && !this.isDown(m.id) && p.y < (m.y ?? 0) + m.height && Math.hypot(p.x - m.x, p.z - m.z) < 0.35 + m.height * 0.15)
+    if (!inside) return
+    this.lensRetook = now
+    const { which, follow, duration } = this.asked
+    this.shot(which, { follow, duration, take: this.take ?? undefined })
+  }
   // Whether the straight line from `from` to `to` passes through anyone on stage standing: inside the round of their
   // body, below the top of their head. Its two ends are left out, which the shot itself answers for.
   private throughSomeone(from: THREE.Vector3, to: THREE.Vector3) {
@@ -1681,6 +1700,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       this.stepMoves(dt)
       this.follow()
       this.circle(dt)
+      this.keepLensClear(dt)
       // A line stands still. When the beats have moved it on, everyone is put in their new place unseen.
       if (!PEOPLE_STILL) for (const l of this.loops.values()) l.update(dt)
       else
