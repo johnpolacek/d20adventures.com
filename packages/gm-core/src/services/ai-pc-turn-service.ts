@@ -13,6 +13,7 @@ import { characterStory, scriptLine, storyNames } from "../story/render"
 import { characterScript, sceneFor, storyOutputObject, storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import { PLAYER_KNOWLEDGE_RULE } from "../utils/narrative-utils"
+import { standingWords } from "../sheet/placement"
 import { isAiControlledPc, isDown, playsForMaster, takesTurn } from "../utils/turn-actors"
 import type { RequiredRoll } from "../validations/roll-requirement-schema"
 import { premiseNote } from "../wiki-adventures/player-safety"
@@ -168,6 +169,13 @@ export async function suggestActions(
 const MAX_ROLLS_A_TURN = 6
 
 export function createAiPcTurnService(ports: GmPorts) {
+  // Where the companion stands and the foes it faces. Other heroes are left out: in Covert Cargo three strangers watch
+  // the pier unaware of each other, and the companion learns of the others only as the story shows them. AI Thalbern
+  // with no positions shot at Reinhard through the aft cabin, then charged him with a sword from 43 feet.
+  const companionStanding = async (characters: TurnCharacter[], character: TurnCharacter, encounterId: string) => {
+    const floor = await Promise.resolve(ports.content.floor?.(encounterId)).catch(() => undefined)
+    return floor ? standingWords(characters.filter((other) => other.id === character.id || other.type === "npc"), floor) : undefined
+  }
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { resolvePlayerRollNarrativeAndCharacters } = createAdventureRollResultService(ports)
   const { readTurnReply, applyReading } = createAdventureTurnReplyService(ports)
@@ -184,13 +192,15 @@ export function createAiPcTurnService(ports: GmPorts) {
     knowledge?: KnownFact[]
     heard?: NamesHeard
     led?: string[]
+    // Where the companion and those it can see stand, in the engine's words (standingWords).
+    standing?: string
   }): Promise<StoryBeat[]> {
     const roster = buildSceneRoster(args.allCharacters, args.character.id, args.heard)
     const unheard = unheardNote(args.heard, args.character, args.allCharacters)
     // A hero a spell binds to another does their bidding (../sheet/masters).
     const bound = boundWords(args.character, args.allCharacters)
     const idle = noOneToWorkOnNote(args.character, args.allCharacters)
-    const prompt = buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led, bound, idle)
+    const prompt = `${buildAiPcIntentPrompt(args.character, args.narrative, roster, args.scene, args.premise, args.lately, args.knowledge, unheard, args.led, bound, idle)}${args.standing ? `\n\n${args.standing}\nWhat ${args.character.name} does fits where they stand: a target out of sight cannot be shot, and one farther than they can walk this turn cannot be reached in melee.` : ""}`
     const { object } = await generateObject({ prompt, schema: storyOutputObject, viewer: args.character.id })
     const beats = cleanStory(object.beats, args.scene, { step: "reply", character: args.character.id })
     if (!beats.length) throw new Error(`Empty intent generated for AI companion ${args.character.name}`)
@@ -249,6 +259,7 @@ export function createAiPcTurnService(ports: GmPorts) {
         knowledge: adventure.knowledge,
         heard: plan?.strangers ? namesHeard(adventure.knowledge, turn) : undefined,
         led: await leadsEarlier(turn as typeof turn & { characters: TurnCharacter[] }, characterId),
+        standing: await companionStanding(turn.characters as TurnCharacter[], character, turn.encounterId),
       })
       const intent = storyProse(beats)
       console.log("[AI PC] Intent for", character.name, ":", intent)
