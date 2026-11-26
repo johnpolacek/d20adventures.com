@@ -35,6 +35,7 @@ What John's own posts show works, added each time he finishes one. `pnpm content
 - **Show how it works.** A technical post opens its list with the system end to end, such as how an adventure is written and what one turn does, and says at each step whether the AI decides or code does (John, 2026-11-25: “do we get enough into the technical aspects? how we have an adventure plan? what the ai does and what is deterministic?”).
 - **Honest about what's open.** Say what we are doing, and that we are still figuring it out. Each item names what is unsolved or untested, and the post doesn't claim a choice is settled before play has shown it (John, 2026-11-25: “i like the idea of saying what we are doing but also being honest that we are still figuring it out”).
 - **BG3 is the reason.** Baldur's Gate 3 is the bar for D20 Adventures' rules choices. Full book rules, and suggestions that offer only what works, are both “to be like BG3”, so a post can give that as the why (John, 2026-11-25, on why full rules and on the Speak with Animals suggestion: “full rules is to be like BG3”, “same”).
+- **Short post titles.** The post's own title stays short. “Trying to Train an AI Game Master on 5E Rules” replaced “Trying to Keep an AI Game Master Inside the Rules with Claude Opus and a 5E Rules Engine” (John, 2026-11-25: “The title is too long”). The long title is for the queue, not the post.
 
 ## Short and long titles
 

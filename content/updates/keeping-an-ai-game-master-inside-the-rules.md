@@ -1,5 +1,5 @@
 ---
-title: "Trying to Keep an AI Game Master Inside the Rules with Claude Opus and a 5E Rules Engine"
+title: "Trying to Train an AI Game Master on 5E Rules"
 date: 2026-11-26
 description: "How D20 Adventures splits a game of D&D between Claude as the game master and a 5E rules engine, part by part, and what we’re still figuring out."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/owlbear.webp"
