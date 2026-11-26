@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import { test } from "node:test"
 import { parsePronunciations, withCharacters } from "@d20/ui/sound/pronunciations"
 import { phonemize as espeak } from "phonemizer"
-import { phonemize } from "./phonemize"
+import { phonemize } from "@d20/ui/sound/phonemize"
 
 // kokoro-js's own phonemize, taken from its bundle, which does not export it.
 const kokoro = readFileSync(`${realpathSync(fileURLToPath(new URL("../node_modules/kokoro-js", import.meta.url)))}/dist/kokoro.js`, "utf8")

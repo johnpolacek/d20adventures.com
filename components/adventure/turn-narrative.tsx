@@ -23,6 +23,7 @@ import { useAdventure } from "@/lib/context/AdventureContext"
 import { useTurnContext } from "@/lib/context/TurnContext"
 import { scrollToBottom } from "@d20/ui/scroll"
 import TurnNarrativeBody from "./turn-narrative-body"
+import TurnSound from "./turn-sound"
 import { controlsHero } from "./turn-reaction"
 import { useTurnActor } from "./use-turn-actor"
 
@@ -252,6 +253,7 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
               <StoryviewButton />
             </span>
           )}
+          <TurnSound />
           <span className="text-xs text-white/60">Show Original Replies</span>
           <div className="scale-75 pt-0.5">
             <Switch checked={showOriginalReplies} onCheckedChange={setShowOriginalReplies} id="show-original-replies-switch" />

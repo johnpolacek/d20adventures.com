@@ -61,10 +61,15 @@ export function narratorVoice(): NarratorVoice | null {
   try {
     const v = localStorage.getItem(KEY)
     if (v === "off") return null
-    return NARRATOR_VOICES.find((n) => n.id === v)?.id ?? DEFAULT
+    return NARRATOR_VOICES.find((n) => n.id === v)?.id ?? unchosen
   } catch {
-    return DEFAULT
+    return unchosen
   }
+}
+// The voice before the player picks one. The website starts with none, since its voice is a large download.
+let unchosen: NarratorVoice | null = DEFAULT
+export function setNarratorDefault(voice: NarratorVoice | null) {
+  unchosen = voice
 }
 export function setNarratorVoice(voice: NarratorVoice | null) {
   try {
@@ -79,8 +84,9 @@ export function onNarratorChange(listener: () => void) {
 }
 
 // ── The model ──
-// What makes the speech. The desktop app sets one that runs Kokoro in Node beside the game. Without one there is no
-// narrator: in a browser it made speech slower than it plays, and stalled on the play screen.
+// What makes the speech. The desktop app sets one that runs Kokoro in Node beside the game. The website sets
+// narrator-web.ts, which runs it on the graphics card. Without one there is no narrator: on a browser's processor
+// Kokoro made speech slower than it plays, and stalled on the play screen.
 export type NarratorClip = { audio: Float32Array; rate: number }
 export type NarratorEngine = {
   load: () => Promise<void>

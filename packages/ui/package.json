@@ -16,6 +16,8 @@
     "./sound/engine": "./src/sound/engine.ts",
     "./sound/fx": "./src/sound/fx.ts",
     "./sound/narrator": "./src/sound/narrator.ts",
+    "./sound/narrator-web": "./src/sound/narrator-web.ts",
+    "./sound/phonemize": "./src/sound/phonemize.ts",
     "./sound/pronunciations": "./src/sound/pronunciations.ts",
     "./sound/settings": "./src/sound/settings.ts",
     "./sound/use-narrator": "./src/sound/use-narrator.ts",
@@ -43,7 +45,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "3.15.1",
+    "kokoro-js": "1.2.1",
     "lucide-react": "^0.577.0",
+    "phonemizer": "1.2.1",
     "tailwind-merge": "^3.7.0",
     "three": "0.183.2",
     "zod": "4.6.7"

@@ -1,4 +1,4 @@
-import { entryFor, namesPattern, type Pronunciations } from "@d20/ui/sound/pronunciations"
+import { entryFor, namesPattern, type Pronunciations } from "./pronunciations"
 import { phonemize as espeak } from "phonemizer"
 
 // Text into the sounds Kokoro speaks. This is kokoro-js 1.2.1's own phonemize (Apache-2.0), which it does not export,

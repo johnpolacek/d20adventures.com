@@ -4,7 +4,7 @@ import { createInterface } from "node:readline"
 import { env } from "@huggingface/transformers"
 import type { Pronunciations } from "@d20/ui/sound/pronunciations"
 import { KokoroTTS } from "kokoro-js"
-import { phonemize } from "./phonemize"
+import { phonemize } from "@d20/ui/sound/phonemize"
 
 // The narrator's voice for the desktop app: Kokoro on the processor, kept running while the app is open so the model
 // loads once. Each line in is a request, and each line out answers it, in turn:
@@ -35,7 +35,7 @@ function pcm16(audio: Float32Array): string {
 type Voice = NonNullable<Parameters<KokoroTTS["generate_from_ids"]>[1]>["voice"]
 let names: Pronunciations = {}
 
-// A sentence spoken: its sounds made here (phonemize.ts), so a listed name is said as listed, then given to Kokoro.
+// A sentence spoken: its sounds made by @d20/ui/sound/phonemize.ts, so a listed name is said as listed, then given to Kokoro.
 async function speak(tts: KokoroTTS, text: string, voice: string) {
   const sounds = await phonemize(text, voice.startsWith("a") ? "a" : "b", names)
   const { input_ids } = tts.tokenizer(sounds, { truncation: true })

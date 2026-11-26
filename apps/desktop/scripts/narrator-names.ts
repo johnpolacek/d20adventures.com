@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from "node:path"
 import { NARRATOR_VOICES } from "@d20/ui/sound/narrator"
 import { parsePronunciations, type Pronunciations } from "@d20/ui/sound/pronunciations"
-import { phonemize } from "../runtime/phonemize"
+import { phonemize } from "@d20/ui/sound/phonemize"
 
 const ROOT = resolve(import.meta.dirname, "../../..")
 const args = process.argv.slice(2)
