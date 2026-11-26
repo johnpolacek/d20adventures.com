@@ -22,7 +22,7 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
     adventureList(packs).map((a) => [a.id, a.title, a.start, a.players]),
     [
       ["welcome-to-kordavos", "Welcome to Kordavos", "the-gates-of-kordavos", [3, 5]],
-      ["the-midnight-summons", "The Midnight Summons", "the-squirrels-note", [1, 1]],
+      ["the-midnight-summons", "The Midnight Summons", "broken-silence", [1, 1]],
       ["covert-cargo", "Covert Cargo", "the-shipment", [3, 3]],
       ["the-road-to-kordavos", "The Road to Kordavos", "well-met", [1, 4]],
     ]
@@ -37,7 +37,7 @@ test("all four Myr adventures are bundled, share no encounter ids, and start wit
     await run({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
     assert.equal(store.state!.adventure.planId, "the-midnight-summons")
     assert.equal(store.state!.adventure.title, "The Midnight Summons")
-    assert.equal(store.current().encounterId, "the-squirrels-note")
+    assert.equal(store.current().encounterId, "broken-silence")
     assert.deepEqual(
       store
         .current()
@@ -86,11 +86,6 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
   }
   try {
     await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
-    staged("the-squirrels-note")
-    // The opening at home teaches the game, and Thalbern sets out with the note.
-    everyoneDone()
-    await game(store, packs, gm("broken-silence"))({ kind: "continue", turnId: store.current()._id })
-    assert.equal(store.current().encounterId, "broken-silence")
     // Thalbern fails a Constitution save that puts 1d4 + 10 Bludgeoning at stake. The engine rolls 11 to 14, at
     // least his 11 hit points and short of 11 more, so he drops to 0, Unconscious and dying, not killed outright.
     for (const c of store.current().characters) if (c.id !== "thalbern") c.hasReplied = c.isComplete = true
@@ -156,7 +151,7 @@ test("the real core plays The Midnight Summons through the owlbear to its ending
     assert.equal(store.current().isFinalEncounter, true)
     assert.deepEqual(
       store.state!.turns.map((t) => t.encounterId),
-      ["the-squirrels-note", "broken-silence", "owlbear-confrontation", "timely-rescue", "meeting-at-the-stones", "preparing-for-the-city"]
+      ["broken-silence", "owlbear-confrontation", "timely-rescue", "meeting-at-the-stones", "preparing-for-the-city"]
     )
     await assert.rejects(() => game(store, packs, offline)({ kind: "continue", turnId: store.current()._id }), /complete/)
     const reopened = new LocalStore(path)
@@ -177,11 +172,9 @@ test("a hidden Thalbern watches the Owlbear come out, and acts before it does", 
   })
   try {
     await game(store, packs, offline)({ kind: "start", provider: "claude", adventure: "the-midnight-summons" })
-    for (const next of ["broken-silence", "the-owlbear-prowls"]) {
-      for (const c of store.current().characters) c.hasReplied = c.isComplete = true
-      store.save()
-      await game(store, packs, gm(next))({ kind: "continue", turnId: store.current()._id })
-    }
+    for (const c of store.current().characters) c.hasReplied = c.isComplete = true
+    store.save()
+    await game(store, packs, gm("the-owlbear-prowls"))({ kind: "continue", turnId: store.current()._id })
     assert.equal(store.current().encounterId, "the-owlbear-prowls")
     const scene = sceneFor("the-owlbear-prowls")
     assert.ok(scene)

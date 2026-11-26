@@ -28,8 +28,6 @@ const PLAYS: Record<string, Play> = {
     adventure: "the-midnight-summons",
     party: ["thalbern"],
     lines: {
-      "the-squirrels-note": ["Thalbern takes the note from the squirrel, reads it, and sets out for the Old Standing Stones."],
-      "the-woodpile-wolf": ["Thalbern draws his longsword and cuts at the wolf."],
       "broken-silence": ["Thalbern slips off the trail into the thick undergrowth, crouches low behind a fallen trunk and goes perfectly still."],
       "the-owlbear-prowls": ["Thalbern stays hidden, barely breathing, and waits for the Owlbear to move on."],
       "owlbear-confrontation": ["Thalbern backs away slowly, bow raised, looking for a way off the trail."],

@@ -1,22 +1,4 @@
 {
-  "the-squirrels-note": {
-    "set": "realm-of-myr/thalberns-forest-home",
-    "staging": "the-squirrels-note",
-    "location": "Thalbern's home",
-    "where": "Late afternoon light falls on Thalbern's stone and timber cottage at the edge of the woods. A red squirrel waits on the doorstep.",
-    "party": [
-      "thalbern"
-    ]
-  },
-  "the-woodpile-wolf": {
-    "set": "realm-of-myr/thalberns-forest-home",
-    "staging": "the-woodpile-wolf",
-    "location": "Thalbern's home",
-    "where": "Late afternoon light falls on Thalbern's cottage at the edge of the woods. A thin grey wolf has come out of the trees toward his gear.",
-    "party": [
-      "thalbern"
-    ]
-  },
   "broken-silence": {
     "set": "realm-of-myr/valkarr-forest-trail",
     "staging": "broken-silence",

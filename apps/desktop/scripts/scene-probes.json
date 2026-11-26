@@ -90,28 +90,6 @@
       "Branka tells the crowd to go home, then asks the party where they mean to sleep tonight."
     ]
   },
-  "summons-squirrel": {
-    "adventure": "the-midnight-summons",
-    "encounter": "the-squirrels-note",
-    "rounds": 4,
-    "replies": [
-      "Thalbern crouches by the door, holds out a hand and speaks softly to the squirrel.",
-      "Thalbern casts Speak with Animals and asks the squirrel who sent it.",
-      "Thalbern unrolls the note and reads it.",
-      "Thalbern takes his bow and sets out for the Old Standing Stones."
-    ]
-  },
-  "summons-wolf": {
-    "adventure": "the-midnight-summons",
-    "encounter": "the-woodpile-wolf",
-    "rounds": 5,
-    "replies": [
-      "Thalbern snatches up his longbow and shoots at the wolf.",
-      "Thalbern draws his longsword and cuts at the wolf.",
-      "Thalbern keeps fighting the wolf with his sword.",
-      "Thalbern shouts and waves his sword to drive it off."
-    ]
-  },
   "summons-hide": {
     "adventure": "the-midnight-summons",
     "encounter": "broken-silence",

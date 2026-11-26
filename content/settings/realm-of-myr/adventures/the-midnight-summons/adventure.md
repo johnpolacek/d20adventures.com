@@ -3,7 +3,7 @@ id: "the-midnight-summons"
 type: "adventure"
 title: "The Midnight Summons"
 settingId: "realm-of-myr"
-startEncounter: "the-squirrels-note"
+startEncounter: "broken-silence"
 minPlayers: 1
 maxPlayers: 1
 premadeCharacters:

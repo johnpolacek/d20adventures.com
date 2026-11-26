@@ -33,7 +33,7 @@ type Expectation = {
 }
 
 const EXPECTATIONS: Expectation[] = [
-  { planId: "the-midnight-summons", party: [1, 1], start: "the-squirrels-note", premadeIds: ["thalbern"], hasOptions: false },
+  { planId: "the-midnight-summons", party: [1, 1], start: "broken-silence", premadeIds: ["thalbern"], hasOptions: false },
   { planId: "covert-cargo", party: [3, 3], start: "the-shipment", premadeIds: ["1749159962941", "1749307435667", "thalbern"], hasOptions: false },
   { planId: "the-road-to-kordavos", party: [1, 3], start: "well-met", premadeIds: [], hasOptions: true },
   {
