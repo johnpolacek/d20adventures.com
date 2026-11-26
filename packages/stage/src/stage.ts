@@ -135,6 +135,8 @@ const STEEPEST_ORBIT = Math.PI * 0.28
 // walks on its own legs, so it is seen to walk, as it is seen to fall (owner, 2026-11-18: "can we make the pcs and
 // npcs actually move on the scene as they do the action for their round").
 const PEOPLE_STILL = true
+// How tall someone crouched is, of their height standing.
+const LOW = 0.6
 // A painted set's drift: on arriving at a point the camera starts a little off it (see driftIn) and a touch wide, and over these
 // seconds comes to rest, easing all the way. It ends this much closer than the view it was given, never wider, so a
 // view fitted to the edge of its painting stays on the paint.
@@ -689,7 +691,7 @@ export class Stage {
     const on = [...(authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []), ...follow]
     try {
       // A painted set frames the subject from a painted point, so there is no camera to swing clear of the walls.
-      if (painted && authored) s = frameShot(authored, this.cast)
+      if (painted && authored) s = frameShot(this.crouched(authored), this.cast)
       // Any view of the cast is taken from where nothing hides them. A view of the place alone is as its author framed it.
       else s = authored ? this.clearView(authored, on, true, true) : typeof which === "string" ? this.shots[which] : undefined
     } catch {
@@ -781,7 +783,8 @@ export class Stage {
   // With `turn`, a single subject the camera had to swing far round turns toward it, so they are not seen from behind.
   // One facing someone near them is talking to them, and keeps facing them: the turn stays for good, and would leave
   // them turned away from the one they speak with for the rest of the scene.
-  private clearView(which: StagingShot, ids: string[], turn = false, sure = false): ResolvedShot {
+  private clearView(asked: StagingShot, ids: string[], turn = false, sure = false): ResolvedShot {
+    const which = this.crouched(asked)
     const { shot, moved } = clearView({
       shot: which,
       cast: this.cast,
@@ -1417,7 +1420,20 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.shot(which, { follow, duration })
   }
   // A cast member as the sight test sees them: where they stand and how much of them there is to hide.
-  private seenAs = (m: CastMember) => ({ x: m.x, z: m.z, y: m.y, height: this.isLow(m.id) ? m.height * 0.6 : m.height, down: this.isDown(m.id) })
+  private seenAs = (m: CastMember) => ({ x: m.x, z: m.z, y: m.y, height: this.isLow(m.id) ? m.height * LOW : m.height, down: this.isDown(m.id) })
+  // A shot on one person, brought down with them when they crouch. Every shot on someone is sized for them standing, so
+  // a close-up of Thalbern hidden behind cover looked level over the top of his head, at where his face would be.
+  private crouched(s: StagingShot): StagingShot {
+    if (!("subject" in s) || !this.isLow(s.subject)) return s
+    return { ...s, height: s.height * LOW, lookHeight: s.lookHeight * LOW }
+  }
+  // Whether a lens sees a figure of a height at each spot with nothing solid in the way, as a shot that sees someone
+  // walk from one place to another must: the director tries it on a prowl's camera before it takes it.
+  sees(lens: { position: readonly [number, number, number]; target: readonly [number, number, number]; fov: number }, height: number, spots: readonly { x: number; z: number }[]) {
+    const at = { ...lens, fov: this.lens(lens.fov), aspect: this.camera.aspect }
+    const v = viewCost(this.sight, at, spots.map((p) => ({ x: p.x, z: p.z, height })))
+    return v.hidden <= 0.15 && v.cover <= 0.25
+  }
   // Whether a view from a point hides those the current shot is on, by more than a shoulder.
   private hides(from: THREE.Vector3, target: THREE.Vector3) {
     const figures = this.cast.filter((m) => this.framed.has(m.id) && this.isOnStage(m.id))
