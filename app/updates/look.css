@@ -33,6 +33,16 @@ html[data-update-theme="dark"] .ul-head-art {
   background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--up-bg) 40%, color-mix(in srgb, var(--up-bg) 70%, transparent) 65%, transparent 100%);
 }
 
+/* A halo of paper around each letter, stacked tight to wide, so the words read over the engraving where the glow thins. */
+.vn-head.ul-head:not(.is-plain) .vn-head-inner {
+  text-shadow:
+    0 0 2px var(--up-bg),
+    0 0 6px var(--up-bg),
+    0 0 12px var(--up-bg),
+    0 0 24px var(--up-bg),
+    0 0 40px var(--up-bg);
+}
+
 .ul-date {
   margin-bottom: 4px;
   font-family: var(--up-mono);
