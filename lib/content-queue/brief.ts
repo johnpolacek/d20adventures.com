@@ -17,7 +17,9 @@ ${lines("What it is about", part("Point"))}${lines("Topic intro", part("Intro") 
 
 Make it useful to someone doing the same thing. Mine the commits and sessions for tips they can use: the setting, prompt or step that worked, what failed first and the fix, the number that decided it. John’s prompts and the final replies hold the decisions, so skip tool output. Every tip needs a source in a commit or session. Keep secrets, keys and private paths out.
 
-Write it to content/updates/ with draft: true. List the pictures and clips it needs, and make the ones the repo’s tools can make. Don’t publish or post anything.`
+Every item gets a picture or a clip. Use the one the plan names after looking at it. Where the plan says To make, make it: screenshots and clips of the game from the desktop app (D20 Adventures Dev, through computer use) or the stage preview at /dev/stage, as AGENTS.md and packages/stage/AGENTS.md describe. Convert each to webp at most 1600 wide in public/images/updates/<post>/, link it by its bucket URL with its measured size, and name any you could not make in a comment at the top. Never use a picture that shows anything private.
+
+Write it to content/updates/ with draft: true. Don’t upload, publish or post anything. Once John has read it, pnpm stage:sync public/images/updates/<post> uploads the pictures.`
 }
 
 /**
