@@ -1,0 +1,57 @@
+{
+  "summons-hide": {
+    "adventure": "the-midnight-summons",
+    "hero": "thalbern",
+    "rolls": [17, 12, 15, 18],
+    "lines": {
+      "broken-silence": ["Thalbern slips off the trail into the thick undergrowth, crouches low behind a fallen trunk and goes perfectly still."],
+      "the-owlbear-prowls": ["Thalbern stays hidden, barely breathing, and waits for the Owlbear to move on."],
+      "owlbear-confrontation": ["Thalbern backs away slowly, bow raised, looking for a way off the trail."],
+      "timely-rescue": ["Thalbern follows Wollandora."],
+      "meeting-at-the-stones": [
+        "“Your squirrel found me, old friend. What could be so urgent that it needs the stones at midnight?”",
+        "Thalbern looks toward the river, then back to her. “I don't love the city. But for the forest, I'll go. I'll find the relics.”"
+      ]
+    },
+    "fallback": "Thalbern presses on toward the Old Standing Stones."
+  },
+  "summons-fight": {
+    "adventure": "the-midnight-summons",
+    "hero": "thalbern",
+    "rolls": [14, 4, 19, 9, 20, 2, 12, 16, 7, 18],
+    "lines": {
+      "broken-silence": ["Thalbern nocks an arrow and shouts into the dark: “Show yourself!”"],
+      "the-owlbear-prowls": ["Thalbern draws his longbow and shoots at the Owlbear."],
+      "owlbear-confrontation": ["Thalbern shoots the Owlbear with his longbow.", "Thalbern keeps shooting the Owlbear.", "Thalbern draws his sword and slashes at the Owlbear."],
+      "timely-rescue": ["Thalbern catches his breath. “Wollandora! What is so urgent?”", "Thalbern follows Wollandora to the stones."],
+      "meeting-at-the-stones": ["“What could be so urgent that it needs the stones at midnight?”", "“I'll go to the city. I'll find the relics.”", "Thalbern asks what the relics look like and where to start."]
+    },
+    "fallback": "Thalbern presses on toward the Old Standing Stones."
+  },
+  "summons-refuse": {
+    "adventure": "the-midnight-summons",
+    "hero": "thalbern",
+    "rolls": [20, 18, 15, 12],
+    "lines": {
+      "broken-silence": ["Thalbern listens closely, trying to work out what is out there."],
+      "the-owlbear-prowls": ["Thalbern steps out slowly with open hands and speaks low and calm to the Owlbear, the way the elves taught him."],
+      "owlbear-confrontation": ["Thalbern lowers his bow and speaks low and calm to the Owlbear, the way the elves taught him, edging around it."],
+      "timely-rescue": ["Thalbern follows Wollandora."],
+      "meeting-at-the-stones": ["“Tell me about the relics first. What are they, and who would take them?”", "“No. I won't go to the city. Find someone else.”", "“My answer is no.”"]
+    },
+    "fallback": "Thalbern presses on toward the Old Standing Stones."
+  },
+  "summons-odd": {
+    "adventure": "the-midnight-summons",
+    "hero": "thalbern",
+    "rolls": [3, 1, 6, 2, 9],
+    "lines": {
+      "broken-silence": ["Thalbern climbs the nearest tree to look around.", "Thalbern stays up in the tree, very still."],
+      "the-owlbear-prowls": ["Thalbern drops from the tree onto the Owlbear's back with his sword."],
+      "owlbear-confrontation": ["Thalbern runs for the river.", "Thalbern keeps running.", "Thalbern throws his dagger at the Owlbear."],
+      "timely-rescue": ["“Who are you?”", "Thalbern asks Wollandora to heal him."],
+      "meeting-at-the-stones": ["Thalbern asks Wollandora for a boat to Kordavos.", "“Fine. I'll go.”"]
+    },
+    "fallback": "Thalbern looks around."
+  }
+}

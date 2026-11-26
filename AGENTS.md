@@ -30,7 +30,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - What a player's action rolls: `packages/gm-core/src/services/roll-requirement-service.ts`. What the roll does: `adventure-roll-result-service.ts` beside it. NPC turns: the `npc-turn-*-service.ts` files there.
 - Character and adventure types: `packages/gm-core/src/types`. `types/*.ts` at the root only re-export them.
 - Desktop screens: `apps/desktop/src/pages.tsx` for saved and hosted games, `play.tsx` and `stage-play.tsx` for play. The game itself runs in `apps/desktop/runtime/game.ts`.
-- How the GM rules on a check, probed against the model: `apps/desktop/scripts/check-probe.ts` with cases in `check-probes.json`. Scenes: `scene-probe.ts` beside it.
+- How the GM rules on a check, probed against the model: `apps/desktop/scripts/check-probe.ts` with cases in `check-probes.json`. Scenes: `scene-probe.ts` beside it. A whole adventure on scripted paths, with timings, the hero's health and repeated NPC lines: `pnpm --dir apps/desktop playtest <plan>`, plans in `playtest-plans.json`. Watched in the app: `record:playthrough` with `VITE_D20_TRACE=1`, which logs each shot, who is in frame and each stage's load wait to `apps/desktop/.logs/window.log`.
 - The asset library is `asset-library/` at the repo root, not under `public/`.
 
 ## Where New Code Goes
