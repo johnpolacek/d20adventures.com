@@ -6,3 +6,4 @@ src-tauri/resources/
 src-tauri/gen/
 dist-packs/
 .logs/
+scripts/.playtest-*.mjs

@@ -245,7 +245,8 @@ async function main() {
   if (opt("--out")) writeFileSync(resolve(opt("--out")!), `${JSON.stringify(judged, null, 2)}\n`)
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// By the script's name, so a bundle that imports it (playtest-sweep.ts) does not run it.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && /scene-judge\.ts$/.test(process.argv[1])) {
   // Core debugging must not flood the report.
   console.log = console.warn = () => {}
   main().catch((error) => {

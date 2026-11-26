@@ -13,6 +13,7 @@
     "scene:probe": "tsx scripts/scene-probe.ts",
     "check:probe": "tsx scripts/check-probe.ts",
     "playtest": "tsx scripts/playtest.ts",
+    "playtest:sweep": "tsx scripts/playtest-sweep.ts",
     "narrator:names": "tsx scripts/narrator-names.ts",
     "record:playthrough": "tsx scripts/record-playthrough.ts",
     "tauri": "tauri"
