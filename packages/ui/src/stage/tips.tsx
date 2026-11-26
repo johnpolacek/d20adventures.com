@@ -97,11 +97,41 @@ export const TOUR: TourStop[] = [
   { at: "feedback", title: "Give Us Feedback", text: "D20 Adventures is new and growing. Tell us what works and what doesn’t, any time, right here." },
 ]
 
-/** Whether the tour has yet to be seen on this device, and the way to mark it seen. */
+// The tour asked for again, by a player starting an adventure with it. It shows once more, whatever has been seen.
+const AGAIN = "d20-tour-again"
+const againNow = () => {
+  try {
+    return localStorage.getItem(AGAIN) === "1"
+  } catch {
+    return false
+  }
+}
+
+/** Show the tour the next time the play screen opens, even on a device that has seen it. */
+export function tourAgain() {
+  try {
+    localStorage.setItem(AGAIN, "1")
+  } catch {}
+  dispatchEvent(new Event(MARKED))
+}
+
+/** Whether the tour has yet to be seen on this device, or was asked for again, and the way to mark it seen. */
 export function useTour() {
   const seen = useSeen()
-  const done = useCallback(() => mark("tour"), [])
-  return { open: !seen.includes(ALL) && !seen.includes("tour"), done }
+  const [again, setAgain] = useState(false)
+  useEffect(() => {
+    const read = () => setAgain(againNow())
+    read()
+    addEventListener(MARKED, read)
+    return () => removeEventListener(MARKED, read)
+  }, [])
+  const done = useCallback(() => {
+    try {
+      localStorage.removeItem(AGAIN)
+    } catch {}
+    mark("tour")
+  }, [])
+  return { open: again || (!seen.includes(ALL) && !seen.includes("tour")), done }
 }
 
 // The first mark on screen for a stop: a page may mark two places for one part, one of them hidden at its width.

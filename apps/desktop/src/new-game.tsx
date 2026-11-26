@@ -2,6 +2,7 @@ import { type AnimationEventHandler, type CSSProperties, useEffect, useState } f
 import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { Button, buttonClassName, Option } from "@d20/ui/button"
 import { Presence, Swap } from "@d20/ui/presence"
+import { tourAgain } from "@d20/ui/stage/tips"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { Chip, siteLabel } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
@@ -37,6 +38,10 @@ export function LockIcon() {
     </svg>
   )
 }
+
+// The adventure that teaches the game. Its party screen also offers Play with Tour, which shows the first-look tour
+// again on a device that has seen it.
+const TUTORIAL = "the-midnight-summons"
 
 // Party setup for the adventure chosen on the Adventures page: who goes, who plays each hero, and which CLI runs the
 // GM. The first hero is the player's, the rest default to AI. A hero set to Invite makes it a game hosted on the
@@ -442,6 +447,21 @@ export function NewGame(props: {
         {props.onCancel && (
           <Button variant="ghost" disabled={props.busy} onClick={props.onCancel}>
             Cancel
+          </Button>
+        )}
+        {!hosting && info.id === TUTORIAL && (
+          <Button
+            variant="outline"
+            className="text-lg"
+            disabled={props.busy || Boolean(queued) || !ready || !props.providers.length}
+            onClick={() => {
+              tourAgain()
+              const chosen = party.map((c) => ({ id: c.id, ai: c.who === "ai" }))
+              if (props.waiting) setQueued(chosen)
+              else props.onStart(chosen)
+            }}
+          >
+            Play with Tour
           </Button>
         )}
         <Swap id={hosting ? "invite" : "play"} motion="pop" className="flex">
