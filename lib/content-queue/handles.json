@@ -8,5 +8,11 @@
   { "name": "Mesh2Motion", "as": "Mesh2Motion from @scottpetrovic", "source": "80.lv and Mesh2Motion posts", "checked": "2026-11-21" },
   { "name": "Claude Code", "as": "Claude Code from @claudeai", "source": "known account", "checked": "2026-11-21" },
   { "name": "Three.js", "as": "@threejs", "source": "threejs.org Community links", "checked": "2026-11-21" },
-  { "name": "Claude", "as": "@claudeai", "source": "known account, the same one as Claude Code", "checked": "2026-11-26" }
+  { "name": "Claude", "as": "@claudeai", "source": "known account, the same one as Claude Code", "checked": "2026-11-26" },
+  { "name": "GitHub", "as": "@github", "source": "github.com footer", "checked": "2026-11-26" },
+  { "name": "ElevenLabs", "as": "@elevenlabs", "source": "elevenlabs.io page links", "checked": "2026-11-26" },
+  { "name": "OpenAI", "as": "@OpenAI", "source": "openai.com", "checked": "2026-11-26" },
+  { "name": "Resemble AI", "as": "@resembleai", "source": "resemble.ai footer", "checked": "2026-11-26" },
+  { "name": "Chrome", "as": "@googlechrome", "source": "google.com/chrome footer", "checked": "2026-11-26" },
+  { "name": "Playwright", "as": "@playwrightweb", "source": "playwright.dev footer, Community", "checked": "2026-11-26" }
 ]
