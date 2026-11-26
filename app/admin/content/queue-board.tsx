@@ -107,7 +107,6 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
               )}
               onClick={() => setSelected(item.slug)}
             >
-              <span className="up-small w-6 shrink-0 pt-0.5 text-right font-mono">{item.rank < 90 ? item.rank : "·"}</span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm" style={{ color: "var(--up-strong)" }}>{item.title}</div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
