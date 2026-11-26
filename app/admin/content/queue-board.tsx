@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@d20/ui/utils"
 import { createPortal } from "react-dom"
 import { type ReactNode, useEffect, useMemo, useState, useTransition } from "react"
-import { reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
+import { deleteQueueItem, reorderQueue, saveQueueItem, syncContentQueue } from "@/app/_actions/content-queue"
 import { briefFor, missingHandles, socialBriefFor, tagHandle } from "@/lib/content-queue/brief"
 import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
@@ -134,7 +134,12 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
         </ol>
 
         {current ? (
-          <Editor key={current.slug} item={current} onSaved={(next) => setItems((list) => list.map((i) => (i.slug === next.slug ? next : i)))} />
+          <Editor
+            key={current.slug}
+            item={current}
+            onSaved={(next) => setItems((list) => list.map((i) => (i.slug === next.slug ? next : i)))}
+            onDeleted={() => setItems((list) => list.filter((i) => i.slug !== current.slug))}
+          />
         ) : (
           <div />
         )}
@@ -143,13 +148,15 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
   )
 }
 
-function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem) => void }) {
+function Editor({ item, onSaved, onDeleted }: { item: QueueItem; onSaved: (item: QueueItem) => void; onDeleted: () => void }) {
   const [title, setTitle] = useState(item.title)
   const [longTitle, setLongTitle] = useState(item.longTitle)
   const [status, setStatus] = useState(item.status)
   const [posted, setPosted] = useState<Record<string, string>>(item.posted)
   const [bodies, setBodies] = useState<Record<string, string>>(() => Object.fromEntries(item.sections.map((s) => [s.name, s.body])))
   const [dirty, setDirty] = useState(false)
+  // Delete asks once more on the button itself before the file goes.
+  const [confirming, setConfirming] = useState(false)
   const [copied, setCopied] = useState("")
   const [error, setError] = useState("")
   const [pending, start] = useTransition()
@@ -229,6 +236,25 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         </Select>
         <Button variant="plain" className="up-btn is-primary" disabled={!dirty || pending} onClick={save}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
+        </Button>
+        <Button
+          variant="plain"
+          className={cn("up-btn", confirming ? "is-bad" : "is-ghost")}
+          disabled={pending}
+          onBlur={() => setConfirming(false)}
+          onClick={() => {
+            if (!confirming) return setConfirming(true)
+            start(async () => {
+              try {
+                await deleteQueueItem(item.slug)
+                onDeleted()
+              } catch (e) {
+                setError((e as Error).message)
+              }
+            })
+          }}
+        >
+          {confirming ? "Really Delete" : "Delete"}
         </Button>
       </div>
       <Field label="Long Title">

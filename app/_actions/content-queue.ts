@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-utils"
-import { listQueue, readItem, STATUSES, writeItem, writeOrder } from "@/lib/content-queue/store"
+import { deleteItem, listQueue, readItem, STATUSES, writeItem, writeOrder } from "@/lib/content-queue/store"
 import { syncQueue } from "@/lib/content-queue/sync"
 
 // The queue is files on this machine, so it only exists in development.
@@ -29,6 +29,12 @@ export async function saveQueueItem(input: {
   const lastLive = listQueue().filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0)
   const rank = parked && item.rank < 90 ? 90 : !parked && item.rank >= 90 ? lastLive + 1 : item.rank
   writeItem({ ...item, title: input.title.trim() || item.title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted, schedule: input.schedule })
+  revalidatePath("/admin/content")
+}
+
+export async function deleteQueueItem(slug: string) {
+  await guard()
+  deleteItem(slug)
   revalidatePath("/admin/content")
 }
 

@@ -104,6 +104,11 @@ export function readItem(slug: string): QueueItem {
   return parseItem(slug, fs.readFileSync(fileOf(slug), "utf8"))
 }
 
+/** Removes an idea's file. The next sync removes it from the bucket too. */
+export function deleteItem(slug: string): void {
+  fs.rmSync(fileOf(slug))
+}
+
 export function writeItem(item: QueueItem): void {
   fs.writeFileSync(fileOf(item.slug), serialize(item))
 }
