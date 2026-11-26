@@ -779,6 +779,8 @@ export class Stage {
   // footprints, so a tree counts for its roots and its lean as well as its trunk. With `sure`, the views it would take
   // are also put to the GPU, which knows what a look stood in the set after it was built.
   // With `turn`, a single subject the camera had to swing far round turns toward it, so they are not seen from behind.
+  // One facing someone near them is talking to them, and keeps facing them: the turn stays for good, and would leave
+  // them turned away from the one they speak with for the rest of the scene.
   private clearView(which: StagingShot, ids: string[], turn = false, sure = false): ResolvedShot {
     const { shot, moved } = clearView({
       shot: which,
@@ -795,12 +797,22 @@ export class Stage {
       truth: sure ? (lens, figures) => this.drawn(lens, figures) : undefined,
     })
     const c = "subject" in which ? this.cast.find((m) => m.id === which.subject) : undefined
-    if (turn && moved && c && "subject" in which && new Set(ids).size === 1) {
+    if (turn && moved && c && "subject" in which && new Set(ids).size === 1 && !this.facingSomeone(c)) {
       const bearing = Math.atan2(shot.position[0] - c.x, shot.position[2] - c.z)
       const off = Math.atan2(Math.sin(bearing - c.ry), Math.cos(bearing - c.ry))
       if (Math.abs(off) > THREE.MathUtils.degToRad(60)) c.ry = bearing - THREE.MathUtils.degToRad(which.angle)
     }
     return shot
+  }
+  // Whether a cast member faces another on the stage within 8 metres, to 45 degrees.
+  private facingSomeone(c: { id: string; x: number; z: number; ry: number }) {
+    return this.cast.some((o) => {
+      if (o.id === c.id || !this.isOnStage(o.id)) return false
+      const d = Math.hypot(o.x - c.x, o.z - c.z)
+      if (d < 0.1 || d > 8) return false
+      const b = Math.atan2(o.x - c.x, o.z - c.z)
+      return Math.abs(Math.atan2(Math.sin(b - c.ry), Math.cos(b - c.ry))) < THREE.MathUtils.degToRad(45)
+    })
   }
   // What a lens would really show of some figures: the scene drawn small from there with its own materials, cast and
   // crowd left out, and its depth read back. This is the truth of what is on screen. A look stands modelled trees
