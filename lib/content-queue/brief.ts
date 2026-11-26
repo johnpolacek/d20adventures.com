@@ -19,7 +19,7 @@ Make it useful to someone doing the same thing. Mine the commits and sessions fo
 
 Every item gets a picture or a clip. Use the one the plan names after looking at it. Where the plan says To make, make it: screenshots and clips of the game from the desktop app (D20 Adventures Dev, through computer use) or the stage preview at /dev/stage, as AGENTS.md and packages/stage/AGENTS.md describe. Convert each to webp at most 1600 wide in public/images/updates/<post>/, link it by its bucket URL with its measured size, and name any you could not make in a comment at the top. Never use a picture that shows anything private.
 
-Write it to content/updates/ with draft: true. Don’t upload, publish or post anything. Once John has read it, pnpm stage:sync public/images/updates/<post> uploads the pictures.`
+Write it to content/updates/ with draft: true, then set status: draft and post: <the post's slug> in the front matter of content/queue/${item.slug}.md, so the queue shows it as a draft. Don’t upload, publish or post anything. Once John has read it, pnpm stage:sync public/images/updates/<post> uploads the pictures.`
 }
 
 /**
