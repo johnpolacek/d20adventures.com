@@ -5,7 +5,7 @@ import StoryviewRailPanel from "@/components/adventure/storyview/storyview-rail-
 import { WEB_NARRATION } from "@/lib/narration"
 import { FloorPlanButton, FloorPlanRailPanel } from "@/components/floorplan/floor-plan-panel"
 import { Presence } from "@d20/ui/presence"
-import { Tour, type TourStop, TOUR, useTour } from "@d20/ui/stage/tips"
+import { Tour, type TourStop, TOUR, tourAgain, useTour } from "@d20/ui/stage/tips"
 import { useLiveFloor } from "@/components/floorplan/use-live-floor"
 import type { FloorView } from "@/components/floorplan/view"
 import { useTurn } from "@/lib/context/TurnContext"
@@ -26,12 +26,28 @@ const WEB_TOUR: TourStop[] = [
   { at: "chat", title: "Chat", text: "Talk with the other players at the table." },
 ]
 
+// Every game on the site opens on the tour, even on a device that has seen it. A game is toured once, so a reload
+// mid-game does not show it again.
+const TOURED = "d20-toured-games"
+function tourOnce(adventureId: string) {
+  try {
+    const toured = JSON.parse(localStorage.getItem(TOURED) ?? "[]") as string[]
+    if (toured.includes(adventureId)) return
+    localStorage.setItem(TOURED, JSON.stringify([...toured, adventureId].slice(-20)))
+  } catch {}
+  tourAgain()
+}
+
 export default function Turn({ nextAdventure, encounter, floor: initialFloor, isSolo }: { nextAdventure?: string; encounter?: AdventureEncounter | null; floor?: FloorView | null; isSolo?: boolean }) {
   // The plan follows the live turn: its characters as they move, and its encounter's floor.
   const turn = useTurn()
   const floor = useLiveFloor(initialFloor, turn?.encounterId)
   const characters = turn?.characters ?? []
   const tour = useTour()
+  const adventureId = turn?.adventureId
+  useEffect(() => {
+    if (adventureId) tourOnce(adventureId)
+  }, [adventureId])
 
   // The map is titled by the place it depicts; fall back to the encounter title
   // for plans that don't declare locations.
