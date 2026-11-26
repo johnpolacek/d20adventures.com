@@ -3,7 +3,6 @@ import { notFound } from "next/navigation"
 import { LedgerHead } from "@/components/layout/ledger-page"
 import { requireAdmin } from "@/lib/auth-utils"
 import { listQueue } from "@/lib/content-queue/store"
-import { getPosts } from "@/lib/updates"
 import { QueueBoard } from "./queue-board"
 
 export const dynamic = "force-dynamic"
@@ -17,8 +16,8 @@ export default async function AdminContentPage() {
 
   return (
     <>
-      <LedgerHead title="Content Queue" subtitle="Ideas, drafts and the two weeks of posts ahead" />
-      <QueueBoard items={listQueue()} posts={(await getPosts()).map((p) => ({ slug: p.slug, title: p.title, date: p.date, draft: p.draft }))} />
+      <LedgerHead title="Content Queue" subtitle="Ideas and drafts, and what has been posted" />
+      <QueueBoard items={listQueue()} />
     </>
   )
 }

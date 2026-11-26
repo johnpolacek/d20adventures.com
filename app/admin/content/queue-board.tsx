@@ -14,19 +14,12 @@ const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X", limit: 280 }
 const NOTES = ["Point", "Title ideas", "Intro", "Angle", "Hook", "Payoff", "Why it spreads", "Items", "Stories", "Pictures", "Links", "Questions for John", "Facts", "John said", "Changes", "Clips", "Update verdict"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
-type Filter = "live" | "parked" | "all"
-type Sort = "rank" | "score"
+type Tab = "new" | "posted"
 
-const parked = (item: QueueItem) => item.status === "shelved"
-
-type PostRef = { slug: string; title: string; date: string; draft: boolean }
-
-// Today and the days after it, as YYYY-MM-DD in Chicago time, where John posts.
-function days(count: number): string[] {
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" })
-  const start = new Date(`${today}T12:00:00Z`)
-  return Array.from({ length: count }, (_, i) => new Date(start.getTime() + i * 86_400_000).toISOString().slice(0, 10))
-}
+const isPosted = (item: QueueItem) => item.status === "posted"
+const tabOf = (item: QueueItem): Tab => (isPosted(item) ? "posted" : "new")
+// New holds everything not yet posted, shelved ideas last.
+const newList = (items: QueueItem[]) => [...items.filter((i) => !isPosted(i) && i.status !== "shelved"), ...items.filter((i) => i.status === "shelved")]
 
 // A status as a tag on the paper (app/admin/admin.css).
 const statusTone: Record<string, string> = {
@@ -44,45 +37,40 @@ function section(item: QueueItem, name: string): string {
   return item.sections.find((s) => s.name === name)?.body ?? ""
 }
 
-export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; posts: PostRef[] }) {
+export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
   const [items, setItems] = useState(initial)
-  const [filter, setFilter] = useState<Filter>("live")
-  const [sort, setSort] = useState<Sort>("rank")
-  const [selected, setSelected] = useState(initial.find((i) => !parked(i))?.slug ?? initial[0]?.slug)
+  const [tab, setTab] = useState<Tab>("new")
+  const [selected, setSelected] = useState(newList(initial)[0]?.slug ?? initial[0]?.slug)
   const [dragging, setDragging] = useState<string | null>(null)
   const [syncNote, setSyncNote] = useState("")
-  const [showSchedule, setShowSchedule] = useState(true)
   const [pending, start] = useTransition()
 
   useEffect(() => setItems(initial), [initial])
 
-  const shown = useMemo(() => {
-    const list = items.filter((i) => (filter === "all" ? true : filter === "parked" ? parked(i) : !parked(i)))
-    return sort === "score" ? [...list].sort((a, b) => b.score - a.score || a.rank - b.rank) : list
-  }, [items, filter, sort])
+  const shown = useMemo(() => (tab === "new" ? newList(items) : items.filter(isPosted)), [items, tab])
 
-  const canDrag = filter === "live" && sort === "rank"
-  const current = items.find((i) => i.slug === selected)
+  const canDrag = tab === "new"
+  const current = items.find((i) => i.slug === selected && tabOf(i) === tab) ?? shown[0]
 
   function move(slug: string, to: number) {
-    const live = items.filter((i) => !parked(i))
-    const from = live.findIndex((i) => i.slug === slug)
-    if (from === -1 || to < 0 || to >= live.length || from === to) return
-    const next = [...live]
+    const list = newList(items)
+    const from = list.findIndex((i) => i.slug === slug)
+    if (from === -1 || to < 0 || to >= list.length || from === to) return
+    const next = [...list]
     const [moved] = next.splice(from, 1)
     next.splice(to, 0, moved)
     const ranked = next.map((i, n) => ({ ...i, rank: n + 1 }))
-    setItems([...ranked, ...items.filter(parked)])
+    setItems([...ranked, ...items.filter(isPosted)])
     start(() => reorderQueue(ranked.map((i) => i.slug)))
   }
 
   function drop(target: string) {
-    if (dragging && dragging !== target) move(dragging, items.filter((i) => !parked(i)).findIndex((i) => i.slug === target))
+    if (dragging && dragging !== target) move(dragging, newList(items).findIndex((i) => i.slug === target))
     setDragging(null)
   }
 
   function nudge(slug: string, by: number) {
-    move(slug, items.filter((i) => !parked(i)).findIndex((i) => i.slug === slug) + by)
+    move(slug, newList(items).findIndex((i) => i.slug === slug) + by)
   }
 
   function sync() {
@@ -92,31 +80,14 @@ export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; post
   return (
     <div>
       <div className="up-chips mb-4 items-center">
-        {(["live", "parked", "all"] as Filter[]).map((f) => (
-          <Button key={f} variant="plain" className="up-chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
-            {f === "live" ? "Live" : f === "parked" ? "Shelved" : "All"}
+        {(["new", "posted"] as Tab[]).map((t) => (
+          <Button key={t} variant="plain" className="up-chip" aria-pressed={tab === t} onClick={() => setTab(t)}>
+            {t === "new" ? "New" : "Posted"} <span className="up-small ml-1 font-mono">{t === "new" ? newList(items).length : items.filter(isPosted).length}</span>
           </Button>
         ))}
-        <span className="mx-1 h-5 w-px" style={{ background: "var(--up-line)" }} />
-        <Button variant="plain" className="up-chip" aria-pressed={sort === "rank"} onClick={() => setSort("rank")}>Rank</Button>
-        <Button variant="plain" className="up-chip" aria-pressed={sort === "score"} onClick={() => setSort("score")}>Score</Button>
-        <span className="mx-1 h-5 w-px" style={{ background: "var(--up-line)" }} />
-        <Button variant="plain" className="up-chip" aria-pressed={showSchedule} onClick={() => setShowSchedule((v) => !v)}>Schedule</Button>
         <Button variant="plain" className="up-btn is-xs ml-auto" disabled={pending} onClick={sync}>Sync</Button>
         {syncNote && <span className="up-small">{syncNote}</span>}
       </div>
-
-      {showSchedule && (
-        <Schedule
-          items={items}
-          posts={posts}
-          selected={selected}
-          onSelect={(slug) => {
-            setSelected(slug)
-            if (parked(items.find((i) => i.slug === slug)!)) setFilter("all")
-          }}
-        />
-      )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <ol className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-1.5">
@@ -128,7 +99,7 @@ export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; post
               onDragOver={(e) => canDrag && e.preventDefault()}
               onDrop={() => drop(item.slug)}
               onDragEnd={() => setDragging(null)}
-              aria-current={item.slug === selected || undefined}
+              aria-current={item.slug === current?.slug || undefined}
               className={cn(
                 "up-pick flex min-w-0 cursor-pointer items-start gap-3 px-3 py-2",
                 dragging === item.slug && "opacity-40",
@@ -148,7 +119,7 @@ export function QueueBoard({ items: initial, posts }: { items: QueueItem[]; post
                   {item.audience && <span className="up-small !text-[11px]">{item.audience}</span>}
                 </div>
               </div>
-              {canDrag && item.slug === selected && (
+              {canDrag && item.slug === current?.slug && (
                 <span className="flex shrink-0 flex-col">
                   <button type="button" aria-label="Move Up" className="up-small px-1 text-xs leading-none" onClick={(e) => (e.stopPropagation(), nudge(item.slug, -1))}>
                     ▲
@@ -177,7 +148,6 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
   const [longTitle, setLongTitle] = useState(item.longTitle)
   const [status, setStatus] = useState(item.status)
   const [posted, setPosted] = useState<Record<string, string>>(item.posted)
-  const [schedule, setSchedule] = useState<Record<string, string>>(item.schedule)
   const [bodies, setBodies] = useState<Record<string, string>>(() => Object.fromEntries(item.sections.map((s) => [s.name, s.body])))
   const [dirty, setDirty] = useState(false)
   const [copied, setCopied] = useState("")
@@ -199,11 +169,10 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
     ]
     const sections: QueueSection[] = names.map((name) => ({ name, body: bodies[name] ?? "" }))
     const cleanPosted = Object.fromEntries(Object.entries(posted).filter(([, url]) => url.trim()))
-    const cleanSchedule = Object.fromEntries(Object.entries(schedule).filter(([, day]) => day))
     start(async () => {
       try {
-        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted, schedule: cleanSchedule })
-        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted, schedule: cleanSchedule })
+        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted, schedule: item.schedule })
+        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted })
         setDirty(false)
         setError("")
       } catch (e) {
@@ -336,16 +305,6 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
               )}
               <div className="mt-1.5 flex gap-1.5">
                 <input
-                  type="date"
-                  aria-label={`${name} Day`}
-                  className={cn(field, "!w-36")}
-                  value={schedule[name.toLowerCase()] ?? ""}
-                  onChange={(e) => {
-                    setSchedule((d) => ({ ...d, [name.toLowerCase()]: e.target.value }))
-                    setDirty(true)
-                  }}
-                />
-                <input
                   className={cn(field, "flex-1")}
                   placeholder="Posted URL"
                   value={posted[name.toLowerCase()] ?? ""}
@@ -371,65 +330,6 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           ))}
         </div>
       </details>
-    </div>
-  )
-}
-
-// Two weeks of the plan in plans/content-engine.md: X once or twice a day, Reddit on Wednesday,
-// the week's best picture on Saturday, and /updates posts on their dates.
-function Schedule({ items, posts, selected, onSelect }: { items: QueueItem[]; posts: PostRef[]; selected?: string; onSelect: (slug: string) => void }) {
-  const list = days(14)
-  const today = list[0]
-  return (
-    <div className="mb-4 grid grid-cols-7 gap-1.5">
-      {list.map((day) => {
-        const date = new Date(`${day}T12:00:00Z`)
-        const weekday = date.getUTCDay()
-        const updates = posts.filter((p) => p.date === day)
-        const slots = items.flatMap((item) =>
-          Object.entries(item.schedule)
-            .filter(([, d]) => d === day)
-            .map(([platform]) => ({ item, platform, done: Boolean(item.posted[platform]) }))
-        )
-        const x = slots.filter((s) => s.platform === "x").length
-        const reddit = slots.some((s) => s.platform === "reddit")
-        return (
-          <div key={day} aria-current={day === today ? "date" : undefined} className="up-well min-h-24 p-1.5 text-[11px]">
-            <div className="up-small mb-1 flex items-baseline gap-1 !text-[11px]">
-              <span className="font-medium" style={{ color: "var(--up-strong)" }}>{date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}</span>
-              <span>{date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", timeZone: "UTC" })}</span>
-              {weekday === 6 && <span className="ml-auto" style={{ color: "var(--up-warn)" }} title="#ScreenshotSaturday">SS</span>}
-            </div>
-            <div className="grid gap-1">
-              {updates.map((p) => (
-                <a
-                  key={p.slug}
-                  href={`/updates/${p.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="up-tag is-warn truncate !text-left"
-                  title={p.title}
-                >
-                  Post{p.draft ? " (Draft)" : ""}: {p.title}
-                </a>
-              ))}
-              {slots.map(({ item, platform, done }) => (
-                <button
-                  key={item.slug + platform}
-                  type="button"
-                  title={item.title}
-                  onClick={() => onSelect(item.slug)}
-                  className={cn("up-tag truncate !text-left", done ? "is-good" : "is-accent", item.slug === selected && "outline outline-1 outline-[var(--up-accent)]")}
-                >
-                  {platform === "x" ? "X" : "Reddit"}: {item.title}
-                </button>
-              ))}
-              {x === 0 && <span className="up-tag is-empty">X</span>}
-              {weekday === 3 && !reddit && <span className="up-tag is-empty">Reddit</span>}
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }
