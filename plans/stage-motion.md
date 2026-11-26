@@ -24,6 +24,7 @@ Quiet under play. Parts are set down like cards and tokens: short, close, and se
 - The roll timeline, with its pace and its tap.
 - The controller, for the six `enter-*` and `exit-*` pairs, `plate-in`, `gm-musing-in`, `gm-musing-out` and `die-land`.
 - Rays behind a Critical Hit turn for five seconds and stop.
+- The first-look tour (`Tour` in `tips.tsx`, on the stage and the web demo): its lit box and card glide between stops with `gsap.quickTo`, following each part every frame while the page scrolls. The welcome lights its own card, and the first stop grows out of it.
 
 ## To Do
 
