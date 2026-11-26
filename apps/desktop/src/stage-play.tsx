@@ -1231,7 +1231,13 @@ export function StagePlay(props: {
       return void go(leader ? speakerShot(leader, shot) : { subject: lead, ...shot }, null)
     }
     const view = beats[paragraph]?.view
-    if (!view) return void (arrived && stage.staging?.shot && go(stage.staging.shot, null))
+    // A paragraph with nothing new to frame still moves the camera: it circles round what it looks at, turning the
+    // opposite way to the last, so each new card is seen from a new angle.
+    if (!view) {
+      if (arrived && stage.staging?.shot) return void go(stage.staging.shot, null)
+      if (!preview && !cut) stage.circleOn(paragraph % 2 ? -3 : 3, 12)
+      return
+    }
     const shot = shotFor(stage, view, heroes.current)
     // A walk under way in this paragraph is followed: two facing off keep both in the picture.
     if (shot) go(shot, null, "pair" in view ? view.pair : [])

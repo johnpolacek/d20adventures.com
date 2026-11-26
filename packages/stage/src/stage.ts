@@ -927,6 +927,14 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   shotSettled() {
     return this.transition || this.cut ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
   }
+  // Circle round what the camera looks at now, at `orbit` degrees a second (negative goes the other way), easing out
+  // once it has gone `sweep` degrees: a new paragraph with nothing new to frame still moves. Not while the player has
+  // the camera, nor with reduced motion.
+  circleOn(orbit: number, sweep: number) {
+    if (this.driving || !this.motion) return
+    this.circling = THREE.MathUtils.degToRad(orbit)
+    this.sweepLeft = THREE.MathUtils.degToRad(sweep)
+  }
   private settle() {
     const w = this.settleWaiters
     this.settleWaiters = []
