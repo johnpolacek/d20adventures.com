@@ -39,7 +39,7 @@ test("a move closes the paragraph before it and stays out of the words", () => {
 
 test("the story's pace rides on an action that moves within the scene, and on an entrance's", () => {
   const by = { step: "reply" as const, character: "thalbern" }
-  const scene = { cast: [{ id: "thalbern", name: "Thalbern" }], places: [{ id: "treeLine", name: "the tree line" }] }
+  const scene = { cast: [{ id: "thalbern", name: "Thalbern" }], places: [{ id: "treeLine", label: "the tree line" }] }
   const [away] = cleanStory([{ kind: "action", who: "thalbern", text: "Thalbern sprints away from the owlbear.", pace: "sprint" }], scene as Parameters<typeof cleanStory>[1], by)
   assert.deepEqual([away.kind === "action" && away.pace, away.kind === "action" && away.enters], ["sprint", undefined])
   const [comes] = cleanStory([{ kind: "action", who: "thalbern", text: "Thalbern creeps out of the trees.", from: "treeLine", pace: "sneak" }], scene as Parameters<typeof cleanStory>[1], by)
