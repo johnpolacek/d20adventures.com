@@ -36,11 +36,21 @@ html[data-update-theme="dark"] .ul-head-art {
 /* A halo of paper around each letter, stacked tight to wide, so the words read over the engraving where the glow thins. */
 .vn-head.ul-head:not(.is-plain) .vn-head-inner {
   text-shadow:
-    0 0 2px var(--up-bg),
-    0 0 6px var(--up-bg),
-    0 0 12px var(--up-bg),
-    0 0 24px var(--up-bg),
-    0 0 40px var(--up-bg);
+    1px 1px 0 var(--up-bg),
+    -1px -1px 0 var(--up-bg),
+    1px -1px 0 var(--up-bg),
+    -1px 1px 0 var(--up-bg),
+    0 0 3px var(--up-bg),
+    0 0 3px var(--up-bg),
+    0 0 8px var(--up-bg),
+    0 0 8px var(--up-bg),
+    0 0 8px var(--up-bg),
+    0 0 16px var(--up-bg),
+    0 0 16px var(--up-bg),
+    0 0 16px var(--up-bg),
+    0 0 32px var(--up-bg),
+    0 0 32px var(--up-bg),
+    0 0 48px var(--up-bg);
 }
 
 .ul-date {
