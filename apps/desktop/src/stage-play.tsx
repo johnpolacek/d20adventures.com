@@ -308,6 +308,8 @@ export function StagePlay(props: {
   const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | "feedback" | null>(null)
   // The hero whose level-up screen is open.
   const [levelling, setLevelling] = useState<string | null>(null)
+  // The turn whose levels the player put off till the next round.
+  const [levelLater, setLevelLater] = useState<string | null>(null)
   const [feedbackStart, setFeedbackStart] = useState<FeedbackStart>({ kind: "general" })
   const [endingSent, setEndingSent] = useState(false)
   const closePanel = useCallback(() => setOpen(null), [])
@@ -1554,9 +1556,12 @@ export function StagePlay(props: {
   const unseen = reading || previousText.current.paragraphs !== text
   // Narration just in has not yet set `reading`, so for a frame the card would show over the story it comes after.
   const taken = previousText.current.turn === turn?._id && previousText.current.paragraphs.length === text.length && text.every((p, i) => p === previousText.current.paragraphs[i])
+  // Levels are offered between rounds: once the latest narration has been read and nothing waits on a roll, before
+  // the next action card comes up or the game moves on.
+  const levelStep = Boolean(owed.length > 0 && !ended && !past && !busy && !held && !reading && taken && turn === latest && levelLater !== latest?._id)
   const ahead = Boolean(autoContinue && !props.writing && (!mode || (held && !props.busy)) && (next || latest === turn))
   const continueKey =
-    !past && !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi)
+    !past && !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && !levelStep && !levelHero && latest && !(next?.type === "pc" && !nextAi)
       ? `${latest._id}:${next?.id ?? "round"}${reaction ? `:${reaction.expiresAt}` : ""}`
       : null
   const [continued, setContinued] = useState<string | null>(null)
@@ -1573,7 +1578,9 @@ export function StagePlay(props: {
   // attack, or a reaction offered to their hero.
   const tipsWanted: TipId[] = []
   if (offerShown && offerMine) tipsWanted.push("reaction")
-  else if (mode?.kind === "roll" && !held && !reading) tipsWanted.push(mode.roll.kind === "attack" ? "attack" : "roll")
+  else if (levelStep || levelHero) {
+    // No tips for a card that waits behind the level-up step.
+  } else if (mode?.kind === "roll" && !held && !reading) tipsWanted.push(mode.roll.kind === "attack" ? "attack" : "roll")
   else if (mode?.kind === "hold" && !reading) tipsWanted.push("act", "sheet")
   const tips = useTip(tipsWanted)
   const react = (take: boolean) => {
@@ -1771,7 +1778,7 @@ export function StagePlay(props: {
               </Pill>
             </Presence>
           </div>
-          <Presence show={on && !opening && Boolean(mode && ((!reading && taken) || busy || held))} motion="rise" asChild>
+          <Presence show={on && !opening && !levelStep && !levelHero && Boolean(mode && ((!reading && taken) || busy || held))} motion="rise" asChild>
             {mode && (
               <PromptCard
                 key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}
@@ -1821,13 +1828,14 @@ export function StagePlay(props: {
               )}
             </div>
           </Presence>
-          <Presence show={on && !ended && owed.length > 0 && !levelHero} motion="drop" asChild>
-            <div className="absolute top-24 left-1/2 z-raised flex -translate-x-1/2 flex-wrap justify-center gap-2">
+          <Presence show={on && !opening && levelStep && !levelHero} motion="rise" asChild>
+            <div className="absolute bottom-28 left-1/2 z-raised flex -translate-x-1/2 flex-wrap justify-center gap-2">
               {owed.map((c) => (
                 <Pill key={c.id} variant="primary" onClick={() => setLevelling(c.id)}>
                   Level Up {c.name}
                 </Pill>
               ))}
+              <Pill onClick={() => setLevelLater(latest?._id ?? null)}>Later</Pill>
             </div>
           </Presence>
           <Presence show={on && Boolean(levelHero?.sheet && latest)} motion="fade" asChild>
