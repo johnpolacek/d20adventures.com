@@ -182,9 +182,18 @@ export function prepareNarration(text: string, voice: NarratorVoice, speaker?: S
 const LIFT = 1.8
 
 // A sentence that has not come after this long is given up, so the story never waits on a narrator that has stalled.
-// One that stalls before the narrator has ever spoken turns it off until the page is loaded again.
+// The wait does not run while the words are paused, as under the first-look tour, since nothing waits on them then.
+// Kokoro takes about 3 s a sentence, and far longer while a new game is starting, so a first sentence that is only
+// slow does not turn the narrator off: it is off until the page is loaded again only if that sentence fails, or has
+// still not come after STALLED_MS.
 const LATE_MS = 12_000
+const STALLED_MS = 60_000
 let spokeOnce = false
+function failNarrator() {
+  if (spokeOnce || state !== "ready") return
+  state = "failed"
+  for (const l of listeners) l()
+}
 
 // A paragraph being read aloud: `done` settles when the last sentence ends, or at once when stopped, with whether any of
 // it was heard. `pause` holds the words where they are and `resume` goes on from there. `progress` is how much of the
@@ -267,14 +276,17 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
       let at = 0
       for (const [i, m] of made.entries()) {
         let timer: ReturnType<typeof setTimeout> | undefined
-        const late = new Promise<"late">((r) => (timer = setTimeout(() => r("late"), LATE_MS)))
+        const late = new Promise<"late">((r) => {
+          const wait = () => (timer = setTimeout(() => (held === null || stopped ? r("late") : wait()), LATE_MS))
+          wait()
+        })
         const clip = await Promise.race([m.catch(() => null), late])
         clearTimeout(timer)
         if (stopped) return
         if (clip === "late") {
           if (!spokeOnce) {
-            state = "failed"
-            for (const l of listeners) l()
+            const stalled = setTimeout(failNarrator, STALLED_MS)
+            m.then(() => clearTimeout(stalled), () => (clearTimeout(stalled), failNarrator()))
           }
           break
         }
