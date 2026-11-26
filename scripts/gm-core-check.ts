@@ -491,7 +491,7 @@ async function npcFixedOutcome() {
   answer = { check: "none", moveTo: "gangway" }
   assert.deepEqual(await readAction("Thalbern heads for the gangway.", ranger, at(45)), { roll: null, move: { at: { x: 0, y: 30 }, feet: 30, path: [{ x: 0, y: 30 }] } })
   answer = { check: "dash", moveTo: "gangway" }
-  assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50, path: [{ x: 0, y: 50 }] } })
+  assert.deepEqual(await readAction("Thalbern sprints for the gangway.", ranger, at(45)), { roll: null, action: { action: "dash" }, move: { at: { x: 0, y: 50 }, feet: 50, path: [{ x: 0, y: 50 }], dash: true } })
   answer = { check: "none", moveAway: "owlbear", moveFeet: 10 }
   assert.deepEqual((await readAction("Thalbern backs off.", ranger, at(8))).move, { at: { x: -10, y: 0 }, feet: 10, path: [{ x: -10, y: 0 }] })
   // Hide goes into cover before its Stealth roll, with Invisible at stake. An 8-foot pillar 2 feet across at (10, 0)
@@ -713,6 +713,26 @@ function lootFindings() {
   ])
 }
 
+// A milestone raises the party above the adventure's level, somewhere it comes to. Welcome to Kordavos is played at 2.
+function levelFindings() {
+  const definition = getLocalWikiAdventureDefinition("realm-of-myr", "welcome-to-kordavos")
+  assert.ok(definition)
+  const marked: Record<string, number> = { "the-gates-of-kordavos.md": 3, "the-front-of-the-line.md": 2, "the-ambush.md": 4 }
+  const files = readLocalWikiAdventureSourceFiles(definition).map((file) => {
+    const level = Object.entries(marked).find(([name]) => file.path.endsWith(`/${name}`))?.[1]
+    return level ? { ...file, content: file.content.replace('type: "encounter"\n', `type: "encounter"\nlevel: ${level}\n`) } : file
+  })
+  const artifacts = compileAdventureSourceTree(files, { mode: "publish", contentVersion: definition.contentVersion, allowedAssetHosts: definition.assetHosts })
+  assert.deepEqual(
+    artifacts.validationReport.findings.filter((finding) => finding.code === "level.invalid").map((finding) => [finding.sourceId, finding.message]),
+    [
+      ["the-front-of-the-line", "Level 2: the adventure is played at level 2, so level 2 raises no one."],
+      ["the-gates-of-kordavos", "Level 3: the adventure opens here and never enters it, so the adventure's own level is the one to raise."],
+    ]
+  )
+  assert.equal(artifacts.encounters["the-ambush"].level, 4)
+}
+
 // A roll belongs to its round. The next round, in the same scene or the next, starts with none on any hero.
 function rollsEndWithTheRound() {
   const turn = { ...clone(fixture.initialState), id: "turn", encounterId: "the-wine-cellar" }
@@ -766,6 +786,7 @@ async function main() {
     await npcFixedOutcome()
     roundBudget()
     lootFindings()
+    levelFindings()
     questionsStayInTheScene()
     rollsEndWithTheRound()
     await replayTurn()

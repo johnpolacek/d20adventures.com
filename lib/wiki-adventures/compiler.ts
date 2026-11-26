@@ -66,6 +66,8 @@ const commonFrontmatterSchema = z.object({
   rest: z.enum(["short", "long"]).optional(),
   // A hero down but not dead comes to at 1 hit point as the encounter opens: the cold river wakes one thrown in.
   revive: z.boolean().optional(),
+  // A milestone: the level the party is raised to as they come here the first time, as BG3 levels a party mid-act.
+  level: z.number().int().min(1).max(20).optional(),
   // Magic items the encounter gives, each by its SRD id, and when: `on: enter` or `on: leave`, with `to` naming the
   // transition where it is given on leaving by one alone. Each is read and checked below, so a wrong one is a finding.
   loot: z.array(z.unknown()).optional(),
@@ -182,9 +184,31 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       roundBudget: frontmatter.roundBudget,
       rest: frontmatter.rest,
       ...(frontmatter.revive ? { revive: true as const } : {}),
+      ...(frontmatter.level ? { level: frontmatter.level } : {}),
       ...(frontmatter.loot?.length ? { loot: frontmatter.loot.flatMap((entry) => lootSchema.safeParse(entry).data ?? []) } : {}),
       validationStatus: extractedTransitions.every((entry) => entry.publishResolved) ? "valid" : options.mode === "publish" ? "blocked" : "draftOnly",
     }
+  }
+
+  // A milestone must raise the party above the level the adventure is played at, somewhere the party comes to.
+  for (const encounter of Object.values(runtimeEncounters)) {
+    if (!encounter.level) continue
+    const problem =
+      encounter.id === adventure?.startEncounter
+        ? "the adventure opens here and never enters it, so the adventure's own level is the one to raise"
+        : encounter.level <= (adventure?.level ?? 1)
+          ? `the adventure is played at level ${adventure?.level ?? 1}, so level ${encounter.level} raises no one`
+          : undefined
+    if (problem)
+      findings.push({
+        code: "level.invalid",
+        severity: "error",
+        sourcePath: encounter.sourcePath,
+        sourceId: encounter.id,
+        sourceType: "encounter",
+        message: `Level ${encounter.level}: ${problem}.`,
+        aiFixable: false,
+      })
   }
 
   // An encounter's loot must name a real item, as it comes, given at a moment the encounter has.

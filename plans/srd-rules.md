@@ -154,6 +154,7 @@ The session's calls:
 - A rest asked for in play is read off the menu, and the engine refuses it in a fight. An encounter's `rest: short` or `rest: long` is taken as it first opens.
 - Moving to a new encounter gives nothing back.
 - An adventure's end gives the level the next adventure is played at (`levelDue`). An AI companion takes it at once by `autoChoices`.
+- Owner decision, 2026-11-25: levels come mid-adventure too, as BG3 gives them mid-act. An encounter's `level: N` raises the party to N the first time they come to it. The compiler refuses one on the start encounter or at or below the adventure's level.
 
 Left at close: a Stable hero does not wake after 1d4 hours. No guard on how often a Long Rest is asked for. Standing orders in hosted play. A hero above an adventure's level plays it as they are.
 

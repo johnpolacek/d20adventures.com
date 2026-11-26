@@ -185,3 +185,35 @@ test("an adventure's end raises its heroes to the level of the adventure that fo
     cleanup()
   }
 })
+
+test("an encounter's milestone raises the party the first time they come to it", async () => {
+  const marked: Packs = structuredClone(packs)
+  marked["welcome-to-kordavos"].artifacts.encounters["the-front-of-the-line"].level = 3
+  const { store, cleanup } = setup(marked)
+  try {
+    await game(
+      store,
+      marked,
+      offline
+    )({
+      kind: "start",
+      provider: "claude",
+      adventure: "welcome-to-kordavos",
+      party: [
+        { id: THALBERN, ai: false },
+        { id: LYRA, ai: true },
+        { id: POPPEN, ai: true },
+      ],
+    })
+    // Played at level 2: the companion takes it, and the player is owed it and leaves it untaken.
+    assert.deepEqual([sheetOf(store, LYRA).level, hero(store, THALBERN).levelDue], [2, 2])
+    roundOver(store)
+    await game(store, marked, onTo("the-front-of-the-line"))({ kind: "continue", turnId: store.current()._id })
+    // At the milestone the companion takes both levels, and the player is owed up to 3.
+    assert.deepEqual([sheetOf(store, LYRA).level, hero(store, LYRA).levelDue], [3, undefined])
+    assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).levelDue], [1, 3])
+    assert.equal(store.kept()[LYRA].sheet.level, 3)
+  } finally {
+    cleanup()
+  }
+})

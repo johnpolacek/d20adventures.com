@@ -27,6 +27,7 @@ export const validationFindingCodes = [
   "asset.url.unapproved",
   "link.target.missing",
   "loot.invalid",
+  "level.invalid",
 ] as const
 
 export type ValidationFindingCode = (typeof validationFindingCodes)[number]
@@ -145,6 +146,8 @@ export type RuntimeEncounter = {
   rest?: "short" | "long"
   // A hero down but not dead comes to at 1 hit point as the encounter opens, as on entering the adventure's rescue.
   revive?: true
+  // A milestone: the level the party is raised to as they come to the encounter the first time (../sheet/milestone).
+  level?: number
   // The magic items the encounter gives, and when: on entering it or on leaving it (../sheet/loot).
   loot?: Loot[]
   validationStatus: "valid" | "draftOnly" | "blocked"

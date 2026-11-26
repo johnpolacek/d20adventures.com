@@ -236,14 +236,16 @@ export function createAdvanceTurn(ports: GmPorts) {
       // The story ends at its last encounter, or when every hero is dead: no one is left to take a turn.
       const heroes = (turn.characters as TurnCharacter[]).filter((character) => character.type === "pc")
       const isFinalEncounter = isLocalWikiFinalEncounter(artifacts, nextEncounter.id) || (heroes.length > 0 && heroes.every(isDead))
-      // The adventure's end raises the level due to each hero to the level the adventure that follows is played at
-      // (../sheet/milestone). An AI companion takes it at once, and a player chooses theirs on the level-up screen.
+      // A milestone raises the level due to each hero (../sheet/milestone): an encounter's `level`, the first time the
+      // party comes to it, and the adventure's end, to the level the adventure that follows is played at. An AI
+      // companion takes it at once, and a player chooses theirs on the level-up screen.
       const following = isFinalEncounter && artifacts.manifest.nextAdventureId ? await ports.content.loadWikiRuntime(settingId, artifacts.manifest.nextAdventureId).catch(() => undefined) : undefined
-      const levelAfter = following?.artifacts.manifest.level ?? 1
+      const levelAfter = Math.max(following?.artifacts.manifest.level ?? 1, isTransition && !returning ? (nextEncounter.level ?? 1) : 1)
       const companions: TurnCharacter[] = []
       const levelled = opening.map((character) => {
         if (character.type !== "pc" || !character.sheet || isDead(character) || character.sheet.level >= levelAfter) return character
-        const raised = raisedTo(character, levelAfter)
+        // A level still owed from before is kept, never lowered.
+        const raised = raisedTo(character, Math.max(levelAfter, character.levelDue ?? 1))
         if (raised.sheet && raised.sheet.level > character.sheet.level) companions.push(raised)
         return raised
       })
