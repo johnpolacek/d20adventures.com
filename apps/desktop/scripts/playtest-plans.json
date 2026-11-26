@@ -2,12 +2,25 @@
   "summons-hide": {
     "adventure": "the-midnight-summons",
     "hero": "thalbern",
-    "rolls": [17, 12, 15, 18],
+    "rolls": [
+      17,
+      12,
+      15,
+      18
+    ],
     "lines": {
-      "broken-silence": ["Thalbern slips off the trail into the thick undergrowth, crouches low behind a fallen trunk and goes perfectly still."],
-      "the-owlbear-prowls": ["Thalbern stays hidden, barely breathing, and waits for the Owlbear to move on."],
-      "owlbear-confrontation": ["Thalbern backs away slowly, bow raised, looking for a way off the trail."],
-      "timely-rescue": ["Thalbern follows Wollandora."],
+      "broken-silence": [
+        "Thalbern slips off the trail into the thick undergrowth, crouches low behind a fallen trunk and goes perfectly still."
+      ],
+      "the-owlbear-prowls": [
+        "Thalbern stays hidden, barely breathing, and waits for the Owlbear to move on."
+      ],
+      "owlbear-confrontation": [
+        "Thalbern backs away slowly, bow raised, looking for a way off the trail."
+      ],
+      "timely-rescue": [
+        "Thalbern follows Wollandora."
+      ],
       "meeting-at-the-stones": [
         "“Your squirrel found me, old friend. What could be so urgent that it needs the stones at midnight?”",
         "Thalbern looks toward the river, then back to her. “I don't love the city. But for the forest, I'll go. I'll find the relics.”"
@@ -18,40 +31,719 @@
   "summons-fight": {
     "adventure": "the-midnight-summons",
     "hero": "thalbern",
-    "rolls": [14, 4, 19, 9, 20, 2, 12, 16, 7, 18],
+    "rolls": [
+      14,
+      4,
+      19,
+      9,
+      20,
+      2,
+      12,
+      16,
+      7,
+      18
+    ],
     "lines": {
-      "broken-silence": ["Thalbern nocks an arrow and shouts into the dark: “Show yourself!”"],
-      "the-owlbear-prowls": ["Thalbern draws his longbow and shoots at the Owlbear."],
-      "owlbear-confrontation": ["Thalbern shoots the Owlbear with his longbow.", "Thalbern keeps shooting the Owlbear.", "Thalbern draws his sword and slashes at the Owlbear."],
-      "timely-rescue": ["Thalbern catches his breath. “Wollandora! What is so urgent?”", "Thalbern follows Wollandora to the stones."],
-      "meeting-at-the-stones": ["“What could be so urgent that it needs the stones at midnight?”", "“I'll go to the city. I'll find the relics.”", "Thalbern asks what the relics look like and where to start."]
+      "broken-silence": [
+        "Thalbern nocks an arrow and shouts into the dark: “Show yourself!”"
+      ],
+      "the-owlbear-prowls": [
+        "Thalbern draws his longbow and shoots at the Owlbear."
+      ],
+      "owlbear-confrontation": [
+        "Thalbern shoots the Owlbear with his longbow.",
+        "Thalbern keeps shooting the Owlbear.",
+        "Thalbern draws his sword and slashes at the Owlbear."
+      ],
+      "timely-rescue": [
+        "Thalbern catches his breath. “Wollandora! What is so urgent?”",
+        "Thalbern follows Wollandora to the stones."
+      ],
+      "meeting-at-the-stones": [
+        "“What could be so urgent that it needs the stones at midnight?”",
+        "“I'll go to the city. I'll find the relics.”",
+        "Thalbern asks what the relics look like and where to start."
+      ]
     },
     "fallback": "Thalbern presses on toward the Old Standing Stones."
   },
   "summons-refuse": {
     "adventure": "the-midnight-summons",
     "hero": "thalbern",
-    "rolls": [20, 18, 15, 12],
+    "rolls": [
+      20,
+      18,
+      15,
+      12
+    ],
     "lines": {
-      "broken-silence": ["Thalbern listens closely, trying to work out what is out there."],
-      "the-owlbear-prowls": ["Thalbern steps out slowly with open hands and speaks low and calm to the Owlbear, the way the elves taught him."],
-      "owlbear-confrontation": ["Thalbern lowers his bow and speaks low and calm to the Owlbear, the way the elves taught him, edging around it."],
-      "timely-rescue": ["Thalbern follows Wollandora."],
-      "meeting-at-the-stones": ["“Tell me about the relics first. What are they, and who would take them?”", "“No. I won't go to the city. Find someone else.”", "“My answer is no.”"]
+      "broken-silence": [
+        "Thalbern listens closely, trying to work out what is out there."
+      ],
+      "the-owlbear-prowls": [
+        "Thalbern steps out slowly with open hands and speaks low and calm to the Owlbear, the way the elves taught him."
+      ],
+      "owlbear-confrontation": [
+        "Thalbern lowers his bow and speaks low and calm to the Owlbear, the way the elves taught him, edging around it."
+      ],
+      "timely-rescue": [
+        "Thalbern follows Wollandora."
+      ],
+      "meeting-at-the-stones": [
+        "“Tell me about the relics first. What are they, and who would take them?”",
+        "“No. I won't go to the city. Find someone else.”",
+        "“My answer is no.”"
+      ]
     },
     "fallback": "Thalbern presses on toward the Old Standing Stones."
   },
   "summons-odd": {
     "adventure": "the-midnight-summons",
     "hero": "thalbern",
-    "rolls": [3, 1, 6, 2, 9],
+    "rolls": [
+      3,
+      1,
+      6,
+      2,
+      9
+    ],
     "lines": {
-      "broken-silence": ["Thalbern climbs the nearest tree to look around.", "Thalbern stays up in the tree, very still."],
-      "the-owlbear-prowls": ["Thalbern drops from the tree onto the Owlbear's back with his sword."],
-      "owlbear-confrontation": ["Thalbern runs for the river.", "Thalbern keeps running.", "Thalbern throws his dagger at the Owlbear."],
-      "timely-rescue": ["“Who are you?”", "Thalbern asks Wollandora to heal him."],
-      "meeting-at-the-stones": ["Thalbern asks Wollandora for a boat to Kordavos.", "“Fine. I'll go.”"]
+      "broken-silence": [
+        "Thalbern climbs the nearest tree to look around.",
+        "Thalbern stays up in the tree, very still."
+      ],
+      "the-owlbear-prowls": [
+        "Thalbern drops from the tree onto the Owlbear's back with his sword."
+      ],
+      "owlbear-confrontation": [
+        "Thalbern runs for the river.",
+        "Thalbern keeps running.",
+        "Thalbern throws his dagger at the Owlbear."
+      ],
+      "timely-rescue": [
+        "“Who are you?”",
+        "Thalbern asks Wollandora to heal him."
+      ],
+      "meeting-at-the-stones": [
+        "Thalbern asks Wollandora for a boat to Kordavos.",
+        "“Fine. I'll go.”"
+      ]
     },
     "fallback": "Thalbern looks around."
+  },
+  "cargo-nod": {
+    "adventure": "covert-cargo",
+    "hero": "1749159962941",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      16,
+      12,
+      18,
+      9,
+      14,
+      19,
+      11,
+      15,
+      7,
+      17,
+      13,
+      20
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra casts Detect Magic on the crate.",
+          "Lyra nods to Silas. “It's genuine. A powerful old enchantment.”"
+        ],
+        "1749307435667": [
+          "Poppen stays hidden and listens to what they say."
+        ],
+        "thalbern": [
+          "Thalbern watches the elves and the crate from the thicket."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra asks Silas when she will be paid."
+        ],
+        "1749307435667": [
+          "Poppen keeps still and watches."
+        ],
+        "thalbern": [
+          "Thalbern notches an arrow and waits."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra casts Ray of Frost at Reinhard.",
+          "Lyra tries to slip past Silas to the door.",
+          "Lyra casts Ray of Frost at Silas."
+        ],
+        "1749307435667": [
+          "Poppen creeps down to the gangway and onto the deck, quiet as he can.",
+          "Poppen throws a dagger in through the window at Silas."
+        ],
+        "thalbern": [
+          "Thalbern shoots Reinhard through the open window.",
+          "Thalbern shoots Reinhard again."
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "Lyra, shivering, looks at the stranger. “Who are you? Did you see where they went?”",
+          "“That boat is going to Kordavos. I'm going after it.”"
+        ],
+        "1749307435667": [
+          "Poppen steps out of the bushes. “That looked cold. Name's Poppen. You all right?”",
+          "“Kordavos it is. I'm coming.”"
+        ],
+        "thalbern": [
+          "Thalbern comes out of the thicket and checks the woman for wounds. “I'm Thalbern. That boat carries stolen relics.”",
+          "“We follow it to Kordavos.”"
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "Lyra asks the others who they are.",
+          "“We go to Kordavos and find the Blackthorns.”"
+        ],
+        "1749307435667": [
+          "Poppen pries at the crate with a crowbar."
+        ],
+        "thalbern": [
+          "Thalbern looks over the stone. “This is what I came for. We go to the city for help.”"
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra runs into the woods toward the city.",
+          "Lyra heads for Kordavos."
+        ],
+        "1749307435667": [
+          "Poppen follows the woman into the woods."
+        ],
+        "thalbern": [
+          "Thalbern follows the boat downriver toward Kordavos."
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches the two men closely.",
+      "1749307435667": "Poppen stays low in the bushes and watches.",
+      "thalbern": "Thalbern stays in the thicket, bow ready, and watches."
+    }
+  },
+  "cargo-fake": {
+    "adventure": "covert-cargo",
+    "hero": "1749159962941",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      8,
+      15,
+      12,
+      19,
+      6,
+      14,
+      17,
+      10,
+      13,
+      18
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra casts Detect Magic on the crate, then shakes her head. “There's no magic in this. It's a fake.”"
+        ],
+        "1749307435667": [
+          "Poppen stays hidden and listens."
+        ],
+        "thalbern": [
+          "Thalbern watches from the thicket."
+        ]
+      },
+      "the-fake": {
+        "1749159962941": [
+          "“I know what I felt. Nothing. Check it yourself.”",
+          "Lyra shrugs. “Pay him if you want. It's your masters' money.”"
+        ],
+        "1749307435667": [
+          "Poppen grins in the bushes and keeps watching."
+        ],
+        "thalbern": [
+          "Thalbern watches the elves closely."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra says nothing and watches Silas."
+        ],
+        "1749307435667": [
+          "Poppen keeps still."
+        ],
+        "thalbern": [
+          "Thalbern waits."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra casts Shocking Grasp on Reinhard.",
+          "Lyra tries to slip past Silas to the door.",
+          "Lyra casts Ray of Frost at Silas."
+        ],
+        "1749307435667": [
+          "Poppen creeps down to the gangway and onto the deck, quiet as he can.",
+          "Poppen throws a dagger in through the window at Silas."
+        ],
+        "thalbern": [
+          "Thalbern shoots Reinhard through the open window.",
+          "Thalbern shoots Reinhard again."
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "Lyra, shivering, looks at the stranger. “Who are you? Did you see where they went?”",
+          "“That boat is going to Kordavos. I'm going after it.”"
+        ],
+        "1749307435667": [
+          "Poppen steps out of the bushes. “That looked cold. Name's Poppen. You all right?”",
+          "“Kordavos it is. I'm coming.”"
+        ],
+        "thalbern": [
+          "Thalbern comes out of the thicket and checks the woman for wounds. “I'm Thalbern. That boat carries stolen relics.”",
+          "“We follow it to Kordavos.”"
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "Lyra asks the others who they are.",
+          "“We go to Kordavos and find the Blackthorns.”"
+        ],
+        "1749307435667": [
+          "Poppen pries at the crate with a crowbar."
+        ],
+        "thalbern": [
+          "Thalbern looks over the stone. “This is what I came for. We go to the city for help.”"
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra runs into the woods toward the city.",
+          "Lyra heads for Kordavos."
+        ],
+        "1749307435667": [
+          "Poppen follows the woman into the woods."
+        ],
+        "thalbern": [
+          "Thalbern follows the boat downriver toward Kordavos."
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches the two men closely.",
+      "1749307435667": "Poppen stays low in the bushes and watches.",
+      "thalbern": "Thalbern stays in the thicket, bow ready, and watches."
+    }
+  },
+  "cargo-disturb": {
+    "adventure": "covert-cargo",
+    "hero": "1749307435667",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      5,
+      14,
+      11,
+      17,
+      9,
+      16,
+      12,
+      19,
+      8,
+      15
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra begins casting Detect Magic on the crate.",
+          "Lyra nods to Silas. “It's real.”"
+        ],
+        "1749307435667": [
+          "Poppen tries to sneak closer to the gangway for a better look."
+        ],
+        "thalbern": [
+          "Thalbern searches the bank for any other watchers."
+        ]
+      },
+      "the-disturbance": {
+        "1749159962941": [
+          "Lyra looks out the window toward the noise."
+        ],
+        "1749307435667": [
+          "Poppen ducks back into the trees and hides.",
+          "Poppen stays hidden."
+        ],
+        "thalbern": [
+          "Thalbern stays perfectly still in the thicket."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra watches Silas pay."
+        ],
+        "1749307435667": [
+          "Poppen watches."
+        ],
+        "thalbern": [
+          "Thalbern waits."
+        ]
+      },
+      "the-fake": {
+        "1749159962941": [
+          "Lyra keeps quiet."
+        ],
+        "1749307435667": [
+          "Poppen watches."
+        ],
+        "thalbern": [
+          "Thalbern waits."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra casts Ray of Frost at Reinhard.",
+          "Lyra tries to slip past Silas to the door.",
+          "Lyra casts Ray of Frost at Silas."
+        ],
+        "1749307435667": [
+          "Poppen creeps down to the gangway and onto the deck, quiet as he can.",
+          "Poppen throws a dagger in through the window at Silas."
+        ],
+        "thalbern": [
+          "Thalbern shoots Reinhard through the open window.",
+          "Thalbern shoots Reinhard again."
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "Lyra, shivering, looks at the stranger. “Who are you? Did you see where they went?”",
+          "“That boat is going to Kordavos. I'm going after it.”"
+        ],
+        "1749307435667": [
+          "Poppen steps out of the bushes. “That looked cold. Name's Poppen. You all right?”",
+          "“Kordavos it is. I'm coming.”"
+        ],
+        "thalbern": [
+          "Thalbern comes out of the thicket and checks the woman for wounds. “I'm Thalbern. That boat carries stolen relics.”",
+          "“We follow it to Kordavos.”"
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "Lyra asks the others who they are.",
+          "“We go to Kordavos and find the Blackthorns.”"
+        ],
+        "1749307435667": [
+          "Poppen pries at the crate with a crowbar."
+        ],
+        "thalbern": [
+          "Thalbern looks over the stone. “This is what I came for. We go to the city for help.”"
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra runs into the woods toward the city.",
+          "Lyra heads for Kordavos."
+        ],
+        "1749307435667": [
+          "Poppen follows the woman into the woods."
+        ],
+        "thalbern": [
+          "Thalbern follows the boat downriver toward Kordavos."
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches the two men closely.",
+      "1749307435667": "Poppen stays low in the bushes and watches.",
+      "thalbern": "Thalbern stays in the thicket, bow ready, and watches."
+    }
+  },
+  "cargo-ai": {
+    "adventure": "covert-cargo",
+    "hero": "1749159962941",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "ai": [
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      14,
+      11,
+      17,
+      9,
+      16,
+      12,
+      19,
+      8
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra casts Detect Magic on the crate.",
+          "Lyra nods to Silas."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra asks Silas about her fee."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra shoves Silas aside and runs for the door.",
+          "Lyra casts Ray of Frost at whoever holds her."
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "“Who are you two? Did you see that?”",
+          "“They're going to Kordavos. So am I.”"
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "“We go to Kordavos.”"
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra heads for Kordavos."
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches."
+    }
+  },
+  "cargo-escape": {
+    "adventure": "covert-cargo",
+    "hero": "1749159962941",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      18,
+      15,
+      17,
+      14,
+      19,
+      12,
+      16,
+      11
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra casts Detect Magic on the crate.",
+          "Lyra nods to Silas. “It's genuine.”"
+        ],
+        "1749307435667": [
+          "Poppen stays hidden and watches."
+        ],
+        "thalbern": [
+          "Thalbern watches from the thicket."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra edges toward the river-side window."
+        ],
+        "1749307435667": [
+          "Poppen stays hidden."
+        ],
+        "thalbern": [
+          "Thalbern waits, bow ready."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra casts Fog Cloud to fill the cabin.",
+          "Lyra climbs out through the window on the bank side and runs for the trees.",
+          "Lyra keeps running into the woods."
+        ],
+        "1749307435667": [
+          "Poppen stays hidden and watches."
+        ],
+        "thalbern": [
+          "Thalbern shoots Reinhard through the open window."
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra catches her breath in the trees. “Kordavos. I need to get to the city.”"
+        ],
+        "1749307435667": [
+          "Poppen follows the woman into the woods and calls softly. “Hey. You all right? I saw that.”"
+        ],
+        "thalbern": [
+          "Thalbern follows her and keeps watch behind them."
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "Lyra, shivering, looks at the stranger. “Who are you? Did you see where they went?”",
+          "“That boat is going to Kordavos. I'm going after it.”"
+        ],
+        "1749307435667": [
+          "Poppen steps out of the bushes. “That looked cold. Name's Poppen. You all right?”",
+          "“Kordavos it is. I'm coming.”"
+        ],
+        "thalbern": [
+          "Thalbern comes out of the thicket and checks the woman for wounds. “I'm Thalbern. That boat carries stolen relics.”",
+          "“We follow it to Kordavos.”"
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "Lyra asks the others who they are.",
+          "“We go to Kordavos and find the Blackthorns.”"
+        ],
+        "1749307435667": [
+          "Poppen pries at the crate with a crowbar."
+        ],
+        "thalbern": [
+          "Thalbern looks over the stone. “This is what I came for. We go to the city for help.”"
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches the two men closely.",
+      "1749307435667": "Poppen stays low in the bushes and watches.",
+      "thalbern": "Thalbern stays in the thicket, bow ready, and watches."
+    }
+  },
+  "cargo-win": {
+    "adventure": "covert-cargo",
+    "hero": "thalbern",
+    "party": [
+      "1749159962941",
+      "1749307435667",
+      "thalbern"
+    ],
+    "rolls": [
+      19,
+      17,
+      20,
+      16,
+      18,
+      15,
+      19,
+      14,
+      17,
+      20
+    ],
+    "lines": {
+      "the-shipment": {
+        "1749159962941": [
+          "Lyra casts Detect Magic on the crate.",
+          "Lyra nods to Silas. “It's genuine.”"
+        ],
+        "1749307435667": [
+          "Poppen stays hidden and watches."
+        ],
+        "thalbern": [
+          "Thalbern creeps closer along the bank, toward the cabin windows."
+        ]
+      },
+      "the-transaction": {
+        "1749159962941": [
+          "Lyra asks Silas when she will be paid."
+        ],
+        "1749307435667": [
+          "Poppen creeps toward the gangway."
+        ],
+        "thalbern": [
+          "Thalbern nocks an arrow under the window."
+        ]
+      },
+      "battle-on-the-boat": {
+        "1749159962941": [
+          "Lyra casts Magic Missile at Silas.",
+          "Lyra casts Magic Missile at Reinhard.",
+          "Lyra casts Ray of Frost at whoever is still standing."
+        ],
+        "1749307435667": [
+          "Poppen sneaks onto the deck.",
+          "Poppen stabs Silas in the back with his shortsword.",
+          "Poppen keeps stabbing Silas."
+        ],
+        "thalbern": [
+          "Thalbern shoots Reinhard through the window.",
+          "Thalbern shoots Silas through the window.",
+          "Thalbern keeps shooting whichever man is still up."
+        ]
+      },
+      "the-crate": {
+        "1749159962941": [
+          "Lyra looks at the two strangers. “Who are you two?”",
+          "“We go to Kordavos and tell someone what the Blackthorns are buying.”"
+        ],
+        "1749307435667": [
+          "Poppen pries at the crate. “Name's Poppen. What's in it?”",
+          "“Kordavos, then.”"
+        ],
+        "thalbern": [
+          "“I'm Thalbern. That stone was stolen from the elves. We need help to move it. Kordavos.”"
+        ]
+      },
+      "overboard": {
+        "1749159962941": [
+          "Lyra, shivering, looks at the stranger. “Who are you? Did you see where they went?”",
+          "“That boat is going to Kordavos. I'm going after it.”"
+        ],
+        "1749307435667": [
+          "Poppen steps out of the bushes. “That looked cold. Name's Poppen. You all right?”",
+          "“Kordavos it is. I'm coming.”"
+        ],
+        "thalbern": [
+          "Thalbern comes out of the thicket and checks the woman for wounds. “I'm Thalbern. That boat carries stolen relics.”",
+          "“We follow it to Kordavos.”"
+        ]
+      },
+      "the-escape": {
+        "1749159962941": [
+          "Lyra runs into the woods toward the city.",
+          "Lyra heads for Kordavos."
+        ],
+        "1749307435667": [
+          "Poppen follows the woman into the woods."
+        ],
+        "thalbern": [
+          "Thalbern follows the boat downriver toward Kordavos."
+        ]
+      }
+    },
+    "fallback": {
+      "1749159962941": "Lyra watches the two men closely.",
+      "1749307435667": "Poppen stays low in the bushes and watches.",
+      "thalbern": "Thalbern stays in the thicket, bow ready, and watches."
+    }
   }
 }

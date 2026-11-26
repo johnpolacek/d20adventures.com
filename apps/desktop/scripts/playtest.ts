@@ -26,12 +26,17 @@ import { loadPack } from "./scene-judge"
 
 type Plan = {
   adventure: string
+  // The hero whose health the summary follows.
   hero: string
-  // The hero's d20s in turn, round and round. A roll with Advantage or Disadvantage takes the next two.
+  // The whole party, when more than the one hero. Those in `ai` are played by the game's own AI heroes, on continue.
+  party?: string[]
+  ai?: string[]
+  // The scripted heroes' d20s in turn, round and round. A roll with Advantage or Disadvantage takes the next two.
   rolls: number[]
-  // What the hero says, by encounter, in order. The last is said again if the GM asks more.
-  lines: Record<string, string[]>
-  fallback: string
+  // What a scripted hero says, by encounter, in order. The last is said again if the GM asks more. A list is the one
+  // hero's. With a party, each hero's list goes under their id.
+  lines: Record<string, string[] | Record<string, string[]>>
+  fallback: string | Record<string, string>
   // Steps before the run gives up.
   max?: number
 }
@@ -51,7 +56,11 @@ type Summary = {
   calls: Record<string, { n: number; avgMs: number; maxMs: number }>
   deadContinues: number
   hero: { turn: number; encounter: string; health?: number; levelDue?: number }[]
+  // Each hero's health at the end, with the party.
+  party?: Record<string, number | undefined>
   repeats: { speaker: string; text: string; turns: number[] }[]
+  // What the game ruled out of a hero's move, told in the story: a spell they do not know, an attack out of reach.
+  rulings: { turn: number; who: string; name: string; text: string }[]
   errors: string[]
   minutes: number
 }
@@ -78,8 +87,9 @@ function repeatsOf(turns: TurnRecord[]) {
     for (let j = i + 1; j < said.length; j++) {
       const a = said[i]
       const b = said[j]
-      if (a.speaker !== b.speaker || a.w.size < 5) continue
-      if (a.text === b.text || overlap(a.w, b.w) >= 0.8) out.push({ speaker: a.speaker, text: a.text.slice(0, 120), turns: [a.turn, b.turn] })
+      if (a.speaker !== b.speaker) continue
+      // A short line said again word for word is a repeat too: Silas's "Someone's out there. Get her over the side, now!"
+      if ((a.text === b.text && a.text.length >= 20) || (a.w.size >= 5 && overlap(a.w, b.w) >= 0.8)) out.push({ speaker: a.speaker, text: a.text.slice(0, 120), turns: [a.turn, b.turn] })
     }
   return out
 }
@@ -135,8 +145,12 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
   }
   let ended = "step limit"
   try {
-    await step({ kind: "start", provider: "claude", adventure: plan.adventure, party: [{ id: plan.hero, ai: false }] })
-    for (let n = 0; n < (plan.max ?? 45); n++) {
+    const party = plan.party ?? [plan.hero]
+    const ai = new Set(plan.ai ?? [])
+    const scripted = (id?: string) => !!id && party.includes(id) && !ai.has(id)
+    await step({ kind: "start", provider: "claude", adventure: plan.adventure, party: party.map((id) => ({ id, ai: ai.has(id) })) })
+    // Each hero takes a step of their own each round, so a party has more steps to the end.
+    for (let n = 0; n < (plan.max ?? 45 * party.length); n++) {
       print()
       const state = store.state!
       if (state.adventure.status === "completed") {
@@ -146,20 +160,24 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
       const turn = store.current()
       const me = turn.characters.find((c) => c.id === plan.hero) as (TurnRecord["characters"][number] & { healthPercent?: number; levelDue?: number }) | undefined
       if (hero.at(-1)?.turn !== turn.order) hero.push({ turn: turn.order ?? 0, encounter: turn.encounterId, health: me?.healthPercent, levelDue: me?.levelDue })
-      log(`   (hero ${me?.healthPercent ?? "?"}% health${me?.levelDue ? `, level ${me.levelDue} owed` : ""})`)
+      if (plan.party) log(`   (${party.map((id) => `${id} ${(turn.characters.find((c) => c.id === id) as { healthPercent?: number } | undefined)?.healthPercent ?? "?"}%`).join(", ")})`)
+      else log(`   (hero ${me?.healthPercent ?? "?"}% health${me?.levelDue ? `, level ${me.levelDue} owed` : ""})`)
       const actor = findCurrentActor(turn.characters)
       let command: GameCommand
-      if (actor?.id === plan.hero && actor.rollRequired && actor.rollResult === undefined) {
+      if (actor && scripted(actor.id) && actor.rollRequired && actor.rollResult === undefined) {
         const rr = actor.rollRequired
-        log(`   roll asked: ${rr.rollType} DC ${rr.difficulty} ${rr.modifier >= 0 ? "+" : ""}${rr.modifier}${rr.mode && rr.mode !== "normal" ? ` ${rr.mode}${rr.reasons?.length ? ` (${rr.reasons.join(", ")})` : ""}` : ""}`)
+        log(`   roll asked of ${actor.id}: ${rr.rollType} DC ${rr.difficulty} ${rr.modifier >= 0 ? "+" : ""}${rr.modifier}${rr.mode && rr.mode !== "normal" ? ` ${rr.mode}${rr.reasons?.length ? ` (${rr.reasons.join(", ")})` : ""}` : ""}`)
         const next = () => plan.rolls[rolled++ % plan.rolls.length]
         const two = rr.mode === "advantage" || rr.mode === "disadvantage"
-        command = { kind: "roll", turnId: turn._id, characterId: plan.hero, result: next(), ...(two ? { second: next() } : {}) }
-      } else if (actor?.id === plan.hero && !actor.hasReplied) {
-        const lines = plan.lines[turn.encounterId] ?? [plan.fallback]
-        const i = said[turn.encounterId] ?? 0
-        said[turn.encounterId] = i + 1
-        command = { kind: "reply", turnId: turn._id, characterId: plan.hero, text: lines[Math.min(i, lines.length - 1)] }
+        command = { kind: "roll", turnId: turn._id, characterId: actor.id, result: next(), ...(two ? { second: next() } : {}) }
+      } else if (actor && scripted(actor.id) && !actor.hasReplied) {
+        const own = plan.lines[turn.encounterId]
+        const fallback = typeof plan.fallback === "string" ? plan.fallback : (plan.fallback[actor.id] ?? "")
+        const lines = (Array.isArray(own) ? (actor.id === plan.hero ? own : undefined) : own?.[actor.id]) ?? [fallback]
+        const k = `${turn.encounterId}:${actor.id}`
+        const i = said[k] ?? 0
+        said[k] = i + 1
+        command = { kind: "reply", turnId: turn._id, characterId: actor.id, text: lines[Math.min(i, lines.length - 1)] }
       } else if (turn.reaction && turn.reaction.answer === undefined) command = { kind: "react", turnId: turn._id, characterId: turn.reaction.offer.to, take: false }
       else command = { kind: "continue", turnId: turn._id }
       await step(command)
@@ -181,6 +199,7 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
   }
   const last = turns.at(-1)?.characters.find((c) => c.id === plan.hero) as { healthPercent?: number; levelDue?: number } | undefined
   if (last) hero.push({ turn: turns.at(-1)?.order ?? 0, encounter: `${turns.at(-1)?.encounterId} (end)`, health: last.healthPercent, levelDue: last.levelDue })
+  const partyEnd = plan.party ? Object.fromEntries(plan.party.map((id) => [id, (turns.at(-1)?.characters.find((c) => c.id === id) as { healthPercent?: number } | undefined)?.healthPercent])) : undefined
   const byKind: Summary["calls"] = {}
   for (const c of calls) {
     if (c.kind === "start") continue
@@ -196,7 +215,13 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
     calls: byKind,
     deadContinues: calls.filter((c) => c.kind === "continue" && !c.error && c.beats === 0).length,
     hero,
+    party: partyEnd,
     repeats: repeatsOf(turns),
+    rulings: turns.flatMap((t) =>
+      (t.story as { kind: string; name?: string; text?: string; character?: string; by?: { step?: string } }[])
+        .filter((b) => b.kind === "feature" && b.by?.step === "reply" && b.name && !/ casts | uses /.test(b.text ?? ""))
+        .map((b) => ({ turn: t.order ?? 0, who: b.character ?? "", name: b.name ?? "", text: (b.text ?? "").slice(0, 140) }))
+    ),
     errors,
     minutes: Math.round((Date.now() - started) / 6000) / 10,
   }
@@ -220,7 +245,9 @@ function print(s: Summary) {
   console.log(`calls: ${Object.entries(s.calls).map(([k, v]) => `${k} ${v.n}× avg ${(v.avgMs / 1000).toFixed(1)}s max ${(v.maxMs / 1000).toFixed(1)}s`).join(", ")}; ${s.deadContinues} continues added nothing`)
   const end = s.hero.at(-1)
   console.log(`hero at the end: ${end?.health ?? "?"}% health${end?.levelDue ? `, level ${end.levelDue} owed` : ""}`)
+  if (s.party) console.log(`party at the end: ${Object.entries(s.party).map(([id, h]) => `${id} ${h ?? "?"}%`).join(", ")}`)
   for (const r of s.repeats) console.log(`REPEAT ${r.speaker} in turns ${r.turns.join(" and ")}: "${r.text}"`)
+  for (const r of s.rulings ?? []) console.log(`RULING turn ${r.turn} ${r.who} ${r.name}: ${r.text}`)
   for (const e of s.errors) console.log(`ERROR ${e}`)
 }
 
