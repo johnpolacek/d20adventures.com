@@ -1343,6 +1343,8 @@ export function StagePlay(props: {
     // The same paragraphs again: nothing new to read.
     if (sameTurn && firstChanged < 0 && text.length === old.paragraphs.length) return
     previousText.current = { turn: turn?._id, paragraphs: text }
+    // `taken` reads the ref, so a turn with nothing to read still draws its card.
+    redraw((n) => n + 1)
     // The answer to a roll on the card waits for Continue, and starts after the roll the card has shown.
     const hold = heldRef.current
     if (hold) {
@@ -1550,6 +1552,8 @@ export function StagePlay(props: {
   const next = latest ? findCurrentActor(latest.characters) : undefined
   const nextAi = next?.type === "pc" && next.controlledBy === "ai"
   const unseen = reading || previousText.current.paragraphs !== text
+  // Narration just in has not yet set `reading`, so for a frame the card would show over the story it comes after.
+  const taken = previousText.current.turn === turn?._id && previousText.current.paragraphs.length === text.length && text.every((p, i) => p === previousText.current.paragraphs[i])
   const ahead = Boolean(autoContinue && !props.writing && (!mode || (held && !props.busy)) && (next || latest === turn))
   const continueKey =
     !past && !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && latest && !(next?.type === "pc" && !nextAi)
@@ -1767,7 +1771,7 @@ export function StagePlay(props: {
               </Pill>
             </Presence>
           </div>
-          <Presence show={on && !opening && Boolean(mode && (!reading || busy || held))} motion="rise" asChild>
+          <Presence show={on && !opening && Boolean(mode && ((!reading && taken) || busy || held))} motion="rise" asChild>
             {mode && (
               <PromptCard
                 key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}
