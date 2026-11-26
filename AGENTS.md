@@ -31,6 +31,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Character and adventure types: `packages/gm-core/src/types`. `types/*.ts` at the root only re-export them.
 - Desktop screens: `apps/desktop/src/pages.tsx` for saved and hosted games, `play.tsx` and `stage-play.tsx` for play. The game itself runs in `apps/desktop/runtime/game.ts`.
 - How the GM rules on a check, probed against the model: `apps/desktop/scripts/check-probe.ts` with cases in `check-probes.json`. Scenes: `scene-probe.ts` beside it.
+- The asset library is `asset-library/` at the repo root, not under `public/`.
 
 ## Where New Code Goes
 
@@ -50,10 +51,11 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Auto mode blocks `pnpm convex:deploy`, `pnpm deploy:site`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production. It also blocks `pnpm desktop:release`, paid or destructive asset runs (`assets:pilot --pay`, `assets:archive`), `aws s3`, force pushes, and `git checkout` or `git restore` on files you did not change. Ask John instead of trying another way.
 - `proxy.ts` is the Clerk middleware.
 - There is no `wiki/`, `tailwind.config.ts`, ESLint, Prettier or Biome. Never run them through `npx`. Match the formatting of the file you edit.
-- Scratchpad scripts cannot resolve `@d20/*` imports, or any other package such as `playwright` or `three`. Import a `@d20` package's source file by absolute path. For others, put the script in the repo root and delete it after.
+- Scratchpad scripts cannot resolve `@d20/*` imports, or any other package such as `playwright` or `three`. Import a `@d20` package's source file by absolute path. For others, put the script in the repo root and delete it after. Import Playwright from `@playwright/test`, since plain `playwright` is not installed.
 - When root `tsc` reports errors in `.next/types`, they name pages that no longer exist. Delete `.next/types` and run it again.
 - Pull with `git pull --rebase --autostash`. Plain `--rebase` fails on unstaged changes.
 - Other sessions edit `main` at the same time. Re-read a file after a pull, before editing it.
+- A check that fails in a file you did not change may be another session's edit in progress. Look at `git status` and leave it alone.
 - Run `pnpm stage:sync` before pushing new or changed files in `public/stage`, `public/stage-lab` or `public/images/app/backgrounds`. Vercel deploys leave them out and the site serves them from the public bucket.
 - Site code imports `served` from `lib/served.ts`, which names the asset host on the server and in the browser alike. Background textures in CSS read the `--tex-*` variables that `app/layout.tsx` sets on `<html>`.
 - Run `pnpm images:sync` after adding or repainting a picture the content names, then commit `lib/images-manifest.json`. `lib/images.ts` picks a size: `picture()` for an `<img>` with a size list, `pictureAt()` for a single address. The site does not use `next/image`.
