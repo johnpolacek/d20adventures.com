@@ -274,6 +274,7 @@ export interface GrassOptions {
 
 // Grass blades and heather: each blade shades from a dark root to its tip colour along uv.y (0 at the root, 1 at the
 // tip), and its tip sways in the wind. Blade normals point up, so a meadow lights like the ground it grows from.
+// Past about 5 m blades flatten toward one shade and sway less, so thin far blades don't flicker.
 // uv.x carries a per-tuft random value for colour variety. Casts no shadow: thousands of blades would only add noise.
 export function grass(ctx: MaterialContext, name: string, o: GrassOptions = {}) {
   const u = { gBase: { value: new THREE.Color(o.base || "#1b2d18") }, gTip: { value: new THREE.Color(o.tip || "#5c8040") } }
@@ -284,19 +285,30 @@ export function grass(ctx: MaterialContext, name: string, o: GrassOptions = {}) 
     Object.assign(s.uniforms, u)
     s.uniforms.uTime = ctx.shared.time
     s.uniforms.uWind = ctx.shared.wind
-    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nuniform float uTime, uWind; varying vec2 vGUv;").replace(
+    s.vertexShader = s.vertexShader.replace("#include <common>", "#include <common>\nuniform float uTime, uWind; varying vec2 vGUv; varying float vGDist;").replace(
       "#include <begin_vertex>",
       `#include <begin_vertex>
 vGUv = uv;
-float gSw = uv.y * uv.y;
+{ vec4 gp = vec4(position, 1.0);
+#ifdef USE_BATCHING
+ gp = batchingMatrix * gp;
+#endif
+#ifdef USE_INSTANCING
+ gp = instanceMatrix * gp;
+#endif
+ vGDist = -(modelViewMatrix * gp).z; }
+// Far off, a blade's tip is thinner than a pixel, and its sway makes it flicker in and out. So it sways less there.
+float gSw = uv.y * uv.y * mix(1.0, .25, smoothstep(6.0, 20.0, vGDist));
 float gPh = position.x * .35 + position.z * .27;
 transformed.x += (sin(uTime * 1.3 + gPh) * .6 + sin(uTime * 2.9 + gPh * 2.3) * .25) * gSw * uWind * .08;
 transformed.z += sin(uTime * 1.1 + gPh * 1.7) * gSw * uWind * .05;`
     )
-    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 gBase, gTip; varying vec2 vGUv;").replace(
+    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 gBase, gTip; varying vec2 vGUv; varying float vGDist;").replace(
       "#include <color_fragment>",
       `#include <color_fragment>
 vec3 gC = mix(gBase, gTip * (.78 + .44 * vGUv.x), smoothstep(0.0, .55, vGUv.y));
+// With distance the pale tips settle toward one even shade, so subpixel blades stop sparkling against the ground.
+gC = mix(gC, mix(gBase, gTip, .3), smoothstep(5.0, 18.0, vGDist) * .8);
 diffuseColor.rgb *= gC;`
     )
   })
