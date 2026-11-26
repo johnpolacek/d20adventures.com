@@ -1,5 +1,6 @@
 import { conditionIdSchema, conditionIds, damageTypeIdSchema, skillIdSchema } from "@d20/srd"
 import { abilityById } from "@d20/srd/abilities"
+import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
@@ -173,6 +174,29 @@ const MENU = (kind: "skill" | "ability" | "save") =>
     .map((entry) => `   - ${entry.id}: ${entry.name}. ${entry.uses}.`.replace(/\.\.$/, "."))
     .join("\n")
 
+// A spell the player says their hero casts that the hero does not know. The read takes it for no spell, and the story
+// used to tell it cast all the same with nothing coming of it: Lyra "casts Shocking Grasp on him", a cantrip she lacks,
+// and Reinhard took no harm. It is told now that she does not know it, and no spell is cast.
+const spellsByName = [...spellById.values()].sort((a, b) => b.name.length - a.name.length)
+const escaped = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+export function unknownSpellNamed(action: string, known: readonly string[]): { name: string } | undefined {
+  const said = action.replace(/[’']/g, "'")
+  for (const spell of spellsByName) {
+    if (known.includes(spell.id)) continue
+    if (new RegExp(`\\bcast(?:s|ing)?\\s+(?:a |an |the |her |his |their |my )?${escaped(spell.name.replace(/’/g, "'"))}\\b`, "i").test(said)) return { name: spell.name }
+  }
+  return undefined
+}
+function withUnknownSpell(action: string, character: Character, read: TurnReading): TurnReading {
+  if (read.ruling || read.cast || (read.roll && "cast" in read.roll) || !("sheet" in character) || !character.sheet) return read
+  const unknown = unknownSpellNamed(action, spellsOf(character as Parameters<typeof spellsOf>[0]).map((k) => k.spell.id))
+  if (!unknown) return read
+  return { ...read, ruling: { name: "Not Their Spell", text: `${character.name} does not know ${unknown.name}. The spell is not cast.` } }
+}
+
+// How far a hero may walk at once beside their Speed when no fight is on: any set's whole floor.
+const OUT_OF_FIGHT_FEET = 500
+
 export function createRollRequirementService(ports: GmPorts) {
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   type Options = {
@@ -197,7 +221,7 @@ export function createRollRequirementService(ports: GmPorts) {
     const ruled = "id" in character ? ruledReading(character, (options?.present ?? []) as Parameters<typeof ruledReading>[1], options?.floor) : undefined
     if (ruled) return ruled
     const self = "id" in character ? character.id : undefined
-    const read = await readPicked(action, character, options)
+    const read = withUnknownSpell(action, character, await readPicked(action, character, options))
     // One who is hidden and loud is heard before they act. An attack or a spell of the same turn is read again as made
     // in plain sight, so it takes no Advantage from a hiding that is over.
     const struck = !!read.cast || (!!read.roll && ("attack" in read.roll || "cast" in read.roll))
@@ -733,7 +757,10 @@ Action: "${action}"
       const usedRule = bonusRuleFor(character, used?.id)
       const dash = pick.check === "dash" || !!usedRule?.dash
       // A Bonus Action that moves the hero beside their Speed (Instinctive Pounce with a Rage entered).
-      const extra = usedRule?.moveBonus?.(character)
+      // Out of a fight there are no turns to walk in, as SRD 5.2.1 and BG3 have it: the hero goes where they say in the
+      // scene. Thalbern, 39 feet down the bank from a bleeding Lyra after the fight, walked his 30 and was out of reach
+      // of the Cure Wounds he came to cast. One who cannot move still cannot.
+      const extra = pick.fight === false && pick.check !== "attack" ? OUT_OF_FIGHT_FEET : usedRule?.moveBonus?.(character)
       // A spell of the turn that teleports its caster (../sheet/spell-rules `teleports`): the move is where it takes them,
       // with no walk, as far as the spell goes, and it is their move this turn.
       const castName = pick.check === "cast" ? pick.spell?.trim().toLowerCase() : undefined

@@ -566,7 +566,8 @@ async function npcFixedOutcome() {
   answer = { check: "cast", spell: "ray-of-frost" }
   assert.deepEqual((await readAction("Lyra casts Ray of Frost.", spent, { present: [owlbear, spent] })).roll?.rollType, "Ray of Frost")
   answer = { check: "cast", spell: "fireball", targets: ["owlbear"] }
-  assert.deepEqual(await readAction("Lyra casts Fireball.", lyra, scene), { roll: null })
+  // The story is told that she does not know it, so it does not tell a spell cast with nothing coming of it.
+  assert.deepEqual(await readAction("Lyra casts Fireball.", lyra, scene), { roll: null, ruling: { name: "Not Their Spell", text: "Lyra Silvanus does not know Fireball. The spell is not cast." } })
   // Identify is in her book and not prepared: only as a Ritual, which spends nothing. A utility spell names no one.
   answer = { check: "cast", spell: "identify" }
   assert.deepEqual(await readAction("Lyra identifies the ring.", lyra, scene), { roll: null })

@@ -1,5 +1,7 @@
 import type { GmPorts } from "../ports"
-import { spellWords } from "../sheet/spells"
+import { spotWords } from "../sheet/placement"
+import { spellsOf, spellWords } from "../sheet/spells"
+import { unknownSpellNamed } from "./roll-requirement-service"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
 import { storyRules } from "../story/prompt"
@@ -24,11 +26,18 @@ export function createNarrativeGenerationService(ports: GmPorts) {
     ]
       .filter(Boolean)
       .join("\n")
+    // Where the hero stands, so a bare "waits" is not told in the wrong place: Thalbern, hidden in a thicket on the bank,
+    // "waits where he stands in the cabin".
+    const floor = await Promise.resolve(ports.content.floor?.(args.turn.encounterId)).catch(() => undefined)
+    const where = floor ? spotWords(character, floor) : undefined
+    // A spell the player names that the hero does not know is not cast, and the game tells so after: the reply tells
+    // the attempt, never the spell cast.
+    const unknown = unknownSpellNamed(playerInput, spellsOf(character).map((k) => k.spell.id))
     const context = characterScript(args.turn, character.id).split(/\n\n+/).slice(-3).join("\n\n")
     const prompt = `A player has written what their hero does. Write it into the story as beats.
 
 Hero:
-${info}
+${info}${where ? `\nWhere they are: ${where}. They are there unless the player's words move them.` : ""}
 
 Recent story:
 ${context}
@@ -43,7 +52,7 @@ Rules:
 - A bare action of a word or two ("attack", "hide", "look around") becomes one sentence of 8 to 16 words that shows how the hero sets about it, in the voice of the recent story. It may name a weapon the hero carries, a target the story has set before them, or one thing the recent story or the places below already hold, and nothing else. It names the hero, shows the attempt and stops before whether it works. "hide" in a wine cellar might become "${character.name} ducks behind the stacked casks and goes still."
 - Keep the player's intent exactly, even when it deceives, threatens, steals or is cruel.
 - Name the target with "to", and the effect of an attack or spell the hero makes, when the player's action shows one.
-- Never mention game mechanics, dice or rules.
+- Never mention game mechanics, dice or rules.${unknown ? `\n- ${character.name} does not know ${unknown.name}. Tell them reaching for magic, and never that ${unknown.name} is cast or what it does.` : ""}
 
 ${storyRules(scene)}
 

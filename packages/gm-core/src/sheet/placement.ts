@@ -133,6 +133,15 @@ export function placeCharacters<T extends Placeable>(characters: readonly T[], f
   })
 }
 
+/** Where one character stands, in words: at a named spot, or so many feet from the nearest. None with no position. */
+export function spotWords(character: Standing, floor: EncounterFloor): string | undefined {
+  const at = placedOf(character)
+  const nearest = at && [...floor.places].sort((a, b) => between(a.at, at.at) - between(b.at, at.at))[0]
+  if (!at || !nearest) return undefined
+  const feet = between(nearest.at, at.at)
+  return feet <= BASE_REACH ? `at ${nearest.label}` : `${Math.round(feet)} feet from ${nearest.label}`
+}
+
 /**
  * Where everyone stands, in words for the game master: the place, its named spots, and each character with the spot
  * they are at or nearest and how far each of the others is from them, in feet. The dead, the fled, those away for now
