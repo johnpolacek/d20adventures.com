@@ -11,7 +11,7 @@ import { adventurePatchSchema } from "@d20/gm-core/wiki-adventures/adventure-pat
 import { z } from "zod"
 import { strictModelSchema } from "./strict-state.mjs"
 import { characterInfo } from "../src/character-info"
-import { applyCharacterUpdates, desktopPatchSchema, nextCharacterState } from "./characters"
+import { applyCharacterUpdates, characterState, desktopPatchSchema, nextCharacterState } from "./characters"
 import { game, type Packs } from "./game"
 import { schemaLlm } from "./llm"
 import { LocalStore } from "./store"
@@ -185,6 +185,14 @@ test("real turns transfer items, apply conditions/spell use, preserve history an
     const hidden = (next: typeof hid) => nextCharacterState({ current: [hid], next: [next], remembered: {}, updates: [], encounterChanged: true }).characters[0].conditions
     assert.deepEqual(hidden(hid), [{ id: "invisible" }])
     assert.equal(hidden(shown as typeof hid), undefined)
+    // What the core changed on the way in is kept: a Long Rest as the encounter opens brings the hero back to full, where
+    // the remembered 6 of the last turn used to win and the rest was told but lost.
+    const hurt = byId(t.store, t.pc.id)
+    const rested = longRest(hurt).character
+    assert.ok(rested.hitPoints! > hurt.hitPoints!)
+    const after = nextCharacterState({ current: [hurt], next: [rested], remembered: { [hurt.id]: characterState(hurt) }, updates: [], encounterChanged: true }).characters[0]
+    assert.equal(after.hitPoints, rested.hitPoints)
+    assert.equal(after.healthPercent, 100)
   } finally {
     t.close()
   }

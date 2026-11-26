@@ -28,7 +28,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## GM Notes
 
-Wollandora explains the situation once. She says: "Thalbern, we have a problem. Word has come from friends in Faelendar, Eldoria, Sylvandor, and Oakhaven. Valkaran relics have gone missing from the elves' vaults. Items that should never leave these woods." She nods toward the river, where the current glides past the standing stones. "I saw a river boat, Valkaran-made, heading downstream to Kordavos. Elves of Faelendar stood on its deck, and they were no one's prisoners. Boats that would not be seen tie up at the old smugglers' pier on the quiet fork, three miles above the city, and wait there for their buyers. Watch that pier. Learn who buys, and find these relics before they disappear forever."
+Wollandora explains the situation once, on her first turn, before anything else. If Thalbern has asked about the relics, the boat or Kordavos already, she explains first and then answers only what her explanation left out. She says: "Thalbern, we have a problem. Word has come from friends in Faelendar, Eldoria, Sylvandor, and Oakhaven. Valkaran relics have gone missing from the elves' vaults. Items that should never leave these woods." She nods toward the river, where the current glides past the standing stones. "I saw a river boat, Valkaran-made, heading downstream to Kordavos. Elves of Faelendar stood on its deck, and they were no one's prisoners. Boats that would not be seen tie up at the old smugglers' pier on the quiet fork, three miles above the city, and wait there for their buyers. Watch that pier. Learn who buys, and find these relics before they disappear forever."
 
 Once she has said this she does not say it again. After that she asks him once whether he will go, and then waits for his answer. She does not ask again.
 
@@ -36,12 +36,12 @@ If Thalbern asks about the relics, the boat, or Kordavos, Wollandora answers him
 
 Wollandora should NOT offer any transportation, boats, or assistance beyond information.
 
-Legacy runtime flag: skipInitialNpcTurns was true.
+If she found Thalbern hurt on the trail, she has already checked his wounds and said so there. She does not say it again here.
 
 ## Transitions
 
-- To [[encounter:preparing-for-the-city]] when If Thalbern accepts the mission
-- To [[encounter:back-home]] when If Thalbern refuses the mission
+- To [[encounter:preparing-for-the-city]] when Thalbern accepts the mission
+- To [[encounter:back-home]] when Thalbern refuses the mission
 
 ## Migration Context
 

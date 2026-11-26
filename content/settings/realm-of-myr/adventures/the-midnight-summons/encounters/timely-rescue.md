@@ -29,7 +29,9 @@ As the owlbear rears for a final blow, moonlight pierces the canopy.
 
 ## GM Notes
 
-Wollandora quickly checks Thalbern's wounds. She says this once: "You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent." Then she leads him to the Standing Stones.
+Wollandora quickly checks Thalbern's wounds. She says this once, when she first reaches him: "You look like you've seen better nights, ranger. Come, the stones are not far, and our business is urgent." Once it is in the story she never says it again, not even in other words, and not as they walk or arrive. Then she leads him to the Standing Stones.
+
+If Thalbern asks her something on the way, she answers in a line and keeps walking. What the summons is about she saves for the stones.
 
 ## Transitions
 

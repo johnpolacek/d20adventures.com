@@ -116,6 +116,26 @@ export function applyCharacterUpdates(characters: TurnCharacter[], input: unknow
 
 const deathState = (c: TurnCharacter) => ({ hitPoints: c.hitPoints, healthPercent: c.healthPercent, conditions: c.conditions, dead: c.dead, deathSaves: c.deathSaves })
 
+// A character's saved state for the turn ahead, field by field, from three: as the turn stood (`before`), as the core
+// built the next turn (`next`), and as the store remembers it with the round's patch applied (`kept`). A field the core
+// changed is the core's, among those only the core keeps: a rest's hit points, slots and uses back, a burn at the round's
+// end. Gear, effects and spells are always the remembered ones, since the core brings a hero into a new encounter with
+// their premade's gear. Thalbern at 1 of 11 who rests on the way home used to wake at 1, the rest told and then lost.
+const coreKeeps = new Set<keyof CharacterState>(["hitPoints", "healthPercent", "tempHitPoints", "hitDiceUsed", "featureUses", "spellSlots", "spellEffects", "turnEffects", "concentration", "inspiration", "heroicInspiration", "conditions"])
+function merged(before: TurnCharacter | undefined, next: TurnCharacter, kept: CharacterState | undefined): CharacterState {
+  if (!kept) return characterState(next)
+  if (!before) return kept
+  const was = characterState(before)
+  const now = characterState(next)
+  const out = { ...kept } as Record<string, unknown>
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  for (const field of coreKeeps) {
+    const patched = !same(kept[field], was[field])
+    if (!patched && !same(now[field], was[field])) out[field] = now[field]
+  }
+  return out as CharacterState
+}
+
 export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnCharacter[]; remembered: CharacterStates; updates: unknown; encounterChanged: boolean }): {
   characters: TurnCharacter[]
   characterStates: CharacterStates
@@ -140,7 +160,7 @@ export function nextCharacterState(args: { current: TurnCharacter[]; next: TurnC
     // The rescue brings a hero at 0 back as the round turns, unless the round's patch already did.
     const before = args.current.find((c) => c.id === next.id)
     const revived = before && isDown(before) && !isDown(next) && isDown(states[next.id] ?? before) ? deathState(next) : {}
-    const kept = { ...structuredClone(next), ...(states[next.id] ?? characterState(next)), ...revived, rollRequired: undefined, rollResult: undefined }
+    const kept = { ...structuredClone(next), ...merged(before, next, states[next.id]), ...revived, rollRequired: undefined, rollResult: undefined }
     // A new encounter ends the conditions of a fight's moment, what its actions left and a held Bardic Inspiration die.
     // The lasting conditions come along. Spell slots, feature uses and Hit Point Dice stay spent, and Temporary Hit
     // Points stay, until a rest (@d20/gm-core/sheet/rest). One hidden stays hidden where the core kept them so, on the

@@ -37,7 +37,7 @@ If combat ensues and Thalbern falls to 0 hit points, Wollandora appears and driv
 ## Transitions
 
 - To [[encounter:the-owlbear-prowls]] when Thalbern successfully rolls to hide, evade or withdraw before the creature arrives.
-- To [[encounter:owlbear-confrontation]] when If Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation. Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.
+- To [[encounter:owlbear-confrontation]] when Thalbern fails any dice roll (including stealth, perception, or any other check) or does nothing requiring a roll, advance to owlbear-confrontation. Also, if Thalbern detects the approaching creature but does not successfully hide, evade, or withdraw, advance to owlbear-confrontation so the Owlbear enters the encounter.
 - To [[encounter:timely-rescue]] when Thalbern falls to 0 hit points, Wollandora appears and drives off the Owlbear: go to timely-rescue.
 
 ## Migration Context

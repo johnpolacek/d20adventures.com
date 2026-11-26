@@ -9,6 +9,7 @@ settingId: "realm-of-myr"
 location: "thalberns-forest-home"
 adventureId: "the-midnight-summons"
 landmark: "valkarr-woods/thalberns-home"
+rest: long
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/the-midnight-summons/back-home.png"
 ---
 
@@ -24,7 +25,7 @@ The story continues in Covert Cargo.
 
 ## GM Notes
 
-Legacy runtime flag: resetHealth was true.
+Thalbern is fully healed from any wounds or fatigue from the previous night.
 
 ## Migration Context
 
