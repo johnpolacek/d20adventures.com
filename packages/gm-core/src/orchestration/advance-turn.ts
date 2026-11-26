@@ -53,6 +53,13 @@ const wikiEncounterProgressionSchema = z.object({
   adventurePatch: z.unknown().optional(),
 })
 
+// The round end that tells nothing: the way on, what was learned, and a line for the record (../wiki-adventures/runtime-context).
+const quietProgressionSchema = z.object({
+  nextEncounterId: z.string(),
+  ...learnedField,
+  summary: z.string().optional().catch(undefined),
+})
+
 // The round's ending as told: the GM's beats without a closing question to the players, which the game asks itself.
 function tellRound(beats: StoryBeat[], playerNames: string[]): StoryBeat[] {
   const last = beats[beats.length - 1]
@@ -136,9 +143,17 @@ export function createAdvanceTurn(ports: GmPorts) {
         },
       })
       const scene = await sceneFor(ports, turn)
-      const prompt = buildWikiEncounterProgressionPrompt(packet, scene)
       await wait(1000)
-      const llmResult = (await generateObject({ prompt, schema: wikiEncounterProgressionSchema })).object
+      // A round left on an NPC's question goes straight to the player's answer, and what the GM would tell after it is
+      // never shown (`roundEnd` below). So the GM is asked only the way on and what was learned, a third of the wait. The
+      // facts must still be recorded: without them Wollandora gave her whole briefing again in The Midnight Summons. Should
+      // it take a way out, or a hero be down and the rescue wait, the round is told after all, and the GM asked in full.
+      const quietly = waitsOnAnswer(turn.story) && !packet.graph.rescue
+      const quiet = quietly ? (await generateObject({ prompt: buildWikiEncounterProgressionPrompt(packet, scene, { quiet: true }), schema: quietProgressionSchema })).object : undefined
+      const llmResult =
+        quiet && quiet.nextEncounterId === turn.encounterId
+          ? { nextEncounterId: quiet.nextEncounterId, beats: [], knowledge: quiet.knowledge, adventurePatch: quiet.summary ? { summaryDelta: quiet.summary } : {} }
+          : (await generateObject({ prompt: buildWikiEncounterProgressionPrompt(packet, scene), schema: wikiEncounterProgressionSchema })).object
       const told = tellRound(cleanStory(llmResult.beats, scene, { step: "round" }), packet.outputContract.playerCharacterNames)
       let transition = validatePacketTransition(packet, llmResult.nextEncounterId)
       if (!transition.allowed) {

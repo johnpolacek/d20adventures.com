@@ -261,7 +261,10 @@ Your beats then follow the lengths for transitioning, whatever the GM notes call
 Whatever you decide, any rescue the GM notes describe is that intro. Tell none of it: no one the intro brings arrives, speaks or acts in your telling, and nothing it does is done.`
 }
 
-export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket, scene?: StoryScene): string {
+// With `quiet`, the round ends on a question waiting for a player's answer, and nothing it would tell is shown (see
+// ../orchestration/advance-turn). The GM then only decides the way on and records what was learned and a line of
+// summary: a few dozen words where a told round end writes several hundred, so it is about a third of the wait.
+export function buildWikiEncounterProgressionPrompt(packet: LlmGameplayContextPacket, scene?: StoryScene, { quiet = false }: { quiet?: boolean } = {}): string {
   const transitionText = packet.graph.legalTransitions.length
     ? packet.graph.legalTransitions
         .map((transition, index) => {
@@ -322,7 +325,11 @@ Your Task:
    Improvise freely inside the scene, but open no way out of it that the intro and GM notes do not give: no secret passage, hidden stair or tunnel, no fleeing figure or trail to chase, no new lead toward a place no listed transition names. When the players search for or chase something the notes do not provide, they find nothing more to follow.
 2. If transitioning, set nextEncounterId to one of the listed transition target IDs.
 3. If not transitioning, set nextEncounterId to the current encounter ID.
-4. Return beats for players. Do not write new player decisions, lines, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
+${
+    quiet
+      ? `4. The round ends on a question that waits for a player's answer. The game asks it, and nothing more is told this round: write no beats.
+`
+      : `4. Return beats for players. Do not write new player decisions, lines, or internal thoughts for: ${packet.outputContract.playerCharacterNames.join(", ")}. End on the story itself. Never ask the players what they do and never speak to them directly: the game asks for each action.
 5. Keep the beats short and new. Lengths count narration and action, and an NPC's spoken line is extra.
    - Players have just read everything under 'This Round So Far'. Tell none of it again: no action, roll outcome, description or line of dialogue from this round or from recent turns, and no character repeats what they have already said.
    - A question waiting for a player's answer is not asked again, by anyone, in any words. The game asks the player.
@@ -331,7 +338,8 @@ Your Task:
    - An event the GM notes call for at this moment may take up to 5 sentences and 90 words.
    - Keep every fact the players need. Give one telling detail, not several, and cut any sentence that only adds mood.
    - No em dashes, en dashes or semicolons.
-6. ${KNOWLEDGE_RULE}
+`
+  }6. ${KNOWLEDGE_RULE}
    ${CONTINUITY_RULE}
    The end of the round settles nothing a roll has not settled. No one is killed, captured, bound, disarmed, persuaded or beaten, and no fight, chase or contest is won, unless a roll this round did it. An NPC who tries such a thing begins it here, and it resolves on later turns.
    No NPC leaves the scene in your telling: one goes only on its own turn. A condition that needs an NPC gone is met only once its own turn this round took it away.${gone.length ? ` Gone for good this round: ${gone.join(", ")}.` : ""}${
@@ -341,9 +349,18 @@ Your Task:
    }
    Resolve only what happens in ${packet.currentEncounter.id}. A turn from another encounter in the history is over: what was begun there, such as a coin offered or a door left open, is not taken up, settled or narrated now.
    The scene holds only the people and things its intro, GM notes and story have shown. When a player acts toward someone or something not there, the scene does not gain them: they are not found.
-7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.
+${quiet ? `7. In "summary", one short sentence for the playthrough record: what happened this round.` : `7. Include an adventurePatch that updates the live Adventure playthrough record with summaries, discoveries, entity updates, character updates, open threads, resolved threads, and transition details when applicable.`}
 8. In "knowledge", record what characters learned this round that matters later: a secret, a plan, a name, a place, a deadline, who is behind something. A word said aloud to the whole line counts as much as a secret. One sentence each, with "knownBy": the id of every character who saw, heard or was told it. Said or done in the open, it is known to everyone present who could see or hear it. Leave out what anyone can see in the scene now. Private beats are recorded already for those in them. When someone tells a fact listed under WHO KNOWS WHAT to others, give its id with everyone who knows it now.${packet.session.names ? ` A hero's name heard aloud is recorded already. One learned another way, such as read in a book, has the id "name-<the hero's id>".` : ""} At most 4, or [] when nothing new was learned.
-${scene ? `\n${storyRules(scene)}\n` : ""}
+${
+    quiet
+      ? `
+Respond in JSON:
+{
+  "nextEncounterId": string,
+  "knowledge": [...],
+  "summary": string
+}`
+      : `${scene ? `\n${storyRules(scene)}\n` : ""}
 Respond in JSON:
 {
   "nextEncounterId": string,
@@ -351,4 +368,5 @@ Respond in JSON:
   "knowledge": [...],
   "adventurePatch": object
 }`
+  }`
 }

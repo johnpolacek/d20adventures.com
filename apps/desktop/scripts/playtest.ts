@@ -48,7 +48,8 @@ const valued = new Set(["--jobs", "--out", "--plans"])
 const names = argv.filter((a, i) => !a.startsWith("--") && !valued.has(argv[i - 1] ?? ""))
 const plans: Record<string, Plan> = JSON.parse(readFileSync(opt("--plans") ? resolve(opt("--plans")!) : join(here, "playtest-plans.json"), "utf8"))
 
-type Call = { kind: string; ms: number; beats: number; error?: string }
+// `offer`: the call stopped to offer a hero a reaction, which the player answers, so it is not a dead wait.
+type Call = { kind: string; ms: number; beats: number; error?: string; offer?: boolean }
 type Summary = {
   plan: string
   ended: string
@@ -118,7 +119,7 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
     try {
       await game(store, packs, m.llm)(command)
       const beats = storyLength() - before
-      calls.push({ kind: command.kind, ms: Date.now() - t0, beats })
+      calls.push({ kind: command.kind, ms: Date.now() - t0, beats, offer: !!store.current().reaction && store.current().reaction?.answer === undefined })
       log(`>> ${command.kind}${"text" in command ? `: ${command.text}` : ""}${"result" in command ? ` d20 ${command.result}${command.second ? `/${command.second}` : ""}` : ""} [${((Date.now() - t0) / 1000).toFixed(1)}s, ${beats} beats]`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -213,7 +214,7 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
     ended,
     path,
     calls: byKind,
-    deadContinues: calls.filter((c) => c.kind === "continue" && !c.error && c.beats === 0).length,
+    deadContinues: calls.filter((c) => c.kind === "continue" && !c.error && c.beats === 0 && !c.offer).length,
     hero,
     party: partyEnd,
     repeats: repeatsOf(turns),

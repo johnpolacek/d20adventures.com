@@ -775,6 +775,41 @@ async function extraAttack() {
   assert.equal(game.records.get("turn-1").story.filter((beat: { kind: string; attack?: unknown }) => beat.kind === "roll" && beat.attack).length, 2)
 }
 
+// A round left on an NPC's question tells nothing after it, so its end asks the GM only the way on and what was learned,
+// and the facts are kept. One that takes a way out after all is asked again in full, to tell it.
+async function quietRoundEnd() {
+  for (const way of ["the-front-of-the-line", "the-harvest-festival"]) {
+    const game = memoryGame()
+    const turn = game.records.get("turn-1")
+    turn.story = [...turn.story, { kind: "line", by: { step: "npc", character: "garlan-ironfist" }, speaker: "garlan-ironfist", text: "Name and business?" }]
+    turn.characters = turn.characters.map((character: any) => ({ ...character, hasReplied: true, isComplete: true }))
+    const asked: { prompt: string; beats: boolean }[] = []
+    game.ports.llm.generateObject = (async (args: { prompt: string; schema: z.ZodTypeAny }) => {
+      const beats = "beats" in (z.toJSONSchema(args.schema) as { properties: object }).properties
+      asked.push({ prompt: args.prompt, beats })
+      return {
+        object: args.schema.parse(
+          beats
+            ? { nextEncounterId: way, beats: [{ kind: "narration", text: "Garlan waves them on." }], knowledge: [] }
+            : { nextEncounterId: way, knowledge: [{ id: "garlan-asks-names", text: "Garlan keeps the gate book.", knownBy: ["mira"] }], summary: "Garlan asked for names." }
+        ),
+      }
+    }) as GmPorts["llm"]["generateObject"]
+    await createGmCore(game.ports).advanceTurn({ turnId: "turn-1", settingId: "realm-of-myr", adventurePlanId: "welcome-to-kordavos" })
+    assert.deepEqual(
+      asked.map((call) => call.beats),
+      way === "the-front-of-the-line" ? [false] : [false, true]
+    )
+    assert.match(asked[0].prompt, /write no beats/)
+    const next = game.records.get("turn-2")
+    if (way === "the-front-of-the-line") {
+      assert.deepEqual(next.story.filter((beat: StoryBeat) => beat.by.step === "round"), [])
+      assert.ok(game.records.get("fixture-adventure").knowledge.some((fact: { id: string }) => fact.id === "garlan-asks-names"))
+      assert.equal(next.adventurePatch.summaryDelta, "Garlan asked for names.")
+    } else assert.equal(next.encounterId, "the-harvest-festival")
+  }
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -791,6 +826,7 @@ async function main() {
     questionsStayInTheScene()
     rollsEndWithTheRound()
     await replayTurn()
+    await quietRoundEnd()
     await characterPrompts()
     await accessAndInstanceIsolation()
     await extraAttack()
@@ -799,7 +835,7 @@ async function main() {
     Object.assign(console, originalConsole)
   }
   console.log(
-    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, questions kept in the scene, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
+    "GM core: browser bundle, dependency boundary, 7-call prompt/schema/write parity, 9 character prompts, NPC death, waiting, memory, rules, fixed outcomes and the check menu with its stakes, ledger ranking, round budget, loot and its refusals, questions kept in the scene, the quiet round end after a question, rolls ending with the round, Extra Attack's second roll, access, AI companion, instance isolation, duplicate/stale/invalid transitions passed."
   )
 }
 main().catch((error) => {

@@ -314,7 +314,24 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       if (current?.type === "pc" && current.controlledBy !== "ai") throw new Error("A player character still needs to act.")
       // The turns that need no player, or the end of the round, never both: the stage keeps a round on screen until
       // its last turns have been read, then shows the next.
-      if (current) await autonomous()
+      // A turn that told nothing leaves nothing to read, so the call plays on: to the next one's turn, or to the round's
+      // end. A way out met mid-round ends the round with nothing told, and so does an NPC that waits unaddressed.
+      // Without this each was a GM call the player waited through for nothing.
+      if (current) {
+        const told = store.current().story.length
+        await autonomous()
+        for (let more = 0; more < 8; more++) {
+          const now = store.current()
+          if (now._id !== turn._id || now.story.length !== told || now.reaction) break
+          const next = findCurrentActor(now.characters)
+          if (!next) {
+            await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
+            break
+          }
+          if (next.type !== "npc" && next.controlledBy !== "ai") break
+          await autonomous()
+        }
+      }
       // Deliberately let the new encounter's intro be read before the next NPC action.
       else await core.advanceTurn({ turnId: turn._id, settingId: "realm-of-myr", adventurePlanId: store.state!.adventure.planId })
     } else {
