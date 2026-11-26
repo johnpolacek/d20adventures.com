@@ -184,6 +184,7 @@ Done 2026-11-14. All twelve classes at levels 1 to 20, monsters, magic items, an
 - Owner decision, 2026-11-13: the order was the six other classes to level 5, then monsters, then magic items, then levels 6 to 20 with spells of levels 4 to 9.
 - An encounter marks an NPC `side: party` or `side: none`. Unmarked is a foe (`sides.ts`).
 - No Opportunity Attack while no fight is on (`moveWithReactions`, `fight: false`), added 2026-11-22.
+- Ammunition is spent and a Thrown weapon lands by its target (`ammunition.ts`), added 2026-11-26. Counts start from the equipment's free-text names and live on `sheet.stock` once spent. One lying within 5 feet is picked up as the hero attacks. A won fight gathers the thrown ones and half the ammunition.
 - `spellLabel` names each spell run, partly run or told. One named nowhere is told.
 - An encounter's `loot` is given by the engine. The GM invents no magic item.
 - Plain rules spend a resource the way a careful player would: Legendary Resistance, Heroic Inspiration, Stroke of Luck.

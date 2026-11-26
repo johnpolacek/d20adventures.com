@@ -1,6 +1,7 @@
 import { standingWords } from "../sheet/placement"
 import type { GmPorts } from "../ports"
 import { afterRoll } from "../sheet/actions"
+import { withAttackSpent } from "../sheet/ammunition"
 import { type Strike, strikeFacts } from "../sheet/attack"
 import { followingRoll, type InScene } from "../sheet/attack-roll"
 import { checkBonus, resolveCheck } from "../sheet/check"
@@ -338,6 +339,11 @@ export function createAdventureRollResultService(ports: GmPorts) {
         ask: (offer) => ordered(standing.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
       })
       blow = made.blow
+      // The arrow is spent, or the dagger thrown lands where its target stands (../sheet/ammunition).
+      const landsAt = target.position
+      made.characters = made.characters.map((character) =>
+        character.id === args.characterId ? withAttackSpent(character, required.attack.weapon, { thrown: required.attack.thrown, landsAt }) : character
+      )
       if (die && made.blow.inspired !== undefined) spendDie = (character) => die.spend(character, made.blow.roll.hit)
       turnCharacters = made.characters.map((character) => (character.id === required.attack.target ? afterHarm(character) : character))
       rolls = [...made.reactions.map((taken): StoryBeat => ({ kind: "feature", by, character: taken.by, name: taken.name, text: taken.text })), attackBeat(by, args.character, target.id, blow)]

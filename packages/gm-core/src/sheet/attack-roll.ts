@@ -1,6 +1,7 @@
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
 import type { RequiredAttack, RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
+import { attackStockRuling, useOf } from "./ammunition"
 import { type Attack, attacksOf, averageDamage } from "./attack"
 import { combineModes, type RollMode } from "./check"
 import { classCovers, type FollowRule, followRules, withAdvantageBarred } from "./class-rules"
@@ -53,6 +54,8 @@ export type AttackAsk = {
    * none, and they are left off a roll that has Disadvantage.
    */
   forgo?: readonly string[]
+  /** Where no floor measures the distance: the player's words throw the weapon ("throws a dagger"). */
+  throws?: boolean
   after?: After
 }
 
@@ -79,6 +82,11 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
       ruling: { name: `Out Of ${what}`, text: `${character.name}${moved} is ${Math.round(feet)} feet from ${target.name}, out of ${what.toLowerCase()} with ${attack.name}. The attack is not made.` },
     }
   }
+  // A hero with no ammunition left, or no thrown weapon in hand or within 5 feet, cannot make it (./ammunition).
+  const empty = attackStockRuling(character, attack)
+  if (empty) return { ruling: empty }
+  // A Thrown weapon is thrown at one beyond its reach, or where no floor measures it, when the words throw it.
+  const thrown = useOf(attack.id)?.kind === "thrown" && (band === "normal" || band === "long" || (band === undefined && (attack.reach === undefined || !!ask.throws)))
   // Cover, from the solid things and the creatures on the line between the two, by their height. The game master may
   // name cover the place does not hold, and the greater stands. Through total cover no attack is made.
   const from = placedOf(character)
@@ -144,6 +152,7 @@ export function attackRequirement(ask: AttackAsk): { roll: RequiredAttack } | { 
         ...(choices && Object.keys(choices).length ? { choices } : {}),
         // Kept only for an attack whose stat block gives a charge something (./hit-riders).
         ...(ask.charged && charges(attack) ? { charge: ask.charged } : {}),
+        ...(thrown ? { thrown: true as const } : {}),
       },
       rollType: attack.name,
       difficulty: armorClass + coverBonus(cover),

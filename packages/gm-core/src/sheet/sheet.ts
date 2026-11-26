@@ -76,6 +76,20 @@ export const ownedItemSchema = z.strictObject({
 export type OwnedItem = z.infer<typeof ownedItemSchema>
 
 /**
+ * What the hero holds of their ammunition and thrown weapons, by SRD id, once they have spent any (./ammunition).
+ * `carried` is how many of each they have now: `{ arrows: 17, dagger: 1 }`. One not listed is counted from the
+ * character's equipment, so a sheet saved before any was spent reads as it did. `loose` is each thrown weapon lying
+ * where it fell, at the point it fell, until it is picked up. `shot` is the ammunition spent in the fight, half of
+ * which is gathered after it.
+ */
+export const stockSchema = z.strictObject({
+  carried: z.record(idSchema, z.number().int().min(0)).optional(),
+  loose: z.array(z.strictObject({ id: idSchema, at: z.strictObject({ x: z.number(), y: z.number() }).optional() })).optional(),
+  shot: z.record(idSchema, z.number().int().min(1)).optional(),
+})
+export type Stock = z.infer<typeof stockSchema>
+
+/**
  * What a player chooses for a character. Everything else on a character sheet (hit points, Armor Class, saves, skill
  * bonuses) is worked out from this and the SRD data by `deriveSheet`, so no bonus is ever stored.
  */
@@ -139,6 +153,8 @@ export const sheetSchema = z.strictObject({
   advancements: z.array(advancementSchema).optional(),
   /** The magic items the hero owns, in the order they were gained. */
   items: z.array(ownedItemSchema).optional(),
+  /** The ammunition and thrown weapons the hero has used, kept once the first is spent (./ammunition). */
+  stock: stockSchema.optional(),
 })
 export type Sheet = z.infer<typeof sheetSchema>
 

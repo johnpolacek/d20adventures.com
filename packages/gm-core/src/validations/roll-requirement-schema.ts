@@ -63,6 +63,7 @@ export const rollRequirementSchema = z.union([
         .optional()
         .describe("What class features the attacker chose for this attack, by the key of each choice (../sheet/class-rules.ts): a Cunning Strike's cunning"),
       charge: z.number().optional().describe("Feet the attacker moved straight toward the target immediately before this attack, for a stat block's charge"),
+      thrown: z.literal(true).optional().describe("A Thrown weapon thrown, not held: it leaves the hand and lands by the target (../sheet/ammunition.ts)"),
     }),
     ...asked,
   }),

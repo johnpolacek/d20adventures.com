@@ -4,6 +4,7 @@ import { spellById } from "@d20/srd/spells"
 import { z } from "zod"
 import type { GmPorts } from "../ports"
 import { checkModesFromActions, HIDE_DC, hideRoll, type TakenAction } from "../sheet/actions"
+import { stockWords } from "../sheet/ammunition"
 import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
@@ -203,6 +204,9 @@ function withUnknownSpell(action: string, character: Character, read: TurnReadin
   return read
 }
 
+// Words that throw a weapon, for an attack where no floor measures whether it is thrown (../sheet/ammunition).
+const THROWS = /\b(?:throw|throws|threw|thrown|throwing|hurl|hurls|hurled|toss|tosses|tossed|fling|flings|flung|lob|lobs)\b/i
+
 // How far a hero may walk at once beside their Speed when no fight is on: any set's whole floor.
 const OUT_OF_FIGHT_FEET = 500
 
@@ -333,7 +337,13 @@ export function createRollRequirementService(ports: GmPorts) {
       ? `     A spell cast the same turn as a Bonus Action that changes their shape is cast in the new shape.${castWith.length ? ` In their present shape they cannot cast, and with ${castWith.join(" or ")} first they can: then "bonus" is ${castWith.map((id) => `"${id}"`).join(" or ")} and "check" is "cast", with a spell from Their Spells.` : ""}${castNotWith.length ? ` With ${castNotWith.join(" or ")} they cannot cast any spell this turn, so beside one of those no spell is cast.` : ""}\n`
       : ""
     const attackWords = (list: readonly (typeof attacks)[number][]) =>
-      list.map((attack) => `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind})`).join(", ") || "none"
+      list
+        .map((attack) => {
+          // What the hero has left to shoot or throw with it (../sheet/ammunition).
+          const left = stockWords(character, attack)
+          return `${attack.id} (${attack.name}, ${attack.kind === "melee-or-ranged" ? "melee or thrown" : attack.kind}${left ? `, ${left}` : ""})`
+        })
+        .join(", ") || "none"
     // The choices of a hero's class the player makes in the moment, each only while it can be used (../sheet/classes).
     const hero = "type" in character && character.type === "pc"
     const choices = hero
@@ -1053,6 +1063,7 @@ Action: "${action}"
           charged: also.move && acting.position && target.position ? chargedFeet(acting.position, also.move.path, target.position) : undefined,
           choices: onAttack,
           ...(forgo.length ? { forgo } : {}),
+          ...(!floor && THROWS.test(action) ? { throws: true } : {}),
           after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
         })
         if ("ruling" in made) {

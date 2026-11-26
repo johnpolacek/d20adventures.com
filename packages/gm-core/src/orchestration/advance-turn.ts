@@ -13,12 +13,14 @@ import {
   getRecentTurnsForContext,
   getSectionAndSceneContext,
 } from "../services/advance-turn-prompt-service"
+import { afterFight } from "../sheet/ammunition"
 import { atRoundStart } from "../sheet/death"
 import { noticeBeats, noticedOnArrival } from "../sheet/hiding"
 import { giveLoot, type LootGiven, lootDue } from "../sheet/loot"
 import { raisedTo } from "../sheet/milestone"
 import { placeCharacters, standingWords } from "../sheet/placement"
 import { partyRest, restName } from "../sheet/rest"
+import { sideOf } from "../sheet/sides"
 import { roundTurns } from "../sheet/spell-rounds"
 import { authoredStory } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
@@ -32,7 +34,7 @@ import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { mapConvexTurnToTurn, rollD20, rollDie } from "../utils/game-utils"
 import { dropPlayerPrompt } from "../utils/narrative-utils"
-import { isDead } from "../utils/turn-actors"
+import { isDead, isDown } from "../utils/turn-actors"
 import { validateAdventurePatch } from "../wiki-adventures/adventure-patch"
 import { buildLocalWikiTurnCharacters, isLocalWikiFinalEncounter } from "../wiki-adventures/characters"
 import { rescuedCharacters } from "../wiki-adventures/player-safety"
@@ -218,7 +220,13 @@ export function createAdvanceTurn(ports: GmPorts) {
       // burn, Spirit Guardians, a repeated save), told after the round's story. One they drop is not carried on.
       const turned = isTransition ? undefined : roundTurns({ characters: beforeRound, d20: rollD20, roll: rollDie, rules: { playerDeath: artifacts.manifest.playerDeath } })
       const settled = turned ? turned.characters.filter((character) => !isDead(character) && !character.fled) : beforeRound
-      const opening = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
+      const reopened = (rescuing ? rescuedCharacters(settled) : settled).map(atRoundStart)
+      // Once no foe stands, each hero picks up what they threw and gathers half the ammunition they spent. Leaving the
+      // encounter while foes still stand loses what lies there (../sheet/ammunition).
+      const foesStand = (turn.characters as TurnCharacter[]).some((character) => sideOf(character) === "foe" && !isDead(character) && !character.fled && !isDown(character))
+      const fought = reopened.map((character): { character: TurnCharacter; told?: string } => (character.type === "pc" && (!foesStand || isTransition) ? afterFight(character, !foesStand) : { character }))
+      const opening = fought.map((entry) => entry.character)
+      const gathered: StoryBeat[] = fought.flatMap(({ character, told }) => (told ? [{ kind: "feature" as const, by: { step: "round" as const, character: character.id }, character: character.id, name: "Gathered", text: told }] : []))
       // A new encounter opens on its intro, read as beats for the characters who are in it. One the party has played
       // before does not read it again: they know the place, and the round's own story has brought them back.
       const nextScene = isTransition ? await sceneFor(ports, { encounterId: nextEncounter.id, characters: opening }) : scene
@@ -262,7 +270,7 @@ export function createAdvanceTurn(ports: GmPorts) {
       ]
       // A scene left on an NPC's question goes straight to the player's answer.
       const roundEnd = transition.kind === "continue" && waitsOnAnswer(turn.story) ? [] : told
-      const story = [...roundEnd, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...rested, ...intro, ...lootBeats("intro", entering), ...noticed]
+      const story = [...roundEnd, ...(turned ? roundBeats(turned, storyNames(turn.characters)) : []), ...lootBeats("round", leaving), ...gathered, ...rested, ...intro, ...lootBeats("intro", entering), ...noticed]
       const commitResult = await ports.store.commitWikiTurnAdvance({
         adventureId: turnData.adventureId,
         expectedCurrentTurnId: turnId,
