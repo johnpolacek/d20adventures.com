@@ -14,12 +14,17 @@ const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X", limit: 280 }
 const NOTES = ["Point", "Title ideas", "Intro", "Angle", "Hook", "Payoff", "Why it spreads", "Items", "Stories", "Pictures", "Links", "Questions for John", "Facts", "John said", "Changes", "Clips", "Update verdict"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
-type Tab = "new" | "posted"
+const TABS = [
+  ["new", "New"],
+  ["shelved", "Shelved"],
+  ["posted", "Posted"],
+] as const
+type Tab = (typeof TABS)[number][0]
 
-const isPosted = (item: QueueItem) => item.status === "posted"
-const tabOf = (item: QueueItem): Tab => (isPosted(item) ? "posted" : "new")
-// New holds everything not yet posted, shelved ideas last.
-const newList = (items: QueueItem[]) => [...items.filter((i) => !isPosted(i) && i.status !== "shelved"), ...items.filter((i) => i.status === "shelved")]
+// Shelved and posted ideas have tabs of their own. New holds the rest, in rank order.
+const tabOf = (item: QueueItem): Tab => (item.status === "shelved" || item.status === "posted" ? item.status : "new")
+const listFor = (items: QueueItem[], tab: Tab) => items.filter((i) => tabOf(i) === tab)
+const newList = (items: QueueItem[]) => listFor(items, "new")
 
 // A status as a tag on the paper (app/admin/admin.css).
 const statusTone: Record<string, string> = {
@@ -47,7 +52,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
 
   useEffect(() => setItems(initial), [initial])
 
-  const shown = useMemo(() => (tab === "new" ? newList(items) : items.filter(isPosted)), [items, tab])
+  const shown = useMemo(() => listFor(items, tab), [items, tab])
 
   const canDrag = tab === "new"
   const current = items.find((i) => i.slug === selected && tabOf(i) === tab) ?? shown[0]
@@ -60,7 +65,7 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
     const [moved] = next.splice(from, 1)
     next.splice(to, 0, moved)
     const ranked = next.map((i, n) => ({ ...i, rank: n + 1 }))
-    setItems([...ranked, ...items.filter(isPosted)])
+    setItems([...ranked, ...items.filter((i) => tabOf(i) !== "new")])
     start(() => reorderQueue(ranked.map((i) => i.slug)))
   }
 
@@ -80,9 +85,9 @@ export function QueueBoard({ items: initial }: { items: QueueItem[] }) {
   return (
     <div>
       <div className="up-chips mb-4 items-center">
-        {(["new", "posted"] as Tab[]).map((t) => (
+        {TABS.map(([t, label]) => (
           <Button key={t} variant="plain" className="up-chip" aria-pressed={tab === t} onClick={() => setTab(t)}>
-            {t === "new" ? "New" : "Posted"} <span className="up-small ml-1 font-mono">{t === "new" ? newList(items).length : items.filter(isPosted).length}</span>
+            {label} <span className="up-small ml-1 font-mono">{listFor(items, t).length}</span>
           </Button>
         ))}
         <Button variant="plain" className="up-btn is-xs ml-auto" disabled={pending} onClick={sync}>Sync</Button>
