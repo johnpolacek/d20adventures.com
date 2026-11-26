@@ -20,6 +20,7 @@ export type Heard = Narrated & { progress: () => number }
 // are, and they go on from there once it is let go.
 export function useNarrator({ key, text, next, on, speaker, nextSpeaker, paused = false }: { key: string; text: string | undefined; next?: string; on: boolean; speaker?: Spoken; nextSpeaker?: Spoken; paused?: boolean }): Heard {
   const voice = useNarratorVoice()
+  const ready = useSyncExternalStore(onNarratorChange, narratorReady, () => false)
   const [heard, setHeard] = useState<{ key: string } & Narrated>({ key: "", status: "off", sentence: -1 })
   const nextRef = useRef({ next, nextSpeaker })
   nextRef.current = { next, nextSpeaker }
@@ -35,7 +36,7 @@ export function useNarrator({ key, text, next, on, speaker, nextSpeaker, paused 
   }, [voice])
 
   useEffect(() => {
-    if (!on || !voice || !text || !narratorReady()) {
+    if (!on || !voice || !text || !ready) {
       setHeard({ key, status: "off", sentence: -1 })
       return
     }
@@ -55,7 +56,7 @@ export function useNarrator({ key, text, next, on, speaker, nextSpeaker, paused 
       speaking.stop()
       if (reading.current?.speaking === speaking) reading.current = null
     }
-  }, [key, text, on, voice, speaker])
+  }, [key, text, on, voice, speaker, ready])
 
   useEffect(() => {
     if (paused) reading.current?.speaking.pause()
@@ -64,5 +65,5 @@ export function useNarrator({ key, text, next, on, speaker, nextSpeaker, paused 
 
   if (heard.key === key) return { status: heard.status, sentence: heard.sentence, progress }
   // A new paragraph, before the effect above has started reading it: waiting, so nothing is shown ahead of the words.
-  return { status: on && voice && text && narratorReady() ? "waiting" : "off", sentence: -1, progress }
+  return { status: on && voice && text && ready ? "waiting" : "off", sentence: -1, progress }
 }

@@ -3,6 +3,7 @@ import { ModuleCover } from "@d20/ui/adventure/module-cover"
 import { Button, buttonClassName, Option } from "@d20/ui/button"
 import { Presence, Swap } from "@d20/ui/presence"
 import { tourAgain } from "@d20/ui/stage/tips"
+import { narratorVoice, warmNarrator } from "@d20/ui/sound/narrator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@d20/ui/select"
 import { Chip, siteLabel } from "@d20/ui/site"
 import { cardVariants } from "@d20/ui/card"
@@ -125,6 +126,10 @@ export function NewGame(props: {
   // Play pressed while the opening scene loads: the party chosen, started the moment the stage is ready.
   const [queued, setQueued] = useState<PartyChoice[] | null>(null)
   const { onStart, waiting } = props
+  // The narrator's voice loads while the party is chosen, as the opening scene does, so it reads the first words.
+  useEffect(() => {
+    if (narratorVoice()) warmNarrator()
+  }, [])
   useEffect(() => {
     if (!queued || waiting) return
     setQueued(null)
