@@ -1,9 +1,9 @@
 ---
-title: "Trying to Train an AI Game Master on 5E Rules"
+title: "Training an AI Game Master on 5E Rules"
 date: 2026-11-26
 description: "How D20 Adventures splits a game of D&D between Claude as the game master and a 5E rules engine, part by part, and what we’re still figuring out."
-image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/owlbear.webp"
-header: /images/updates/keeping-an-ai-game-master-inside-the-rules.webp
+image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/owlbear.webp"
+header: /images/updates/training-an-ai-game-master-on-5e-rules.webp
 draft: true
 ---
 
@@ -32,7 +32,7 @@ Moving off past it without being noticed is a medium Stealth check, DC 15. If he
 
 Code reads the structure: who is here, their stat blocks, where they stand. Claude reads the prose: the behavior, the notes, and whether an exit has been met.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/owlbear.webp" alt="The owlbear stepping out of the trees into the clearing" width="1440" height="900" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/owlbear.webp" alt="The owlbear stepping out of the trees into the clearing" width="1440" height="900" />
 
 When to move on is still Claude’s call, and it doesn’t always get it right. One talk with Wollandora took seven turns because an exit fired on a question. So the compiler now warns about exits like that.
 
@@ -51,7 +51,7 @@ Every call to Claude comes back in a fixed shape, never free numbers. Here’s o
 
 With a Stealth total of 15, its Passive Perception meets it, and it attacks with no roll at all.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/one-turn.webp" alt="One turn in The Owlbear Prowls, eight steps each marked Player, AI or Code, from typing hide in the ferns to Claude judging the exit met" width="1600" height="728" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/one-turn.webp" alt="One turn in The Owlbear Prowls, eight steps each marked Player, AI or Code, from typing hide in the ferns to Claude judging the exit met" width="1600" height="728" />
 
 Claude can still pick the wrong action, or judge an exit too early. We’re watching for both.
 
@@ -59,7 +59,7 @@ Claude can still pick the wrong action, or judge an exit too early. We’re watc
 
 You can type anything. Most of it rolls nothing: talking, looking around, making a plan. Claude decides whether a move needs a roll at all, and answers “none” when it doesn’t. When it does, it becomes a rule from a fixed menu, and the engine takes over.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/gm-thinking.webp" alt="The GM card while Claude writes: The GM, Weighing what you said" width="1152" height="292" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/gm-thinking.webp" alt="The GM card while Claude writes: The GM, Weighing what you said" width="1152" height="292" />
 
 Claude can still call for a roll that isn’t needed, or skip one that is.
 
@@ -89,7 +89,7 @@ To see how Claude rules, there are 211 [check probes](https://github.com/johnpol
 
 Claude passes if it picks Stealth, an easy or medium DC, and Advantage from the feeding and the rain. The grade is a plain comparison, with no second model judging.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/check-card.webp" alt="A check card: Thalbern, Stealth with Advantage because it’s feeding with its back turned and rain drowns sound, two d20s, roll 10 or higher against DC 15" width="1152" height="754" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/check-card.webp" alt="A check card: Thalbern, Stealth with Advantage because it’s feeding with its back turned and rain drowns sound, two d20s, roll 10 or higher against DC 15" width="1152" height="754" />
 
 Tools aren’t typed yet, so picking a lock is still a bare Dexterity check.
 
@@ -99,7 +99,7 @@ The player only rolls d20s. The engine rolls the damage, and it’s the only thi
 
 NPCs show a wound word, never a number: Unhurt, Hurt, Bloodied or Dead.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/attack-roll.webp" alt="An attack roll card: Lyra’s Fire Bolt at the Owlbear, roll 8 or higher to hit against AC 13" width="1046" height="586" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/attack-roll.webp" alt="An attack roll card: Lyra’s Fire Bolt at the Owlbear, roll 8 or higher to hit against AC 13" width="1046" height="586" />
 
 Blinded and Deafened failing sight and hearing checks is still left to Claude.
 
@@ -119,7 +119,7 @@ That’s how it works in Baldur’s Gate 3, which is the bar. Now before Claude 
 
 If you type it yourself anyway, the reply card holds it first.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/speak-with-animals.webp" alt="The reply card holding a Speak with Animals cast, with Edit Reply and Send Anyway buttons" width="734" height="489" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/speak-with-animals.webp" alt="The reply card holding a Speak with Animals cast, with Edit Reply and Send Anyway buttons" width="734" height="489" />
 
 Half the spells are still told. The ones that change a fight are next.
 
@@ -127,7 +127,7 @@ Half the spells are still told. The ones that change a fight are next.
 
 Thalbern hid in the ferns, and the owlbear wandered off without ever rolling. Claude made that call from the encounter notes, because the engine had no rule for finding anyone.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/thalbern-ferns.webp" alt="Thalbern crouched low in the ferns at night" width="1440" height="900" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/thalbern-ferns.webp" alt="Thalbern crouched low in the ferns at night" width="1440" height="900" />
 
 > should the owlbear be able to make a check after thalbern passed his check or is that like double jeapardy?
 
@@ -139,7 +139,7 @@ Full rules also meant you need somewhere to hide.
 
 There’s no grid. Positions are in feet, read from the 3D sets, with cover from their solid things. Now typing “hide” walks you to thick growth or cover, out of every enemy’s sight. With none in reach there’s no roll, and the story says “No Cover”.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/thalbern-hidden.webp" alt="Thalbern down on one knee on the forest trail in the hidden pose" width="1500" height="937" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/thalbern-hidden.webp" alt="Thalbern down on one knee on the forest trail in the hidden pose" width="1500" height="937" />
 
 Book rules cost something: 23 of 70 encounters refuse a Hide from the starting spot. Hide doesn’t account for light yet, and there’s no elevation.
 
@@ -147,7 +147,7 @@ Book rules cost something: 23 of 70 encounters refuse a Hide from the starting s
 
 A reaction is something a hero does on someone else’s turn, like an Opportunity Attack or casting Shield. At a table the DM just asks you. Here the game asks too, but in a party game the others are waiting, so nothing ever blocks. The round waits 20 seconds, then follows the hero’s standing order.
 
-<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/reaction.webp" alt="A reaction offer: Lyra may take an Opportunity Attack, with a countdown bar, Let It Pass and Take It" width="1046" height="370" />
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/training-an-ai-game-master-on-5e-rules/reaction.webp" alt="A reaction offer: Lyra may take an Opportunity Attack, with a countdown bar, Let It Pass and Take It" width="1046" height="370" />
 
 The default orders take every Opportunity Attack and cast Shield when it turns a hit into a miss. NPCs react by the same orders, with no wait.
 
