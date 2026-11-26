@@ -49,6 +49,64 @@ select {
   color: inherit;
 }
 
+/* The party screen while the opening scene loads: a die that turns and settles, a bar that sweeps while its size is
+   unknown, and light passing over Play. */
+.stage-die {
+  animation: stage-die 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes stage-die {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  45% {
+    transform: rotate(200deg) scale(0.86);
+  }
+  70%,
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+.stage-sweep {
+  animation: stage-sweep 1.3s ease-in-out infinite;
+}
+@keyframes stage-sweep {
+  from {
+    left: -33%;
+  }
+  to {
+    left: 100%;
+  }
+}
+.stage-sheen {
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: stage-sheen 2.2s ease-in-out infinite;
+}
+@keyframes stage-sheen {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-die,
+  .stage-sheen {
+    animation: none;
+  }
+  .stage-sweep {
+    animation: stage-pulse 2s ease-in-out infinite;
+    left: 0;
+    width: 100%;
+  }
+  @keyframes stage-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
 /* Keep last, as in the website's stylesheet. */
 .fade-in {
   @apply opacity-100 transition-opacity duration-300 ease-out;

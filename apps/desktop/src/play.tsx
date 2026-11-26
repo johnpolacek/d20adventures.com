@@ -111,7 +111,7 @@ export function DesktopGame() {
   const [screen, setScreen] = useState<"home" | Page | "new" | null>("home")
   const navigate = (page: Page | "home") => setScreen(page)
   const chosen = adventures.find((a) => a.id === adventure)
-  const [stageState, setStageState] = useState<{ waiting: boolean; error: string | null }>({ waiting: false, error: null })
+  const [stageState, setStageState] = useState<{ waiting: boolean; progress: number | null; error: string | null }>({ waiting: false, progress: null, error: null })
   const stageError = stageState.error
 
   const saveRef = useRef(save)
@@ -531,6 +531,7 @@ export function DesktopGame() {
                             onProvider={pickGm}
                             busy={working || sending}
                             waiting={stageState.waiting}
+                            stageProgress={stageState.progress}
                             created={created}
                             carried={carried ?? undefined}
                             onStart={(chosenParty) => void start(chosenParty)}

@@ -36,7 +36,7 @@ import { rollSeconds } from "@d20/ui/stage/roll-result"
 import { featureView, type RollView, rollView } from "@d20/ui/stage/roll-view"
 import { Bubbles, Plate } from "@d20/ui/stage/stage-dialogue"
 import { passedOver, passedWords, standingOf } from "@d20/ui/stage/standing"
-import { type TipId, TipCard, useTip } from "@d20/ui/stage/tips"
+import { type TipId, TipCard, Tour, useTip, useTour } from "@d20/ui/stage/tips"
 import { TurnOrder } from "@d20/ui/stage/turn-order"
 import { useStage } from "@d20/ui/stage/use-stage"
 import { Button } from "@d20/ui/button"
@@ -290,8 +290,9 @@ export function StagePlay(props: {
   feedbackGate?: ReactNode
   onEscape?: () => void
   onError: (message: string) => void
-  // Reports whether the scene is still loading and any stage error, for setup screens and the error panel.
-  onStage?: (state: { waiting: boolean; error: string | null }) => void
+  // Reports whether the scene is still loading, how much of its files have come down (null while unknown or while the
+  // set is built), and any stage error, for setup screens and the error panel.
+  onStage?: (state: { waiting: boolean; progress: number | null; error: string | null }) => void
   children?: ReactNode
 }) {
   const { save, art, busy } = props
@@ -326,6 +327,8 @@ export function StagePlay(props: {
   const [reading, setReading] = useState(true)
   // The turn held by the player: the narrator stops where it is, and nothing moves on until it is played again.
   const [paused, setPaused] = useState(false)
+  // The first-look tour, the first time the game opens on this device. The story waits while it is up.
+  const tour = useTour()
   // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
   // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
   // `from` is how many beats the turn's story had when the roll was made: the engine's answer comes after them.
@@ -506,7 +509,7 @@ export function StagePlay(props: {
     speaker: speakerOf(paragraph),
     nextSpeaker: speakerOf(paragraph + 1),
     on: reading && !hidden && !props.overlay && !sceneWaits,
-    paused,
+    paused: paused || tour.open,
   })
   // A pause lasts until the turn is played again, or the reading ends.
   useEffect(() => {
@@ -1233,20 +1236,20 @@ export function StagePlay(props: {
     }
   }, [stage, stageRef, reading, paragraph, heard, staged, sounded, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || sceneWaits || !text.length || speaking || paused) return
+    if (!auto || !reading || busy || sceneWaits || !text.length || speaking || paused || tour.open) return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
     const seconds = voiced.status === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(advance, seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused])
+  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused, tour.open])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
   // Read aloud, it fills as the words are heard. A roll waits as it does in auto.
   const continueMs = busy || !text.length || speaking ? undefined : voiced.status === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
-    onStage?.({ waiting: Boolean(scene && !stage && !stageError), error: stageError ?? null })
-  }, [onStage, scene, stage, stageError])
+    onStage?.({ waiting: Boolean(scene && !stage && !stageError), progress: files.ready ? null : files.progress, error: stageError ?? null })
+  }, [onStage, scene, stage, stageError, files.ready, files.progress])
 
   const readingRef = useRef(reading)
   readingRef.current = reading
@@ -1571,14 +1574,20 @@ export function StagePlay(props: {
       actions={
         <>
           {props.actions}
-          {city && <Pill onClick={() => setOpen(open === "map" ? null : "map")}>Map</Pill>}
-          <Pill onClick={() => setOpen(open === "journal" ? null : "journal")}>Journal</Pill>
+          {city && (
+            <Pill data-tour="map" onClick={() => setOpen(open === "map" ? null : "map")}>
+              Map
+            </Pill>
+          )}
+          <Pill data-tour="journal" onClick={() => setOpen(open === "journal" ? null : "journal")}>
+            Journal
+          </Pill>
           {props.onChat && (
             <Pill variant={unread > 0 ? "primary" : "outline"} onClick={() => setOpen(open === "chat" ? null : "chat")}>
               Chat{unread > 0 ? ` · ${unread}` : ""}
             </Pill>
           )}
-          <IconButton label="Scene Settings" active={open === "settings"} onClick={() => setOpen(open === "settings" ? null : "settings")}>
+          <IconButton data-tour="settings" label="Scene Settings" active={open === "settings"} onClick={() => setOpen(open === "settings" ? null : "settings")}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.35" aria-hidden="true">
               <path d="M5 3v18M12 3v18M19 3v18" />
               <path d="M2 8h6M9 16h6M16 9h6" strokeWidth="3" />
@@ -1629,7 +1638,7 @@ export function StagePlay(props: {
             />
           </Presence>
           {/* The narration and the button that brings it back each have the place to themselves, so one leaves as the other comes. */}
-          <div className={`pointer-events-none absolute z-20 ${scene ? nook : "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2"}`}>
+          <div data-tour="story" className={`pointer-events-none absolute z-20 ${scene ? nook : "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2"}`}>
             <Presence show={on && reading} motion="rise" asChild>
               <Narration
                 heading={`Round ${shown?.order} · ${shown?.title}`}
@@ -1750,7 +1759,8 @@ export function StagePlay(props: {
               </div>
             )}
           </Presence>
-          <Presence show={on && Boolean(tips.tip)} motion="drop" asChild>
+          {on && tour.open && !(scene && !files.ready) && <Tour compact={compact} onDone={tour.done} />}
+          <Presence show={on && !tour.open && Boolean(tips.tip)} motion="drop" asChild>
             {tips.tip && (
               <TipCard
                 key={tips.tip}

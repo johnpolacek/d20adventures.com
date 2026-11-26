@@ -55,8 +55,9 @@ export function NewGame(props: {
   claudeModel?: string
   onProvider: (p: string, model?: string) => void
   busy: boolean
-  // The opening scene is still loading.
+  // The opening scene is still loading, and how much of its files have come down, null while unknown or being built.
   waiting: boolean
+  stageProgress?: number | null
   created: string | null
   // The party of the adventure just finished, when the player continues the story from its ending.
   carried?: PartyChoice[]
@@ -116,6 +117,14 @@ export function NewGame(props: {
     (c) => c.id,
     { enter: "pop" }
   )
+  // Play pressed while the opening scene loads: the party chosen, started the moment the stage is ready.
+  const [queued, setQueued] = useState<PartyChoice[] | null>(null)
+  const { onStart, waiting } = props
+  useEffect(() => {
+    if (!queued || waiting) return
+    setQueued(null)
+    onStart(queued)
+  }, [queued, waiting, onStart])
   if (lockedInfo) return <LockedAdventure info={lockedInfo} linked={props.linked} onLink={props.onLink} onCancel={props.onCancel} busy={props.busy} />
   if (!info) return null
   const yours = party.filter((c) => c.who === "you")
@@ -424,6 +433,9 @@ export function NewGame(props: {
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
         <GameMaster providers={props.providers} models={props.models} provider={props.provider} claudeModel={props.claudeModel} onProvider={props.onProvider} />
         <div className="flex-1" />
+        <Presence show={props.waiting && !hosting} motion="fade" asChild>
+          <StageLoading progress={props.stageProgress ?? null} />
+        </Presence>
         <Presence show={hosting && sized && !hostable} motion="fade" asChild>
           <p className="text-sm text-accent-300">{flex ? "Add a guest seat." : "Play a hero, or invite at least two."}</p>
         </Presence>
@@ -459,16 +471,56 @@ export function NewGame(props: {
           ) : (
             <Button
               variant="epic"
-              className="text-xl"
-              disabled={props.busy || props.waiting || !ready || !props.providers.length}
-              onClick={() => props.onStart(party.map((c) => ({ id: c.id, ai: c.who === "ai" })))}
+              className={cn("relative overflow-hidden text-xl", queued && "disabled:opacity-100")}
+              disabled={props.busy || Boolean(queued) || !ready || !props.providers.length}
+              aria-busy={props.waiting || props.busy}
+              onClick={() => {
+                const chosen = party.map((c) => ({ id: c.id, ai: c.who === "ai" }))
+                if (props.waiting) setQueued(chosen)
+                else props.onStart(chosen)
+              }}
             >
-              {props.busy ? "Starting…" : "Play"}
+              {props.waiting && <span aria-hidden className="stage-sheen pointer-events-none absolute inset-0" />}
+              <span className="relative">{props.busy || queued ? "Starting…" : "Play"}</span>
             </Button>
           )}
         </Swap>
       </div>
     </section>
+  )
+}
+
+// While the opening scene loads behind the party: a die turning, its name, and a bar that fills as the files come down
+// or sweeps while the size is unknown or the set is built. Play stays open, and pressed it waits for the stage.
+function StageLoading(props: { progress: number | null; className?: string; onAnimationEnd?: AnimationEventHandler }) {
+  const pct = props.progress === null ? null : Math.round(props.progress * 100)
+  return (
+    <div role="status" aria-live="polite" className={cn("flex items-center gap-3", props.className)} onAnimationEnd={props.onAnimationEnd}>
+      <svg aria-hidden viewBox="0 0 24 24" className="stage-die size-6 text-accent-300">
+        <path d="M12 2 21 7v10l-9 5-9-5V7z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M12 2v6m0 0-6 9h12zm0 0L3 7m9 1 9-1M6 17l-3 0m15 0 3 0M12 22v-5" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" opacity=".6" />
+      </svg>
+      <div className="flex flex-col gap-1.5">
+        <span className={cn(siteLabel, "flex gap-2 text-accent-300")}>
+          Setting the Stage
+          {pct !== null && <span className="tabular-nums text-white/60">{pct}%</span>}
+        </span>
+        <span
+          className="relative h-[3px] w-40 overflow-hidden rounded-full bg-white/10"
+          role="progressbar"
+          aria-label="Setting the stage"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct ?? undefined}
+        >
+          {pct === null ? (
+            <span className="stage-sweep absolute inset-y-0 w-1/3 rounded-full bg-accent-300" />
+          ) : (
+            <span className="absolute inset-y-0 left-0 rounded-full bg-accent-300 transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+          )}
+        </span>
+      </div>
+    </div>
   )
 }
 
