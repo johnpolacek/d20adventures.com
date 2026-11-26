@@ -14,8 +14,8 @@ export interface MomentContext {
   killed: (paragraph: number) => string[]
   // Heroes the paragraph drops to the ground, dying.
   dropped: (paragraph: number) => string[]
-  // Someone coming on in this paragraph, from where to where.
-  arriving: (paragraph: number) => { cast: string; from: readonly [number, number]; home: readonly [number, number] } | undefined
+  // Someone coming on in this paragraph, from where to where, and how fast, in metres a second.
+  arriving: (paragraph: number) => { cast: string; from: readonly [number, number]; home: readonly [number, number]; speed?: number } | undefined
   // The effects the host plays in this paragraph, by cast id: an attack in a hero's reply plays after the roll that
   // decides it, so often a paragraph later than the words.
   effects: (paragraph: number) => { actor: string; target?: string; kind: EffectKind; miss: boolean }[]
@@ -57,7 +57,7 @@ export function storyMoments(paragraphs: readonly { beats: StoryBeat[] }[], ctx:
       const dropped = ctx.dropped(i)
       if (dropped.length) return { kind: "down", victim: dropped[0] }
       const enters = ctx.arriving(i)
-      if (enters) return { kind: "entrance", who: enters.cast, monster: ctx.big(enters.cast), from: enters.from, home: enters.home }
+      if (enters) return { kind: "entrance", who: enters.cast, monster: ctx.big(enters.cast), from: enters.from, home: enters.home, speed: enters.speed }
       if (rollHere) {
         const who = ctx.castOf(rollHere.character)
         if (!who) return null

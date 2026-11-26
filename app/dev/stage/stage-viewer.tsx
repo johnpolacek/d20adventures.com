@@ -74,6 +74,14 @@ const TAKES: { key: string; moment: (a: string, b: string, s: Stage) => Moment; 
     },
     play: null,
   },
+  {
+    key: "prowl",
+    moment: (a, b, s) => {
+      const c = s.castAt(b)
+      return { kind: "entrance", who: b, monster: true, from: [c.x + Math.sin(c.ry) * 8, c.z + Math.cos(c.ry) * 8], home: [c.x, c.z], speed: 0.45 }
+    },
+    play: null,
+  },
 ]
 let takeCount = 0
 function playTake(stage: Stage, t: (typeof TAKES)[number], from: string, to: string, element: Element | "") {

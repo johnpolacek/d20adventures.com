@@ -73,8 +73,8 @@
       "height": 0.6,
       "lookHeight": 2.6,
       "fov": 54,
-      "orbit": 22,
-      "sweep": 120,
+      "orbit": 5,
+      "sweep": 60,
       "label": "The Owlbear comes out"
     }
   },
@@ -95,7 +95,8 @@
   "entrances": [
     {
       "cast": "owlbear",
-      "shot": "reveal"
+      "shot": "reveal",
+      "pace": "prowl"
     }
   ]
 }

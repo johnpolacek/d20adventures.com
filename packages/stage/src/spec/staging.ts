@@ -149,8 +149,20 @@ export const stagingSpecSchema = z
     // paragraph that says it, then walks on from `from` (a mark or point) to their place, seen from `shot` (a set or
     // staging shot) when given. Narration without the phrase, such as a later round's, finds them already in place.
     // An entrance with no `when` only gives the shot for an entrance the story tells ("from: treeLine").
+    // `pace` is how they come on, over the story's own pace: `prowl` is slower than a stroll, a big beast in no hurry,
+    // and the director shoots it as a slow pan and push in that lasts the walk.
     entrances: z
-      .array(z.object({ cast: idName, when: z.string().min(3).max(120).optional(), from: z.union([idName, vec2]).optional(), shot: idName.optional() }).strict())
+      .array(
+        z
+          .object({
+            cast: idName,
+            when: z.string().min(3).max(120).optional(),
+            from: z.union([idName, vec2]).optional(),
+            shot: idName.optional(),
+            pace: z.enum(["prowl", "stroll", "walk", "hurry", "sneak"]).optional(),
+          })
+          .strict()
+      )
       .max(12)
       .default([]),
     // Walks the narration cues for someone already on stage: while a turn's narration contains `when`, they stand at

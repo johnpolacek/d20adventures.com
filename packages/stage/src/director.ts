@@ -26,7 +26,8 @@ export type Moment =
   | { kind: "deathSave"; hero: string; success: boolean; fate?: Fate }
   | { kind: "check"; actor: string; success: boolean; natural: number }
   | { kind: "heal"; actor: string; target?: string }
-  | { kind: "entrance"; who: string; monster: boolean; from: readonly [number, number]; home: readonly [number, number] }
+  // `speed` is how fast they walk on, in metres a second: a slow one is a prowl, shot for as long as it walks.
+  | { kind: "entrance"; who: string; monster: boolean; from: readonly [number, number]; home: readonly [number, number]; speed?: number }
   | { kind: "exit"; who: string }
   | { kind: "action"; actor: string; target?: string }
 
@@ -260,6 +261,9 @@ function twoShot(actor: CastMember, target: CastMember, side: number, variant: n
   return first() ?? second() ?? (apart(actor, target) < 7 ? profile(actor, target, side, 0, ctx) : (on(target, "medium", side) as StagingShot))
 }
 
+// An entrance walked for at least this many seconds is a prowl, shot as one long move.
+const PROWL_SECONDS = 6
+
 export function compose(plan: Plan, ctx: ComposeContext): Take | null {
   const byId = new Map(ctx.cast.map((c) => [c.id, c]))
   const get = (id: string | undefined) => (id ? byId.get(id) : undefined)
@@ -404,6 +408,19 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
       const [fx, fz] = m.from
       const [hx, hz] = m.home
       const d = Math.hypot(hx - fx, hz - fz) || 1
+      // How long they walk on for. A beast that takes its time is a prowl.
+      const walk = m.speed ? d / m.speed : 0
+      if (m.monster && who && walk >= PROWL_SECONDS) {
+        // From low on the ground where it will stop, a long lens on the way it comes, panning slowly round and pushing
+        // in for as long as it walks, so it grows in the frame step by step. No tilt and no jolt: the weight is the pace.
+        const k = (3.2 + who.height * 0.9) / d
+        const seconds = Math.min(24, walk + 2)
+        return take(
+          { position: [hx + (hx - fx) * k, 0.4, hz + (hz - fz) * k], target: [(fx + hx) / 2, who.height * 0.65, (fz + hz) / 2], fov: 44, orbit: s * 2.5, sweep: Math.min(40, seconds * 2) },
+          "monster prowls in",
+          { cut: true, ease: "drift", move: { push: 0.4, rise: 0.25, seconds } }
+        )
+      }
       if (m.monster && who) {
         // From low, on the ground where they will stop, looking back the way they come: they fill the frame on arrival.
         const k = (2.4 + who.height * 0.8) / d

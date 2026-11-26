@@ -75,6 +75,10 @@ type View = Aim | null
 const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
 // A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
 const STROLL = 0.6
+// A staging's entrance can also be a prowl: slower still, a big beast in no hurry, shot as a slow pan and push in.
+const PROWL = 0.45
+// How fast a staging's entrance comes on, when it gives a pace.
+const entrancePace = (pace: "prowl" | "stroll" | keyof typeof PACE | undefined) => (pace === "prowl" ? PROWL : pace === "stroll" ? STROLL : pace ? PACE[pace] : undefined)
 // Where an authored cue's words come in the story: the first paragraph that holds them, and the sentence in it.
 const when = (text: string[], words: string) => {
   const at = text.findIndex((p) => p.toLowerCase().includes(words.toLowerCase()))
@@ -665,14 +669,17 @@ export function StagePlay(props: {
   const cues = useMemo(() => {
     const entrances = stage?.staging?.entrances ?? []
     const authored = entrances.flatMap((e) =>
-      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: 0.9, sneak: false, here: false, ...when(text, e.when) }] : []
+      e.when && e.from !== undefined ? [{ ...e, from: e.from, speed: entrancePace(e.pace) ?? 0.9, sneak: e.pace === "sneak", here: false, ...when(text, e.when) }] : []
     )
     const told = paragraphs.flatMap((p, at) =>
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
         const here = b.kind === "action" && turn?.characters.find((c) => c.id === b.actor)?.type === "pc"
+        // The staging's entrance for them gives its shot, and its pace over the story's: the Owlbear prowls on.
+        const staged = entrances.find((e) => e.cast === cast)
+        const pace = staged?.pace ?? (b.kind === "action" ? b.enters?.pace : undefined)
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: entrances.find((e) => e.cast === cast)?.shot, speed: PACE[b.enters.pace ?? "walk"], sneak: b.enters.pace === "sneak", here, at, s: sentenceOf(p.text, b.text) }]
+          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: staged?.shot, speed: entrancePace(pace) ?? PACE.walk, sneak: pace === "sneak", here, at, s: sentenceOf(p.text, b.text) }]
           : []
       })
     )
@@ -1150,7 +1157,7 @@ export function StagePlay(props: {
         const e = cues.find((c) => c.at === i)
         const from = spot(e?.from)
         const home = spot(e && (spots.get(e.cast)?.at ?? stage.staging?.cast.find((c) => c.id === e.cast)?.at))
-        return e && from && home ? { cast: e.cast, from, home } : undefined
+        return e && from && home ? { cast: e.cast, from, home, speed: e.speed } : undefined
       },
       effects: (i) =>
         (staged.get(i) ?? []).flatMap(({ beat, effect, miss }) => {
