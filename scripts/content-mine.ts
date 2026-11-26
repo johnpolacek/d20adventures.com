@@ -9,11 +9,16 @@
  *   pnpm content:mine --dry            collect and print sizes, no model calls
  *   pnpm content:mine --day 2026-11-20 one day only
  *   pnpm content:mine --day 2026-11-20 --print   try the prompt, write nothing
+ *   pnpm content:mine --themes         fold the queue's open ideas into themes, no mining
+ *
+ * A new idea that continues one already in the queue joins it: its commits, sessions, facts and quotes are added
+ * there, so a theme grows week to week instead of being dropped as a repeat. A mining run ends with the theme pass.
  */
 import { execFileSync, spawn } from "node:child_process"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { type QueueItem as StoredIdea, listQueue, readItem, writeItem } from "../lib/content-queue/store"
 import { syncQueue } from "../lib/content-queue/sync"
 
 const REPO = path.resolve(__dirname, "..")
@@ -44,6 +49,8 @@ type Candidate = {
   sessions: string[]
   quotes: string[]
   slug?: string
+  // The slug of a queue idea this one continues. Its evidence is added there.
+  into?: string
 }
 
 // ---------- args ----------
@@ -376,21 +383,34 @@ function publishedPosts(): string {
     .join("\n")
 }
 
-function reducePrompt(cands: Candidate[], existing: string[]): string {
+// Open ideas, the ones new work can still join: not shelved, not posted.
+function openIdeas(): StoredIdea[] {
+  return listQueue().filter((q) => q.status === "idea" || q.status === "draft")
+}
+
+function describeIdea(q: StoredIdea): string {
+  const point = q.sections.find((s) => s.name === "Point")?.body.replace(/\s+/g, " ").slice(0, 300) ?? ""
+  return `- ${q.slug} (${q.status}, ${q.commits.length} commits): ${q.title}. ${point}`
+}
+
+function reducePrompt(cands: Candidate[], existing: StoredIdea[], closed: string[]): string {
   return `${CONTEXT}
 
-These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Ideas that are each one incident of a bigger subject (several AI game master mistakes, several 3D figure fixes) become one idea about that subject, with the incidents as its examples. Drop any idea that repeats one already in the queue, or that a published post already covers. An idea that only adds a little to a published post is dropped too. Rank what remains by hook plus payoff plus spread and keep the best ${TOP}. Rewrite any hook that starts with what John did instead of the moment itself.
+These ideas were mined from separate days of John's work. Merge ideas that are the same story, combining their evidence. Ideas that are each one incident of a bigger subject (several AI game master mistakes, several 3D figure fixes) become one idea about that subject, with the incidents as its examples. An idea that continues one of the open queue ideas below (more work on the same subject, a new incident of it) joins it: set "into" to that idea's slug and keep the new evidence. Drop any idea that repeats a closed one or that a published post already covers. An idea that only adds a little to a published post is dropped too. Rank the new ideas by hook plus payoff plus spread and keep the best ${TOP}, plus every idea that joins an open one. Rewrite any hook that starts with what John did instead of the moment itself.
 
 ${SHAREABLE}
 
-Already in the queue:
-${existing.length ? existing.map((t) => `- ${t}`).join("\n") : "(empty)"}
+Open queue ideas, which new work can join:
+${existing.length ? existing.map(describeIdea).join("\n") : "(none)"}
+
+Closed queue ideas, shelved or posted:
+${closed.length ? closed.map((t) => `- ${t}`).join("\n") : "(none)"}
 
 Already published on the site, with each post's sections:
 ${publishedPosts() || "(none)"}
 
 Return only a JSON array, best first, each item shaped:
-${CANDIDATE_SHAPE.replace(/^\{/, '{"slug": short-kebab-case, ')}
+${CANDIDATE_SHAPE.replace(/^\{/, '{"slug": short-kebab-case, "into": an open idea\'s slug or omitted, ')}
 
 Ideas:
 ${JSON.stringify(cands, null, 1)}`
@@ -492,9 +512,102 @@ ${c.quotes.length ? c.quotes.map((q) => `> ${q}`).join("\n>\n") : "(no quote)"}
   return slug
 }
 
+// ---------- joining and themes ----------
+
+const union = (a: string[], b: string[]) => [...new Set([...a, ...b])]
+
+function setSection(item: StoredIdea, name: string, body: string): void {
+  const at = item.sections.find((s) => s.name === name)
+  if (at) at.body = body
+  else item.sections.push({ name, body })
+}
+
+function addLines(item: StoredIdea, name: string, lines: string[]): void {
+  const body = item.sections.find((s) => s.name === name)?.body.trim() ?? ""
+  const fresh = lines.filter((l) => l.trim() && !body.includes(l.trim()))
+  if (fresh.length) setSection(item, name, [body.replace(/^- \(none found\)$|^\(no quote\)$/m, "").trim(), ...fresh].filter(Boolean).join("\n"))
+}
+
+// An idea judged not worth a post is judged again once it has grown.
+function reopenVerdict(item: StoredIdea): void {
+  const v = item.sections.find((s) => s.name === "Update verdict")
+  if (v && /:\s*no\b/i.test(v.body)) item.sections = item.sections.filter((s) => s !== v)
+}
+
+/** Adds a mined idea's evidence to the queue idea it continues. */
+function joinIdea(slug: string, c: Partial<Candidate> & { point?: string }): boolean {
+  let item: StoredIdea
+  try {
+    item = readItem(slug)
+  } catch {
+    return false
+  }
+  item.commits = union(item.commits, c.commits ?? [])
+  item.sessions = union(item.sessions, c.sessions ?? [])
+  addLines(item, "Facts", (c.numbers ?? []).map((n) => `- ${n}`))
+  addLines(item, "John said", (c.quotes ?? []).map((q) => `> ${q}`))
+  if (c.point) addLines(item, "Also", [`- ${c.title ? `${c.title}: ` : ""}${c.point}`])
+  reopenVerdict(item)
+  writeItem(item)
+  return true
+}
+
+type Theme = { lead: string; members: string[]; title: string; longTitle: string; point: string }
+
+function themePrompt(ideas: StoredIdea[]): string {
+  return `${CONTEXT}
+
+These are the open ideas in John's content queue, mined week by week. Ideas mined in different weeks are often the same subject: several AI game master rules fixes, several 3D figure fixes, several sound changes. Group the ideas that belong to one bigger subject a stranger would want one post about. A group needs at least two ideas. Leave an idea alone when it stands on its own. Name the lead idea, the one with the strongest material, and give the group a title in the style below, zoomed out to the subject, with a one sentence point.
+
+How to title an idea, from John's voice guide:
+${titleGuide()}
+
+Return only a JSON array of groups, each shaped {"lead": slug, "members": [the other slugs], "title": the short title, "longTitle": the long title, "point": one sentence}. Return [] if nothing groups.
+
+Ideas:
+${ideas.map((q) => `${describeIdea(q)}\n  Facts: ${(q.sections.find((s) => s.name === "Facts")?.body ?? "").replace(/\s+/g, " ").slice(0, 400)}`).join("\n")}`
+}
+
+async function themes(): Promise<void> {
+  // Ideas with a post or a plan keep to themselves. A group can still lead with one.
+  const ideas = openIdeas().filter((q) => q.status === "idea" && q.rank < 90)
+  if (ideas.length < 2) return console.log("themes: nothing to group")
+  const groups = parseJsonArray<Theme>(await claude(themePrompt(ideas)))
+  const open = new Set(ideas.map((q) => q.slug))
+  let shelvedAt = 90 + listQueue().filter((q) => q.rank >= 90).length
+  for (const g of groups) {
+    const members = (g.members ?? []).filter((m) => m !== g.lead && open.has(m))
+    if (!open.has(g.lead) || !members.length) continue
+    for (const m of members) {
+      const item = readItem(m)
+      joinIdea(g.lead, { title: item.title, point: item.sections.find((s) => s.name === "Point")?.body, commits: item.commits, sessions: item.sessions, numbers: (item.sections.find((s) => s.name === "Facts")?.body ?? "").split("\n").map((l) => l.replace(/^- /, "")).filter((l) => l && l !== "(none found)"), quotes: [] })
+      writeItem({ ...item, status: "shelved", into: g.lead, rank: shelvedAt++ })
+    }
+    const lead = readItem(g.lead)
+    // A planned idea keeps John's title. The theme's title is offered instead.
+    if (lead.sections.some((s) => s.name === "Items")) addLines(lead, "Title ideas", [`- ${g.title}`])
+    else {
+      lead.title = g.title
+      lead.longTitle = g.longTitle
+      setSection(lead, "Point", g.point)
+    }
+    writeItem(lead)
+    console.log(`  theme ${g.lead}: ${g.title} (+ ${members.join(", ")})`)
+  }
+  // Close the gaps the shelved ideas left in the running order.
+  listQueue()
+    .filter((q) => q.rank < 90)
+    .forEach((q, i) => q.rank !== i + 1 && writeItem({ ...q, rank: i + 1 }))
+}
+
 // ---------- main ----------
 
 async function main() {
+  if (process.argv.includes("--themes")) {
+    await syncQueue()
+    await themes()
+    return syncQueue()
+  }
   console.log(`mining ${since.toISOString()} → ${until.toISOString()}`)
   const commits = collectCommits()
   const exchanges = [...collectClaude(), ...collectCodex()].sort((a, b) => a.date.localeCompare(b.date))
@@ -536,14 +649,21 @@ async function main() {
   }
 
   const queue = readQueue()
-  const ranked = parseJsonArray<Candidate>(await claude(reducePrompt(all, queue.map((q) => q.title))))
+  const open = openIdeas()
+  const openSlugs = new Set(open.map((q) => q.slug))
+  const closed = queue.filter((q) => !openSlugs.has(q.file.replace(/\.md$/, ""))).map((q) => q.title)
+  const ranked = parseJsonArray<Candidate>(await claude(reducePrompt(all, open, closed)))
   fs.mkdirSync(QUEUE, { recursive: true })
+  const joined = ranked.filter((c) => c.into && openSlugs.has(c.into))
+  for (const c of joined) if (joinIdea(c.into!, c)) console.log(`  joined ${c.into}: ${c.title}`)
+  const fresh = ranked.filter((c) => !joined.includes(c))
   // New ideas join after the live queue. Cut and folded ideas sit at 90 and up, out of the way.
   const startRank = queue.filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0) + 1
   const mined = new Date().toISOString().slice(0, 10)
-  ranked.forEach((c, i) => console.log(`  ${startRank + i}. ${writeIdea(c, startRank + i, mined)} (${(c.scores?.hook ?? 0) + (c.scores?.payoff ?? 0) + (c.scores?.spread ?? 0)})`))
+  fresh.forEach((c, i) => console.log(`  ${startRank + i}. ${writeIdea(c, startRank + i, mined)} (${(c.scores?.hook ?? 0) + (c.scores?.payoff ?? 0) + (c.scores?.spread ?? 0)})`))
   if (!onlyDay) fs.writeFileSync(MARKER, `${JSON.stringify({ through: until.toISOString() }, null, 2)}\n`)
-  console.log(`${ranked.length} ideas written to content/queue`)
+  console.log(`${fresh.length} new ideas, ${joined.length} joined to open ones`)
+  await themes()
   await syncQueue()
 }
 
