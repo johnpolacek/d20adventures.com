@@ -32,6 +32,8 @@ What John's own posts show works, added each time he finishes one. `pnpm content
 - **Claude, not Gemini.** Name Claude as the game master and leave Gemini out (John, 2026-11-25: “do not mention Gemini - focus on Claude”).
 - **Say 5E.** A title says “5E Rules Engine”, not SRD 5.2.1. “Keeping an AI Game Master Inside the Rules with Claude Opus and a 5E Rules Engine” beat “Building an AI Game Master That Plays by the D&D Rules”.
 - **One shape.** Title, a short topic intro, a list of items, each one thing and what we did with a picture or a clip, then a conclusion linking to pages on d20adventures.com (John, 2026-11-25: “thats probably a good general structure”). For a whole system, read the codebase for all of it, not only the week's commits. Playtest stories go inside the item they taught. It started as “analyze the codebase for where we are implementing the 5E rules and think of it like a list post, with each item on the list being a thing and what we did”.
+- **Show how it works.** A technical post opens its list with the system end to end, such as how an adventure is written and what one turn does, and says at each step whether the AI decides or code does (John, 2026-11-25: “do we get enough into the technical aspects? how we have an adventure plan? what the ai does and what is deterministic?”).
+- **Honest about what's open.** Say what we are doing, and that we are still figuring it out. Each item names what is unsolved or untested, and the post doesn't claim a choice is settled before play has shown it (John, 2026-11-25: “i like the idea of saying what we are doing but also being honest that we are still figuring it out”).
 
 ## Short and long titles
 

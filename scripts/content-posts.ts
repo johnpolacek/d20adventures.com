@@ -123,6 +123,7 @@ type Plan = {
     picture?: string
     shows?: string
     need?: string
+    open?: string
   }[]
   links: { url: string; why: string }[]
   questions: string[]
@@ -154,12 +155,14 @@ Gather:
 - Read each commit with git show. When the subject is a whole system, read the codebase and plans/ for all of it, not only these commits, so the list covers the system.
 - Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold what went wrong, what surprised him and what he wanted. A playtest story goes inside the item it taught.
 - Look at the pictures listed in ${dossier}/images.md. Open each that might fit with Read. Pasted ones are what John saw, screenshots are what an agent checked.
+- For a technical subject, start the list with how the system works end to end, such as how an adventure is written and what happens in one turn, marking each step as the model's call or deterministic code.
+- Be honest that the work is still being figured out. Look for what is left open in plans/ ("Left", "Unknowns"), TODOs and the sessions, and give each item its open question.
 - Find the pages to link: the routes under app/ and the adventures under content/settings. Link only pages that exist.
 
 Return only a JSON object:
 {"title": the short title, "longTitle": the long title,
  "intro": two or three sentences on the topic: who it's for and the one thing they walk away with,
- "items": [5 to 12, in the order the post would list them, each {"thing": the item's name, a few words, "solution": what we did about it, in plain words, with the problem it solved, "quote": John's exact words from sessions.md if he said something that shows it, else "", "numbers": [numbers that matter to it, from commits, code or sessions], "sources": [commit hashes, files, or "session <id> <time>"], "picture": the path as images.md lists it, or "" if none fits, "shows": what a reader sees in that picture, "need": when no picture fits, the screenshot or clip to make and how, else ""}],
+ "items": [5 to 12, in the order the post would list them, each {"thing": the item's name, a few words, "solution": what we did about it, in plain words, with the problem it solved, "quote": John's exact words from sessions.md if he said something that shows it, else "", "numbers": [numbers that matter to it, from commits, code or sessions], "sources": [commit hashes, files, or "session <id> <time>"], "picture": the path as images.md lists it, or "" if none fits, "shows": what a reader sees in that picture, "need": when no picture fits, the screenshot or clip to make and how, else "", "open": what is still unsolved, untested or uncertain about it, from plans/, the code or the sessions, else ""}],
  "links": [the d20adventures.com pages the conclusion should send readers to, each {"url": the full URL, "why": what the reader finds there}],
  "questions": [2 to 4 things only John knows that would make the post better: why he cared, what he felt, what he'd tell someone trying the same]}
 Never invent a fact, number, motive or quote. Skip pictures that show anything private: email, messages, other apps or tabs, real people besides John, keys, account pages or a desktop. Skip near duplicates and half-loaded screens.
@@ -214,6 +217,7 @@ function planSections(plan: Plan, dossier: string): QueueSection[] {
       if (it.numbers?.length) lines.push(`   Numbers: ${it.numbers.join("; ")}`)
       if (it.picture) lines.push(`   Picture: ${rel}/${it.picture}, ${it.shows ?? ""}`)
       else if (it.need) lines.push(`   To make: ${it.need}`)
+      if (it.open) lines.push(`   Still open: ${it.open}`)
       if (it.sources?.length) lines.push(`   Sources: ${it.sources.join(", ")}`)
       return lines.join("\n")
     })
