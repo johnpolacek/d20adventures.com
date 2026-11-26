@@ -51,7 +51,7 @@ Every call to Claude comes back in a fixed shape, never free numbers. Here’s o
 
 With a Stealth total of 15, its Passive Perception meets it, and it attacks with no roll at all.
 
-<!-- To make: a diagram of this turn, each step marked AI or code, plus the owlbear's search roll card -->
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/one-turn.webp" alt="One turn in The Owlbear Prowls, eight steps each marked Player, AI or Code, from typing hide in the ferns to Claude judging the exit met" width="1600" height="728" />
 
 Claude can still pick the wrong action, or judge an exit too early. We’re watching for both.
 
@@ -59,7 +59,7 @@ Claude can still pick the wrong action, or judge an exit too early. We’re watc
 
 You can type anything. Most of it rolls nothing: talking, looking around, making a plan. Claude decides whether a move needs a roll at all, and answers “none” when it doesn’t. When it does, it becomes a rule from a fixed menu, and the engine takes over.
 
-<!-- To make: the loading message while the GM thinks, the thinking prompt card rendered on its own with a sample note -->
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/gm-thinking.webp" alt="The GM card while Claude writes: The GM, Weighing what you said" width="1152" height="292" />
 
 Claude can still call for a roll that isn’t needed, or skip one that is.
 
@@ -89,7 +89,7 @@ To see how Claude rules, there are 211 [check probes](https://github.com/johnpol
 
 Claude passes if it picks Stealth, an easy or medium DC, and Advantage from the feeding and the rain. The grade is a plain comparison, with no second model judging.
 
-<!-- To make: a check card with its skill, DC and d20 -->
+<img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keeping-an-ai-game-master-inside-the-rules/check-card.webp" alt="A check card: Thalbern, Stealth with Advantage because it’s feeding with its back turned and rain drowns sound, two d20s, roll 10 or higher against DC 15" width="1152" height="754" />
 
 Tools aren’t typed yet, so picking a lock is still a bare Dexterity check.
 
