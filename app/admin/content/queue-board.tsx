@@ -11,7 +11,7 @@ import type { QueueItem, QueueSection } from "@/lib/content-queue/store"
 
 const STATUSES = ["idea", "draft", "scheduled", "posted", "shelved"]
 const PLATFORMS: { name: string; limit?: number }[] = [{ name: "X", limit: 280 }, { name: "Reddit" }]
-const NOTES = ["Point", "Hook", "Payoff", "Why it spreads", "Stories", "Facts", "John said", "Changes", "Clips"]
+const NOTES = ["Point", "Title ideas", "Angle", "Hook", "Payoff", "Why it spreads", "Stories", "Pictures", "Questions for John", "Facts", "John said", "Changes", "Clips", "Update verdict"]
 const REPO = "https://github.com/johnpolacek/d20adventures.com/commit/"
 
 type Filter = "live" | "parked" | "all"

@@ -24,6 +24,12 @@ Read it in full before drafting and run its self-check. The rules below are only
 - **Code.** Filename as an italic line above the fence: `*lib/updates.ts*`.
 - **Frontmatter.** `title`, `date` (YYYY-MM-DD, the post shows from that day, Chicago time), `description` (a written one-sentence summary), `image` (full bucket URL), and `draft: true` while it isn’t ready. Frontmatter values keep straight quotes.
 
+## Patterns that work
+
+What John's own posts show works, added each time he finishes one. `pnpm content:posts` reads this section when it plans an idea, and the brief on `/admin/content` points the drafting LLM here.
+
+- **Plan, don't draft.** The picker gathers an idea's angle, stories, quotes, pictures and questions, and John writes the post with an LLM. Its full draft of “Building an AI Game Master That Plays by the D&D Rules” kept the title and lost the content (John, 2026-11-25: “i like the title but not the content”).
+
 ## Short and long titles
 
 Write a short title and a long title for the content queue. The short one names the outcome and the best-known tools. The long one keeps the short one whole and extends it with the stack. Leave off creator-post promises like “Every Prompt Included”, which read as paid content. Name the setup plainly and leave the reasons for the post. John picked “…Running Claude Opus Locally and Gemini Flash-Lite on the Web” over “…with Claude Opus as the Best GM and Gemini for the Web Demo”. It never lists incidents. This long title listed bugs and was rejected: “How I Keep an AI Game Master Honest When It Suggests Impossible Spells, Skips Rolls and Narrates Things That Never Happened”.

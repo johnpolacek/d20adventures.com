@@ -1,6 +1,7 @@
 /**
  * A dossier for drafting one post: the full agent sessions behind an idea, scrubbed, and every picture in them.
- * Written to a temp folder, never to content/queue, so session pictures don't sync to the data bucket.
+ * Written to content/queue/dossiers/<slug>/, out of Git with the rest of the queue. The queue sync copies only the
+ * files at its top level, so the session pictures stay on this machine.
  *
  *   <dir>/sessions.md      John's prompts and every reply the agent wrote, in order, tool output left out
  *   <dir>/images/*.{png,jpg,webp}   pictures John pasted, screenshots the agent took, image files it opened
@@ -122,7 +123,7 @@ function commitTimes(commits: string[]): number[] {
  * commits when there are any, and returns its folder.
  */
 export function buildDossier(slug: string, sessions: string[], commits: string[] = []): { dir: string; turns: number; images: number } {
-  const dir = path.join(os.tmpdir(), "d20-dossiers", slug)
+  const dir = path.join(REPO, "content/queue/dossiers", slug)
   fs.rmSync(dir, { recursive: true, force: true })
   fs.mkdirSync(path.join(dir, "images"), { recursive: true })
   const turns: Turn[] = []

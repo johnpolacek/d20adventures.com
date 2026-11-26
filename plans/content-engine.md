@@ -74,17 +74,15 @@ What spreads here: rules gotchas and AI GM mistakes, cost tables, funny visual f
 
 ## Update posts
 
-Owner decision, 2026-11-25: after each mining run, decide which ideas earn an `/updates` post, and draft those.
+Owner decisions, 2026-11-25: after each mining run, decide which ideas earn an `/updates` post, and plan those as ideas. John writes the post with an LLM. “lets keep it at the idea stage, then i can flesh it out with the LLM”, after a full draft kept its title and lost its content.
 
 - `pnpm content:posts` judges each new idea against one bar: a stranger doing similar work walks away with a technique, a number or a fix, with 500 words of real material. Refactors, single fixes and adventure content stay social posts or nothing.
-- It drafts up to one post a run (`--max` raises it), matching the 7 to 10 day rhythm. A yes past the limit waits for the next run.
-- Each judged idea gets an Update verdict section with the reason, so it isn't judged twice. `--rejudge` asks again, `--dry` writes nothing, `--draft <slug>` skips judging.
-- The drafter is `claude -p` in the repo with read tools, git, Write, `cwebp` and `sips`. It reads the commits, the code and a dossier of the idea's sessions (John, 2026-11-25: "can we look at actual claude sessions too and use images attached").
-- The dossier (`scripts/content-dossier.ts`) sits in the temp folder, never in `content/queue`, so it doesn't sync. It holds every prompt and reply from the idea's Claude and Codex sessions, scrubbed like the miner's, and every picture in them: pasted, agent screenshots, and image files the agent opened. It keeps only the hours around the idea's commits, from 3 hours before each to 30 minutes after.
-- The drafter keeps the pictures that show a paragraph's point and skips any showing something private. It converts them to webp in `public/images/updates/<post>/` and links them by bucket URL. It writes `content/updates/<slug>.md` with `draft: true`, with a comment listing what is still missing.
-- After John checks a draft, `pnpm stage:sync public/images/updates/<post>` uploads its pictures.
-- A drafted idea becomes status draft with `post` set. Ideas folded into it become shelved with `into` set.
-- Nothing commits, publishes or posts. John reviews the draft, then it goes through the usual post steps.
+- It plans up to three a run (`--max` changes it). A yes past the limit waits for the next run. `--rejudge` asks again, `--dry` writes nothing, `--plan <slug>` skips judging.
+- Each judged idea gets an Update verdict section with the reason, so it isn't judged twice.
+- The planner is `claude -p` in the repo with read tools and git. It writes nothing itself. It reads the commits, the code and a dossier of the idea's sessions (John: “can we look at actual claude sessions too and use images attached”).
+- The dossier (`scripts/content-dossier.ts`) is `content/queue/dossiers/<slug>/`, out of Git, and the queue sync copies only top-level files, so it stays on this machine. It holds every prompt and reply from the idea's Claude and Codex sessions, scrubbed like the miner's, and every picture in them: pasted, agent screenshots, and image files the agent opened. It keeps the hours around the idea's commits, from 3 hours before each to 30 minutes after.
+- The plan lands in the idea: a new title and long title, then Angle, Stories (each with John's words, numbers and sources), Pictures (dossier paths and what each shows) and Questions for John. Ideas folded into it become shelved with `into` set.
+- The brief on `/admin/content` carries the plan and points at the dossier and the Patterns that work in `docs/writing-voice.md`. After John finishes a post, add what worked there.
 - The weekly run is `pnpm content:mine && pnpm content:posts`.
 
 ## Gameplay videos

@@ -1,31 +1,32 @@
 /**
  * Update post picker: reads the mined ideas in content/queue, asks the local Claude CLI which deserve a post on
- * /updates, and drafts the best into content/updates with draft: true. Runs after `pnpm content:mine`, locally only.
+ * /updates, and plans each one inside its idea. Runs after `pnpm content:mine`, locally only.
  *
- *   pnpm content:posts            judge new ideas, draft up to one post
- *   pnpm content:posts --max 2    draft up to two
+ *   pnpm content:posts            judge new ideas, plan up to three
+ *   pnpm content:posts --max 5    plan up to five
  *   pnpm content:posts --dry      judge and print, write nothing
  *   pnpm content:posts --rejudge  judge ideas that already have a verdict too
- *   pnpm content:posts --draft <slug>   skip judging and draft that idea
+ *   pnpm content:posts --plan <slug>   skip judging and plan that idea
  *
- * The drafter reads the commits, the code, and a dossier of the idea's sessions (scrubbed) with every picture in them,
- * and puts the pictures it uses in public/images/updates/<post>/ for pnpm stage:sync to upload once John checks it.
+ * It writes no post. John fleshes a planned idea out with an LLM, from the brief on /admin/content (owner decision,
+ * 2026-11-25: "lets keep it at the idea stage, then i can flesh it out with the LLM"). The planner reads the commits,
+ * the code, and a dossier of the idea's sessions (scrubbed) with every picture in them, kept in
+ * content/queue/dossiers/<slug>/, and adds to the idea: the angle, the stories with John's words and their sources,
+ * the pictures worth using, questions only John can answer, and title ideas. The idea's own title stays.
  *
- * Each judged idea gets an "Update verdict" section, so it isn't judged twice. A drafted idea becomes status draft
- * with post set, and ideas folded into it become shelved with into set. Nothing is committed, published or posted.
+ * Each judged idea gets an "Update verdict" section, so it isn't judged twice. Ideas folded into a planned one become
+ * shelved with into set. Nothing is committed, published or posted.
  */
 import { spawn } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
-import { briefFor } from "../lib/content-queue/brief"
-import { listQueue, readItem, writeItem, type QueueItem } from "../lib/content-queue/store"
+import { listQueue, readItem, writeItem, type QueueItem, type QueueSection } from "../lib/content-queue/store"
 import { syncQueue } from "../lib/content-queue/sync"
 import { buildDossier } from "./content-dossier"
-import { CONTEXT, claude, parseJsonArray, titleGuide } from "./content-mine"
+import { CONTEXT, claude, parseJsonArray, section, titleGuide } from "./content-mine"
 
 const REPO = path.resolve(__dirname, "..")
 const UPDATES = path.join(REPO, "content/updates")
-const SHARED_WRITING = "/Users/johnpolacek/Projects/johnpolacek-com-nextjs/writing"
 const VERDICT = "Update verdict"
 
 function arg(name: string): string | undefined {
@@ -34,8 +35,8 @@ function arg(name: string): string | undefined {
 }
 const DRY = process.argv.includes("--dry")
 const REJUDGE = process.argv.includes("--rejudge")
-const MAX = Number(arg("max") ?? 1)
-const ONLY = arg("draft")
+const MAX = Number(arg("max") ?? 3)
+const ONLY = arg("plan")
 const MODEL = arg("model") ?? "opus"
 
 type Verdict = { slug: string; post: boolean; reason: string; with?: string[]; title?: string; longTitle?: string }
@@ -98,48 +99,66 @@ Ideas:
 ${JSON.stringify(ideas, null, 1)}`
 }
 
-// The drafting agent reads the repo and the idea's dossier: its sessions, scrubbed, and the pictures in them. It never
-// gets the raw session logs, which could hold keys.
-function draftPrompt(lead: QueueItem, folded: QueueItem[], verdict: Verdict, slug: string, dossier: string): string {
-  const merged: QueueItem = {
-    ...lead,
-    title: verdict.title || lead.title,
-    longTitle: verdict.longTitle || lead.longTitle,
-    commits: [...new Set([lead, ...folded].flatMap((i) => i.commits))],
-    sessions: [],
-    sections: lead.sections.map((s) => ({
-      ...s,
-      body: [s.body, ...folded.map((f) => part(f, s.name))].filter(Boolean).join("\n\n"),
-    })),
-  }
-  const pictures = `public/images/updates/${slug}`
-  return `${briefFor(merged)}
+// Dates in the queue are Chicago days, as the miner writes them.
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date())
 
-Why it was picked for /updates: ${verdict.reason}
-
-For this run:
-- Read the commits with git show and git log, and the code they touch.
-- Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold the reasons, what went wrong and what he wanted. Use his words for the human moments, and quote him only verbatim.
-- Look at the pictures listed in ${dossier}/images.md. Open each that might fit with Read. Pasted ones are what John saw and shared, screenshots are what the agent checked.
-- Use the pictures that show what a paragraph says: a before and after, a bug, the result. Skip near duplicates, half-loaded pages and plain terminal text.
-- Never use a picture that shows anything private: email, messages, other apps or tabs, names of real people besides John, keys, account pages, or a desktop. When unsure, leave it out.
-- For each picture you use, convert it into ${pictures}/ with a short kebab-case name: \`mkdir -p ${pictures}\`, then \`cwebp -q 85 -resize <w> 0 <src> -o ${pictures}/<name>.webp\`, at most 1600 wide. Measure it with \`sips -g pixelWidth -g pixelHeight\`. Reference it as https://d20-public.s3.us-east-1.amazonaws.com/images/updates/${slug}/<name>.webp with its real width and height, and set the frontmatter image to the strongest one.
-- Write exactly one post, content/updates/${slug}.md, with date: ${new Date().toISOString().slice(0, 10)} and draft: true.
-- Right after the frontmatter, put an HTML comment listing what is still missing: pictures or clips the post wants that the dossier didn't have, and how to make them.
-- Don't upload, commit, publish or post. When done, reply with one line: the post and how many pictures it uses.`
+// What John has learned about posts that work, grown from his own write-ups.
+function patterns(): string {
+  return section(fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8"), "Patterns that work") || "(none yet)"
 }
 
-function draftAgent(prompt: string, dossier: string): Promise<string> {
-  const dirs = ["--add-dir", dossier, ...(fs.existsSync(SHARED_WRITING) ? ["--add-dir", SHARED_WRITING] : [])]
-  const allowed = [
-    "Read Grep Glob Write Edit",
-    "Bash(git show:*) Bash(git log:*) Bash(git diff:*) Bash(curl -s https://johnpolacek.com/voice.md)",
-    "Bash(mkdir -p public/images/updates/*) Bash(cwebp:*) Bash(sips -g:*)",
-  ].join(" ")
+type Plan = {
+  title: string
+  longTitle: string
+  angle: string
+  stories: { moment: string; quote?: string; numbers?: string[]; sources: string[] }[]
+  pictures: { file: string; shows: string }[]
+  questions: string[]
+}
+
+// The planning agent reads the repo and the idea's dossier, never the raw session logs, which could hold keys. It
+// writes nothing: its plan comes back as JSON.
+function planPrompt(group: QueueItem[], verdict: Verdict, dossier: string): string {
+  const ideas = group.map((i) => ({
+    slug: i.slug,
+    title: i.title,
+    sections: Object.fromEntries(i.sections.filter((s) => s.name !== VERDICT).map((s) => [s.name, s.body])),
+    commits: i.commits,
+  }))
+  return `${CONTEXT}
+
+This idea was picked for a post on /updates: ${verdict.reason}
+Don't write the post. John writes it with an LLM. Your job is the material he starts from, gathered so he doesn't have to dig.
+
+Patterns that worked in John's posts so far:
+${patterns()}
+
+How to title a post, from John's voice guide:
+${titleGuide()}
+
+Gather:
+- Read each commit with git show, and the code it touches where the detail matters.
+- Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold what went wrong, what surprised him and what he wanted.
+- Look at the pictures listed in ${dossier}/images.md. Open each that might fit with Read. Pasted ones are what John saw, screenshots are what an agent checked.
+
+Return only a JSON object:
+{"title": the short title, "longTitle": the long title,
+ "angle": two or three sentences: who would read this, and the one thing they walk away with,
+ "stories": [the 2 to 5 strongest moments, in the order a post would tell them, each {"moment": what happened in plain words, "quote": John's exact words from sessions.md if he said something that shows it, else "", "numbers": [numbers from commits or sessions that matter to it], "sources": [commit hashes, or "session <id> <time>"]}],
+ "pictures": [up to 8, best first, each {"file": the path as images.md lists it, "shows": what a reader sees in it and which story it goes with}],
+ "questions": [2 to 4 things only John knows that would make the post better: why he cared, what he felt, what he'd tell someone trying the same]}
+Never invent a fact, number, motive or quote. Skip pictures that show anything private: email, messages, other apps or tabs, real people besides John, keys, account pages or a desktop. Skip near duplicates and half-loaded screens.
+
+The idea${group.length > 1 ? "s, the first leading" : ""}:
+${JSON.stringify(ideas, null, 1)}`
+}
+
+function planAgent(prompt: string, dossier: string): Promise<string> {
+  const allowed = "Read Grep Glob Bash(git show:*) Bash(git log:*) Bash(git diff:*)"
   return new Promise((resolve, reject) => {
     const child = spawn(
       "claude",
-      ["-p", "--model", MODEL, "--output-format", "json", "--tools", "Read,Grep,Glob,Write,Edit,Bash", "--allowedTools", allowed, "--no-session-persistence", "--strict-mcp-config", "--setting-sources", "project", ...dirs],
+      ["-p", "--model", MODEL, "--output-format", "json", "--tools", "Read,Grep,Glob,Bash", "--allowedTools", allowed, "--no-session-persistence", "--strict-mcp-config", "--setting-sources", "project", "--add-dir", dossier],
       { cwd: REPO, stdio: ["pipe", "pipe", "pipe"] }
     )
     let out = ""
@@ -160,37 +179,64 @@ function draftAgent(prompt: string, dossier: string): Promise<string> {
   })
 }
 
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80)
+function parsePlan(text: string): Plan {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+  const raw = fenced ? fenced[1] : text
+  const start = raw.indexOf("{")
+  const end = raw.lastIndexOf("}")
+  if (start === -1 || end === -1) throw new Error(`no JSON object in the plan: ${text.slice(0, 300)}`)
+  return JSON.parse(raw.slice(start, end + 1))
+}
+
+const PLAN_SECTIONS = ["Title ideas", "Angle", "Stories", "Pictures", "Questions for John"]
+
+function planSections(plan: Plan, dossier: string): QueueSection[] {
+  const rel = path.relative(REPO, dossier)
+  const stories = plan.stories
+    .map((s, i) => {
+      const lines = [`${i + 1}. ${s.moment}`]
+      if (s.quote) lines.push(`   > ${s.quote}`)
+      if (s.numbers?.length) lines.push(`   Numbers: ${s.numbers.join("; ")}`)
+      if (s.sources?.length) lines.push(`   Sources: ${s.sources.join(", ")}`)
+      return lines.join("\n")
+    })
+    .join("\n\n")
+  const pictures = plan.pictures.map((p) => `- ${rel}/${p.file}: ${p.shows}`).join("\n")
+  return [
+    { name: "Title ideas", body: `- ${plan.title}\n- Long: ${plan.longTitle}` },
+    { name: "Angle", body: plan.angle },
+    { name: "Stories", body: stories || "(none found)" },
+    { name: "Pictures", body: `${pictures || "(none in the sessions)"}\n\nAll of them, with the sessions: ${rel}/` },
+    { name: "Questions for John", body: plan.questions.map((q) => `- ${q}`).join("\n") },
+  ]
 }
 
 function setVerdict(item: QueueItem, text: string): QueueItem {
-  const body = `${new Date().toISOString().slice(0, 10)}: ${text}`
+  const body = `${today()}: ${text}`
   const sections = item.sections.filter((s) => s.name !== VERDICT)
   return { ...item, sections: [...sections, { name: VERDICT, body }] }
 }
 
-async function draft(lead: QueueItem, folded: QueueItem[], verdict: Verdict) {
-  let slug = slugify(verdict.title || lead.title)
-  while (fs.existsSync(path.join(UPDATES, `${slug}.md`))) slug += "-2"
-  console.log(`drafting ${slug}${folded.length ? `, with ${folded.map((f) => f.slug).join(", ")}` : ""}`)
+async function plan(lead: QueueItem, folded: QueueItem[], verdict: Verdict) {
+  console.log(`planning ${lead.slug}${folded.length ? `, with ${folded.map((f) => f.slug).join(", ")}` : ""}`)
   const t = Date.now()
   const group = [lead, ...folded]
-  const d = buildDossier(slug, [...new Set(group.flatMap((i) => i.sessions))], [...new Set(group.flatMap((i) => i.commits))])
-  console.log(`  dossier: ${d.turns} turns, ${d.images} pictures at ${d.dir}`)
-  const reply = await draftAgent(draftPrompt(lead, folded, verdict, slug, d.dir), d.dir)
-  const file = path.join(UPDATES, `${slug}.md`)
-  if (!fs.existsSync(file)) throw new Error(`no draft written for ${slug}: ${reply.slice(0, 400)}`)
-  if (!/^draft:\s*true/m.test(fs.readFileSync(file, "utf8"))) console.warn(`  ${slug}.md is missing draft: true, check it before pushing`)
-  writeItem({ ...setVerdict(readItem(lead.slug), `post. ${verdict.reason}`), status: "draft", post: slug })
-  for (const f of folded) writeItem({ ...setVerdict(readItem(f.slug), `folded into ${slug}.`), status: "shelved", into: lead.slug })
-  console.log(`  wrote content/updates/${slug}.md (${Math.round((Date.now() - t) / 1000)}s): ${reply.trim().slice(0, 200)}`)
-  console.log(`  after checking it: pnpm stage:sync public/images/updates/${slug}`)
+  const d = buildDossier(lead.slug, [...new Set(group.flatMap((i) => i.sessions))], [...new Set(group.flatMap((i) => i.commits))])
+  console.log(`  dossier: ${d.turns} turns, ${d.images} pictures at ${path.relative(REPO, d.dir)}`)
+  const p = parsePlan(await planAgent(planPrompt(group, verdict, d.dir), d.dir))
+  const item = readItem(lead.slug)
+  const kept = item.sections.filter((s) => !PLAN_SECTIONS.includes(s.name) && s.name !== VERDICT)
+  writeItem({
+    ...item,
+    // The idea keeps its title, which John may have picked. The planner's go in Title ideas beside it.
+    longTitle: item.longTitle || p.longTitle,
+    formats: [...new Set([...item.formats, "update"])],
+    commits: [...new Set(group.flatMap((i) => i.commits))],
+    sessions: [...new Set(group.flatMap((i) => i.sessions))],
+    sections: [...kept, ...planSections(p, d.dir), { name: VERDICT, body: `${today()}: post. ${verdict.reason}` }],
+  })
+  for (const f of folded) writeItem({ ...setVerdict(readItem(f.slug), `folded into ${lead.slug}.`), status: "shelved", into: lead.slug })
+  console.log(`  "${p.title}": ${p.stories.length} stories, ${p.pictures.length} pictures, ${p.questions.length} questions (${Math.round((Date.now() - t) / 1000)}s)`)
 }
 
 async function main() {
@@ -201,7 +247,7 @@ async function main() {
   if (ONLY) {
     const lead = bySlug.get(ONLY)
     if (!lead) throw new Error(`no idea named ${ONLY} in content/queue`)
-    await draft(lead, [], { slug: ONLY, post: true, reason: "picked by hand." })
+    await plan(lead, [], { slug: ONLY, post: true, reason: "picked by hand." })
     return syncQueue()
   }
 
@@ -229,7 +275,7 @@ async function main() {
   for (const v of picks) {
     const folded = (v.with ?? []).map((s) => bySlug.get(s)).filter((i): i is QueueItem => !!i && i.slug !== v.slug)
     try {
-      await draft(bySlug.get(v.slug)!, folded, v)
+      await plan(bySlug.get(v.slug)!, folded, v)
     } catch (e) {
       console.error(`  ${v.slug}: failed, ${(e as Error).message}`)
     }
