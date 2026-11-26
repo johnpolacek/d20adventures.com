@@ -13,7 +13,7 @@ export function briefFor(item: QueueItem): string {
 Title: ${item.title}
 Long title: ${item.longTitle || "(none yet)"}
 
-${lines("What it is about", part("Point"))}${lines("The angle", part("Angle"))}${lines("Why a reader wants it", part("Payoff"))}${lines("Stories to use", part("Stories"))}${lines("Pictures from the sessions, look at each before using it", part("Pictures"))}${lines("Questions for John, ask them before drafting", part("Questions for John"))}${lines("Facts gathered so far, check each before using it", part("Facts"))}${lines("Commits", item.commits.join(" "))}${dossierOrSessions(item)}Read docs/writing-voice.md first, its Patterns that work above all, and write in John’s voice. Read the code and docs behind these commits for the real detail, and link the thing itself where it can be linked. Never invent a fact, number or reason.
+${lines("What it is about", part("Point"))}${lines("Topic intro", part("Intro") || part("Angle"))}${lines("Why a reader wants it", part("Payoff"))}${lines("The list, each item a thing and what we did, with its picture", part("Items"))}${lines("Stories to use", part("Stories"))}${lines("Pictures from the sessions, look at each before using it", part("Pictures"))}${lines("Pages to link in the conclusion", part("Links"))}${lines("Questions for John, ask them before drafting", part("Questions for John"))}${lines("Facts gathered so far, check each before using it", part("Facts"))}${lines("Commits", item.commits.join(" "))}${dossierOrSessions(item)}Read docs/writing-voice.md first, its Patterns that work above all, and write in John’s voice. The post takes the shape there: title, topic intro, the list, and a conclusion linking to these pages. Read the code and docs behind these commits for the real detail, and link the thing itself where it can be linked. Never invent a fact, number or reason.
 
 Make it useful to someone doing the same thing. Mine the commits and sessions for tips they can use: the setting, prompt or step that worked, what failed first and the fix, the number that decided it. John’s prompts and the final replies hold the decisions, so skip tool output. Every tip needs a source in a commit or session. Keep secrets, keys and private paths out.
 
@@ -38,7 +38,7 @@ Make each post worth reading on its own. Lead with the most useful tip in its se
 
 // A planned idea has its sessions scrubbed into content/queue/dossiers/<slug>/, which beats the raw logs.
 function dossierOrSessions(item: QueueItem): string {
-  if (item.sections.some((s) => s.name === "Stories") && item.sections.some((s) => s.name === "Pictures")) {
+  if (item.sections.some((s) => s.name === "Items" || s.name === "Stories")) {
     return `Sessions, scrubbed, with every picture in them:\ncontent/queue/dossiers/${item.slug}/sessions.md and images.md\n\n`
   }
   return item.sessions.length ? `Agent sessions:\n${sessionPaths(item.sessions)}\n\n` : ""

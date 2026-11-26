@@ -31,7 +31,7 @@ What John's own posts show works, added each time he finishes one. `pnpm content
 - **Plan, don't draft.** The picker gathers an idea's angle, stories, quotes, pictures and questions, and John writes the post with an LLM. Its full draft of “Building an AI Game Master That Plays by the D&D Rules” kept the title and lost the content (John, 2026-11-25: “i like the title but not the content”).
 - **Claude, not Gemini.** Name Claude as the game master and leave Gemini out (John, 2026-11-25: “do not mention Gemini - focus on Claude”).
 - **Say 5E.** A title says “5E Rules Engine”, not SRD 5.2.1. “Keeping an AI Game Master Inside the Rules with Claude Opus and a 5E Rules Engine” beat “Building an AI Game Master That Plays by the D&D Rules”.
-- **A list post for a system.** When the subject is a whole system, read the codebase for all of it, not only the week's commits, and write a list: each item is one thing and what we did. Playtest stories go inside the item they taught. John, 2026-11-25: “analyze the codebase for where we are implementing the 5E rules and think of it like a list post, with each item on the list being a thing and what we did”.
+- **One shape.** Title, a short topic intro, a list of items, each one thing and what we did with a picture or a clip, then a conclusion linking to pages on d20adventures.com (John, 2026-11-25: “thats probably a good general structure”). For a whole system, read the codebase for all of it, not only the week's commits. Playtest stories go inside the item they taught. It started as “analyze the codebase for where we are implementing the 5E rules and think of it like a list post, with each item on the list being a thing and what we did”.
 
 ## Short and long titles
 

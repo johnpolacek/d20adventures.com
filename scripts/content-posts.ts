@@ -11,8 +11,9 @@
  * It writes no post. John fleshes a planned idea out with an LLM, from the brief on /admin/content (owner decision,
  * 2026-11-25: "lets keep it at the idea stage, then i can flesh it out with the LLM"). The planner reads the commits,
  * the code, and a dossier of the idea's sessions (scrubbed) with every picture in them, kept in
- * content/queue/dossiers/<slug>/, and adds to the idea: the angle, the stories with John's words and their sources,
- * the pictures worth using, questions only John can answer, and title ideas. The idea's own title stays.
+ * content/queue/dossiers/<slug>/, and adds to the idea the shape every post takes: title ideas, a topic intro, a list
+ * of items (each what we did, John's words, its sources and a picture or the clip to make), the d20adventures.com
+ * pages to link at the end, and questions only John can answer. The idea's own title stays.
  *
  * Each judged idea gets an "Update verdict" section, so it isn't judged twice. Ideas folded into a planned one become
  * shelved with into set. Nothing is committed, published or posted.
@@ -107,12 +108,23 @@ function patterns(): string {
   return section(fs.readFileSync(path.join(REPO, "docs/writing-voice.md"), "utf8"), "Patterns that work") || "(none yet)"
 }
 
+// Every post takes one shape (John, 2026-11-25): title, a topic intro, a list of items each with what we did and a
+// picture or clip, and a conclusion linking to pages on d20adventures.com.
 type Plan = {
   title: string
   longTitle: string
-  angle: string
-  stories: { moment: string; quote?: string; numbers?: string[]; sources: string[] }[]
-  pictures: { file: string; shows: string }[]
+  intro: string
+  items: {
+    thing: string
+    solution: string
+    quote?: string
+    numbers?: string[]
+    sources: string[]
+    picture?: string
+    shows?: string
+    need?: string
+  }[]
+  links: { url: string; why: string }[]
   questions: string[]
 }
 
@@ -136,16 +148,19 @@ ${patterns()}
 How to title a post, from John's voice guide:
 ${titleGuide()}
 
+Every post takes one shape: the title, a short topic intro, a list of items, and a conclusion linking to pages on d20adventures.com. Each item is one thing and what we did about it, with a picture or a clip.
+
 Gather:
-- Read each commit with git show, and the code it touches where the detail matters.
-- Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold what went wrong, what surprised him and what he wanted.
+- Read each commit with git show. When the subject is a whole system, read the codebase and plans/ for all of it, not only these commits, so the list covers the system.
+- Read ${dossier}/sessions.md: John's prompts and the agents' replies while he built it, scrubbed. His prompts hold what went wrong, what surprised him and what he wanted. A playtest story goes inside the item it taught.
 - Look at the pictures listed in ${dossier}/images.md. Open each that might fit with Read. Pasted ones are what John saw, screenshots are what an agent checked.
+- Find the pages to link: the routes under app/ and the adventures under content/settings. Link only pages that exist.
 
 Return only a JSON object:
 {"title": the short title, "longTitle": the long title,
- "angle": two or three sentences: who would read this, and the one thing they walk away with,
- "stories": [the 2 to 5 strongest moments, in the order a post would tell them, each {"moment": what happened in plain words, "quote": John's exact words from sessions.md if he said something that shows it, else "", "numbers": [numbers from commits or sessions that matter to it], "sources": [commit hashes, or "session <id> <time>"]}],
- "pictures": [up to 8, best first, each {"file": the path as images.md lists it, "shows": what a reader sees in it and which story it goes with}],
+ "intro": two or three sentences on the topic: who it's for and the one thing they walk away with,
+ "items": [5 to 12, in the order the post would list them, each {"thing": the item's name, a few words, "solution": what we did about it, in plain words, with the problem it solved, "quote": John's exact words from sessions.md if he said something that shows it, else "", "numbers": [numbers that matter to it, from commits, code or sessions], "sources": [commit hashes, files, or "session <id> <time>"], "picture": the path as images.md lists it, or "" if none fits, "shows": what a reader sees in that picture, "need": when no picture fits, the screenshot or clip to make and how, else ""}],
+ "links": [the d20adventures.com pages the conclusion should send readers to, each {"url": the full URL, "why": what the reader finds there}],
  "questions": [2 to 4 things only John knows that would make the post better: why he cared, what he felt, what he'd tell someone trying the same]}
 Never invent a fact, number, motive or quote. Skip pictures that show anything private: email, messages, other apps or tabs, real people besides John, keys, account pages or a desktop. Skip near duplicates and half-loaded screens.
 
@@ -188,25 +203,26 @@ function parsePlan(text: string): Plan {
   return JSON.parse(raw.slice(start, end + 1))
 }
 
-const PLAN_SECTIONS = ["Title ideas", "Angle", "Stories", "Pictures", "Questions for John"]
+const PLAN_SECTIONS = ["Title ideas", "Angle", "Intro", "Stories", "Items", "Pictures", "Links", "Questions for John"]
 
 function planSections(plan: Plan, dossier: string): QueueSection[] {
   const rel = path.relative(REPO, dossier)
-  const stories = plan.stories
-    .map((s, i) => {
-      const lines = [`${i + 1}. ${s.moment}`]
-      if (s.quote) lines.push(`   > ${s.quote}`)
-      if (s.numbers?.length) lines.push(`   Numbers: ${s.numbers.join("; ")}`)
-      if (s.sources?.length) lines.push(`   Sources: ${s.sources.join(", ")}`)
+  const items = plan.items
+    .map((it, i) => {
+      const lines = [`${i + 1}. **${it.thing}.** ${it.solution}`]
+      if (it.quote) lines.push(`   > ${it.quote}`)
+      if (it.numbers?.length) lines.push(`   Numbers: ${it.numbers.join("; ")}`)
+      if (it.picture) lines.push(`   Picture: ${rel}/${it.picture}, ${it.shows ?? ""}`)
+      else if (it.need) lines.push(`   To make: ${it.need}`)
+      if (it.sources?.length) lines.push(`   Sources: ${it.sources.join(", ")}`)
       return lines.join("\n")
     })
     .join("\n\n")
-  const pictures = plan.pictures.map((p) => `- ${rel}/${p.file}: ${p.shows}`).join("\n")
   return [
     { name: "Title ideas", body: `- ${plan.title}\n- Long: ${plan.longTitle}` },
-    { name: "Angle", body: plan.angle },
-    { name: "Stories", body: stories || "(none found)" },
-    { name: "Pictures", body: `${pictures || "(none in the sessions)"}\n\nAll of them, with the sessions: ${rel}/` },
+    { name: "Intro", body: plan.intro },
+    { name: "Items", body: `${items || "(none found)"}\n\nEvery picture and the sessions: ${rel}/` },
+    { name: "Links", body: plan.links.map((l) => `- ${l.url}: ${l.why}`).join("\n") || "- https://d20adventures.com" },
     { name: "Questions for John", body: plan.questions.map((q) => `- ${q}`).join("\n") },
   ]
 }
@@ -236,7 +252,7 @@ async function plan(lead: QueueItem, folded: QueueItem[], verdict: Verdict) {
     sections: [...kept, ...planSections(p, d.dir), { name: VERDICT, body: `${today()}: post. ${verdict.reason}` }],
   })
   for (const f of folded) writeItem({ ...setVerdict(readItem(f.slug), `folded into ${lead.slug}.`), status: "shelved", into: lead.slug })
-  console.log(`  "${p.title}": ${p.stories.length} stories, ${p.pictures.length} pictures, ${p.questions.length} questions (${Math.round((Date.now() - t) / 1000)}s)`)
+  console.log(`  "${p.title}": ${p.items.length} items, ${p.items.filter((i) => i.picture).length} with pictures, ${p.links.length} links, ${p.questions.length} questions (${Math.round((Date.now() - t) / 1000)}s)`)
 }
 
 async function main() {

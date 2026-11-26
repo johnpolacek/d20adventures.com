@@ -81,7 +81,7 @@ Owner decisions, 2026-11-25: after each mining run, decide which ideas earn an `
 - Each judged idea gets an Update verdict section with the reason, so it isn't judged twice.
 - The planner is `claude -p` in the repo with read tools and git. It writes nothing itself. It reads the commits, the code and a dossier of the idea's sessions (John: “can we look at actual claude sessions too and use images attached”).
 - The dossier (`scripts/content-dossier.ts`) is `content/queue/dossiers/<slug>/`, out of Git, and the queue sync copies only top-level files, so it stays on this machine. It holds every prompt and reply from the idea's Claude and Codex sessions, scrubbed like the miner's, and every picture in them: pasted, agent screenshots, and image files the agent opened. It keeps the hours around the idea's commits, from 3 hours before each to 30 minutes after.
-- The plan lands in the idea: a new title and long title, then Angle, Stories (each with John's words, numbers and sources), Pictures (dossier paths and what each shows) and Questions for John. Ideas folded into it become shelved with `into` set.
+- The plan lands in the idea in the shape every post takes (John, 2026-11-25): Title ideas, an Intro, Items (each one thing and what we did, with John's words, numbers, sources, and a dossier picture or the clip to make), Links to d20adventures.com pages for the conclusion, and Questions for John. The idea keeps its own title. Ideas folded into it become shelved with `into` set.
 - The brief on `/admin/content` carries the plan and points at the dossier and the Patterns that work in `docs/writing-voice.md`. After John finishes a post, add what worked there.
 - The weekly run is `pnpm content:mine && pnpm content:posts`.
 
