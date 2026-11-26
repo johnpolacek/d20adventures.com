@@ -173,7 +173,10 @@ export class ClaudeSession {
   constructor(cwd, system, model) {
     this.start = performance.now()
     this.requests = 0
-    this.child = launch(locate("claude"), [...claudeArgs, ...(model ? ["--model", model] : []), "--system-prompt", system], { cwd, env: minimalEnv(), stdio: ["pipe", "pipe", "pipe"] })
+    // Each GM call is one prompt in a new process, so nothing it writes to the prompt cache is read again, and a cache
+    // write costs up to twice plain input. With caching off a call costs about half.
+    const env = { ...minimalEnv(), DISABLE_PROMPT_CACHING: "1" }
+    this.child = launch(locate("claude"), [...claudeArgs, ...(model ? ["--model", model] : []), "--system-prompt", system], { cwd, env, stdio: ["pipe", "pipe", "pipe"] })
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
@@ -232,6 +235,7 @@ export class ClaudeSession {
         failed: Boolean(event.is_error),
         providerTurns: event.num_turns ?? null,
         reportedSessionApiMs: event.duration_api_ms ?? null,
+        usage: event.usage,
       })
     }
   }

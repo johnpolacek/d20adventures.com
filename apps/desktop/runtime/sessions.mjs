@@ -43,6 +43,11 @@ class CodexSession {
   async initialize() {
     await this.peer.request("initialize", { clientInfo: { name: "d20_desktop_spike", version: "0.0.0" }, capabilities: { experimentalApi: true } })
     this.peer.send({ jsonrpc: "2.0", method: "initialized" })
+    this.connected = true
+    await this.thread()
+  }
+  // Each request is a thread of its own, so no prompt is sent again with the next.
+  async thread() {
     const thread = await this.peer.request("thread/start", {
       cwd: this.cwd,
       ephemeral: true,
@@ -58,7 +63,8 @@ class CodexSession {
     this.startupMs = Math.round(performance.now() - this.start)
   }
   async ask(text) {
-    if (!this.id) await this.initialize()
+    if (!this.connected) await this.initialize()
+    else if (this.requests) await this.thread()
     this.requests++
     this.messages = []
     const completion = new Promise((resolve, reject) => {
@@ -119,6 +125,11 @@ class AcpSession {
       await this.peer.request("authenticate", { methodId: auth, _meta: { headless: true } })
       this.authMethod = auth
     }
+    this.connected = true
+    await this.conversation()
+  }
+  // Each request is a session of its own, so no prompt is sent again with the next.
+  async conversation() {
     const session = await this.peer.request("session/new", { cwd: this.cwd, mcpServers: [] })
     this.id = session.sessionId
     this.model = session.models?.currentModelId ?? "CLI default (unreported)"
@@ -127,7 +138,8 @@ class AcpSession {
     this.startupMs = Math.round(performance.now() - this.start)
   }
   async ask(text) {
-    if (!this.id) await this.initialize()
+    if (!this.connected) await this.initialize()
+    else if (this.requests) await this.conversation()
     this.requests++
     this.text = ""
     const result = await this.peer.request("session/prompt", { sessionId: this.id, prompt: [{ type: "text", text: `${this.system}\n\n${text}` }] })
