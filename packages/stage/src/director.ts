@@ -282,8 +282,8 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
       // behind to stand at: the view from behind them all lands in the reeds. The scene's own opening view stands.
       const spread = Math.max(...party.flatMap((a) => party.map((b) => apart(byId.get(a)!, byId.get(b)!))))
       if (spread > 8) return null
-      // Behind the party and above, looking past them at where they face, sweeping slowly round.
-      return take({ subjects: party, offset: [s * 2.4, 3.4, -6.5], target: [0, 1.2, 5], relative: "facing", fov: 52, orbit: s * -4, sweep: 22 }, "establishing", {
+      // Behind the party and above, looking past them at where they face, circling slowly round for as long as it holds.
+      return take({ subjects: party, offset: [s * 2.4, 3.4, -6.5], target: [0, 1.2, 5], relative: "facing", fov: 52, orbit: s * -4, sweep: 90 }, "establishing", {
         duration: 3200,
         ease: "drift",
         move: { push: 0.12, rise: -0.6, seconds: 9 },

@@ -1255,6 +1255,8 @@ export function StagePlay(props: {
       const opening = wide?.shot ?? stage.staging?.shot
       if (opening) {
         go(opening, wide)
+        // Never still: it circles slowly round the place, as it does under the party screen, until the next take.
+        stage.circleOn((plan?.side ?? 1) * -4, 90)
         if (preview) return
         cut = false
         const timer = setTimeout(frame, ESTABLISH_HOLD)
