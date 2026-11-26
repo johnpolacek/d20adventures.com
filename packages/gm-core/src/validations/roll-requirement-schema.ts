@@ -3,6 +3,8 @@ import { z } from "zod"
 import { checkSchema, rollModes } from "../sheet/check"
 import { stakeSchema } from "../sheet/stakes"
 
+const point = z.object({ x: z.number(), y: z.number() })
+
 // What every asked-for roll carries. The numbers are the engine's.
 const asked = {
   rollType: z.string().describe('The roll\'s name on screen and in the story: "Stealth", "Wisdom Saving Throw", "Fog Cloud (Intelligence)", "Longbow"'),
@@ -35,6 +37,21 @@ export const rollRequirementSchema = z.union([
     check: checkSchema,
     ...asked,
     stakes: z.array(stakeSchema).optional().describe("Who the roll hurts or heals, by which dice, on which outcome"),
+    // Escaping a grapple is the action, and the roller's movement is still theirs (SRD 5.2.1, Grappled): held at Speed
+    // 0 they could not move before the check, so the move their words asked for is made once it breaks the grapple.
+    free: z
+      .object({
+        move: z.object({
+          at: point,
+          feet: z.number(),
+          path: z.array(point),
+          dash: z.literal(true).optional(),
+        }),
+        fight: z.literal(false).optional().describe("No fight is on, as the game master read the scene: the move draws no Opportunity Attack"),
+        disengaged: z.literal(true).optional().describe("A Bonus Action let the roller move without drawing Opportunity Attacks: Cunning Action's Disengage"),
+      })
+      .optional()
+      .describe("Where the roller goes once the check frees them of the grapple on them, and how"),
   }),
   z.object({
     attack: z.object({
@@ -108,6 +125,8 @@ export type RequiredAttack = Extract<RequiredRoll, { attack: unknown }>
 export type RequiredDeathSave = Extract<RequiredRoll, { deathSave: true }>
 export type RequiredCast = Extract<RequiredRoll, { cast: unknown }>
 export type RequiredFeature = Extract<RequiredRoll, { feature: unknown }>
+/** The move a roller makes once their check breaks a grapple on them. */
+export type FreedMove = NonNullable<Extract<RequiredRoll, { check: unknown }>["free"]>
 /** A roll the game master picks from its menus: a check or an attack, never a Death Saving Throw. */
 export type ChosenRoll = Exclude<RequiredRoll, RequiredDeathSave | RequiredFeature>
 export const isAttackRoll = (roll: RequiredRoll): roll is RequiredAttack => "attack" in roll

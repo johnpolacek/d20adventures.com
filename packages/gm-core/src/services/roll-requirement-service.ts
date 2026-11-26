@@ -8,9 +8,9 @@ import { attacksOf } from "../sheet/attack"
 import { attackAfter, attackRequirement, followRule, type InScene } from "../sheet/attack-roll"
 import { checkFromMenu, checkMenu, checkMenuIds, checkName, combineModes, DIFFICULTY_CLASSES, difficulties, rollModes, sheetModes, spellcastingAbilityOf } from "../sheet/check"
 import { type ChoiceRule, choiceRules, classBonusCast, classCastingBar, classCheckBonus, classCheckModes, type Featured, seesRules, shapedCast, withAdvantageBarred } from "../sheet/class-rules"
-import { conditionSpans } from "../sheet/condition-entry"
+import { type ConditionEntry, conditionSpans } from "../sheet/condition-entry"
 import { CONDITION_RULES, cannotAttack, checkModesFrom, conditionWords, isHidden, type ModeSource } from "../sheet/conditions"
-import { bonusActionsOf, bonusRuleFor, usable } from "../sheet/features"
+import { bonusActionsOf, bonusDisengages, bonusRuleFor, usable } from "../sheet/features"
 import { found, type Hider, hiddenFrom, searchRoll } from "../sheet/hiding"
 import { chargedFeet, escapeFrom, strengthAndProficiency } from "../sheet/hit-riders"
 import { itemCastingWords, menuId } from "../sheet/item-use"
@@ -53,7 +53,7 @@ import { actionIds } from "../sheet/turn-effect"
 import type { TurnCharacter } from "../types/adventure"
 import type { Character } from "../types/character"
 import { hasFled, isAway, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
-import type { ChosenRoll, RequiredCast, RequiredFeature } from "../validations/roll-requirement-schema"
+import type { ChosenRoll, FreedMove, RequiredCast, RequiredFeature } from "../validations/roll-requirement-schema"
 
 // An NPC whose action the notes fix rolls nothing. Mara's lift "always happens" unless a hero spots it, yet she rolled
 // Sleight of Hand, failed, and the theft the scene turns on never happened.
@@ -624,6 +624,7 @@ ${
    - An action that goes anywhere moves them, however short the way. Creeping to the edge of the cover they are in, or stepping up to a rail or a window, is "moveTo" what they come closer to, with "moveFeet" 5. Leave the move out only when they stay where they are.
    - They can move ${moveBudget(mover, others)} feet this turn, and twice that when the whole turn is "dash".
    - A melee attack on someone out of reach closes with them by itself: it needs no "moveTo".
+   - Breaking free of a hold and then going somewhere still names where they go in "moveTo" or "moveAway": the game moves them once they are free.
    - Every turn that moves sets "fight": true when a fight is on in the scene, false when it is not. A scene of talk or trade is no fight, whoever stands near.
    - A "hide" goes into cover: when the action names a place they hide at, "moveTo" is that place. When it names none, leave it out and the game finds the nearest cover.
 ${leapers.length ? `   - ${leapers.join(" and ")} ${leapers.length > 1 ? "teleport" : "teleports"} them: cast it, and "moveTo" or "moveAway" is where it takes them. The game puts them there with no walk, and that is their move this turn.\n` : ""}   - Never refuse or change an action because of distance. The game settles reach and range itself.
@@ -792,6 +793,20 @@ Action: "${action}"
         return move
       }
       moved(moveFor())
+      // The move a hero makes once a check breaks the grapple a holder has on them, walked as though that grip were gone.
+      const freedMove = (holder: string): FreedMove | undefined => {
+        if (!mover || !floor) return undefined
+        const grip = mover.conditions?.find((entry) => entry.id === "grappled" && entry.source === holder)
+        const gone = (entry: ConditionEntry) => entry.source === holder && (entry === grip || (grip?.attack !== undefined && entry.attack === grip.attack))
+        const loose = { ...mover, conditions: (mover.conditions ?? []).filter((entry) => !gone(entry)) }
+        const walked = takeMove({ floor, mover: loose, others, ask, dash, ...(extra ? { extra } : {}) })
+        if (!walked) return undefined
+        return {
+          move: { at: walked.at, feet: walked.feet, path: walked.path, ...(walked.dash ? { dash: true as const } : {}) },
+          ...(also.fight === false ? { fight: false as const } : {}),
+          ...(bonusDisengages(loose, used?.id, walked.feet) ? { disengaged: true as const } : {}),
+        }
+      }
       // Whether an enemy stands within 5 feet of the roller, up and able to act: a ranged attack then has Disadvantage.
       const pressed = (who: typeof character) => {
         const from = floor ? placedOf(who) : undefined
@@ -1211,6 +1226,11 @@ Action: "${action}"
         check = { kind: "skill", skill: nimble ? "acrobatics" : "athletics" }
         difficulty = escaping.dc
       }
+      // Escaping is the action, and the roller's movement is still theirs (SRD 5.2.1, Grappled, as BG3 runs it). Held at
+      // Speed 0 they made no move before the check, so the one their words ask for is made once the check frees them:
+      // Lyra, held by Reinhard, breaks his grip and climbs out the window for the trees. Free of this grapple only, one
+      // held by another still cannot move.
+      const free = escaping?.holder.id && !also.move ? freedMove(escaping.holder.id) : undefined
       // A save made to avoid or end a condition on the roller, for a species trait against it (Fey Ancestry on Charmed).
       const against = stakes.flatMap((stake) => (stake.kind === "condition" && stake.target === self && (stake.ends ? stake.on === "success" : stake.on === "failure") ? [stake.condition] : []))
       // The game master's read of the moment, then what the sheet and the roller's conditions settle with no model.
@@ -1234,6 +1254,7 @@ Action: "${action}"
         mode,
         ...(reasons.length ? { reasons } : {}),
         ...(stakes.length ? { stakes } : {}),
+        ...(free ? { free } : {}),
       }
       console.log("[LLM] Roll requirement decision:", { character: character.name, requiresRoll: true, ...rollRequirement })
       return { roll: rollRequirement, ...also }

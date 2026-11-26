@@ -1,27 +1,24 @@
 import type { GmPorts } from "../ports"
 import { takeAction } from "../sheet/actions"
-import { checkBonus } from "../sheet/check"
 import type { DeathRules } from "../sheet/death"
-import { choiceRule, classConcentrationModes, type Featured } from "../sheet/class-rules"
+import { choiceRule, type Featured } from "../sheet/class-rules"
 import type { ConditionEntry } from "../sheet/condition-entry"
-import { afterHarm } from "../sheet/death"
 import { bonusDisengages } from "../sheet/features"
 import { heard } from "../sheet/hiding"
-import { moveWithReactions, ordered } from "../sheet/reactions"
+import { ordered } from "../sheet/reactions"
 import { partyRest, restName } from "../sheet/rest"
 import type { Sheet } from "../sheet/sheet"
-import { settleConcentration } from "../sheet/spell-effects"
 import type { TurnEffect } from "../sheet/turn-effect"
 import { authoredText } from "../story/authored"
-import { moveBeats, type StoryBeat } from "../story/beats"
+import type { StoryBeat } from "../story/beats"
 import { type StoryNames, storyNames } from "../story/render"
-import { attackBeat, concentrationBeat, turnScript } from "../story/turn"
-import { fallen } from "../sheet/attack"
+import { turnScript } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import type { Character } from "../types/character"
 import { rollD20, rollDie } from "../utils/game-utils"
 import { useBonus } from "./bonus-action"
+import { heroMove } from "./hero-move"
 import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
 
 export function createAdventureTurnReplyService(ports: GmPorts) {
@@ -156,15 +153,12 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
       if (applied.told) chose.push({ kind: "feature", by: { step: "reply", character: args.characterId }, character: args.characterId, name: applied.told.name, text: applied.told.text })
     }
     if (move) {
-      const by = { step: "reply" as const, character: args.characterId }
-      const went = moveWithReactions({
+      const went = heroMove({
         characters,
         moverId: args.characterId,
-        path: move.path,
+        move,
         // No fight is on, as the game master read the scene: no one strikes as the hero walks off.
         fight: args.reading.fight,
-        // A spell's teleport walks nothing (../sheet/moves `takeTeleport`).
-        teleport: move.teleport,
         // The Disengage action, or a Bonus Action that moves without drawing them: Cunning Action's, or Tactical
         // Shift's half Speed taken with Second Wind.
         disengaged:
@@ -174,41 +168,12 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
             bonus?.feature,
             move.feet
           ),
-        ask: (offer) => ordered(characters.find((character) => character.id === offer.to)?.standingOrders, offer.id, offer.matters),
-        d20: rollD20,
-        roll: rollDie,
-        // With `playerDeath: false` a blow that would kill the hero leaves them Stable at 0 Hit Points.
+        by: { step: "reply", character: args.characterId },
         rules: args.rules,
       })
-      const mover = characters.find((character) => character.id === args.characterId)
-      // A caster the blows hurt saves to keep Concentration, and one they dropped loses it.
-      const kept = settleConcentration({
-        before: characters,
-        after: went.characters.map(afterHarm),
-        bonus: (caster) => checkBonus(caster, { kind: "save", ability: "con" }),
-        modes: classConcentrationModes,
-        d20: rollD20,
-      })
-      characters = kept.characters
-      leaving.push(...moveBeats(by, args.characterId, went.walked, move.teleport, move.dash ? "hurry" : undefined))
-      for (const made of went.attacks) {
-        const attacker = characters.find((character) => character.id === made.attacker)
-        if (!attacker || !mover) continue
-        leaving.push(
-          { kind: "feature", by, character: attacker.id, name: "Opportunity Attack", text: `${attacker.name} strikes as ${mover.name} leaves their reach.`, target: mover.id },
-          ...made.reactions.map((taken): StoryBeat => ({ kind: "feature", by, character: taken.by, name: taken.name, text: taken.text })),
-          attackBeat(by, attacker, mover.id, made.blow)
-        )
-      }
-      // What the areas on the floor did to the hero as they walked (../sheet/spell-rounds `areasWalked`).
-      leaving.push(...went.told.map((fact): StoryBeat => ({ kind: "feature", by, character: fact.character, name: fact.spell, text: fact.text })))
-      leaving.push(...kept.saves.map((save) => concentrationBeat(by, save, storyNames(turn.characters))))
-      // A hero the blow dropped does nothing more this turn: what they meant to do is lost, and any roll with it. The
-      // story says so, or the action they set out on would simply vanish from it.
+      characters = went.characters
+      leaving.push(...went.beats)
       if (went.stopped) {
-        const dropped = [...went.attacks].reverse().find((made) => made.blow.hitPoints.after === 0)
-        if (mover && dropped)
-          leaving.push({ kind: "feature", by, character: mover.id, name: "Down", text: `${fallen(mover.name, dropped.blow)} What ${mover.name} set out to do is not done.` })
         await ports.store.updateTurn({ turnId: args.turnId, patch: { characters, story: [...turn.story, ...leaving], updatedAt: Date.now() } })
         return { fell: true }
       }

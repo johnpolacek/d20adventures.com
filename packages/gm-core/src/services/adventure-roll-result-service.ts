@@ -17,7 +17,7 @@ import {
   resolveChosenCast,
   shapedCast,
 } from "../sheet/class-rules"
-import { saveFailedBy } from "../sheet/conditions"
+import { cannotMove, saveFailedBy } from "../sheet/conditions"
 import { costWhenCountered, reactionsToCast } from "../sheet/counterspell"
 import { afterHarm, thrownDeathSave } from "../sheet/death"
 import { featureResolver, inspirationHelps, inspiredCheck } from "../sheet/features"
@@ -44,6 +44,7 @@ import { CONTINUITY_RULE, FAILED_ROLL_RULE, KNOWLEDGE_RULE } from "../utils/narr
 import { hasFled, isDead, isDown } from "../utils/turn-actors"
 import { DEATH_SAVE, isAttackRoll, isCastRoll, isDeathSaveRoll, isFeatureRoll, type RequiredRoll } from "../validations/roll-requirement-schema"
 import { gmNotesWithRules } from "../wiki-adventures/player-safety"
+import { heroMove } from "./hero-move"
 import { legendaryAfterTurn } from "./legendary-action-service"
 
 export function getEncounterInstructionsFromPlan(plan: AdventurePlan, encounterId: string): string {
@@ -428,6 +429,15 @@ export function createAdventureRollResultService(ports: GmPorts) {
     })
     turnCharacters = held.characters
     rolls = [...rolls, ...held.saves.map((save) => concentrationBeat(by, save, storyNames(args.turn.characters)))]
+    // Free of the grapple, the roller makes the move their words asked for, with all a move draws: the one who held
+    // them may strike as they leave his reach (./roll-requirement-service `freedMove`).
+    const freeing = "check" in required ? required.free : undefined
+    const loose = freeing && numbers.success ? turnCharacters.find((character) => character.id === args.characterId) : undefined
+    const freed = freeing && loose && !cannotMove(loose) ? heroMove({ characters: turnCharacters, moverId: args.characterId, move: freeing.move, fight: freeing.fight, disengaged: freeing.disengaged, by, rules }) : undefined
+    if (freed) {
+      turnCharacters = freed.characters
+      rolls = [...rolls, ...freed.beats]
+    }
     // What the classes give once the roll dropped an enemy to 0 hit points (Dark One's Blessing).
     const fell = afterFelled({ before: args.turn.characters, after: turnCharacters, by: args.characterId })
     turnCharacters = fell.characters
@@ -466,7 +476,12 @@ export function createAdventureRollResultService(ports: GmPorts) {
       attack: blow && target ? strikeFacts(args.character.name, target.name, blow) : undefined,
       harm: stakeFacts,
       spell: spellCast,
-      also: [...forced.told.map((fact) => fact.text), ...held.facts, ...fell.told.map((gain) => gain.text)],
+      also: [
+        ...forced.told.map((fact) => fact.text),
+        ...held.facts,
+        ...(freed && freeing ? [`Free of the grapple, ${args.character.name} moves ${Math.round(freeing.move.feet)} feet.`, ...freed.facts] : []),
+        ...fell.told.map((gain) => gain.text),
+      ],
       ...(floor ? { standing: standingWords(turnCharacters, floor) } : {}),
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
