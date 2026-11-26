@@ -533,9 +533,15 @@ body:has(.updates-page) main + footer {
   }
 }
 
-/* Body */
+/* Body. Headings balance their lines, and running text avoids a lone last word. */
 .up-prose p {
   margin: 0 0 1.25em;
+}
+.up-prose :is(p, li, dd, blockquote, figcaption, td) {
+  text-wrap: pretty;
+}
+.up-prose :is(h2, h3, h4) {
+  text-wrap: balance;
 }
 /* A link is a step heavier than the text around it. In bold text or a heading it keeps that weight. */
 .up-prose a {

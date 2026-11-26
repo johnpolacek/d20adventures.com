@@ -109,6 +109,7 @@ html[data-update-theme="dark"] .ul-band {
   font-weight: 400;
   line-height: 1.2;
   -webkit-text-stroke: 0.45px currentColor;
+  text-wrap: balance;
   transition: color 160ms;
 }
 .ul-band .vn-name small {
@@ -118,6 +119,7 @@ html[data-update-theme="dark"] .ul-band {
   font-size: 17px;
   font-style: italic;
   line-height: 1.5;
+  text-wrap: pretty;
 }
 /*
  * The tally: what a post holds, in a narrow column ruled off at its left by a hairline that fades at both ends, like a
