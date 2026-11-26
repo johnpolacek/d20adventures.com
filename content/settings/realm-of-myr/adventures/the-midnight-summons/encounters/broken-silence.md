@@ -14,7 +14,7 @@ image: "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-m
 
 ## Intro
 
-Thalbern is a ranger of the Valkarr woods, raised by the forest's elves. He lives alone at the edge of the trees and keeps clear of Kordavos and its politics.
+Thalbern is a ranger of the Valkarr woods, raised by forest elves. He lives alone at the edge of the trees and keeps clear of Kordavos and its politics.
 
 This evening a red squirrel brought him a note from Wollandora, an elven druid and his trusted friend: Meet me at the Old Standing Stones at midnight. The balance of the forest could depend on it.
 
