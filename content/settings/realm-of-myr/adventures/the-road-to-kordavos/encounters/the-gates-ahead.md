@@ -4,6 +4,7 @@ sceneTitle: "The Marquis Road"
 sectionTitle: ""
 id: "the-gates-ahead"
 type: "encounter"
+level: 2
 title: "The Gates Ahead"
 settingId: "realm-of-myr"
 adventureId: "the-road-to-kordavos"

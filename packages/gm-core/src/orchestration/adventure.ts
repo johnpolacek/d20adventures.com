@@ -7,6 +7,7 @@ import { createLegendaryActionService } from "../services/legendary-action-servi
 import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
 import type { LevelUpChoices } from "../sheet/level-up"
+import { inFight } from "../sheet/level-owed"
 import { levelOwed, takeLevel } from "../sheet/milestone"
 import { standingOrdersSchema } from "../sheet/reactions"
 import type { StandingOrders } from "../sheet/turn-effect"
@@ -278,6 +279,7 @@ export function createAdventure(ports: GmPorts) {
     const { turn } = await assertAdventureAccessByTurn(userId, turnId)
     const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
     if (!levelOwed(character)) throw new Error("No level is owed to this hero.")
+    if (inFight(turn as Parameters<typeof inFight>[0])) throw new Error("A level is taken once the fight is over.")
     const taken = takeLevel(character, choices)
     if ("problems" in taken) return { problems: taken.problems }
     const levelled = taken.character

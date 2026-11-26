@@ -120,12 +120,14 @@ test("a level a player has not taken stays owed from one encounter to the next",
 })
 
 test("an adventure's end raises its heroes to the level of the adventure that follows", async () => {
-  // Covert Cargo leads into The Road to Kordavos, played at level 1: its end gives no level.
-  const plain = setup()
+  // Covert Cargo leads into The Road to Kordavos, played at level 1: with its milestones taken out, its end gives no level.
+  const unmarked: Packs = structuredClone(packs)
+  for (const encounter of Object.values(unmarked["covert-cargo"].artifacts.encounters)) delete encounter.level
+  const plain = setup(unmarked)
   try {
     await game(
       plain.store,
-      packs,
+      unmarked,
       offline
     )({
       kind: "start",
@@ -140,7 +142,7 @@ test("an adventure's end raises its heroes to the level of the adventure that fo
     plain.store.current().encounterId = "the-escape"
     plain.store.state!.adventure.currentEncounterId = "the-escape"
     roundOver(plain.store)
-    await game(plain.store, packs, onTo("return-to-the-city"))({ kind: "continue", turnId: plain.store.current()._id })
+    await game(plain.store, unmarked, onTo("return-to-the-city"))({ kind: "continue", turnId: plain.store.current()._id })
     assert.equal(plain.store.state!.adventure.status, "completed")
     for (const id of [LYRA, POPPEN, THALBERN]) assert.deepEqual([sheetOf(plain.store, id).level, hero(plain.store, id).levelDue], [1, undefined], id)
     assert.deepEqual(plain.store.kept(), {})
@@ -150,7 +152,7 @@ test("an adventure's end raises its heroes to the level of the adventure that fo
 
   // Were the Road played at level 2, the end of Covert Cargo would give that level: the companions take it at once
   // and it is kept, and Lyra's waits on her player.
-  const raised: Packs = structuredClone(packs)
+  const raised: Packs = structuredClone(unmarked)
   raised["the-road-to-kordavos"].artifacts.manifest.level = 2
   const { store, cleanup } = setup(raised)
   try {
@@ -213,6 +215,36 @@ test("an encounter's milestone raises the party the first time they come to it",
     assert.deepEqual([sheetOf(store, LYRA).level, hero(store, LYRA).levelDue], [3, undefined])
     assert.deepEqual([sheetOf(store, THALBERN).level, hero(store, THALBERN).levelDue], [1, 3])
     assert.equal(store.kept()[LYRA].sheet.level, 3)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a player's level waits for the fight to end", async () => {
+  const { store, cleanup } = setup()
+  try {
+    const run = game(store, packs, offline)
+    await run({
+      kind: "start",
+      provider: "claude",
+      adventure: "welcome-to-kordavos",
+      party: [
+        { id: THALBERN, ai: false },
+        { id: LYRA, ai: true },
+        { id: POPPEN, ai: true },
+      ],
+    })
+    const turn = store.current()
+    const story = turn.story
+    turn.story = [...story, { kind: "roll", by: { step: "player", character: THALBERN }, character: THALBERN, attack: { weapon: "longbow", target: "bandit" } } as never]
+    turn.characters.push({ id: "bandit", name: "Bandit", type: "npc", statBlock: "bandit", hitPoints: 11 } as never)
+    store.save()
+    const choices = autoChoices(sheetOf(store, THALBERN))
+    await assert.rejects(() => run({ kind: "level", turnId: turn._id, characterId: THALBERN, choices }), /once the fight is over/)
+    hero(store, "bandit").dead = true
+    store.save()
+    await run({ kind: "level", turnId: turn._id, characterId: THALBERN, choices })
+    assert.equal(sheetOf(store, THALBERN).level, 2)
   } finally {
     cleanup()
   }

@@ -4,6 +4,7 @@ sceneTitle: "Into the Underground"
 sectionTitle: "The Covenant of The Cowl"
 id: "the-hunt-for-the-assassin"
 type: "encounter"
+level: 5
 title: "The Hunt for the Assassin"
 settingId: "realm-of-myr"
 adventureId: "welcome-to-kordavos"

@@ -4,6 +4,7 @@ sceneTitle: "Quiet Pier at Dawn"
 sectionTitle: "Section One"
 id: "return-to-the-city"
 type: "encounter"
+level: 2
 title: "Return to the City"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"

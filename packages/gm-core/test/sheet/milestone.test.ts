@@ -71,3 +71,16 @@ test("choices that need no player make a legal sheet for every class, from level
     assert.ok(deriveSheet(current).hitPointMaximum > deriveSheet(start).hitPointMaximum)
   }
 })
+
+test("no level is taken in a fight: a round with a blow struck while a foe still stands", async () => {
+  const { inFight } = await import("../../src/sheet/level-owed")
+  const hero = { id: "thalbern", type: "pc" }
+  const owlbear = { id: "owlbear", type: "npc" }
+  const blow = { kind: "roll", attack: { weapon: "longbow" } }
+  assert.equal(inFight({ story: [blow], characters: [hero, owlbear] }), true)
+  assert.equal(inFight({ story: [{ kind: "action", effect: { spell: "sleep" } }], characters: [hero, owlbear] }), true)
+  // The round the last foe falls, or one with no blow, is not a fight. Nor is one with only bystanders and allies.
+  assert.equal(inFight({ story: [blow], characters: [hero, { ...owlbear, dead: true as const }] }), false)
+  assert.equal(inFight({ story: [{ kind: "narration" }], characters: [hero, owlbear] }), false)
+  assert.equal(inFight({ story: [blow], characters: [hero, { ...owlbear, side: "none" as const }, { id: "garlan", type: "npc", side: "party" as const }] }), false)
+})

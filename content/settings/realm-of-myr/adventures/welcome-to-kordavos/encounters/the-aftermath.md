@@ -4,6 +4,7 @@ sceneTitle: "The Docks"
 sectionTitle: "The Investigation"
 id: "the-aftermath"
 type: "encounter"
+level: 3
 title: "The Aftermath"
 settingId: "realm-of-myr"
 adventureId: "welcome-to-kordavos"

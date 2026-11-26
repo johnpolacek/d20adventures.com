@@ -1,6 +1,6 @@
 import { Heading } from "@d20/ui/typography/heading"
 import { isHidden } from "@d20/gm-core/sheet/conditions"
-import { levelOwed } from "@d20/gm-core/sheet/level-owed"
+import { inFight, levelOwed } from "@d20/gm-core/sheet/level-owed"
 import type { LevelUpChoices } from "@d20/gm-core/sheet/level-up"
 import { metres } from "@d20/gm-core/sheet/space"
 import type { FeatureBeat, ObjectKind, Ready, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
@@ -1409,8 +1409,8 @@ export function StagePlay(props: {
   useEffect(() => {
     stage?.setTurn(ringed ?? null)
   }, [stage, ringed])
-  // The levels owed to each hero this player plays.
-  const owed = props.onLevel && latest ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c)) : []
+  // The levels owed to each hero this player plays, taken once a fight is over.
+  const owed = props.onLevel && latest && !inFight(latest) ? latest.characters.filter((c) => c.type === "pc" && c.controlledBy !== "ai" && props.controls(c) && levelOwed(c)) : []
   const levelHero = owed.find((c) => c.id === levelling)
   // Suggested replies are asked for once per hero's turn, as soon as it comes up with the game on screen, so they are
   // often there once the narration has been read. A request that fails twice offers none.

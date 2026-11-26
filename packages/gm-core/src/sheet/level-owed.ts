@@ -1,4 +1,5 @@
 import { isDead } from "../utils/turn-actors"
+import { type Sided, sideOf } from "./sides"
 import type { Sheet } from "./sheet"
 
 // Whether a hero is owed a level, kept apart from the level's maths (./milestone) so a screen can ask without loading
@@ -18,4 +19,15 @@ export function levelOwed(hero: Levelling): boolean {
 export function withLevelDue<T extends Levelling>(hero: T, level: number): T {
   const { levelDue: _, ...rest } = hero
   return (hero.type === "pc" && hero.sheet && hero.sheet.level < Math.min(level, LEVEL_CAP) ? { ...rest, levelDue: level } : rest) as T
+}
+
+type Fought = { story?: readonly { kind: string; attack?: unknown; effect?: unknown }[]; characters: readonly (Sided & { dead?: true; fled?: true })[] }
+
+/**
+ * Whether a fight is on, so no level is taken, as in BG3: the round just told had an attack or a spell's effect, and a
+ * foe of the party still stands in the scene. The level waits for the round the fight ends in.
+ */
+export function inFight(turn: Fought): boolean {
+  const struck = (turn.story ?? []).some((beat) => (beat.kind === "roll" && !!beat.attack) || (beat.kind === "action" && !!beat.effect))
+  return struck && turn.characters.some((character) => sideOf(character) === "foe" && !character.dead && !character.fled)
 }

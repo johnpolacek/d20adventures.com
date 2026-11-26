@@ -4,6 +4,7 @@ sceneTitle: "Quiet Pier at Dawn"
 sectionTitle: "Section One"
 id: "the-end"
 type: "encounter"
+level: 2
 title: "The End"
 settingId: "realm-of-myr"
 adventureId: "covert-cargo"

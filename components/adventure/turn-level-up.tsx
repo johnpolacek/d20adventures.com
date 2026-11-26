@@ -4,7 +4,7 @@
 // the choices, and the levelled hero is kept in the player's account.
 
 import { useUser } from "@clerk/nextjs"
-import { levelOwed } from "@d20/gm-core/sheet/level-owed"
+import { inFight, levelOwed } from "@d20/gm-core/sheet/level-owed"
 import { useState } from "react"
 import { levelUpHero } from "@/app/_actions/adventure"
 import { LevelUp } from "@d20/ui/stage/level-up"
@@ -20,7 +20,8 @@ export function TurnLevelUp({ className }: { className?: string }) {
   const { user } = useUser()
   const [open, setOpen] = useState<string | null>(null)
   if (!currentTurn) return null
-  const owed = currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
+  // A level is taken once a fight is over.
+  const owed = inFight(currentTurn) ? [] : currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
   const hero = owed.find((character) => character.id === open)
   // The screen is beside the buttons, not inside them, so it stays for its exit when the last level is taken.
   return (
