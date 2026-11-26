@@ -29,6 +29,9 @@ Read it in full before drafting and run its self-check. The rules below are only
 What John's own posts show works, added each time he finishes one. `pnpm content:posts` reads this section when it plans an idea, and the brief on `/admin/content` points the drafting LLM here.
 
 - **Plan, don't draft.** The picker gathers an idea's angle, stories, quotes, pictures and questions, and John writes the post with an LLM. Its full draft of “Building an AI Game Master That Plays by the D&D Rules” kept the title and lost the content (John, 2026-11-25: “i like the title but not the content”).
+- **Claude, not Gemini.** Name Claude as the game master and leave Gemini out (John, 2026-11-25: “do not mention Gemini - focus on Claude”).
+- **Say 5E.** A title says “5E Rules Engine”, not SRD 5.2.1. “Keeping an AI Game Master Inside the Rules with Claude Opus and a 5E Rules Engine” beat “Building an AI Game Master That Plays by the D&D Rules”.
+- **A list post for a system.** When the subject is a whole system, read the codebase for all of it, not only the week's commits, and write a list: each item is one thing and what we did. Playtest stories go inside the item they taught. John, 2026-11-25: “analyze the codebase for where we are implementing the 5E rules and think of it like a list post, with each item on the list being a thing and what we did”.
 
 ## Short and long titles
 
