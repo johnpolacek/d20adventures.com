@@ -120,10 +120,15 @@ export function castInSpace(args: { spell: Spell | Aimed; caster: Here; everyone
     }
     // An area at a range, centred on the one named, or one on each of the first named where the spell makes several
     // (./spell-rules `areas`). A centre out of range or past total cover makes no area. One caught by two is taken once.
-    const [aim] = named
+    // One that harms and saves no one (Fog Cloud, Darkness, Silence) may be put where the caster stands when no one is
+    // named: Lyra "casts Fog Cloud to fill the cabin" was refused for naming no one. One that harms or saves still needs
+    // someone to aim at, so a Fireball is never dropped on its own caster.
+    const harmless = "level" in spell && !spell.damage?.length && !spell.saves?.length && !spell.conditions?.length
+    const centred = named.length ? named : harmless ? placed.filter((other) => other.id === caster.id) : []
+    const [aim] = centred
     if (!aim) return none("No One In The Way", `${who} has no one to aim ${spell.name} at.`)
     const reach = again ?? rule?.range?.(caster) ?? rangeFeet(range)
-    const centres = named.slice(0, rule?.areas ?? 1)
+    const centres = centred.slice(0, rule?.areas ?? 1)
     const inRange = centres.filter((centre) => reach === undefined || within(from, centre, reach))
     if (!inRange.length)
       return none("Out Of Range", `${who} is ${Math.round(distance(from, aim))} feet from ${aim.name}, out of ${spell.name}'s range of ${rangeWords(range, reach ?? 0)}. The spell is not cast.`)

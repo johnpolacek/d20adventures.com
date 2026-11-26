@@ -91,3 +91,10 @@ test("an area takes whoever stands in it", () => {
   })
   assert.deepEqual(walled.targets, ["bandit"])
 })
+
+test("an area that harms no one may be put where its caster stands, and one that harms may not", () => {
+  // Lyra fills the cabin with Fog Cloud, naming no one: its 20-foot Sphere is put on her, and takes the Bandit 15 feet off.
+  assert.deepEqual(castInSpace({ spell: spell("fog-cloud"), caster: lyra, everyone: [lyra, who("bandit", 15)], named: [], floor: open }).targets, ["lyra", "bandit"])
+  // A Fireball naming no one is not dropped on her.
+  assert.equal(castInSpace({ spell: spell("fireball"), caster: lyra, everyone: [lyra, who("bandit", 15)], named: [], floor: open }).problem?.name, "No One In The Way")
+})
