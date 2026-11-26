@@ -1,11 +1,62 @@
 [
-  { "name": "Hi3D", "as": "@Hi3D_AI", "source": "hi3d.ai footer", "checked": "2026-11-21" },
-  { "name": "Hyper3D", "as": "Hyper3D by @DeemosTech", "source": "Deemos press release, GlobeNewswire 2025-05-08", "checked": "2026-11-21" },
-  { "name": "Rodin", "as": "Rodin by @DeemosTech", "source": "Deemos press release, GlobeNewswire 2025-05-08", "checked": "2026-11-21" },
-  { "name": "Blender", "as": "@Blender", "source": "Blender official sources list", "checked": "2026-11-21" },
-  { "name": "fal", "as": "@fal", "source": "fal profile, x.com/fal", "checked": "2026-11-21" },
-  { "name": "Quaternius", "as": "@quaternius", "source": "Game World Observer embed, 2023", "checked": "2026-11-21" },
-  { "name": "Mesh2Motion", "as": "Mesh2Motion from @scottpetrovic", "source": "80.lv and Mesh2Motion posts", "checked": "2026-11-21" },
-  { "name": "Claude Code", "as": "Claude Code from @claudeai", "source": "known account", "checked": "2026-11-21" },
-  { "name": "Three.js", "as": "@threejs", "source": "threejs.org Community links", "checked": "2026-11-21" }
+  {
+    "name": "Hi3D",
+    "as": "@Hi3D_AI",
+    "source": "hi3d.ai footer",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Hyper3D",
+    "as": "Hyper3D by @DeemosTech",
+    "source": "Deemos press release, GlobeNewswire 2025-05-08",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Rodin",
+    "as": "Rodin by @DeemosTech",
+    "source": "Deemos press release, GlobeNewswire 2025-05-08",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Blender",
+    "as": "@Blender",
+    "source": "Blender official sources list",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "fal",
+    "as": "@fal",
+    "source": "fal profile, x.com/fal",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Quaternius",
+    "as": "@quaternius",
+    "source": "Game World Observer embed, 2023",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Mesh2Motion",
+    "as": "Mesh2Motion from @scottpetrovic",
+    "source": "80.lv and Mesh2Motion posts",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Claude Code",
+    "as": "Claude Code from @claudeai",
+    "source": "known account",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Three.js",
+    "as": "@threejs",
+    "source": "threejs.org Community links",
+    "checked": "2026-11-21"
+  },
+  {
+    "name": "Claude",
+    "as": "@claudeai",
+    "source": "known account, the same one as Claude Code",
+    "checked": "2026-11-26"
+  }
 ]
