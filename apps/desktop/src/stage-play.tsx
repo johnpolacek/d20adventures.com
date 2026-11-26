@@ -72,7 +72,7 @@ type Aim = { pair: [string, string] } | { place: string } | { subject: string }
 type View = Aim | null
 // How fast someone comes on or goes off, in metres a second, by the pace the story gives their entrance or the staging
 // their exit.
-const PACE = { walk: 1.2, hurry: 2.4, sneak: 0.8 } as const
+const PACE = { walk: 1.2, hurry: 2.4, sprint: 4.5, sneak: 0.8 } as const
 // A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
 const STROLL = 0.6
 // A staging's entrance can also be a prowl: slower still, a big beast in no hurry, shot as a slow pan and push in.
@@ -631,14 +631,21 @@ export function StagePlay(props: {
     const text = beats.flatMap((b) => (b.kind === "line" && b.speaker === line.speaker ? [b.text] : [])).join(" ")
     return { name: c.name, role: c.type === "npc" ? c.archetype || c.race : `${c.race} ${c.archetype}`, portrait: portrait(c), text }
   }, [scene, reading, paragraphs, paragraph, shown])
-  // The walks the engine made this turn, by character, each at the paragraph it is read in (story/beats `MoveBeat`).
+  // The walks the engine made this turn, by character, each at the paragraph it is read in (story/beats `MoveBeat`), and
+  // its pace: the story's for the mover in that paragraph, else in the same step, else the engine's, a hurry for a Dash.
+  // A walk in the story leaves a Dash a hurry.
   const trails = useMemo(() => {
-    const out = new Map<string, { at: number; from: { x: number; y: number }; to: { x: number; y: number }; teleport: boolean }[]>()
+    const out = new Map<string, { at: number; from: { x: number; y: number }; to: { x: number; y: number }; teleport: boolean; pace?: keyof typeof PACE }[]>()
     if (shown !== turn) return out
+    const told = (beats: (typeof paragraphs)[number]["beats"], move: { character: string; by: { step: string } }) =>
+      beats.find((b) => b.kind === "action" && b.actor === move.character && b.by.step === move.by.step && b.pace)
     paragraphs.forEach((p, at) => {
       for (const b of p.beats) {
         if (b.kind !== "move") continue
-        out.set(b.character, [...(out.get(b.character) ?? []), { at, from: b.path[0], to: b.path[b.path.length - 1], teleport: !!b.teleport }])
+        const said = told(p.beats, b) ?? paragraphs.map((q) => told(q.beats, b)).find(Boolean)
+        const story = said?.kind === "action" ? said.pace : undefined
+        const pace = story && story !== "walk" ? story : (b.pace ?? story)
+        out.set(b.character, [...(out.get(b.character) ?? []), { at, from: b.path[0], to: b.path[b.path.length - 1], teleport: !!b.teleport, ...(pace ? { pace } : {}) }])
       }
     })
     return out
@@ -649,7 +656,7 @@ export function StagePlay(props: {
   // spot the story's moves give, `teleport` one whose last move set them down there. Ambient extras, and anyone the
   // engine has not placed, stand where the staging puts them.
   const spots = useMemo(() => {
-    const out = new Map<string, { character: string; at: [number, number]; walked?: true; teleport?: true }>()
+    const out = new Map<string, { character: string; at: [number, number]; walked?: true; teleport?: true; pace?: keyof typeof PACE }>()
     for (const c of shown?.characters ?? []) {
       const id = stage && c.position && castIdFor(stage.cast, c)
       if (!id || !c.position) continue
@@ -657,7 +664,13 @@ export function StagePlay(props: {
       const done = moves.filter((m) => !toCome(m.at, 0))
       const last = done[done.length - 1]
       const at = done.length === moves.length ? c.position : (last?.to ?? moves[0].from)
-      out.set(id, { character: c.id, at: [metres(at.x), metres(at.y)], ...(moves.length ? { walked: true as const } : {}), ...(last?.teleport ? { teleport: true as const } : {}) })
+      out.set(id, {
+        character: c.id,
+        at: [metres(at.x), metres(at.y)],
+        ...(moves.length ? { walked: true as const } : {}),
+        ...(last?.teleport ? { teleport: true as const } : {}),
+        ...(last?.pace ? { pace: last.pace } : {}),
+      })
     }
     return out
   }, [stage, shown?.characters, trails, reading, paragraph, heard])
@@ -1006,7 +1019,7 @@ export function StagePlay(props: {
     // before left them, to walk on at their paragraphs, and read from its end, where it leaves them.
     const jump = moved.current?.turn === turn?._id && shown === turn ? moved.current : null
     if (jump) moved.current = null
-    for (const [id, { character, at: to, walked, teleport }] of spots) {
+    for (const [id, { character, at: to, walked, teleport, pace }] of spots) {
       if (jump) {
         const was = jump.where === "start" ? prior?.characters.find((c) => c.id === character)?.position : undefined
         const from: [number, number] = was ? [metres(was.x), metres(was.y)] : to
@@ -1047,7 +1060,7 @@ export function StagePlay(props: {
           if (!live()) return
           const now = stage.castAt(id)
           if (Math.hypot(p.x - now.x, p.z - now.z) > 0.05) stage.faceCast(id, [p.x, p.z])
-          await stage.moveCast(id, [p.x, p.z])
+          await stage.moveCast(id, [p.x, p.z], pace ? { speed: PACE[pace], pace: pace === "sneak" ? "sneak" : undefined } : {})
         }
         // The set can stop a walk short of the engine's spot, which is the truth.
         const now = stage.castAt(id)

@@ -66,4 +66,8 @@ Begun 2026-11-24, from `pnpm assets:legs` (`asset-library/pipeline/legcheck.ts`,
 - [x] The owner synced and archived the rebuilt figures, 2026-11-24.
 - [ ] The owner watches them sneak, walk and hurry in the app.
 - [ ] Poppen's sneak looked at.
-- [ ] Sprint is in no pace yet: only a beat's `move` faster than 3.3 m/s reaches it.
+- [x] A move in the scene plays at its pace, 2026-11-25. It used to walk at 1.1 m/s whatever the story said, so Thalbern sprinting from the owlbear walked.
+  - The engine marks a move made with the Dash action (`Moved.dash`), and its `MoveBeat` takes the pace `hurry`.
+  - The GM may give any action a `pace`, not only an entrance: walk, hurry, `sprint` (new, 4.5 m/s) or sneak.
+  - The stage takes the story's pace for the mover in that move's step. A walk there leaves a Dash a hurry.
+- [ ] The owner watches a sprint in the app.

@@ -58,7 +58,8 @@ function spotPlace(floor: EncounterFloor, ask: MoveAsk, mover: Standing, others:
  * A move as the engine made it: where the character now stands, the feet it took, and the points it walked through,
  * the last of them where it stands. `teleport`: it walked nothing, and its one point is where it landed (`takeTeleport`).
  */
-export type Moved = { at: Point; feet: number; path: Point[]; teleport?: true }
+// `dash` marks a move made with the Dash action, which the stage plays as a run.
+export type Moved = { at: Point; feet: number; path: Point[]; teleport?: true; dash?: true }
 
 type Mover = Afflicted & Standing & { turnEffects?: readonly TurnEffect[] }
 type Other = Standing & { id: string }
@@ -137,7 +138,7 @@ export function takeMove(args: {
     const there = place ? walk(floor, from, place.at, budget, { others: standing, rough, climb, swim: { speed, into: inWater(floor.water, place.at) }, walker, crowd: crowd() }) : undefined
     const reached = there && there.used >= 0.5 && between(there.at, place?.at ?? from) <= BASE_REACH / 2 && hidingCover({ floor, at: rounded(there.at), size, enemies, areas }) ? there : undefined
     const hid = reached ?? coverToHide({ floor, from, size, budget, standing, rough, enemies, areas, ...(speed ? { swims: true } : {}) })
-    return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded) } : undefined
+    return hid ? { at: rounded(hid.at), feet: Math.round(hid.used), path: hid.path.map(rounded), ...(args.dash ? { dash: true as const } : {}) } : undefined
   }
   const toward = someone(ask.to) ?? (!place && !ask.away ? someone(args.close?.target) : undefined)
   const fleeing = !place && !toward ? someone(ask.away) : undefined
@@ -156,7 +157,7 @@ export function takeMove(args: {
     })
   } else if (fleeing?.position) walked = walk(floor, from, pushed(from, fleeing.position, budget), budget, { others: standing, rough, climb, swim: { speed }, walker, crowd: crowd() })
   if (!walked || walked.used < 0.5) return undefined
-  return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded) }
+  return { at: rounded(walked.at), feet: Math.round(walked.used), path: walked.path.map(rounded), ...(args.dash ? { dash: true as const } : {}) }
 }
 
 // What hides one who crouches behind it: a solid thing at least half as tall as they stand, or a wall to the ceiling.

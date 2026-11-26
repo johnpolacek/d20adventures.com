@@ -117,6 +117,8 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       // Where they come in from, when they enter. Where they end up is the engine's: the story does not move anyone.
       const from = findPlace(scene, out.from)?.id
       if (from) action.enters = { from, ...(out.pace ? { pace: out.pace } : {}) }
+      // How they move within the scene, when they do: the engine moves them, and this is how the stage plays it.
+      else if (out.pace) action.pace = out.pace
       if (out.effect) action.effect = { kind: out.effect, ...(out.element ? { element: out.element } : {}) }
       if (out.ready) action.ready = out.ready
       if (out.object) action.object = { kind: out.object, ...(action.target ? { to: action.target } : {}) }

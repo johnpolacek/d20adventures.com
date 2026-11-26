@@ -26,6 +26,7 @@ export const storyValidator = v.array(
       actor: v.string(),
       target: v.optional(v.string()),
       enters: v.optional(v.object({ from: v.string(), pace: v.optional(oneOf(PACES)) })),
+      pace: v.optional(oneOf(PACES)),
       effect: v.optional(v.object({ kind: oneOf(EFFECT_KINDS), element: v.optional(oneOf(ELEMENTS)) })),
       object: v.optional(v.object({ kind: oneOf(OBJECT_KINDS), to: v.optional(v.string()) })),
       ready: v.optional(oneOf(READIES)),
@@ -74,7 +75,7 @@ export const storyValidator = v.array(
     // A class feature used with a Bonus Action, which the engine applied.
     v.object({ kind: v.literal("feature"), by, character: v.string(), name: v.string(), text: v.string(), target: v.optional(v.string()), harm: v.optional(harm) }),
     // A walk the engine made: where the character stood, then the path to where they stopped, in feet.
-    v.object({ kind: v.literal("move"), by, character: v.string(), path: v.array(v.object({ x: v.number(), y: v.number() })), teleport: v.optional(v.literal(true)) })
+    v.object({ kind: v.literal("move"), by, character: v.string(), path: v.array(v.object({ x: v.number(), y: v.number() })), teleport: v.optional(v.literal(true)), pace: v.optional(oneOf(PACES)) })
   )
 )
 

@@ -95,5 +95,11 @@
     "encounter": "broken-silence",
     "rounds": 4,
     "replies": ["hide", "stay hidden and quiet", "wait for the creature to be gone", "keep still and watch the trail"]
+  },
+  "summons-sprint": {
+    "adventure": "the-midnight-summons",
+    "encounter": "broken-silence",
+    "rounds": 1,
+    "replies": ["I turn and sprint away from the owlbear as fast as I can, back down the trail"]
   }
 }

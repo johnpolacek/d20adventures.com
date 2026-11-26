@@ -3,7 +3,8 @@ import { z } from "zod"
 // A turn's story: the beats the GM and the authored intros write, in order. Each beat says what it is and whose it
 // is, so a screen never guesses a speaker, a camera or an effect from the wording. Prose is a view of the story.
 
-export const PACES = ["walk", "hurry", "sneak"] as const
+// How someone moves: a sprint is an all-out run, a hurry a run.
+export const PACES = ["walk", "hurry", "sprint", "sneak"] as const
 export const EFFECT_KINDS = ["arrow", "bolt", "beam", "burst", "aura", "sparkles", "slash", "impact", "mist"] as const
 export const ELEMENTS = ["fire", "frost", "lightning", "radiant", "nature", "shadow", "arcane"] as const
 export const OBJECT_KINDS = ["scroll", "scrollcase", "letter", "map", "pouch", "coin", "key", "relic", "lantern", "torch", "blade", "bow", "potion", "book", "gem", "pack"] as const
@@ -57,6 +58,9 @@ export type ActionBeat = {
   object?: StoryObject
   // A weapon they take in hand and keep there until they put it away: the stage shows it held.
   ready?: Ready
+  // How they move when they move in the scene, as the story tells it: a sprint away, a sneak up. The engine's move
+  // says where to, and this how (MoveBeat `pace`).
+  pace?: Pace
   sound?: StorySound
   private?: true
 }
@@ -104,16 +108,17 @@ export type FeatureBeat = { kind: "feature"; by: StoryBy; character: string; nam
 export type ReplyBeat = { kind: "reply"; by: StoryBy; character: string; text: string }
 // A walk the engine made, with no words: where the character stood, then each point of the path to where they
 // stopped, in the engine's feet. The stage walks them at the paragraph it reads in, and sets a teleport down there. The
-// story is read in order, so the stage knows where everyone stood as each paragraph happened.
-export type MoveBeat = { kind: "move"; by: StoryBy; character: string; path: { x: number; y: number }[]; teleport?: true }
+// story is read in order, so the stage knows where everyone stood as each paragraph happened. `pace` is a hurry for a
+// move with the Dash action, which the stage plays as a run. The story's own pace for the mover can take it further.
+export type MoveBeat = { kind: "move"; by: StoryBy; character: string; path: { x: number; y: number }[]; teleport?: true; pace?: Pace }
 export type StoryBeat = NarrationBeat | ActionBeat | LineBeat | RollBeat | ReplyBeat | FeatureBeat | MoveBeat
 // The beats with words, every kind but a move.
 export type TextBeat = Exclude<StoryBeat, MoveBeat>
 export const hasText = (beat: StoryBeat): beat is TextBeat => beat.kind !== "move"
 // The beat for a walk: where they stood, then each point reached. None for one that went nowhere.
-export const moveBeats = (by: StoryBy, character: string, walked: readonly { x: number; y: number }[], teleport?: boolean): MoveBeat[] =>
+export const moveBeats = (by: StoryBy, character: string, walked: readonly { x: number; y: number }[], teleport?: boolean, pace?: Pace): MoveBeat[] =>
   walked.length > 1 && walked.some((at) => at.x !== walked[0].x || at.y !== walked[0].y)
-    ? [{ kind: "move", by, character, path: walked.map(({ x, y }) => ({ x, y })), ...(teleport ? { teleport: true as const } : {}) }]
+    ? [{ kind: "move", by, character, path: walked.map(({ x, y }) => ({ x, y })), ...(teleport ? { teleport: true as const } : {}), ...(pace && !teleport ? { pace } : {}) }]
     : []
 
 const id = z.string().min(1).max(80)
@@ -134,6 +139,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
     effect: z.object({ kind: z.enum(EFFECT_KINDS), element: z.enum(ELEMENTS).optional() }).optional(),
     object: z.object({ kind: z.enum(OBJECT_KINDS), to: id.optional() }).optional(),
     ready: z.enum(READIES).optional(),
+    pace: z.enum(PACES).optional(),
     sound: z.enum(SOUNDS).optional(),
     private: z.literal(true).optional(),
   }),
@@ -170,7 +176,7 @@ export const storyBeatSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("reply"), by, character: id, text: z.string() }),
   z.object({ kind: z.literal("feature"), by, character: id, name: z.string(), text: z.string(), target: id.optional(), harm: harmSchema.optional() }),
-  z.object({ kind: z.literal("move"), by, character: id, path: z.array(z.object({ x: z.number(), y: z.number() })).min(2), teleport: z.literal(true).optional() }),
+  z.object({ kind: z.literal("move"), by, character: id, path: z.array(z.object({ x: z.number(), y: z.number() })).min(2), teleport: z.literal(true).optional(), pace: z.enum(PACES).optional() }),
 ])
 export const storySchema = z.array(storyBeatSchema)
 
@@ -186,7 +192,7 @@ export const storyOutputSchema = z
       to: z.string().optional().describe("action: the id of the character it is aimed at. line: the id of the character spoken to"),
       place: z.string().optional().describe("narration: the id of the place it shows"),
       from: z.string().optional().describe("action: the id of the place the actor arrives from, only when they come into the scene"),
-      pace: menu(PACES, "action with a from: how the actor comes"),
+      pace: menu(PACES, "action: how the actor moves, when they come in or move about the scene"),
       effect: menu(EFFECT_KINDS, "action: the visible effect of an attack or spell, if any"),
       element: menu(ELEMENTS, "action with an effect: its element, if magical"),
       object: menu(OBJECT_KINDS, "action: an object the actor shows or hands over, if any"),

@@ -190,7 +190,7 @@ export function createAdventureTurnReplyService(ports: GmPorts) {
         d20: rollD20,
       })
       characters = kept.characters
-      leaving.push(...moveBeats(by, args.characterId, went.walked, move.teleport))
+      leaving.push(...moveBeats(by, args.characterId, went.walked, move.teleport, move.dash ? "hurry" : undefined))
       for (const made of went.attacks) {
         const attacker = characters.find((character) => character.id === made.attacker)
         if (!attacker || !mover) continue

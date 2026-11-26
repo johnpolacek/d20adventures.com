@@ -621,11 +621,12 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a from: how the actor comes",
+                  "description": "action: how the actor moves, when they come in or move about the scene",
                   "type": "string",
                   "enum": [
                     "walk",
                     "hurry",
+                    "sprint",
                     "sneak"
                   ]
                 },
@@ -1007,11 +1008,12 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a from: how the actor comes",
+                  "description": "action: how the actor moves, when they come in or move about the scene",
                   "type": "string",
                   "enum": [
                     "walk",
                     "hurry",
+                    "sprint",
                     "sneak"
                   ]
                 },
@@ -1180,11 +1182,12 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a from: how the actor comes",
+                  "description": "action: how the actor moves, when they come in or move about the scene",
                   "type": "string",
                   "enum": [
                     "walk",
                     "hurry",
+                    "sprint",
                     "sneak"
                   ]
                 },
@@ -1619,11 +1622,12 @@
                   "type": "string"
                 },
                 "pace": {
-                  "description": "action with a from: how the actor comes",
+                  "description": "action: how the actor moves, when they come in or move about the scene",
                   "type": "string",
                   "enum": [
                     "walk",
                     "hurry",
+                    "sprint",
                     "sneak"
                   ]
                 },

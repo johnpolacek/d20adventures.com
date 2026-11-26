@@ -173,7 +173,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         rules: args.rules,
       })
       updatedCharacters = went.characters.map(afterHarm)
-      leaving.push(...moveBeats(npcStep(args.npc), args.npc.id, went.walked, reading.move.teleport))
+      leaving.push(...moveBeats(npcStep(args.npc), args.npc.id, went.walked, reading.move.teleport, reading.move.dash ? "hurry" : undefined))
       for (const made of went.attacks) {
         const attacker = updatedCharacters.find((character) => character.id === made.attacker)
         if (!attacker) continue
