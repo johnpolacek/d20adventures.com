@@ -113,6 +113,24 @@ export function writeItem(item: QueueItem): void {
   fs.writeFileSync(fileOf(item.slug), serialize(item))
 }
 
+/**
+ * Gives an idea's /updates post its new title, while the post is still a draft. A published post keeps its title, so
+ * renaming the idea never changes a live page. The post's address stays as it is.
+ */
+export function retitleDraftPost(post: string, title: string): boolean {
+  if (!SLUG.test(post)) return false
+  const file = path.join(process.cwd(), "content/updates", `${post}.md`)
+  if (!fs.existsSync(file)) return false
+  const text = fs.readFileSync(file, "utf8")
+  const m = text.match(/^---\n([\s\S]*?)\n---/)
+  if (!m || !/^draft:\s*true\s*$/m.test(m[1])) return false
+  const line = `title: ${JSON.stringify(title)}`
+  const front = /^title:.*$/m.test(m[1]) ? m[1].replace(/^title:.*$/m, line) : `${line}\n${m[1]}`
+  if (front === m[1]) return false
+  fs.writeFileSync(file, text.replace(m[1], () => front))
+  return true
+}
+
 /** Gives the listed slugs ranks 1..n in order. Folded and cut ideas are left at 90 and up. */
 export function writeOrder(slugs: string[]): void {
   slugs.forEach((slug, i) => {

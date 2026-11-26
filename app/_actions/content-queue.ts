@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth-utils"
-import { deleteItem, listQueue, readItem, STATUSES, writeItem, writeOrder } from "@/lib/content-queue/store"
+import { deleteItem, listQueue, readItem, retitleDraftPost, STATUSES, writeItem, writeOrder } from "@/lib/content-queue/store"
 import { syncQueue } from "@/lib/content-queue/sync"
 
 // The queue is files on this machine, so it only exists in development.
@@ -28,7 +28,10 @@ export async function saveQueueItem(input: {
   const parked = status === "shelved"
   const lastLive = listQueue().filter((q) => q.rank < 90).reduce((m, q) => Math.max(m, q.rank), 0)
   const rank = parked && item.rank < 90 ? 90 : !parked && item.rank >= 90 ? lastLive + 1 : item.rank
-  writeItem({ ...item, title: input.title.trim() || item.title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted, schedule: input.schedule })
+  const title = input.title.trim() || item.title
+  // A draft post follows its idea's title, so the page's header matches the queue.
+  if (item.post && title !== item.title) retitleDraftPost(item.post, title)
+  writeItem({ ...item, title, longTitle: input.longTitle.trim(), status, rank, sections: input.sections, posted: input.posted, schedule: input.schedule })
   revalidatePath("/admin/content")
 }
 
