@@ -247,6 +247,9 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
         <Prompt key={item.post ? "thread" : "post"} label={item.post ? "Thread Prompt" : "Post Prompt"} text={item.post ? socialBriefFor(item) : briefFor({ ...item, title, longTitle })} />
       )}
 
+      {/* The rest waits for a drafted X thread. */}
+      {section(item, "X").trim() && (
+        <>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
         {item.post && (
           <>
@@ -330,6 +333,8 @@ function Editor({ item, onSaved }: { item: QueueItem; onSaved: (item: QueueItem)
           ))}
         </div>
       </details>
+        </>
+      )}
     </div>
   )
 }
