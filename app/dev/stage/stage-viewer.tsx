@@ -90,10 +90,20 @@ function playTake(stage: Stage, t: (typeof TAKES)[number], from: string, to: str
   const b = to || (a === first ? second : first)
   if (!a || !b || a === b) return
   for (const id of [a, b]) if (stage.isDown(id)) stage.setDown(id, false, true)
-  const [plan] = planTakes([t.moment(a, b, stage)], `dev:${takeCount++}`)
-  const take = plan && compose(plan, { cast: stage.cast.filter((c) => stage.isOnStage(c.id)), clear: (from, at) => !stage.reach(from.id, at, 4).short })
+  const moment = t.moment(a, b, stage)
+  // An entrance is walked: from where they come on to where they stood, a moment after the shot opens.
+  if (moment.kind === "entrance") stage.placeCast(moment.who, [moment.from[0], moment.from[1]], [moment.home[0], moment.home[1]])
+  const [plan] = planTakes([moment], `dev:${takeCount++}`)
+  const take =
+    plan &&
+    compose(plan, {
+      cast: stage.cast.filter((c) => stage.isOnStage(c.id)),
+      clear: (from, at) => !stage.reach(from.id, at, 4).short,
+      sees: (lens, height, spots) => stage.sees(lens, height, spots),
+    })
   if (!take) return
-  stage.shot(take.shot, { instant: take.cut, follow: take.follow, duration: take.duration, ease: take.ease, move: take.move, impact: take.impact, take: take.label })
+  stage.shot(take.shot, { instant: take.cut, follow: take.follow, duration: take.duration, ease: take.ease, move: take.move, impact: take.impact, take: take.label, planted: take.planted })
+  if (moment.kind === "entrance") setTimeout(() => void stage.moveCast(moment.who, [moment.home[0], moment.home[1]], { speed: moment.speed }), 1400)
   void stage.shotSettled().then(() => {
     if (t.play === "slash") void stage.effect("slash", a, b)
     if (t.play === "bolt") void stage.effect("bolt", a, b, element || "lightning")

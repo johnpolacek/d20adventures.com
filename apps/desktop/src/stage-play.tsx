@@ -76,7 +76,7 @@ const PACE = { walk: 1.2, hurry: 2.4, sprint: 4.5, sneak: 0.8 } as const
 // A staging's walk can also be a stroll: unhurried, someone on their way through the woods.
 const STROLL = 0.6
 // A staging's entrance can also be a prowl: slower still, a big beast in no hurry, shot as a slow pan and push in.
-const PROWL = 0.45
+const PROWL = 0.5
 // How fast a staging's entrance comes on, when it gives a pace.
 const entrancePace = (pace: "prowl" | "stroll" | keyof typeof PACE | undefined) => (pace === "prowl" ? PROWL : pace === "stroll" ? STROLL : pace ? PACE[pace] : undefined)
 // Where an authored cue's words come in the story: the first paragraph that holds them, and the sentence in it.
@@ -329,6 +329,9 @@ export function StagePlay(props: {
   overlay.current = props.overlay || Boolean(levelling)
   const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
+  // A beast prowling on, by its entrance's key: the story waits on its paragraph until it has walked all the way in, so
+  // the next card does not cut the camera away mid-walk.
+  const [prowling, setProwling] = useState<string | null>(null)
   const [sound, setSound] = useState(soundOn)
   const [reading, setReading] = useState(true)
   // The turn held by the player: the narrator stops where it is, and nothing moves on until it is played again.
@@ -690,11 +693,12 @@ export function StagePlay(props: {
       p.beats.flatMap((b) => {
         const cast = b.kind === "action" && b.enters && stage?.set.marks[b.enters.from] ? castOf(b.actor) : undefined
         const here = b.kind === "action" && turn?.characters.find((c) => c.id === b.actor)?.type === "pc"
-        // The staging's entrance for them gives its shot, and its pace over the story's: the Owlbear prowls on.
+        // The staging's entrance for them gives its shot, and its start and pace over the story's: the Owlbear prowls on
+        // from deep in the trees.
         const staged = entrances.find((e) => e.cast === cast)
         const pace = staged?.pace ?? (b.kind === "action" ? b.enters?.pace : undefined)
         return cast && b.kind === "action" && b.enters
-          ? [{ cast, from: b.enters.from as string | [number, number], when: "", shot: staged?.shot, speed: entrancePace(pace) ?? PACE.walk, sneak: pace === "sneak", here, at, s: sentenceOf(p.text, b.text) }]
+          ? [{ cast, from: staged?.from ?? (b.enters.from as string | [number, number]), when: "", shot: staged?.shot, speed: entrancePace(pace) ?? PACE.walk, sneak: pace === "sneak", here, at, s: sentenceOf(p.text, b.text) }]
           : []
       })
     )
@@ -719,6 +723,7 @@ export function StagePlay(props: {
       const key = `${e.cast}:${e.at}`
       if (toCome(e.at, e.s)) {
         entered.current.delete(key)
+        setProwling((k) => (k === key ? null : k))
         stage.placeCast(e.cast, from, e.here ? home.facing : undefined)
         stage.setOnStage(e.cast, e.here)
       } else if (reached(e.at, e.s) && !entered.current.has(key)) {
@@ -726,11 +731,22 @@ export function StagePlay(props: {
         stage.placeCast(e.cast, from, to)
         stage.setOnStage(e.cast, true)
         // An entrance with a shot of its own is a reveal: the camera holds on the way in a moment before they come out.
-        // A rerun of this effect does not call it off. Stepping back, or a new stage, does.
-        const walk = () => {
-          if (enteredOn.current === stage && entered.current.has(key)) void stage.moveCast(e.cast, to, { speed: e.speed, pace: e.sneak ? "sneak" : undefined }).then(() => stage.faceCast(e.cast, home.facing))
+        // A prowl is one too. A rerun of this effect does not call it off. Stepping back, or a new stage, does.
+        const prowl = e.speed <= PROWL
+        if (prowl) {
+          setProwling(key)
+          // Should the walk be cut off unseen, as by a new stage, the story still goes on once it would have ended.
+          const seconds = Math.hypot(to[0] - from[0], to[1] - from[1]) / e.speed + REVEAL_BEAT / 1000 + 3
+          setTimeout(() => setProwling((k) => (k === key ? null : k)), seconds * 1000)
         }
-        if (e.shot) setTimeout(walk, REVEAL_BEAT)
+        const walk = () => {
+          if (enteredOn.current !== stage || !entered.current.has(key)) return setProwling((k) => (k === key ? null : k))
+          void stage.moveCast(e.cast, to, { speed: e.speed, pace: e.sneak ? "sneak" : undefined }).then(() => {
+            stage.faceCast(e.cast, home.facing)
+            setProwling((k) => (k === key ? null : k))
+          })
+        }
+        if (e.shot || prowl) setTimeout(walk, REVEAL_BEAT)
         else walk()
       } else if (!stage.isOnStage(e.cast)) {
         stage.setOnStage(e.cast, true)
@@ -1210,7 +1226,11 @@ export function StagePlay(props: {
     const arrived = reframe.current === turn?._id
     if (arrived && !preview) reframe.current = null
     // A spot is clear when nothing solid stands between it and the one it is taken from, however far off it is.
-    const composing: ComposeContext = { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }
+    const composing: ComposeContext = {
+      cast,
+      clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked,
+      sees: (lens, height, spots) => stage.sees(lens, height, spots),
+    }
     const take = plan ? compose(plan, composing) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => {
       if (preview) return void stage.shot(t ? which : alive(which, paragraph), { instant: true })
@@ -1224,6 +1244,7 @@ export function StagePlay(props: {
         move: t ? t.move : SETTLE,
         impact: t?.impact,
         take: t?.label,
+        planted: t?.planted,
       })
     }
     // An encounter opens wide, on the place with the party in it, and holds there before its first paragraph's own take,
@@ -1244,7 +1265,8 @@ export function StagePlay(props: {
     function frame() {
       if (!stage) return
       if (departing?.shot) return void go(departing.shot, take)
-      if (arriving?.shot) return void go(arriving.shot, take)
+      // A prowl is the director's own long take, the walk followed all the way in, over any shot the staging gives.
+      if (arriving?.shot && !(take && arriving.speed <= PROWL)) return void go(arriving.shot, take)
       if (take) return void go(take.shot, take)
       if (lead) {
         const shot = { distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
@@ -1295,16 +1317,16 @@ export function StagePlay(props: {
     }
   }, [stage, stageRef, reading, paragraph, heard, staged, sounded, turn, castOf])
   useEffect(() => {
-    if (!auto || !reading || busy || sceneWaits || !text.length || speaking || paused || tour.open) return
+    if (!auto || !reading || busy || sceneWaits || !text.length || speaking || paused || tour.open || prowling) return
     // A roll stays up until the die has landed and the verdict has had a moment. A paragraph read aloud moves on once
     // the narrator has finished.
     const seconds = voiced.status === "done" ? AFTER_VOICE_MS / 1000 : rollTime || readingSeconds(text[paragraph] ?? "")
     const timer = setTimeout(advance, seconds * 1000)
     return () => clearTimeout(timer)
-  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused, tour.open])
+  }, [auto, reading, busy, sceneWaits, text, rollTime, paragraph, speaking, voiced.status, paused, tour.open, prowling])
   // Stepping through, Continue presses itself once the paragraph has had time to be read, or the narrator has read it.
   // Read aloud, it fills as the words are heard. A roll waits as it does in auto.
-  const continueMs = busy || !text.length || speaking ? undefined : voiced.status === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
+  const continueMs = busy || !text.length || speaking || prowling ? undefined : voiced.status === "done" ? AFTER_VOICE_MS : Math.round((rollTime || readingSeconds(text[paragraph] ?? "", CONTINUE_WPM)) * 1000)
   const focused = useRef<string | null>(null)
   useEffect(() => {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), progress: files.ready ? null : files.progress, error: stageError ?? null })

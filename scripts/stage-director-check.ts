@@ -69,12 +69,14 @@ check("a monster comes on from low", () => {
   assert.ok("position" in t.shot && t.shot.position[1] < 1)
   assert.equal(t.cut, true)
 })
-check("a monster that prowls on is one long, slow pan and push", () => {
+check("a monster that prowls on is one long take from low that holds its ground", () => {
   const t = shoot({ kind: "entrance", who: "bear", monster: true, from: [14, 4], home: [6, 4], speed: 0.45 })
   assert.equal(t.label, "monster prowls in")
+  assert.equal(t.planted, true)
   assert.ok((t.move?.seconds ?? 0) >= 8 / 0.45)
-  assert.ok((t.move?.push ?? 0) >= 0.3)
-  assert.ok("position" in t.shot && Math.abs(t.shot.orbit ?? 0) > 0 && Math.abs(t.shot.orbit ?? 0) < 5)
+  assert.ok((t.move?.push ?? 0) > 0)
+  assert.ok("position" in t.shot && t.shot.position[1] < 1 && t.shot.position[0] < 6)
+  assert.ok(Math.abs(t.shot.orbit ?? 0) > 0 && Math.abs(t.shot.orbit ?? 0) < 3)
   assert.ok(!t.impact && !t.move?.roll)
 })
 check("a tense line pushes in close and tilts", () => {

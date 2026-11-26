@@ -62,6 +62,8 @@ export interface Take {
   impact?: Impact
   // What the take is, for the dev page and the stats.
   label: string
+  // The camera holds its ground while those in the shot walk, rather than follow them: a prowl grows in the frame.
+  planted?: boolean
 }
 export interface Plan {
   moment: Moment
@@ -139,6 +141,9 @@ export interface ComposeContext {
   // Whether a camera can stand at a point behind someone, looking past them: nothing solid in the way. Without it,
   // anywhere will do.
   clear?: (from: CastMember, at: { x: number; z: number }) => boolean
+  // Whether a lens sees a figure of a height at each spot, nothing solid in the way and room for the camera. Without it,
+  // any view will do.
+  sees?: (lens: { position: [number, number, number]; target: [number, number, number]; fov: number }, height: number, spots: { x: number; z: number }[]) => boolean
 }
 
 const DEG = Math.PI / 180
@@ -411,15 +416,31 @@ export function compose(plan: Plan, ctx: ComposeContext): Take | null {
       // How long they walk on for. A beast that takes its time is a prowl.
       const walk = m.speed ? d / m.speed : 0
       if (m.monster && who && walk >= PROWL_SECONDS) {
-        // From low on the ground where it will stop, a long lens on the way it comes, panning slowly round and pushing
-        // in for as long as it walks, so it grows in the frame step by step. No tilt and no jolt: the weight is the pace.
-        const k = (3.2 + who.height * 0.9) / d
+        // Low on the ground just past where it will stop, looking back up the way it comes. The camera holds its ground
+        // and only drifts in, so the beast walks out of the dark and grows step by step until it looms over the lens.
+        // No tilt and no jolt: the weight is the pace. The line it walks is turned a little either way until a trunk
+        // stands neither in the way nor where the camera would be.
+        const ux = (hx - fx) / d
+        const uz = (hz - fz) / d
+        const back = 2 + who.height * 1.4
+        const target: [number, number, number] = [hx, who.height * 0.52, hz]
         const seconds = Math.min(24, walk + 2)
-        return take(
-          { position: [hx + (hx - fx) * k, 0.4, hz + (hz - fz) * k], target: [(fx + hx) / 2, who.height * 0.65, (fz + hz) / 2], fov: 44, orbit: s * 2.5, sweep: Math.min(40, seconds * 2) },
-          "monster prowls in",
-          { cut: true, ease: "drift", move: { push: 0.4, rise: 0.25, seconds } }
-        )
+        const at = (deg: number): [number, number, number] => {
+          const r = deg * s * DEG
+          return [hx + (ux * Math.cos(r) - uz * Math.sin(r)) * back, 0.4, hz + (ux * Math.sin(r) + uz * Math.cos(r)) * back]
+        }
+        const spots = [
+          { x: hx, z: hz },
+          { x: fx, z: fz },
+        ]
+        const turns = [0, 8, -8, 16, -16, 24, -24, 32, -32]
+        const position = at(turns.find((t) => !ctx.sees || ctx.sees({ position: at(t), target, fov: 40 }, who.height, spots)) ?? 0)
+        return take({ position, target, fov: 40, orbit: s, sweep: 14 }, "monster prowls in", {
+          cut: true,
+          ease: "drift",
+          planted: true,
+          move: { push: 0.2, rise: 0, seconds },
+        })
       }
       if (m.monster && who) {
         // From low, on the ground where they will stop, looking back the way they come: they fill the frame on arrival.

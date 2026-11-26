@@ -95,7 +95,7 @@
   "entrances": [
     {
       "cast": "owlbear",
-      "shot": "reveal",
+      "from": [11, -8.5],
       "pace": "prowl"
     }
   ]

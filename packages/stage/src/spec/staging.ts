@@ -148,9 +148,10 @@ export const stagingSpecSchema = z
     // Entrances the narration cues: while a turn's narration contains `when`, the cast member is offstage until the
     // paragraph that says it, then walks on from `from` (a mark or point) to their place, seen from `shot` (a set or
     // staging shot) when given. Narration without the phrase, such as a later round's, finds them already in place.
-    // An entrance with no `when` only gives the shot for an entrance the story tells ("from: treeLine").
+    // An entrance with no `when` only gives the shot, start and pace for an entrance the story tells ("from: treeLine").
     // `pace` is how they come on, over the story's own pace: `prowl` is slower than a stroll, a big beast in no hurry,
-    // and the director shoots it as a slow pan and push in that lasts the walk.
+    // and the director shoots it from low where it will stop, the camera holding its ground as it comes, for as long as
+    // it walks. A prowl takes the director's shot over the entrance's own, and the story waits on it.
     entrances: z
       .array(
         z

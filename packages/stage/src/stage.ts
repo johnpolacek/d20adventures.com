@@ -252,6 +252,8 @@ export class Stage {
   // How far it has still to go round, in radians, when the shot gave a sweep.
   private sweepLeft = Number.POSITIVE_INFINITY
   private followed = new Map<string, { x: number; z: number }>()
+  // Whether the current shot holds its ground while those in it walk, as a prowl's does (see `shot`).
+  private planted = false
   // The take's move, its dutch tilt now (radians), an impact waiting for the next blow to land, and the jolts playing.
   private moving: Moving | null = null
   private roll = 0
@@ -683,7 +685,8 @@ export class Stage {
       move,
       impact,
       take,
-    }: { instant?: boolean; duration?: number; follow?: string[]; ease?: Ease; move?: CameraMove; impact?: Impact; take?: string } = {}
+      planted = false,
+    }: { instant?: boolean; duration?: number; follow?: string[]; ease?: Ease; move?: CameraMove; impact?: Impact; take?: string; planted?: boolean } = {}
   ) {
     let s: ResolvedShot | undefined
     const authored = typeof which === "string" ? this.staging?.shots[which] : which
@@ -715,9 +718,11 @@ export class Stage {
       else this.joltTimers.push(setTimeout(() => this.jolt(impact.shake, impact.punch ?? 0), (impact.delay ?? 0) * 1000))
     }
     this.framed = new Set(on)
-    // A walker the new shot is not on is let go. One it is on is followed from where they stand now.
-    for (const id of this.followed.keys()) if (!this.framed.has(id)) this.followed.delete(id)
-    for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
+    this.planted = planted
+    // A walker the new shot is not on is let go. One it is on is followed from where they stand now. A planted camera
+    // follows no one: it holds its ground and lets them come, so they grow in the frame.
+    for (const id of this.followed.keys()) if (planted || !this.framed.has(id)) this.followed.delete(id)
+    if (!planted) for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
     this.driving = false
     this.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
     this.sweepLeft = authored?.sweep ? THREE.MathUtils.degToRad(authored.sweep) : Number.POSITIVE_INFINITY
@@ -1215,7 +1220,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         this.putUnseen(id)
       })
     }
-    if (!this.followed.has(id) && (this.framed.has(id) || this.inView(c))) this.followed.set(id, { x: c.x, z: c.z })
+    if (!this.planted && !this.followed.has(id) && (this.framed.has(id) || this.inView(c))) this.followed.set(id, { x: c.x, z: c.z })
     if (this.cameOn.delete(id)) this.body(id, "enter", speed)
     // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
     const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
@@ -1432,7 +1437,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   sees(lens: { position: readonly [number, number, number]; target: readonly [number, number, number]; fov: number }, height: number, spots: readonly { x: number; z: number }[]) {
     const at = { ...lens, fov: this.lens(lens.fov), aspect: this.camera.aspect }
     const v = viewCost(this.sight, at, spots.map((p) => ({ x: p.x, z: p.z, height })))
-    return v.hidden <= 0.15 && v.cover <= 0.25
+    return roomAt(this.sight, ...lens.position, 0.4) && v.hidden <= 0.15 && v.cover <= 0.25
   }
   // Whether a view from a point hides those the current shot is on, by more than a shoulder.
   private hides(from: THREE.Vector3, target: THREE.Vector3) {
