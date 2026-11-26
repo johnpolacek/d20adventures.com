@@ -25,7 +25,7 @@ import { loadPack } from "./scene-judge"
 // the ladder, and Advantage or Disadvantage. The model is asked once per scene and its pick is graded by those rules,
 // with no second model. A scene may instead have one of the encounter's NPCs act (`actor`), its action being what its
 // turn wrote, read as the NPC's turn reads it. In process, on the current prompt and content.
-// pnpm --dir apps/desktop check:probe [--only id,id] [--out file.json]
+// pnpm --dir apps/desktop check:probe [--only id,id] [--out file.json] [--provider antigravity] [--model gemini-4-neon-medium]
 
 type Probe = {
   id: string
@@ -109,6 +109,8 @@ const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
 const all: Probe[] = JSON.parse(readFileSync(join(here, "check-probes.json"), "utf8"))
 const only = opt("--only")?.split(",")
+const provider = opt("--provider") ?? "claude"
+const modelName = opt("--model")
 const probes = only ? all.filter((probe) => only.includes(probe.id)) : all
 
 // A stake the engine made of a pick, in a scene's words.
@@ -136,7 +138,7 @@ async function run(probe: Probe): Promise<Graded> {
   const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), ...holds, ...(probe.shape ? { shape: probe.shape } : {}), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
-  const model = localLlm("claude", mkdtempSync(join(tmpdir(), "check-probe-")))
+  const model = localLlm(provider, mkdtempSync(join(tmpdir(), "check-probe-")), undefined, true, modelName)
   try {
     const { readAction } = createRollRequirementService({ llm: model.llm } as GmPorts)
     // On a floor everyone stands where the encounter stages them, unless the scene says where.

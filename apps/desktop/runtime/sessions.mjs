@@ -175,15 +175,17 @@ async function antigravityModel(cwd) {
 // whatever the agent may use, so the lockdown is that agent being the one that runs, and any tool step failing the
 // session.
 class AntigravitySession {
-  constructor(cwd, system) {
+  // `model` is a slug from `agy models`, for probes that try a model other than the app's pick.
+  constructor(cwd, system, model) {
     this.cwd = cwd
     this.system = system
+    this.slug = model?.startsWith("gemini-") ? model : undefined
     this.requests = 0
     this.toolEvents = 0
     this.start = performance.now()
   }
   async initialize() {
-    const picked = await antigravityModel(this.cwd)
+    const picked = this.slug ? { slug: this.slug } : await antigravityModel(this.cwd)
     if (this.failure) throw new Error(this.failure)
     const agents = join(this.cwd, ".agents", "agents")
     mkdirSync(agents, { recursive: true })
@@ -231,7 +233,7 @@ class AntigravitySession {
       const pending = this.pending
       this.pending = null
       clearTimeout(pending.timer)
-      pending.resolve({ text: event.result?.response ?? "", failed: event.result?.status !== "SUCCESS", providerTurns: event.result?.num_turns ?? null })
+      pending.resolve({ text: event.result?.response ?? "", failed: event.result?.status !== "SUCCESS", providerTurns: event.result?.num_turns ?? null, usage: event.result?.usage })
     }
   }
   fail(reason) {
@@ -263,12 +265,12 @@ class AntigravitySession {
   }
 }
 
-// `model` picks a Claude model by the CLI's alias. Other CLIs run their own default.
+// `model` picks a Claude model by the CLI's alias, or an Antigravity model by its slug. Other CLIs run their own default.
 export function createSession(provider, cwd, system, model) {
   if (provider === "claude") return new ClaudeSession(cwd, system, model)
   if (provider === "codex") return new CodexSession(cwd, system)
   // The Gemini CLI gave way to Antigravity, so a save started on it goes on there.
-  if (["antigravity", "gemini"].includes(provider)) return new AntigravitySession(cwd, system)
+  if (["antigravity", "gemini"].includes(provider)) return new AntigravitySession(cwd, system, model)
   if (provider === "grok") return new AcpSession(provider, cwd, system)
   throw new Error("Unsupported provider")
 }
