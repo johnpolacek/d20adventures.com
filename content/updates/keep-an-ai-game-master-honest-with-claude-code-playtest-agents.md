@@ -32,7 +32,7 @@ findings: z.array(z.object({
 contentGap: z.string().nullable(),
 ```
 
-The judge can be wrong too. Lady Astrid’s notes say she hands over the invitation in the scene’s second round. She did, but the judge saw only the turn, not where it fell in the scene, and flagged it as too early. Now the judge is told which round it is grading, and re-judging the saved rounds cleared her. A person still reads each flag before anything gets fixed.
+The judge is a model too, so it gets the same loop as the GM. When it flags something that wasn’t wrong, the judge gets the fix, and the saved rounds get judged again.
 
 ### Agents in Parallel
 
