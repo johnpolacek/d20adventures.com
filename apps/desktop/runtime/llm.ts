@@ -89,7 +89,9 @@ export function schemaLlm(ask: (prompt: string) => Promise<string>, validatePatc
     async generateObject({ schema, prompt, system }) {
       // Require the strict world-state contract before core validation.
       const advancement = strict && schema instanceof z.ZodObject && "adventurePatch" in schema.shape
-      const effective = advancement ? schema.extend({ adventurePatch: desktopPatchSchema.required({ characterUpdates: true }) }) : schema
+      // The patch asked for is what play reads (story.ts, characters.ts): no discoveries or entity updates, which
+      // took most of a round end's output and were read by nothing.
+      const effective = advancement ? schema.extend({ adventurePatch: desktopPatchSchema.omit({ discoveries: true, entityUpdates: true }).required({ characterUpdates: true }) }) : schema
       const jsonSchema = z.toJSONSchema(effective, { unrepresentable: "any" })
       let correction = ""
       for (let attempt = 0; attempt < 2; attempt++) {

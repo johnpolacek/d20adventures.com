@@ -2,6 +2,7 @@ import { spawn } from "node:child_process"
 import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { DatabaseSync } from "node:sqlite"
 import { build } from "esbuild"
 
 // The playtest scorecard: every plan, played some times each, summed into one table. One run of a plan is noisy, as the
@@ -40,6 +41,10 @@ type Card = {
   deadContinues: number
   repeats: number
   rulings: number
+  // What the save recorded for later: facts in `knowledge`, without which an NPC says again what it said, and the open
+  // threads a chapter carries to the next adventure (runtime/story.ts).
+  facts: number
+  threads: number
   errors: number
   minutes: number
   prompts: Record<string, Prompt>
@@ -71,8 +76,20 @@ function promptsOf(file: string, into: Record<string, Prompt>) {
   }
 }
 
+function recorded(file: string) {
+  if (!existsSync(file)) return { facts: 0, threads: 0 }
+  const db = new DatabaseSync(file, { readOnly: true })
+  try {
+    const row = db.prepare("select json from save").get() as { json: string } | undefined
+    const a = row ? (JSON.parse(row.json).adventure as { knowledge?: unknown[]; openThreads?: unknown[] }) : {}
+    return { facts: a.knowledge?.length ?? 0, threads: a.openThreads?.length ?? 0 }
+  } finally {
+    db.close()
+  }
+}
+
 function score(label: string, out: string, plans: string[], runs: number): Card {
-  const card: Card = { label, runs, plans, ended: {}, calls: {}, deadContinues: 0, repeats: 0, rulings: 0, errors: 0, minutes: 0, prompts: {}, each: [] }
+  const card: Card = { label, runs, plans, ended: {}, calls: {}, deadContinues: 0, repeats: 0, rulings: 0, facts: 0, threads: 0, errors: 0, minutes: 0, prompts: {}, each: [] }
   for (const plan of plans)
     for (let r = 1; r <= runs; r++) {
       const dir = join(out, `run${r}`, plan)
@@ -85,6 +102,9 @@ function score(label: string, out: string, plans: string[], runs: number): Card 
       card.repeats += s.repeats?.length ?? 0
       card.rulings += s.rulings?.length ?? 0
       card.errors += s.errors?.length ?? 0
+      const kept = recorded(join(dir, "adventure.sqlite"))
+      card.facts += kept.facts
+      card.threads += kept.threads
       card.minutes = Math.round((card.minutes + (s.minutes ?? 0)) * 10) / 10
       promptsOf(join(dir, "gm-trace.jsonl"), card.prompts)
       card.each.push({ plan, run: r, ended: s.ended, minutes: s.minutes, dead: s.deadContinues, repeats: (s.repeats ?? []).map((x) => `${x.speaker}: ${x.text}`), errors: s.errors ?? [] })
@@ -103,6 +123,8 @@ function table(cards: Card[]) {
   row("dead continues", (c) => String(c.deadContinues))
   row("REPEAT lines", (c) => String(c.repeats))
   row("rulings", (c) => String(c.rulings))
+  row("facts recorded", (c) => String(c.facts ?? "-"))
+  row("open threads", (c) => String(c.threads ?? "-"))
   row("errors", (c) => String(c.errors))
   const kinds = [...new Set(cards.flatMap((c) => Object.keys(c.calls)))]
   for (const k of kinds) row(`${k} n / avg / max`, (c) => (c.calls[k] ? `${c.calls[k].n} / ${sec(c.calls[k].avgMs)} / ${sec(c.calls[k].maxMs)}` : "-"))
