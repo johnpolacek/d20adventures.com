@@ -1,7 +1,8 @@
 "use client"
 
 // The levels this player's heroes are owed: a button for each, and the level-up screen it opens. The engine checks
-// the choices, and the levelled hero is kept in the player's account.
+// the choices, and the levelled hero is kept in the player's account. The buttons come between rounds, in the reply
+// form's place, and Later puts them off till the next round.
 
 import { useUser } from "@clerk/nextjs"
 import { inFight, levelOwed } from "@d20/gm-core/sheet/level-owed"
@@ -15,18 +16,24 @@ import { useTurnContext } from "@/lib/context/TurnContext"
 import { pictureAt } from "@/lib/images"
 import { controlsHero } from "./turn-reaction"
 
-export function TurnLevelUp({ className }: { className?: string }) {
+/** The heroes this player plays who are owed a level. A level is taken once a fight is over. */
+export function useOwedLevels() {
   const { currentTurn } = useTurnContext()
   const { user } = useUser()
+  if (!currentTurn || inFight(currentTurn)) return []
+  return currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
+}
+
+export function TurnLevelUp({ show = true, onLater, className }: { show?: boolean; onLater?: () => void; className?: string }) {
+  const { currentTurn } = useTurnContext()
+  const owed = useOwedLevels()
   const [open, setOpen] = useState<string | null>(null)
   if (!currentTurn) return null
-  // A level is taken once a fight is over.
-  const owed = inFight(currentTurn) ? [] : currentTurn.characters.filter((character) => controlsHero(character, user?.id) && levelOwed(character))
   const hero = owed.find((character) => character.id === open)
   // The screen is beside the buttons, not inside them, so it stays for its exit when the last level is taken.
   return (
     <>
-      <Presence show={owed.length > 0} asChild>
+      <Presence show={show && owed.length > 0} asChild>
         <div className={className}>
           <div className="flex flex-wrap justify-center gap-3">
             {owed.map((character) => (
@@ -34,6 +41,11 @@ export function TurnLevelUp({ className }: { className?: string }) {
                 Level Up {character.name}
               </Button>
             ))}
+            {onLater && (
+              <Button size="sm" variant="outline" onClick={onLater}>
+                Later
+              </Button>
+            )}
           </div>
         </div>
       </Presence>

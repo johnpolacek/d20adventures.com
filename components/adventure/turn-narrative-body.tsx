@@ -26,7 +26,7 @@ import LoadingAnimation from "@d20/ui/loading-animation"
 import { Presence, Swap } from "@d20/ui/presence"
 import { dropCap } from "@d20/ui/typography/styles"
 import FinalEncounterCompleteMessage from "./final-encounter-complete-message"
-import { TurnLevelUp } from "./turn-level-up"
+import { TurnLevelUp, useOwedLevels } from "./turn-level-up"
 import TurnNarrativeReply from "./turn-narrative-reply"
 import { TurnReaction, useStandingOffer } from "./turn-reaction"
 import { useTurnActions } from "./use-turn-actions"
@@ -39,6 +39,9 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
   const { isSignedIn } = useUser()
   // A reaction offered to a hero stops the NPC's turn until it is answered or runs out. It shows in place of the roll.
   const offer = useStandingOffer()
+  // Levels owed come between rounds: once nothing is being rolled or sent, in the reply form's place.
+  const owed = useOwedLevels()
+  const [levelLater, setLevelLater] = React.useState<string | null>(null)
 
   // Drawer variant scrolls its own container (the page variant's window scroll
   // lives in TurnNarrative): jump to the latest content + reply form on open,
@@ -62,7 +65,8 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
   // Who the turn passed over to reach whose turn it is, because they cannot act, and why.
   const passed = passedWords(passedOver(currentTurn.characters, currentCharacter))
   // What closes the turn's story: the reply box, the game over notice, or whose turn it is.
-  const ending = shouldShowReply && currentCharacter ? "reply" : allPCsDead ? "over" : !currentTurn.isFinalEncounter ? "waiting" : "none"
+  const levelStep = owed.length > 0 && !currentTurn.isFinalEncounter && !isNpcProcessing && !advancing && !offer && levelLater !== currentTurn.id
+  const ending = levelStep ? "level" : shouldShowReply && currentCharacter ? "reply" : allPCsDead ? "over" : !currentTurn.isFinalEncounter ? "waiting" : "none"
 
   return (
     <div className="w-full grow max-w-3xl mx-auto fade-in">
@@ -105,7 +109,9 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
 
       {/* Show reply form only if current character is a PC and not in historical mode */}
       <Swap id={ending}>
-        {shouldShowReply && currentCharacter ? (
+        {levelStep ? (
+          <TurnLevelUp className="mt-6" onLater={() => setLevelLater(currentTurn.id)} />
+        ) : shouldShowReply && currentCharacter ? (
           <TurnNarrativeReply character={currentCharacter} submitReply={submitReply} />
         ) : allPCsDead ? (
           <div id="turn-indicator" className="flex flex-col gap-2 justify-center border mt-6 border-red-800/50 items-center p-8 rounded-lg bg-red-900/20">
@@ -136,7 +142,7 @@ export default function TurnNarrativeBody({ variant, showOriginalReplies = false
         ) : null}
       </Swap>
 
-      <TurnLevelUp className="mt-8" />
+      <TurnLevelUp show={Boolean(currentTurn.isFinalEncounter)} className="mt-8" />
       <Presence show={Boolean(currentTurn?.isFinalEncounter)} motion="fade" asChild>
         <div className="flex flex-col items-center justify-center mt-8 md:mt-16 text-center px-2 py-4 md:py-6 border-double border-8 border-primary-800 rounded-lg">
           <FinalEncounterCompleteMessage isSignedIn={Boolean(isSignedIn)} settingId={settingId} adventurePlanId={adventurePlanId} nextAdventure={nextAdventure} />

@@ -4,6 +4,7 @@ sceneTitle: "Path Through The Dark Forest"
 sectionTitle: "Journey to the Standing Stones"
 id: "timely-rescue"
 type: "encounter"
+level: 2
 title: "Timely Rescue"
 settingId: "realm-of-myr"
 location: "valkarr-forest"
