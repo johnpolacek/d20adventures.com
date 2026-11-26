@@ -1171,19 +1171,27 @@ export function StagePlay(props: {
   const framed = useRef<Stage | null>(null)
   // A speaker framed only where the director has no take, so a bubble that comes up mid-paragraph does not restart one.
   const lead = plans[paragraph] ? undefined : speech[0]?.cast.id
+  // Before the story starts on a new stage, as while the narrator readies its first words or the first-look tour is up,
+  // the stage already stands where its first paragraph is seen from, still. It used to hold the set's opening view, then
+  // cut to the paragraph's the moment the words began.
+  const previewed = useRef<Stage | null>(null)
   useEffect(() => {
-    if (!stage || !reading || !started) return
+    if (!stage || !reading) return
+    const preview = !started
+    if (preview && (framed.current === stage || previewed.current === stage)) return
     const cut = framed.current !== stage
-    framed.current = stage
+    if (preview) previewed.current = stage
+    else framed.current = stage
     const plan = plansRef.current[paragraph]
     const cast = stage.cast.filter((c) => stage.isOnStage(c.id))
     const arrived = reframe.current === turn?._id
-    if (arrived) reframe.current = null
+    if (arrived && !preview) reframe.current = null
     // A spot is clear when nothing solid stands between it and the one it is taken from, however far off it is.
     const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }) : null
-    const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => (
-      logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut),
-      traceShot(stage, paragraph, which, t, cast),
+    const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => {
+      if (preview) return void stage.shot(t ? which : alive(which, paragraph), { instant: true })
+      logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut)
+      traceShot(stage, paragraph, which, t, cast)
       stage.shot(t ? which : alive(which, paragraph), {
         instant: cut || !!t?.cut,
         follow,
@@ -1192,7 +1200,8 @@ export function StagePlay(props: {
         move: t ? t.move : SETTLE,
         impact: t?.impact,
         take: t?.label,
-      }))
+      })
+    }
     if (departing?.shot) return void go(departing.shot, take)
     if (arriving?.shot) return void go(arriving.shot, take)
     if (take) return void go(take.shot, take)
@@ -1558,6 +1567,9 @@ export function StagePlay(props: {
   }))
   // The play interface is up. Each part of it comes and goes on its own, so hiding it lets every part leave.
   const on = !hidden && !props.overlay
+  // A game's first stage, still being built on black. The story and the cards wait for it under Loading: put up over
+  // the build, which holds the window up for seconds, the story card drew half laid out.
+  const opening = Boolean(save && scene && !stage && !stageError && builtFor !== adventureOf(sceneId))
   // Where the narration sits over a scene, and the button that brings it back.
   const nook = compact ? "bottom-[118px] left-8 w-[min(460px,45vw)]" : "bottom-[84px] left-8 w-[min(460px,35vw)]"
   return (
@@ -1610,7 +1622,7 @@ export function StagePlay(props: {
         </>
       }
     >
-      {scene && !files.ready && <SceneLoading progress={files.progress} />}
+      {scene && (!files.ready || opening) && <SceneLoading progress={files.ready ? null : files.progress} />}
       {save && (
         <>
           {on && stage && speech.length > 0 && (
@@ -1641,7 +1653,7 @@ export function StagePlay(props: {
           </Presence>
           {/* The narration and the button that brings it back each have the place to themselves, so one leaves as the other comes. */}
           <div data-tour="story" className={`pointer-events-none absolute z-20 ${scene ? nook : "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2"}`}>
-            <Presence show={on && reading} motion="rise" asChild>
+            <Presence show={on && reading && !opening} motion="rise" asChild>
               <Narration
                 heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
@@ -1683,7 +1695,7 @@ export function StagePlay(props: {
               </Pill>
             </Presence>
           </div>
-          <Presence show={on && Boolean(mode && (!reading || busy || held))} motion="rise" asChild>
+          <Presence show={on && !opening && Boolean(mode && (!reading || busy || held))} motion="rise" asChild>
             {mode && (
               <PromptCard
                 key={`${turn?._id}:${(held?.actor ?? actor)?.id}:${mode.kind}:${tries}`}

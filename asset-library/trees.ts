@@ -437,9 +437,13 @@ export async function standTrees(stage: Stage, footprints: unknown, set: SetLike
   }
 
   // One bark and one leaf material to a species, whatever the shape or the weight.
+  // Each picture is waited for before the trees go up: drawn before its picture is in, a leaf card is cut away whole
+  // and the wood shows as bare ground for a moment, then fills in.
   const pictures = new THREE.TextureLoader()
+  const painting: Promise<unknown>[] = []
   const picture = (file: string, colour: boolean) => {
-    const map = pictures.load(`${swap.files}/textures/${file}`)
+    let map!: THREE.Texture
+    painting.push(new Promise((done) => (map = pictures.load(`${swap.files}/textures/${file}`, done, undefined, done))))
     map.flipY = false
     map.wrapS = map.wrapT = THREE.RepeatWrapping
     map.anisotropy = 4
@@ -549,6 +553,7 @@ export async function standTrees(stage: Stage, footprints: unknown, set: SetLike
     })
   )
   if (swap.bark) dress(near)
+  await Promise.all(painting)
   stage.scene.add(group)
 
   // What a near trunk carries: roots at its foot, dead branches low on it, a broken limb hung on it or leant on it.

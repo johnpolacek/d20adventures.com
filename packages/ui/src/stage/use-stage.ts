@@ -85,6 +85,10 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
         flags: { ...built?.flags, ...opts.flags },
         onProgress: setStatus,
       })
+      // Unseen until it is dressed and framed. Without a picture held over it, a first stage drew its bare set the moment
+      // it was made: the figures on open ground, then the wood planted round them, then the camera cut to the opening.
+      const canvas = created.canvas
+      canvas.style.opacity = "0"
       if (cancelled) {
         created.dispose()
         return
@@ -104,7 +108,11 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       // The play screen places the cast and frames the opening view as it takes the stage. A few frames on, that is
       // drawn, and the old picture fades off it.
       for (let i = 0; i < 4 && !cancelled; i++) await new Promise((r) => requestAnimationFrame(r))
-      if (!cancelled) lift(true)
+      if (cancelled) return
+      // Under a held picture the stage is simply there as the picture fades off it. On black it fades up itself.
+      if (!cover.current) canvas.style.transition = "opacity 350ms ease"
+      canvas.style.opacity = ""
+      lift(true)
     })().catch((err) => {
       console.error(err)
       if (!cancelled) {
