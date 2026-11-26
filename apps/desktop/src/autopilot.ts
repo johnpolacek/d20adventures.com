@@ -87,6 +87,8 @@ const SEND_MS = 700
 const ROLL_MS = 1600
 // After the end, how long the last screen stays before the recording stops.
 const END_MS = 7000
+// How long the finished adventure must sit with nothing being read before the run counts as over.
+const END_SETTLE_MS = 4000
 // A roll's die and verdict are worth watching for this long, though the GM is still at work.
 const ROLL_SHOWN_MS = 3500
 // A paragraph read for this long is taken to be stuck. The longest take about half a minute aloud.
@@ -248,7 +250,14 @@ export function useAutopilot(seat: Seat) {
     if (idleSince.current !== null) spans.current.push([idleSince.current, Date.now()])
     setTimeout(() => void mark("done", { spans: spans.current, problems, at: Date.now() }), END_MS)
   }
+  // The end holds for a moment first. Between the last turn landing and its first words being read, nothing is read for
+  // a beat, and a run that ended there stopped the video before the closing scene was told.
   useEffect(() => {
-    if (autopilot && seat.ended && !seat.reading) end()
+    if (!autopilot || !seat.ended || seat.reading) return
+    const timer = setTimeout(() => {
+      log("end", "the adventure is over and read")
+      end()
+    }, END_SETTLE_MS)
+    return () => clearTimeout(timer)
   }, [seat.ended, seat.reading])
 }

@@ -445,6 +445,15 @@ export function StagePlay(props: {
   // The next scene still on its way: its files downloading, or its set being built. The story waits for it, so the
   // narration of a new place is never read over the last one.
   const sceneWaits = Boolean(scene && !stage && !stageError)
+  // Development only, with VITE_D20_TRACE: how long each scene change kept the story waiting for its stage.
+  const waitedFrom = useRef<number | null>(null)
+  useEffect(() => {
+    if (sceneWaits) waitedFrom.current ??= performance.now()
+    else if (waitedFrom.current !== null) {
+      traceLine(`stage ${sceneId ?? "-"} ${stageError ? "failed" : "ready"} after ${Math.round(performance.now() - waitedFrom.current)}ms waiting`)
+      waitedFrom.current = null
+    }
+  }, [sceneWaits])
   // Silent under the home screen and its pages: the set's ambience starts in play.
   useStageSound(stage, !props.overlay)
   const actor = turn ? findCurrentActor(turn.characters) : undefined
@@ -1216,7 +1225,14 @@ export function StagePlay(props: {
   // the stage already stands where its first paragraph is seen from, still. It used to hold the set's opening view, then
   // cut to the paragraph's the moment the words began.
   const previewed = useRef<Stage | null>(null)
+  // The shot last given, by turn, paragraph and where it looks. A save that lands mid-paragraph rebuilds what this effect
+  // reads and runs it again, and giving the same shot again restarted its glide, two or three times a paragraph. Reading
+  // the paragraph again (its replay button) clears it, so the take plays again.
+  const lastShot = useRef<string | null>(null)
+  // The opening's wide hold on a new stage, by turn and paragraph, and when it ends.
+  const openingHold = useRef<{ at: string; until: number } | null>(null)
   useEffect(() => {
+    if (!reading) lastShot.current = null
     if (!stage || !reading) return
     const preview = !started
     if (preview && (framed.current === stage || previewed.current === stage)) return
@@ -1236,8 +1252,11 @@ export function StagePlay(props: {
     const take = plan ? compose(plan, composing) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => {
       if (preview) return void stage.shot(t ? which : alive(which, paragraph), { instant: true })
+      const sig = `${turn?._id}:${paragraph}:${JSON.stringify(which)}`
+      if (!cut && !t?.cut && lastShot.current === sig) return void traceLine(`shot p${paragraph} repeat skipped`)
+      lastShot.current = sig
       logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut)
-      traceShot(stage, paragraph, which, t, cast)
+      traceShot(stage, paragraph, which, t, cast, text[paragraph])
       stage.shot(t ? which : alive(which, paragraph), {
         instant: cut || !!t?.cut,
         follow,
@@ -1261,9 +1280,16 @@ export function StagePlay(props: {
         stage.circleOn((plan?.side ?? 1) * -4, 90)
         if (preview) return
         cut = false
+        openingHold.current = { at: `${turn?._id}:${paragraph}`, until: Date.now() + ESTABLISH_HOLD }
         const timer = setTimeout(frame, ESTABLISH_HOLD)
         return () => clearTimeout(timer)
       }
+    }
+    // A run again during the opening's hold waits out the rest of it, where it used to cut the hold short.
+    const hold = openingHold.current
+    if (hold?.at === `${turn?._id}:${paragraph}` && hold.until > Date.now()) {
+      const timer = setTimeout(frame, hold.until - Date.now())
+      return () => clearTimeout(timer)
     }
     frame()
     function frame() {
@@ -1736,7 +1762,8 @@ export function StagePlay(props: {
           </Presence>
           {/* The narration and the button that brings it back each have the place to themselves, so one leaves as the other comes. */}
           <div data-tour="story" className={`pointer-events-none absolute z-20 ${scene ? nook : "left-1/2 top-1/2 w-[min(680px,75vw)] -translate-x-1/2 -translate-y-1/2"}`}>
-            <Presence show={on && reading && !opening} motion="rise" asChild>
+            {/* Down while the next scene's stage is built, so the new place is never read over a still of the last. */}
+            <Presence show={on && reading && !opening && !sceneWaits} motion="rise" asChild>
               <Narration
                 heading={`Round ${shown?.order} · ${shown?.title}`}
                 text={text[paragraph]}
@@ -1752,6 +1779,7 @@ export function StagePlay(props: {
                 paused={paused || tour.open}
                 onPause={setPaused}
                 onReplay={() => {
+                  lastShot.current = null
                   setParagraph(0)
                   setReading(true)
                 }}
@@ -2032,17 +2060,32 @@ export function StagePlay(props: {
   )
 }
 
-// Development only, with VITE_D20_TRACE: each shot, where the cast stands for it, and where the camera has got to once
-// it settles, with the nearest of them, so a lens inside someone shows in the log.
-function traceShot(stage: Stage, paragraph: number, which: unknown, take: Take | null, cast: readonly { id: string; x: number; z: number; height: number }[]) {
+// Development only, with VITE_D20_TRACE: each shot with the first words of the paragraph it is for, where the cast
+// stands for it, and where the camera has got to once it settles, with the nearest of them, so a lens inside someone
+// shows in the log. Once settled, who is in the picture: "in" well inside it, "edge" in its outer tenth, where a figure
+// is cut off, "off" out of it. A paragraph framed on no one, or on the wrong one, reads plainly off the log. A view of a
+// place with no one in it, as the tree line a noise came from, is "NO ONE IN FRAME" too, and may be meant.
+function traceShot(stage: Stage, paragraph: number, which: unknown, take: Take | null, cast: readonly { id: string; x: number; z: number; height: number }[], words = "") {
   if (!import.meta.env.DEV || !import.meta.env.VITE_D20_TRACE) return
   const r = (n: number) => Math.round(n * 100) / 100
   const who = cast.map((c) => `${c.id}@${r(c.x)},${r(c.z)} h${r(c.height)}${stage.isDown(c.id) ? " down" : ""}`).join("; ")
-  traceLine(`shot p${paragraph} ${take?.label ?? (typeof which === "string" ? which : "view")} ${JSON.stringify(take?.shot ?? which)} | ${who}`)
+  traceLine(`shot p${paragraph} ${take?.label ?? (typeof which === "string" ? which : "view")} ${JSON.stringify(take?.shot ?? which)} | ${who} | "${words.slice(0, 70)}"`)
   setTimeout(() => {
-    const p = stage.camera.position
-    const near = cast.map((c) => ({ id: c.id, d: Math.hypot(c.x - p.x, c.z - p.z) })).sort((a, b) => a.d - b.d)[0]
-    traceLine(`camera p${paragraph} at ${r(p.x)},${r(p.y)},${r(p.z)} nearest ${near?.id} ${near ? r(near.d) : "-"}m`)
+    const camera = stage.camera
+    const p = camera.position
+    const near = cast.map((c) => ({ id: c.id, d: Math.hypot(c.x - p.x, c.z - p.z), height: c.height })).sort((a, b) => a.d - b.d)[0]
+    // A lens nearer a figure's middle than its body is wide is inside it: the picture is all feathers or cloak.
+    const inside = near && p.y < near.height && near.d < Math.max(0.35, near.height * 0.22) ? ` | LENS INSIDE ${near.id}` : ""
+    camera.updateMatrixWorld()
+    // Each figure by its head and its chest, as the lens sees them: -1 to 1 across the picture, behind the lens past 1 in
+    // depth. The better of the two counts, so a face in close-up is in.
+    const where = (x: number, y: number, z: number) => {
+      const v = p.clone().set(x, y, z).project(camera)
+      return v.z > 1 || Math.abs(v.x) > 1 || Math.abs(v.y) > 1 ? 2 : Math.abs(v.x) > 0.8 || Math.abs(v.y) > 0.8 ? 1 : 0
+    }
+    const seen = cast.map((c) => `${c.id} ${["in", "edge", "off"][Math.min(where(c.x, c.height * 0.92, c.z), where(c.x, c.height * 0.55, c.z))]}`)
+    const none = cast.length > 0 && seen.every((s) => s.endsWith(" off"))
+    traceLine(`camera p${paragraph} at ${r(p.x)},${r(p.y)},${r(p.z)} nearest ${near?.id} ${near ? r(near.d) : "-"}m | ${seen.join(", ")}${none ? " | NO ONE IN FRAME" : ""}${inside}`)
   }, 2500)
 }
 
