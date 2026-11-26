@@ -9,7 +9,7 @@ import { conditionLabel } from "@d20/gm-core/utils/condition-label"
 import { findCurrentActor, hasFled, isDead, isDown } from "@d20/gm-core/utils/turn-actors"
 import type { SoundCue, Stage } from "@d20/stage"
 import { readingSeconds } from "@d20/stage/beats"
-import { compose, planTakes, speakerShot, type Take } from "@d20/stage/director"
+import { compose, planTakes, speakerShot, type ComposeContext, type Take } from "@d20/stage/director"
 import { served } from "@d20/stage/served"
 import type { StagingShot } from "@d20/stage/spec/staging"
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -48,7 +48,7 @@ import { logShot, useAutopilot } from "./autopilot"
 import { traceLine } from "./dev-trace"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
-import { storyMoments } from "./moments"
+import { openingParagraph, storyMoments } from "./moments"
 import { useSceneFiles } from "./files"
 import { adventureOf, castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 import { loadPlay, loadPronunciations } from "./stage-data"
@@ -107,6 +107,8 @@ function wayOff(stage: Stage, id: string, heroes: string[]): [number, number] | 
 // A shot the director has no take for still lives: once there, the camera circles a little and closes slowly, easing
 // out over the paragraph. Paragraphs turn opposite ways, so a run of them does not wind round one way.
 const SETTLE = { push: 0.07, rise: 0.12, seconds: 9 }
+// How long an encounter's establishing view holds before its first paragraph's own take, in milliseconds.
+const ESTABLISH_HOLD = 4000
 function alive(shot: StagingShot | string, turn: number): StagingShot | string {
   if (typeof shot === "string" || "orbit" in shot) return shot
   const way = turn % 2 ? -1 : 1
@@ -1185,6 +1187,7 @@ export function StagePlay(props: {
   const plansRef = useRef(plans)
   plansRef.current = plans
   const planKey = JSON.stringify(plans[paragraph] ?? null)
+  const openingAt = useMemo(() => openingParagraph(paragraphs), [paragraphs])
   // Each paragraph moves the camera to fit it, as the director shoots its moment. An author's shot for an entrance or
   // an exit is kept, with the take's move. A paragraph the director has no take for frames its first speaker or the
   // place it describes. The first view on a new stage is a cut, not a glide from its opening view.
@@ -1199,7 +1202,7 @@ export function StagePlay(props: {
     if (!stage || !reading) return
     const preview = !started
     if (preview && (framed.current === stage || previewed.current === stage)) return
-    const cut = framed.current !== stage
+    let cut = framed.current !== stage
     if (preview) previewed.current = stage
     else framed.current = stage
     const plan = plansRef.current[paragraph]
@@ -1207,7 +1210,8 @@ export function StagePlay(props: {
     const arrived = reframe.current === turn?._id
     if (arrived && !preview) reframe.current = null
     // A spot is clear when nothing solid stands between it and the one it is taken from, however far off it is.
-    const take = plan ? compose(plan, { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }) : null
+    const composing: ComposeContext = { cast, clear: (from, at) => !stage.reach(from.id, at, Math.hypot(at.x - from.x, at.z - from.z) + 0.1).blocked }
+    const take = plan ? compose(plan, composing) : null
     const go = (which: Parameters<Stage["shot"]>[0], t: Take | null, follow: string[] = t?.follow ?? []) => {
       if (preview) return void stage.shot(t ? which : alive(which, paragraph), { instant: true })
       logShot(turn?._id, paragraph, typeof which === "string" ? which : (t?.label ?? "view"), cut || !!t?.cut)
@@ -1222,26 +1226,44 @@ export function StagePlay(props: {
         take: t?.label,
       })
     }
-    if (departing?.shot) return void go(departing.shot, take)
-    if (arriving?.shot) return void go(arriving.shot, take)
-    if (take) return void go(take.shot, take)
-    if (lead) {
-      const shot = { distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
-      const leader = stage.cast.find((c) => c.id === lead)
-      return void go(leader ? speakerShot(leader, shot) : { subject: lead, ...shot }, null)
+    // An encounter opens wide, on the place with the party in it, and holds there before its first paragraph's own take,
+    // as a close-up of Wollandora at the Standing Stones used to open on. An author's shot for an entrance or exit stands.
+    if ((cut || preview) && paragraph === openingAt && plan?.moment.kind !== "establish" && !departing?.shot && !arriving?.shot) {
+      const party = heroes.current.filter((id) => stage.isOnStage(id))
+      const wide = party.length ? compose({ moment: { kind: "establish", party }, side: plan?.side ?? 1, variant: 0 }, composing) : null
+      const opening = wide?.shot ?? stage.staging?.shot
+      if (opening) {
+        go(opening, wide)
+        if (preview) return
+        cut = false
+        const timer = setTimeout(frame, ESTABLISH_HOLD)
+        return () => clearTimeout(timer)
+      }
     }
-    const view = beats[paragraph]?.view
-    // A paragraph with nothing new to frame still moves the camera: it circles round what it looks at, turning the
-    // opposite way to the last, so each new card is seen from a new angle.
-    if (!view) {
-      if (arrived && stage.staging?.shot) return void go(stage.staging.shot, null)
-      if (!preview && !cut) stage.circleOn(paragraph % 2 ? -3 : 3, 12)
-      return
+    frame()
+    function frame() {
+      if (!stage) return
+      if (departing?.shot) return void go(departing.shot, take)
+      if (arriving?.shot) return void go(arriving.shot, take)
+      if (take) return void go(take.shot, take)
+      if (lead) {
+        const shot = { distance: 5, angle: 18, height: 1.7, lookHeight: 1.1, fov: 45 }
+        const leader = stage.cast.find((c) => c.id === lead)
+        return void go(leader ? speakerShot(leader, shot) : { subject: lead, ...shot }, null)
+      }
+      const view = beats[paragraph]?.view
+      // A paragraph with nothing new to frame still moves the camera: it circles round what it looks at, turning the
+      // opposite way to the last, so each new card is seen from a new angle.
+      if (!view) {
+        if (arrived && stage.staging?.shot) return void go(stage.staging.shot, null)
+        if (!preview && !cut) stage.circleOn(paragraph % 2 ? -3 : 3, 12)
+        return
+      }
+      const shot = shotFor(stage, view, heroes.current)
+      // A walk under way in this paragraph is followed: two facing off keep both in the picture.
+      if (shot) go(shot, null, "pair" in view ? view.pair : [])
     }
-    const shot = shotFor(stage, view, heroes.current)
-    // A walk under way in this paragraph is followed: two facing off keep both in the picture.
-    if (shot) go(shot, null, "pair" in view ? view.pair : [])
-  }, [stage, lead, departing, arriving, beats, planKey, paragraph, reading, started])
+  }, [stage, lead, departing, arriving, beats, planKey, paragraph, reading, started, openingAt])
   const played = useRef(new Set<string>())
   // The paragraph on screen, so an effect waiting on the camera is dropped once the reader moves on.
   const showing = useRef("")

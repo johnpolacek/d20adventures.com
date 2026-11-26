@@ -38,9 +38,16 @@ export function toneOf(text: string, delivery: string | undefined, fighting: boo
 
 const outcomeOf = (r: RollBeat): Outcome => (r.attack?.critical ? "crit" : r.natural === 1 && !r.success ? "fumble" : r.success ? "hit" : "miss")
 
+// The paragraph that opens an encounter, or -1: its first intro paragraph. A turn that opens a new encounter tells the
+// end of the last one first.
+export function openingParagraph(paragraphs: readonly { beats: StoryBeat[] }[]): number {
+  return paragraphs.findIndex((p) => p.beats[0]?.by.step === "intro")
+}
+
 // Every paragraph's moment, or null where the paragraph says nothing the camera should answer: it stays where it is,
 // or the host frames a place.
 export function storyMoments(paragraphs: readonly { beats: StoryBeat[] }[], ctx: MomentContext): (Moment | null)[] {
+  const opening = openingParagraph(paragraphs)
   const all = paragraphs.flatMap((p) => p.beats)
   const fighting = all.some((b) => (b.kind === "roll" && b.attack) || (b.kind === "action" && b.effect))
   // The roll that decided a beat: the last one before it in the same step.
@@ -92,10 +99,8 @@ export function storyMoments(paragraphs: readonly { beats: StoryBeat[] }[], ctx:
         return { kind: "action", actor: who, target: ctx.castOf(first.target) }
       }
       if (act?.kind === "action" && actor) return { kind: "action", actor, target: ctx.castOf(act.target) }
-      // An encounter's opening words, before anyone does anything: the place, with the party in it. A turn that opens
-      // a new encounter tells the end of the last one first, so its opening is the first intro paragraph, not the first.
-      const opening = first?.by.step === "intro" && !paragraphs.slice(0, i).some((p) => p.beats[0]?.by.step === "intro")
-      if (opening && ctx.party.length) return { kind: "establish", party: ctx.party }
+      // An encounter's opening words, before anyone does anything: the place, with the party in it.
+      if (i === opening && ctx.party.length) return { kind: "establish", party: ctx.party }
       return null
     })()
     for (const b of beats) if (b.kind === "roll") lastRoll = b
