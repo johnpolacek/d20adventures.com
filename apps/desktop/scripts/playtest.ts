@@ -89,7 +89,7 @@ function repeatsOf(turns: TurnRecord[]) {
       const b = said[j]
       if (a.speaker !== b.speaker) continue
       // A short line said again word for word is a repeat too: Silas's "Someone's out there. Get her over the side, now!"
-      if ((a.text === b.text && a.text.length >= 20) || (a.w.size >= 5 && overlap(a.w, b.w) >= 0.8)) out.push({ speaker: a.speaker, text: a.text.slice(0, 120), turns: [a.turn, b.turn] })
+      if ((a.text === b.text && a.text.length >= 20) || (a.w.size >= 5 && overlap(a.w, b.w) >= 0.8)) out.push({ speaker: a.speaker, text: a.text === b.text ? a.text.slice(0, 120) : `${a.text.slice(0, 80)} / ${b.text.slice(0, 80)}`, turns: [a.turn, b.turn] })
     }
   return out
 }

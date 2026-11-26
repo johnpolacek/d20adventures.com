@@ -174,24 +174,33 @@ const MENU = (kind: "skill" | "ability" | "save") =>
     .map((entry) => `   - ${entry.id}: ${entry.name}. ${entry.uses}.`.replace(/\.\.$/, "."))
     .join("\n")
 
-// A spell the player says their hero casts that the hero does not know. The read takes it for no spell, and the story
+// A spell the player says their hero casts that the read did not cast. The read takes it for no spell, and the story
 // used to tell it cast all the same with nothing coming of it: Lyra "casts Shocking Grasp on him", a cantrip she lacks,
-// and Reinhard took no harm. It is told now that she does not know it, and no spell is cast.
+// and Reinhard took no harm. Lyra's second Magic Missile, with no slot left, struck Reinhard with "stinging bolts" that
+// did nothing. It is told now that she does not know it, or why she cannot cast it, and no spell is cast.
 const spellsByName = [...spellById.values()].sort((a, b) => b.name.length - a.name.length)
 const escaped = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-export function unknownSpellNamed(action: string, known: readonly string[]): { name: string } | undefined {
+/** The first spell the words say is cast, by name. */
+export function spellNamed(action: string): { id: string; name: string } | undefined {
   const said = action.replace(/[’']/g, "'")
-  for (const spell of spellsByName) {
-    if (known.includes(spell.id)) continue
-    if (new RegExp(`\\bcast(?:s|ing)?\\s+(?:a |an |the |her |his |their |my )?${escaped(spell.name.replace(/’/g, "'"))}\\b`, "i").test(said)) return { name: spell.name }
-  }
+  for (const spell of spellsByName)
+    if (new RegExp(`\\bcast(?:s|ing)?\\s+(?:a |an |the |her |his |their |my )?${escaped(spell.name.replace(/’/g, "'"))}\\b`, "i").test(said)) return { id: spell.id, name: spell.name }
   return undefined
 }
+export function unknownSpellNamed(action: string, known: readonly string[]): { name: string } | undefined {
+  const named = spellNamed(action)
+  return named && !known.includes(named.id) ? { name: named.name } : undefined
+}
 function withUnknownSpell(action: string, character: Character, read: TurnReading): TurnReading {
-  if (read.ruling || read.cast || (read.roll && "cast" in read.roll) || !("sheet" in character) || !character.sheet) return read
-  const unknown = unknownSpellNamed(action, spellsOf(character as Parameters<typeof spellsOf>[0]).map((k) => k.spell.id))
-  if (!unknown) return read
-  return { ...read, ruling: { name: "Not Their Spell", text: `${character.name} does not know ${unknown.name}. The spell is not cast.` } }
+  if (read.ruling || read.cast || (read.roll && "cast" in read.roll) || read.bonus || !("sheet" in character) || !character.sheet) return read
+  const named = spellNamed(action)
+  if (!named) return read
+  const caster = character as Parameters<typeof spellsOf>[0]
+  if (!spellsOf(caster).some((k) => k.spell.id === named.id)) return { ...read, ruling: { name: "Not Their Spell", text: `${character.name} does not know ${named.name}. The spell is not cast.` } }
+  // One they know and cannot pay for now: no slot left of its level or above.
+  const cost = castCost(caster, named.id)
+  if ("problem" in cost) return { ...read, ruling: { name: "Cannot Cast", text: `${cost.problem} The spell is not cast.` } }
+  return read
 }
 
 // How far a hero may walk at once beside their Speed when no fight is on: any set's whole floor.

@@ -1,3 +1,4 @@
+import { standingWords } from "../sheet/placement"
 import type { GmPorts } from "../ports"
 import { afterRoll } from "../sheet/actions"
 import { type Strike, strikeFacts } from "../sheet/attack"
@@ -81,6 +82,8 @@ function buildRollOutcomePrompt(args: {
   spell?: { name: string; facts: string[]; text?: string; verb?: string }
   // What else the game settled as this happened: a caster losing Concentration.
   also?: string[]
+  // Where everyone stands now, in the engine's words (standingWords). None when the encounter has no floor.
+  standing?: string
 }): string {
   return `
 Context:
@@ -95,7 +98,7 @@ NPCs ACTUALLY PRESENT in this encounter:
 ${args.presentNpcs || "None"}
 ${args.cast ? `\n${args.cast}\n` : ""}${args.dead.length ? `\nDEAD: ${args.dead.join(", ")}. The dead do not act, speak or move, and are never described alive.\n` : ""}
 IMPORTANT: Only reference NPCs listed above. Do NOT reference characters mentioned in conditional statements unless they are confirmed to be present.
-
+${args.standing ? `\n${args.standing}\nTell each one where this shows them: Silas, gone out on the foredeck, does not stagger against the crate in the cabin.\n` : ""}
 Player action (verbatim): """${args.playerActionText}"""
   
 ${
@@ -464,6 +467,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       harm: stakeFacts,
       spell: spellCast,
       also: [...forced.told.map((fact) => fact.text), ...held.facts, ...fell.told.map((gain) => gain.text)],
+      ...(floor ? { standing: standingWords(turnCharacters, floor) } : {}),
       ledger: [ledgerNote(args.knowledge, names), args.strangers ? namesNote(namesHeard(args.knowledge, args.turn), args.turn.characters) : ""].filter(Boolean).join("\n\n"),
     })
 
