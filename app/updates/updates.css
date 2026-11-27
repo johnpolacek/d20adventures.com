@@ -15,6 +15,8 @@ body:has(.updates-page),
   /* A raised part, a step darker than the paper and quieter: a filled tone in a stronger peach read as a band. */
   --up-raise: #f8eee0;
   --up-code: #fff2e0;
+  /* The body of a code card or a table: the paper shows through, lighter. */
+  --up-well: rgb(255 255 255 / 0.5);
   --up-bar: #ffefdd;
   --up-bar-line: #f1d4b5;
   --up-line: #f1d4b5;
@@ -52,6 +54,7 @@ html[data-update-theme="dark"] body:has(.updates-page),
   --up-bg: #15110d;
   --up-raise: #1f1a14;
   --up-code: #1a1611;
+  --up-well: #1a1611;
   --up-bar: #0a0806;
   --up-bar-line: #2c251d;
   --up-line: #3a3127;
@@ -635,6 +638,7 @@ body:has(.updates-page) main + footer {
   overflow-x: auto;
   border: 1px solid var(--up-line);
   border-radius: 8px;
+  background: var(--up-well);
 }
 :is(.up-prose, .up-table) table {
   width: 100%;
@@ -724,7 +728,7 @@ body:has(.updates-page) main + footer {
   overflow: hidden;
   border: 1px solid var(--up-line);
   border-radius: 8px;
-  background: var(--up-code);
+  background: var(--up-well);
   box-shadow: var(--up-shadow);
 }
 .up-prompt-head {
@@ -765,14 +769,8 @@ body:has(.updates-page) main + footer {
 .up-prompt.is-long:not(.is-open) pre {
   max-height: 10.6em;
   overflow: hidden;
-}
-.up-prompt.is-long:not(.is-open) .up-prompt-body::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 64px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, transparent, var(--up-code));
+  /* The body is see-through, so the text fades out rather than under a painted band. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 64px), transparent);
 }
 /* The fold under a long prompt: a ghost button across the card. */
 .up-prompt-more.up-btn {
@@ -782,7 +780,7 @@ body:has(.updates-page) main + footer {
   border-width: 1px 0 0;
   border-top-color: var(--up-line);
   border-radius: 0;
-  background: var(--up-code);
+  background: transparent;
 }
 .up-slot {
   padding: 0 2px;
