@@ -16,7 +16,7 @@ body:has(.updates-page),
   --up-raise: #f8eee0;
   --up-code: #fff2e0;
   /* The body of a code card or a table: the paper shows through, lighter. */
-  --up-well: rgb(255 255 255 / 0.5);
+  --up-well: rgb(255 255 255 / 0.2);
   --up-bar: #ffefdd;
   --up-bar-line: #f1d4b5;
   --up-line: #f1d4b5;
