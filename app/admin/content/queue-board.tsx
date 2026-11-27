@@ -170,7 +170,8 @@ function Editor({ item, onSaved, onDeleted }: { item: QueueItem; onSaved: (item:
     setDirty(true)
   }
 
-  function save() {
+  // Shelve and Unshelve save at once, with any edits not yet saved.
+  function save(nextStatus = status) {
     // Known sections keep their order; platform drafts join once they have text; anything else stays.
     const known = NOTES
     const names = [
@@ -182,8 +183,9 @@ function Editor({ item, onSaved, onDeleted }: { item: QueueItem; onSaved: (item:
     const cleanPosted = Object.fromEntries(Object.entries(posted).filter(([, url]) => url.trim()))
     start(async () => {
       try {
-        await saveQueueItem({ slug: item.slug, title, longTitle, status, sections, posted: cleanPosted, schedule: item.schedule })
-        onSaved({ ...item, title, longTitle, status, sections, posted: cleanPosted })
+        await saveQueueItem({ slug: item.slug, title, longTitle, status: nextStatus, sections, posted: cleanPosted, schedule: item.schedule })
+        onSaved({ ...item, title, longTitle, status: nextStatus, sections, posted: cleanPosted })
+        setStatus(nextStatus)
         setDirty(false)
         setError("")
       } catch (e) {
@@ -238,8 +240,11 @@ function Editor({ item, onSaved, onDeleted }: { item: QueueItem; onSaved: (item:
             ))}
           </SelectContent>
         </Select>
-        <Button variant="plain" className="up-btn is-primary" disabled={!dirty || pending} onClick={save}>
+        <Button variant="plain" className="up-btn is-primary" disabled={!dirty || pending} onClick={() => save()}>
           {pending ? "Saving" : dirty ? "Save" : "Saved"}
+        </Button>
+        <Button variant="plain" className="up-btn is-ghost" disabled={pending} onClick={() => save(item.status === "shelved" ? "idea" : "shelved")}>
+          {item.status === "shelved" ? "Unshelve" : "Shelve"}
         </Button>
         <Button
           variant="plain"
