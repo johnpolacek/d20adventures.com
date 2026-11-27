@@ -196,7 +196,7 @@ test("at the gate table in Kordavos, what Garlan whispers to Thalbern does not r
 test("the dead say nothing: words given to them join the narration", () => {
   const scene = {
     cast: [
-      { id: "thaddeus", name: "Thaddeus Blackthorn", type: "npc", silent: true },
+      { id: "thaddeus", name: "Thaddeus Blackthorn", type: "npc", down: true },
       { id: "astrid", name: "Astrid Blackthorn", type: "npc" },
     ],
   }

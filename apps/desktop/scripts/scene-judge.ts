@@ -92,7 +92,11 @@ export function authoredScene(artifacts: RuntimeArtifacts, encounterId: string):
   // How each next scene opens, so the ordinary road into it reads as taking that way out.
   const opens = (id: string) => (artifacts.encounters[id]?.sections.intro ?? "").split(/\n\s*\n/)[0].trim()
   const ways = e.transitions.map((t) => `- ${linked(t.condition, artifacts)}${opens(t.toEncounterId) ? ` It opens: ${opens(t.toEncounterId)}` : ""}`)
-  const cast = e.npcRefs.map((n) => `- ${sheet(n.id)?.name ?? nameOf({}, n.id)}: ${n.behavior ?? sheet(n.id)?.personality ?? ""}`)
+  const cast = e.npcRefs.map((n) => {
+    const base = n.behavior ?? sheet(n.id)?.personality ?? ""
+    const extras = [...(n.silent ? ["Silent (never speaks aloud)."] : []), ...(n.limits ?? [])]
+    return `- ${sheet(n.id)?.name ?? nameOf({}, n.id)}: ${[base, ...extras].filter(Boolean).join(" ")}`
+  })
   const scenes = playOrder(artifacts).map((id) => `- ${artifacts.encounters[id]?.title ?? id}${id === encounterId ? " (this scene)" : ""}`)
   return [
     `# The adventure's scenes, in play order\n${scenes.join("\n")}`,
