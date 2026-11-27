@@ -6,7 +6,7 @@ Commit and push to `main` when the work is done and nothing about it is in quest
 
 Each finishes in under 30 seconds. There is no root lint or typecheck script.
 
-- `pnpm test:gm-core`: game master core and its server adapter, plus `tsc` on `convex/`.
+- `pnpm test:gm-core`: game master core and its server adapter, plus `tsc` on `convex/` and the regex check (`scripts/regex-check.ts`).
 - `pnpm --filter @d20/gm-core test` and `check`: the rules tests in `packages/gm-core/test/sheet`, and its typecheck.
 - `pnpm --filter @d20/desktop test` and `check`: the desktop runtime tests, and its typecheck.
 - `pnpm test:store`: store and desktop unit tests.
@@ -36,6 +36,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 ## Where New Code Goes
 
 - Game logic goes in `packages/gm-core`. It imports nothing from Next, Clerk or Convex and reaches the outside only through the ports in `src/ports.ts`.
+- Game logic never reads what a player or the model meant with a pattern on their words. Add a field to the model's schema, or an authored field to the content, and read that. Patterns are for text we write: SRD rules, adventure markdown, ids and dice. `scripts/regex-check.ts` lists the patterns the GM's services and story may hold, each with its reason.
 - `lib/gm-server` binds that core to the website. Most of `lib/services` is one-line wrappers that call it, so logic does not go there.
 - `packages/ui` (`@d20/ui`) is shared by the site and the desktop app. It imports nothing from Next, Clerk, Convex or the site. It is built on UI SDK (`@ui-sdk/react`, docs in its `docs` folder).
 - `apps/desktop` is the Tauri app, with its Node game runtime in `apps/desktop/runtime`. The `.mjs` files there find and launch the player's AI CLI (`cli.mjs`, `sessions.mjs`).
