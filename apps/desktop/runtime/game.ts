@@ -339,7 +339,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       if (actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai") throw new Error("It is another character's turn.")
       if (command.kind === "reply") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-        const beats = await core.writeReply({ character: actor, playerInput: command.text, turn })
+        const beats = core.writeReply({ character: actor, playerInput: command.text, turn })
         await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: command.text, story: beats })
       } else if (command.kind === "skip") {
         if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")

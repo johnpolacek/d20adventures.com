@@ -169,7 +169,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   if (job.kind === "reply") {
     const text = job.text?.trim()
     if (!text) throw new Error("The action is empty.")
-    const beats = await core.writeReply({ character: actor, playerInput: text, turn })
+    const beats = core.writeReply({ character: actor, playerInput: text, turn })
     await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: text, story: beats })
     return
   }

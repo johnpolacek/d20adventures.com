@@ -25,8 +25,10 @@ export function createAdventure(ports: GmPorts) {
   const { writeReply } = createNarrativeGenerationService(ports)
   const { afterHeroTurn } = createLegendaryActionService(ports)
   const loadAdventurePlanForRuntime = ports.content.loadPlan.bind(ports.content)
-  // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it.
-  async function processTurnReply({ turnId, characterId, originalPlayerInput, story }: { turnId: string; characterId: string; originalPlayerInput?: string; story: StoryBeat[] }) {
+  // `story` is the reply as the hero's beats, from writeReply. The player's own words go before it. It may be given
+  // still in writing: the game master reads the player's own words for the roll, so the two calls run at once, about
+  // 3 seconds sooner a reply. Only a reply with no words of the player's waits for the beats to read.
+  async function processTurnReply({ turnId, characterId, originalPlayerInput, story: writing }: { turnId: string; characterId: string; originalPlayerInput?: string; story: StoryBeat[] | Promise<StoryBeat[]> }) {
     const userId = await ports.identity()
     if (!userId) {
       console.error("[processTurnReply] Unauthorized access attempt.")
@@ -36,18 +38,12 @@ export function createAdventure(ports: GmPorts) {
     const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
 
     const characterPerformingAction = assertPlayerCharacterControl(userId, turn, characterId)
-    const narrativeAction = storyProse(story)
+    const read = (narrativeAction: string) => readTurnReply({ turn, adventure, characterPerformingAction, narrativeAction, originalPlayerInput })
+    const [story, reading] = await Promise.all([writing, originalPlayerInput?.trim() ? read(originalPlayerInput) : Promise.resolve(writing).then((beats) => read(storyProse(beats)))])
     const reply: StoryBeat[] = [
       ...(originalPlayerInput ? [{ kind: "reply" as const, by: { step: "reply" as const, character: characterId }, character: characterId, text: originalPlayerInput }] : []),
       ...story,
     ]
-    const reading = await readTurnReply({
-      turn,
-      adventure,
-      characterPerformingAction,
-      narrativeAction,
-      originalPlayerInput,
-    })
     const rollRequirementDetails: RollRequirement = reading.roll
     // With `playerDeath: false` a blow the hero draws as they move leaves them Stable instead of dead.
     const rules = { playerDeath: (await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId))?.playerDeath }
@@ -96,7 +92,7 @@ export function createAdventure(ports: GmPorts) {
     if (!userId) throw new Error("Unauthorized")
     const { turn } = await assertAdventureAccessByTurn(userId, turnId)
     const character = assertPlayerCharacterControl(userId, turn, characterId) as TurnCharacter
-    const story = await writeReply({ character, playerInput, turn: { ...turn, characters: turn.characters as TurnCharacter[] } })
+    const story = writeReply({ character, playerInput, turn: { ...turn, characters: turn.characters as TurnCharacter[] } })
     return processTurnReply({ turnId, characterId, originalPlayerInput: playerInput, story })
   }
 
