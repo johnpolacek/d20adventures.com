@@ -6,11 +6,12 @@ import type { SpellRules } from "../spell-rules"
 
 /**
  * Sleep: "Creatures that don't sleep, such as elves, or that have Immunity to the Exhaustion condition automatically
- * succeed on saves against this spell." A hero is an elf by species, an NPC by the race it is written with.
+ * succeed on saves against this spell." A hero is an elf by its sheet's species, an NPC by the `species` it is written
+ * with. A pattern on the NPC's race once decided it, and would have let a drow sleep.
  */
-function sleepless(character: Roller & { race?: string }): boolean {
+function sleepless(character: Roller & { species?: string }): boolean {
   if (character.sheet) return character.sheet.species === "elf"
-  if (/\b(elf|elven)\b/i.test(character.race ?? "") && !/half/i.test(character.race ?? "")) return true
+  if (character.species === "elf") return true
   return !!(character.type === "npc" && ownBlockOf(character)?.conditionImmunities?.includes("exhaustion"))
 }
 

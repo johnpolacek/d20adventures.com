@@ -54,6 +54,7 @@
   "id": "1749307435667",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/covert-cargo/pcs/b44179ad-0e8e-4d1e-8b17-8c436dbeb15a.png?t=1749311061893",
   "sheet": {
+    "stock": { "carried": { "dagger": 2, "bullets-sling": 20 } },
     "class": "rogue",
     "level": 1,
     "species": "halfling",

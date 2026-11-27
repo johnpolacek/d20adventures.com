@@ -40,6 +40,7 @@
   "id": "wrenna-faelendar",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/wrenna-faelendar.png",
   "sheet": {
+    "stock": { "carried": { "arrows": 20, "dagger": 1 } },
     "class": "ranger",
     "level": 1,
     "species": "elf",

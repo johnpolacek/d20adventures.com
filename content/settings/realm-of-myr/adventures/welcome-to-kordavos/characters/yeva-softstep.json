@@ -40,6 +40,7 @@
   "id": "yeva-softstep",
   "image": "https://d20-public.s3.us-east-1.amazonaws.com/images/settings/realm-of-myr/march-of-davos/pcs/yeva-softstep.png",
   "sheet": {
+    "stock": { "carried": { "dagger": 2 } },
     "class": "rogue",
     "level": 1,
     "species": "halfling",

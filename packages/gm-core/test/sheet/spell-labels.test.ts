@@ -120,7 +120,7 @@ test("Sorcerous Burst rolls another d8 for each 8, as many as the spellcasting m
 })
 
 test("Sleep takes no elf and no creature immune to Exhaustion, and its second save leaves the sleeper Unconscious", () => {
-  const elf: Character = { id: "archer", name: "Elven Archer", type: "npc", statBlock: "scout", race: "Wood Elf", hitPoints: 16 }
+  const elf: Character = { id: "archer", name: "Elven Archer", type: "npc", statBlock: "scout", race: "Wood Elf", species: "elf", hitPoints: 16 }
   const skeleton: Character = { id: "skeleton", name: "Skeleton", type: "npc", statBlock: "skeleton", hitPoints: 13 }
   // The Bandit's Wisdom save: 2 against DC 13, a failure. The elf and the Skeleton make none.
   const cast = castSpell({

@@ -306,6 +306,8 @@ export default defineSchema({
         silent: v.optional(v.literal(true)),
         // Waits to be spoken to or gone to before it takes a turn (a festival vendor).
         waits: v.optional(v.literal(true)),
+        // An NPC's SRD species id, where a rule asks it: an elf does not sleep.
+        species: v.optional(v.string()),
         limits: v.optional(v.array(v.string())),
         // A Beast's or another's form the character holds: a Druid's Wild Shape, or a spell's, with the spell and its caster.
         shape: v.optional(v.object({ form: v.string(), hours: v.number(), spell: v.optional(v.string()), by: v.optional(v.string()) })),

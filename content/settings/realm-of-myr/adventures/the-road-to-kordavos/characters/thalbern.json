@@ -44,6 +44,7 @@
   },
   "specialAbilities": [],
   "sheet": {
+    "stock": { "carried": { "arrows": 20, "dagger": 1 } },
     "class": "ranger",
     "level": 1,
     "species": "human",

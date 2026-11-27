@@ -44,9 +44,11 @@ test("what a hero carries is counted from the equipment's names", () => {
 })
 
 test("a saved hero with no stock reads its equipment, and a stock still parses on the sheet", () => {
-  assert.equal(poppen.sheet?.stock, undefined)
-  assert.equal(carriedCount(poppen, "dagger"), 2)
-  const spent = withAttackSpent(poppen, "dagger", { thrown: true, landsAt: at(15) })
+  // Premades carry their counts now. A hero saved before they did has none, and its equipment's words count.
+  assert.deepEqual(poppen.sheet?.stock, { carried: { dagger: 2, "bullets-sling": 20 } })
+  const unstocked = { ...poppen, sheet: { ...(poppen.sheet as Sheet), stock: undefined } }
+  assert.equal(carriedCount(unstocked, "dagger"), 2)
+  const spent = withAttackSpent(unstocked, "dagger", { thrown: true, landsAt: at(15) })
   assert.ok(sheetSchema.safeParse(spent.sheet).success)
   assert.deepEqual(spent.sheet?.stock, { carried: { dagger: 1 }, loose: [{ id: "dagger", at: at(15) }] })
 })

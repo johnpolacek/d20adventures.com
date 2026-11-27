@@ -2,6 +2,7 @@
   "name": "Elven Fighter",
   "archetype": "Fighter",
   "race": "Elf",
+  "species": "elf",
   "gender": "Male",
   "appearance": "Tall and lean with sharp, angular features and piercing emerald green eyes. He carries himself with a quiet confidence and a warrior's posture.",
   "personality": "",

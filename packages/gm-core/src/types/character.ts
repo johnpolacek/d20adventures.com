@@ -160,6 +160,9 @@ export const npcSchema = baseCharacterSchema.extend({
   side: z.enum(SIDES).optional(),
   // True when the encounter marks this NPC as never speaking aloud. Code drops any dialogue beat given to them.
   silent: z.literal(true).optional(),
+  // The SRD species id, where a rule asks it of an NPC: an elf does not sleep (../sheet/spell-mechanics/sleep). `race` is
+  // the story's word for it.
+  species: z.string().optional(),
   // True when the encounter has this NPC wait to be addressed before it takes a turn (../services/npc-turn-service).
   waits: z.literal(true).optional(),
   // Explicit hard limits set by the encounter for this NPC, passed directly to prompts (../story/limits).

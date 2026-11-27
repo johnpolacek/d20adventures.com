@@ -14,6 +14,7 @@ import type { PCTemplate } from "../types/character"
 import { alwaysPrepared, deriveSheet, expertiseSlots, featuresOf, needsFeatureChoice, sheetProblems, takesPicks, trainedWith } from "./derive"
 import { allSpecies, grantedSkills, picksSkills, type SpeciesEntry, speciesById } from "./house-species"
 import { type ChoiceOffer, choiceOffers, type FeatOffer, featOffer, listSpells, masteriesAllowed, type Named, named, type PicksOffer, picksOffer, skillNamed, spellNamed } from "./level-up"
+import { useOf } from "./ammunition"
 import { autoPicks, spellOrder } from "./milestone"
 import { type AbilityScores, type Advancement, abilityScoresSchema, featurePickSchema, type Sheet } from "./sheet"
 import { spellsOf } from "./spells"
@@ -212,12 +213,12 @@ const bareSheet = (pick: CreationPick): Sheet => ({
 })
 
 /** One line of gear: an item's name, how many, and the note the SRD prints beside it ("prayers", "sheets"). */
-type GearItem = { name: string; quantity: number; note?: string }
+type GearItem = { id?: string; name: string; quantity: number; note?: string }
 
 function gearItem(id: string, quantity: number, note?: string): GearItem {
   const name = id === SPELLBOOK ? "Spellbook" : equipmentById.get(id)?.name
   if (!name) throw new Error(`"${id}" is not equipment`)
-  return { name, quantity, ...(note && note.toLowerCase() !== name.toLowerCase() ? { note } : {}) }
+  return { id, name, quantity, ...(note && note.toLowerCase() !== name.toLowerCase() ? { note } : {}) }
 }
 
 // An item in words, with its count and note: "Parchment (10 sheets)", "Dagger (4)".
@@ -554,7 +555,7 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
       const chosen = picks?.[line.id]
       const item = line.from.find((each) => each.id === chosen)
       if (!item) problems.push(`${whose} option ${letter} has a ${line.name} to choose, one of ${line.from.map((each) => each.id).join(", ")}, and the choices name ${chosen ?? "none"}`)
-      else gear.push({ name: item.name, quantity: 1 })
+      else gear.push({ id: item.id, name: item.name, quantity: 1 })
     }
     for (const id of Object.keys(picks ?? {})) if (!offer.picks?.some((line) => line.id === id)) problems.push(`${whose} option ${letter} has no ${id} to choose`)
     return offer
@@ -564,6 +565,11 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
   const weapons = [...new Set([...(classGear?.weapons ?? []), ...(backgroundGear?.weapons ?? [])].map((weapon) => weapon.id))]
   const armor = classGear?.armor ?? backgroundGear?.armor
 
+  // How many of each ammunition and thrown weapon the kit gives, counted here from the SRD's quantities: a Ranger's
+  // 20 Arrows, a Barbarian's 4 Handaxes. The count was once read back out of the gear's words (./ammunition).
+  const carried: Record<string, number> = {}
+  for (const item of gear)
+    if (item.id && (equipmentById.get(item.id)?.kind === "ammunition" || useOf(item.id)?.kind === "thrown")) carried[item.id] = (carried[item.id] ?? 0) + item.quantity
   const advancements = [background_.entry, species_?.entry].filter((entry): entry is Advancement => !!entry)
   const abilityScores = { ...choices.abilityScores }
   for (const [ability, amount] of Object.entries(choices.abilityIncrease) as [AbilityId, number][]) abilityScores[ability] += amount
@@ -591,6 +597,7 @@ export function createSheet(pick: CreationPick, choices: CreationChoices): { she
     ...(choices.spellbook?.length ? { spellbook: [...choices.spellbook] } : {}),
     ...(choices.weaponMasteries?.length ? { weaponMasteries: [...choices.weaponMasteries] } : {}),
     ...(advancements.length ? { advancements } : {}),
+    ...(Object.keys(carried).length ? { stock: { carried } } : {}),
   }
   const all = [...new Set([...problems, ...sheetProblems(built)])]
   return all.length ? { problems: all } : { sheet: built, gear: mergedGear(gear) }

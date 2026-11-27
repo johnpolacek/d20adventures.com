@@ -251,3 +251,11 @@ test("a hero's record and rules in words, read off the High Elf Cleric's sheet",
     spells: ["Guidance", "Sacred Flame", "Thaumaturgy", "Prestidigitation", "Bless", "Cure Wounds", "Healing Word", "Shield of Faith", "Light", "Spare the Dying", "Command"],
   })
 })
+
+test("A new hero's ammunition and thrown weapons are counted from the SRD's quantities, not read from the gear's words", () => {
+  const ranger = made({ class: "ranger", species: "human", background: "soldier" } as unknown as CreationPick)
+  // The Ranger's 20 Arrows and the Soldier's 20.
+  assert.equal(ranger.sheet.stock?.carried?.arrows, 40)
+  const barbarian = made({ class: "barbarian", species: "human", background: "soldier" } as unknown as CreationPick)
+  assert.equal(barbarian.sheet.stock?.carried?.handaxe, 4)
+})
