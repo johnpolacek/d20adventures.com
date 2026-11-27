@@ -11,7 +11,9 @@ landmark: "kordavos/silver-serpent"
 roundBudget: 3
 npcs:
   - id: "harron"
-    behavior: "Gruff and closemouthed behind the bar. For coin or a hard push, says Joran was seen meeting Silverhand, who works the Black Market in the Lower Districts. In the same breath, adds the dock talk of a missing relic, a key, and cowl-wearers asking after it. Gives his warning to move along once, never again."
+    behavior: "Gruff and closemouthed behind the bar. For coin or a hard push, says Joran was seen meeting Silverhand, who works the Black Market in the Lower Districts. In the same breath, adds the dock talk of a missing relic, a key, and cowl-wearers asking after it."
+    limits:
+      - "Gives his warning to move along once, never again."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726289298448"
 ---
 

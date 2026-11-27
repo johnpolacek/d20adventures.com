@@ -21,7 +21,7 @@ const pronoun = (gender?: string) => (!gender ? undefined : /^f|^wom/i.test(gend
 export function storyRules(scene: StoryScene): string {
   const cast = scene.cast
     .map((c) => {
-      const notes = [pronoun(c.gender), c.type === "pc" ? "a player's hero" : undefined].filter(Boolean)
+      const notes = [pronoun(c.gender), c.type === "pc" ? "a player's hero" : undefined, c.silent ? "silent, no lines" : undefined].filter(Boolean)
       return `${c.id}: ${c.name}${notes.length ? ` (${notes.join(", ")})` : ""}`
     })
     .join("; ")

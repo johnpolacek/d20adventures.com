@@ -79,9 +79,19 @@ function parseSimpleYaml(input: string): Record<string, unknown> {
   let currentArrayKey: string | null = null
   let currentObjectKey: string | null = null
   let currentArrayObject: Record<string, unknown> | null = null
+  let currentNestedArray: unknown[] | null = null
+  let currentNestedIndent = 0
 
   for (const rawLine of lines) {
     if (!rawLine.trim() || rawLine.trim().startsWith("#")) continue
+    if (currentNestedArray) {
+      const nestedItem = rawLine.match(/^(\s+)-\s+(.+)$/)
+      if (nestedItem && nestedItem[1].length > currentNestedIndent) {
+        currentNestedArray.push(parseScalar(nestedItem[2]))
+        continue
+      }
+      currentNestedArray = null
+    }
     const arrayObjectStart = rawLine.match(/^\s*-\s+([a-zA-Z0-9_-]+):\s*(.*)$/)
     if (arrayObjectStart && currentArrayKey) {
       const existing = root[currentArrayKey]
@@ -100,15 +110,21 @@ function parseSimpleYaml(input: string): Record<string, unknown> {
       continue
     }
 
-    const nested = rawLine.match(/^\s{2,}([a-zA-Z0-9_-]+):\s*(.*)$/)
+    const nested = rawLine.match(/^(\s{2,})([a-zA-Z0-9_-]+):\s*(.*)$/)
     if (nested && currentArrayObject) {
-      currentArrayObject[nested[1]] = parseScalar(nested[2])
+      if (nested[3] === "") {
+        currentNestedArray = []
+        currentNestedIndent = nested[1].length
+        currentArrayObject[nested[2]] = currentNestedArray
+      } else {
+        currentArrayObject[nested[2]] = parseScalar(nested[3])
+      }
       continue
     }
     if (nested && currentObjectKey) {
       const objectValue = root[currentObjectKey]
       if (objectValue && typeof objectValue === "object" && !Array.isArray(objectValue)) {
-        ;(objectValue as Record<string, unknown>)[nested[1]] = parseScalar(nested[2])
+        ;(objectValue as Record<string, unknown>)[nested[2]] = parseScalar(nested[3])
       }
       continue
     }
@@ -119,6 +135,7 @@ function parseSimpleYaml(input: string): Record<string, unknown> {
     currentArrayKey = null
     currentObjectKey = null
     currentArrayObject = null
+    currentNestedArray = null
     if (value === "") {
       const nextNonEmpty = lines.slice(lines.indexOf(rawLine) + 1).find((line) => line.trim())
       if (nextNonEmpty?.trim().startsWith("- ")) {

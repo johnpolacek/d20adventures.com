@@ -11,9 +11,13 @@ landmark: "kordavos/dragonbone-inn"
 roundBudget: 3
 npcs:
   - id: "beric"
-    behavior: "Gruff but respectful, with a no-nonsense attitude. Loyal to his town and friends. Knows only the facts in the scene's notes about the crate, and says so. Never names his employer."
+    behavior: "Gruff but respectful, with a no-nonsense attitude. Loyal to his town and friends. Knows only the facts in the scene's notes about the crate, and says so."
+    limits:
+      - "Never names his employer."
   - id: "eamon"
-    behavior: "Intelligent and curious, with a calm demeanor. Often lost in thought or poring over ancient texts. Keeps to the crate facts and reward in the scene's notes, never changes a number, and never says what is in the crate or whom he serves."
+    behavior: "Intelligent and curious, with a calm demeanor. Often lost in thought or poring over ancient texts. Keeps to the crate facts and reward in the scene's notes."
+    limits:
+      - "Never changes a reward number, and never says what is in the crate or whom he serves."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726093207477"
 ---
 

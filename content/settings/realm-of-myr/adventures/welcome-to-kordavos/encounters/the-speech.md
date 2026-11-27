@@ -11,11 +11,16 @@ landmark: "kordavos/blackthorn-mansion"
 roundBudget: 1
 npcs:
   - id: "thaddeus-blackthorn"
-    behavior: "Proud and triumphant on the stage. Gives his speech and unveils the Forest Drake, basking in the crowd's awe. Astrid is his sister and their parents are long dead. Admits nothing about the Key, the crate, Mikhail Antonov or his house's past."
+    behavior: "Proud and triumphant on the stage. Gives his speech and unveils the Forest Drake, basking in the crowd's awe. Astrid is his sister and their parents are long dead."
+    limits:
+      - "Admits nothing about the Key, the crate, Mikhail Antonov or his house's past."
   - id: "eamon"
     behavior: "Stands near the stage with the Blackthorn household. If the Forest Drake was lost or killed, conjures a lifelike illusion of it when the curtain draws back."
   - id: "seraphina-valtor"
-    behavior: "Stands at the back of the crowd and does not applaud. Speaks to no one. Slips out through the side doors once, as the curtain draws back. Once gone, takes no turn and is not seen again."
+    silent: true
+    behavior: "Stands at the back of the crowd and does not applaud. Slips out through the side doors once, as the curtain draws back."
+    limits:
+      - "Once gone through the side doors, takes no turn and is not seen again."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726779752897"
 ---
 

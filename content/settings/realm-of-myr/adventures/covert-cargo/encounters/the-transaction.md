@@ -18,7 +18,9 @@ npcs:
     side: "none"
     initialInitiative: 0
   - id: "npcs-1749184389465"
-    behavior: "Aelar takes the scroll case from Silas in the intro and leaves the boat with his guard at once. He is gone after the intro: he takes no turns, says nothing more and does not come back."
+    behavior: "Aelar takes the scroll case from Silas in the intro and leaves the boat with his guard at once."
+    limits:
+      - "Gone after the intro: takes no turns, says nothing more, and does not come back."
     side: "none"
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/the-transaction/1c232871-8395-4892-bcf9-543a03bede80.png?t=1749243102836"

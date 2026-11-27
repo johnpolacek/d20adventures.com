@@ -15,7 +15,8 @@ npcs:
   - id: "barok-redbeard"
     behavior: "Gruff but dignified, vigilant, holds grudges from past encounters. Checks the party as one group. One invitation or one good bluff gets them all up the stairs."
   - id: "door-guard"
-    behavior: "Stands beside Barok at the foot of the stairs, silent and watchful. Never speaks a word: answers with a nod, a look or a hand on his hilt. Steps in only if a guest causes trouble."
+    silent: true
+    behavior: "Stands beside Barok at the foot of the stairs, silent and watchful. Answers with a nod, a look or a hand on his hilt. Steps in only if a guest causes trouble."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726597339022"
 ---
 

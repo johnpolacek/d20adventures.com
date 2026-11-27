@@ -12,6 +12,8 @@ roundBudget: 4
 npcs:
   - id: "scarface-alaric"
     behavior: "Cautious and untrusting, fiercely protective of his crew and territory, has a sharp tongue and quick wit."
+    limits:
+      - "Never takes up his sword again once he surrenders."
   - id: "warehouse-thug"
     behavior: "Alaric's three hired blades, acting as one. Fight at his signal and break if he falls or surrenders."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726351294262"

@@ -10,9 +10,14 @@ adventureId: "welcome-to-kordavos"
 landmark: "kordavos/forgotten-temple"
 npcs:
   - id: "joran-antonov"
-    behavior: "Defiant and certain, the Key of Ilmarin in hand. Accuses Astrid of his father's murder and urges the party to join the Covenant. Never sets down or hands over the Key, whatever a talking roll gives, except to the Church as the notes allow. Fights only if attacked, with a roll."
+    behavior: "Defiant and certain, the Key of Ilmarin in hand. Accuses Astrid of his father's murder and urges the party to join the Covenant. Fights only if attacked, with a roll."
+    limits:
+      - "Never sets down or hands over the Key, whatever a talking roll gives, except to the Church as the notes allow."
+      - "Never grabs or fights for the Key unless attacked."
   - id: "astrid-blackthorn"
-    behavior: "Shocked, then cold. Knows she killed Mikhail on Thaddeus's order and does not deny it. Demands the Key and urges the party to stand with House Blackthorn. If the party sides with Joran, attacks him for the Key with her sword, with a roll each turn."
+    behavior: "Shocked, then cold. Demands the Key and urges the party to stand with House Blackthorn. If the party sides with Joran, attacks him for the Key with her sword, with a roll each turn."
+    limits:
+      - "Knows she killed Mikhail on Thaddeus's order and never denies it."
   - id: "eamon"
     behavior: "Stays near Astrid, wary of the Key's power. Speaks little. If the party sides with Joran, fights at Astrid's side with a roll each turn: Hideous Laughter on Joran, then Magic Missile at whoever guards him."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726970504298"

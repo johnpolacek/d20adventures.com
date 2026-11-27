@@ -7,7 +7,9 @@ export interface StoryCast {
   name: string
   type?: string
   gender?: string
-  // Dead or down: words given to them go to the narration. A round end gave a guest's gasp to the murdered Thaddeus.
+  // Dead or down: words given to them go to the narration without their name. A round end gave a guest's gasp to murdered Thaddeus.
+  down?: boolean
+  // Marked silent by the encounter: never speaks aloud. Any spoken line beat given to them is dropped.
   silent?: boolean
 }
 export interface StoryPlace {
@@ -65,7 +67,7 @@ export function findPlace(scene: StoryScene, value: string | undefined): StoryPl
 
 const isHero = (c: StoryCast | undefined) => c?.type === "pc"
 // A hero speaks only in their own reply. Any other step that gives a hero words is writing for the player.
-const maySpeak = (speaker: StoryCast, by: StoryBy) => !speaker.silent && (!isHero(speaker) || (by.step === "reply" && by.character === speaker.id))
+const maySpeak = (speaker: StoryCast, by: StoryBy) => !speaker.down && !speaker.silent && (!isHero(speaker) || (by.step === "reply" && by.character === speaker.id))
 
 // Spoken words without their quote marks. A line cut from before its speech tag ("We have a problem," she says) ends
 // on a full stop.
@@ -104,7 +106,8 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
     const who = findCharacter(scene, out.who)
     const to = findCharacter(scene, out.to)
     if (out.kind === "line") {
-      if (who && !who.silent) line(who, text, to, out.delivery, out.private)
+      if (who?.silent) continue
+      if (who && !who.down) line(who, text, to, out.delivery, out.private)
       else said(`"${unquote(text)}"`)
       continue
     }

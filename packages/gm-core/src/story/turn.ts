@@ -15,7 +15,7 @@ import { characterStory, nameOf, type StoryNames, storyNames, storyParagraphs, s
 type StoryTurn = {
   encounterId: string
   story: StoryBeat[]
-  characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number }[]
+  characters: readonly { id: string; name: string; type?: string; gender?: string; hitPoints?: number; healthPercent?: number; silent?: boolean }[]
 }
 
 /**
@@ -35,7 +35,14 @@ export const storyOutputObject = z.object(beatsField)
 export async function sceneFor(ports: GmPorts, turn: Omit<StoryTurn, "story">): Promise<StoryScene> {
   const places = (await ports.content.places?.(turn.encounterId).catch(() => undefined)) ?? undefined
   return {
-    cast: turn.characters.map((c) => ({ id: c.id, name: c.name, type: c.type, ...(c.gender ? { gender: c.gender } : {}), ...(isDown(c) ? { silent: true } : {}) })),
+    cast: turn.characters.map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      ...(c.gender ? { gender: c.gender } : {}),
+      ...(isDown(c) ? { down: true } : {}),
+      ...(c.silent ? { silent: true } : {}),
+    })),
     ...(places?.length ? { places } : {}),
   }
 }

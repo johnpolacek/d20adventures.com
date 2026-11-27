@@ -11,6 +11,8 @@ landmark: "valkarr-woods/forest-pier"
 npcs:
   - id: "npcs-1749163978757"
     behavior: "Determined to complete the mission to secure the artifact."
+    limits:
+      - "Draws his weapon only on Silas's nod, never on his own."
     side: "none"
     initialInitiative: 0
   - id: "npcs-1749181492795"

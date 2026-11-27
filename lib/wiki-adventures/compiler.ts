@@ -53,6 +53,10 @@ const commonFrontmatterSchema = z.object({
         z.object({
           id: z.string().min(1),
           behavior: z.string().optional(),
+          // True when this NPC never speaks aloud in this encounter. Enforced in code (story/clean.ts) and prompts.
+          silent: z.boolean().optional(),
+          // Explicit hard limits for this NPC in this encounter, passed directly to prompts.
+          limits: z.array(z.string().min(1)).optional(),
           initialInitiative: z.number().optional(),
           // "party" for one who fights beside the heroes here, "none" for a bystander. Unmarked is a foe.
           side: z.enum(SIDES).optional(),
@@ -176,7 +180,15 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       assetIds: frontmatter.assets ?? [],
       locationId: frontmatter.location,
       landmarkId: frontmatter.landmark,
-      npcRefs: (frontmatter.npcs ?? []).map((npc) => (typeof npc === "string" ? { id: npc } : npc)),
+      npcRefs: (frontmatter.npcs ?? []).map((npc) => {
+        if (typeof npc === "string") return { id: npc }
+        const { silent, limits, ...rest } = npc
+        return {
+          ...rest,
+          ...(silent ? { silent: true as const } : {}),
+          ...(limits?.length ? { limits } : {}),
+        }
+      }),
       sections: file.sections,
       summary: frontmatter.summary ?? file.sections.summary,
       typedLinks: file.typedLinks,

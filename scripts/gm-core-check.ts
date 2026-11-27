@@ -8,8 +8,10 @@ import { handleSkipPassNpcTurn } from "@d20/gm-core/services/npc-turn-branch-ser
 import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-turn-service"
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
 import type { StoryBeat } from "@d20/gm-core/story/beats"
+import { cleanStory } from "@d20/gm-core/story/clean"
 import { ledgerNote } from "@d20/gm-core/story/knowledge"
-import { castRulesNote, npcNoteRules } from "@d20/gm-core/story/limits"
+import { castLimitsNote, npcLimits, npcLimitsNote } from "@d20/gm-core/story/limits"
+import { storyRules } from "@d20/gm-core/story/prompt"
 import { waitsOnAnswer } from "@d20/gm-core/story/turn"
 import { buildAdventurePlanViewFromArtifacts } from "@d20/gm-core/wiki-adventures/plan-view"
 import { gmNotesWithRules, premiseNote } from "@d20/gm-core/wiki-adventures/player-safety"
@@ -378,19 +380,41 @@ function npcTurnRules() {
     { order: 2, encounterId: "e", story: [reply("Hi."), own], characters: [npc] },
   ]
   assert.equal(npcEarlierTurns(rows, { order: 3, encounterId: "e" }, "karim"), "Karim lifts a sapphire.")
-  // A rule the notes set for an NPC is lifted out for its turn, and a behavior's rule reaches every GM prompt.
-  const notes = "**Moving on early.** The street runs along this quay. Loric and his crew never send the party away. Loric may open up.\n- Silverhand watches, says nothing, and marks their faces."
+  // Explicit `silent` and `limits` in encounter frontmatter reach NPC turns, round ends, and code-level story cleaning.
   const cast = [
-    { id: "loric", name: "Loric Windrider", type: "npc" },
-    { id: "silverhand", name: "Silverhand", type: "npc", behavior: "Watches from behind his man. Says nothing." },
+    { id: "loric", name: "Loric Windrider", type: "npc", limits: ["Never sends the party away from the docks."] },
+    { id: "silverhand", name: "Silverhand", type: "npc", silent: true as const, behavior: "Watches from behind his man." },
     { id: "rep", name: "Silverhand Representative", type: "npc", behavior: "Bids calmly." },
   ] as any[]
-  assert.deepEqual(npcNoteRules(notes, cast[0], cast), ["Loric and his crew never send the party away."])
-  assert.deepEqual(npcNoteRules(notes, cast[1], cast), ["Silverhand watches, says nothing, and marks their faces."])
-  assert.deepEqual(npcNoteRules(notes, cast[2], cast), [])
-  assert.match(castRulesNote(cast), /\n- Silverhand: Watches from behind his man\. Says nothing\.$/)
-  assert.doesNotMatch(castRulesNote(cast), /Bids calmly/)
-  assert.equal(castRulesNote([{ ...cast[1], dead: true }]), "")
+  assert.deepEqual(npcLimits(cast[0]), ["Never sends the party away from the docks."])
+  assert.match(npcLimitsNote(cast[0]), /HARD LIMITS FOR LORIC WINDRIDER\./)
+  assert.match(npcLimits(cast[1])[0], /Never speaks aloud/)
+  assert.deepEqual(npcLimits(cast[2]), [])
+  assert.match(castLimitsNote(cast), /\n- Loric Windrider: Never sends the party away from the docks\./)
+  assert.match(castLimitsNote(cast), /\n- Silverhand: Never speaks aloud/)
+  assert.doesNotMatch(castLimitsNote(cast), /Bids calmly/)
+  assert.equal(castLimitsNote([{ ...cast[1], dead: true }]), "")
+  // Silent NPCs drop spoken line beats and quoted speech in actions; dead/down NPCs demote lines to unattributed narration.
+  const scene = {
+    cast: [
+      { id: "silverhand", name: "Silverhand", type: "npc", gender: "male", silent: true },
+      { id: "thaddeus", name: "Thaddeus", type: "npc", down: true },
+    ],
+  }
+  assert.match(storyRules(scene), /silverhand: Silverhand \(he, silent, no lines\)/)
+  assert.deepEqual(cleanStory([{ kind: "line", who: "silverhand", text: "Leave now." }], scene, { step: "round" }), [])
+  assert.deepEqual(
+    cleanStory([{ kind: "action", who: "silverhand", text: 'Silverhand narrows his eyes. "Back off."' }], scene, { step: "npc", character: "silverhand" }),
+    [{ kind: "action", by: { step: "npc", character: "silverhand" }, actor: "silverhand", text: "Silverhand narrows his eyes." }]
+  )
+  assert.deepEqual(cleanStory([{ kind: "line", who: "thaddeus", text: "Guards!" }], scene, { step: "round" }), [
+    { kind: "narration", by: { step: "round" }, text: '"Guards!"' },
+  ])
+  // Compiler preserves encounter-level `silent` and `limits` on npcRefs.
+  assert.equal(runtime.artifacts.encounters["a-relic-of-old-valkara"].npcRefs.find((ref) => ref.id === "silverhand")?.silent, true)
+  assert.deepEqual(runtime.artifacts.encounters["arrival-at-the-docks"].npcRefs.find((ref) => ref.id === "loric-windrider")?.limits, [
+    "Never sends the party away from the docks or toward the Lower Districts.",
+  ])
   const facts = [{ id: "clue", text: "The key is below.", knownBy: ["milos"] }, ...Array.from({ length: 30 }, (_, i) => ({ id: `r${i}-private-1`, text: `Chatter ${i}.`, knownBy: ["milos"] }))]
   const ledger = ledgerNote(facts, { milos: "Milos" })
   assert.match(ledger, /The key is below\./)

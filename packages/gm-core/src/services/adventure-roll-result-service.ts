@@ -33,7 +33,7 @@ import { type CastCost, castAgain, castCost, castSpell, isEngineSpell, spellById
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
-import { castRulesNote } from "../story/limits"
+import { castLimitsNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
@@ -470,7 +470,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
       narrativeContext,
       encounterInstructions: gmNotesWithRules(args, args.encounterInstructions) ?? "",
       presentNpcs,
-      cast: castRulesNote(args.turn.characters),
+      cast: castLimitsNote(args.turn.characters),
       dead: deadNames,
       playerActionText,
       characterName: args.character.name,

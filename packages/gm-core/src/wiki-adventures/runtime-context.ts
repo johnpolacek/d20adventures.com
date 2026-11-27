@@ -4,7 +4,7 @@ import { authoredText, withArrivals } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
-import { castRulesNote } from "../story/limits"
+import { castLimitsNote } from "../story/limits"
 import { namesHeard, namesNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { lastStep, storyNames, storyText } from "../story/render"
@@ -196,7 +196,7 @@ export function assembleGameplayContextPacket(args: {
       currentRound: turnScript(args.session.currentTurn),
       ledger: ledgerNote(args.session.knowledge, names, true),
       names: args.artifacts.manifest.strangers ? namesNote(namesHeard(args.session.knowledge, args.session.currentTurn), liveCharacters) : "",
-      cast: castRulesNote(liveCharacters),
+      cast: castLimitsNote(liveCharacters),
       pace: legalTransitions.length ? paceNote(sceneRound(args.session.allTurns, currentEncounter.id, args.session.currentTurnOrder), currentEncounter.roundBudget ?? DEFAULT_ROUND_BUDGET) : "",
       mostRecentAction: storyText(lastStep(args.session.currentTurn.story), storyNames(args.session.currentTurn.characters)),
       rollInfo: buildRollInfo(args.session.currentTurn),

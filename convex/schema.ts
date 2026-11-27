@@ -302,6 +302,9 @@ export default defineSchema({
         tempHitPoints: v.optional(v.number()),
         // The side an encounter marks an NPC as on: with the party, or a bystander. Unmarked is a foe.
         side: v.optional(v.union(v.literal("party"), v.literal("none"))),
+        // Encounter-scoped NPC constraints: silent drops spoken lines in code; limits are passed directly to prompts.
+        silent: v.optional(v.literal(true)),
+        limits: v.optional(v.array(v.string())),
         // A Beast's or another's form the character holds: a Druid's Wild Shape, or a spell's, with the spell and its caster.
         shape: v.optional(v.object({ form: v.string(), hours: v.number(), spell: v.optional(v.string()), by: v.optional(v.string()) })),
         // Whom a spell binds the character to, and the side they then fight on: a summoned creature, a dominated one.

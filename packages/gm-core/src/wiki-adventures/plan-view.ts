@@ -22,6 +22,8 @@ function toAdventureEncounter(encounter: RuntimeEncounter, locations: RuntimeArt
     npc: encounter.npcRefs.map((ref) => ({
       id: ref.id,
       behavior: ref.behavior ?? "",
+      ...(ref.silent ? { silent: true as const } : {}),
+      ...(ref.limits?.length ? { limits: ref.limits } : {}),
       initialInitiative: ref.initialInitiative,
     })),
   }

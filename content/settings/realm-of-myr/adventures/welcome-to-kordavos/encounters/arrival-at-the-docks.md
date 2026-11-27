@@ -13,8 +13,12 @@ npcs:
   - id: "loric-windrider"
     side: "none"
     behavior: "Gruff but fair. He’s a hard worker and expects the same from others. Deeply loyal to his friends."
+    limits:
+      - "Never sends the party away from the docks or toward the Lower Districts."
   - id: "tor-marros"
-    behavior: "Huge, slow-spoken dock hand. Backs Loric and bristles at anyone who pushes him, but never swings first."
+    behavior: "Huge, slow-spoken dock hand. Backs Loric and bristles at anyone who pushes him."
+    limits:
+      - "Never swings first."
   - id: "petra-velan"
     side: "none"
     behavior: "Sharp-eyed dock hand with a pipe and a limp. Wary of the guard and the noble houses, but talks to anyone Loric trusts."

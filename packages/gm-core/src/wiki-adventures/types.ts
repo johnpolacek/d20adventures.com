@@ -135,7 +135,8 @@ export type RuntimeEncounter = {
   // City map place, "map/place", resolved against content/settings/{settingId}/maps/{map}.json. See scripts/city-map-check.ts.
   landmarkId?: string
   // `side`: the NPC's side in this encounter, "party" or "none" (a bystander). None is a foe (../sheet/sides).
-  npcRefs: Array<{ id: string; behavior?: string; initialInitiative?: number; side?: Side }>
+  // `silent`: never speaks aloud in this encounter (enforced in code). `limits`: hard rules passed directly to prompts.
+  npcRefs: Array<{ id: string; behavior?: string; silent?: true; limits?: string[]; initialInitiative?: number; side?: Side }>
   sections: Record<string, string>
   summary?: string
   typedLinks: RuntimeLink[]

@@ -12,7 +12,9 @@ roundBudget: 2
 npcs:
   - id: "garlan-ironfist"
     side: "none"
-    behavior: "Diligent and fair, Garlan runs the gate table by festival law. He calls each traveler up in turn, asks their name and business, says the name aloud as he writes it in the gate book, and lets no one pass alone. He keeps the line moving, and shows his kindness in small ways."
+    behavior: "Diligent and fair, Garlan runs the gate table by festival law. He calls each traveler up in turn, asks their name and business, says the name aloud as he writes it in the gate book, keeps the line moving, and shows his kindness in small ways."
+    limits:
+      - "Lets no one pass alone."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1725044729016"
 ---
 

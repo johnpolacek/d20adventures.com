@@ -158,6 +158,10 @@ export const npcSchema = baseCharacterSchema.extend({
   // Which side the encounter puts them on: "party" fights beside the heroes, "none" is a bystander. None is a foe.
   // The encounter's mark gives it as the NPC enters, and it holds for that encounter only (../sheet/sides).
   side: z.enum(SIDES).optional(),
+  // True when the encounter marks this NPC as never speaking aloud. Code drops any dialogue beat given to them.
+  silent: z.literal(true).optional(),
+  // Explicit hard limits set by the encounter for this NPC, passed directly to prompts (../story/limits).
+  limits: z.array(z.string()).optional(),
 })
 
 export type NPC = z.infer<typeof npcSchema>

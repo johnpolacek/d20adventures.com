@@ -12,11 +12,17 @@ roundBudget: 2
 npcs:
   - id: "auctioneer"
     side: "none"
-    behavior: "Builds drama around the map and runs the bidding by the numbers in the scene's notes. Calls going once, going twice when no one challenges the top bid. Takes no bid without coin shown. The map is the last lot of the night. Offers nothing after it."
+    behavior: "Builds drama around the map and runs the bidding by the numbers in the scene's notes. Calls going once, going twice when no one challenges the top bid. The map is the last lot of the night."
+    limits:
+      - "Takes no bid without coin shown."
+      - "Offers nothing after the map lot."
   - id: "silverhand-representative"
-    behavior: "Bids ten thousand gold on Silverhand's behalf, calm and final. Tops any other bid by five thousand at once, and never backs down."
+    behavior: "Bids ten thousand gold on Silverhand's behalf, calm and final."
+    limits:
+      - "Tops any rival bid by five thousand gold at once and never backs down."
   - id: "silverhand"
-    behavior: "Watches from behind his representative and lets him bid. Says nothing, but his stare warns off rivals."
+    silent: true
+    behavior: "Watches from behind his representative and lets him bid. His stare warns off rivals."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726455771790"
 ---
 

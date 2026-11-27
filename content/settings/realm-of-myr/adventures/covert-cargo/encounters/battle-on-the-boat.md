@@ -15,6 +15,9 @@ npcs:
     initialInitiative: 0
   - id: "npcs-1749181492795"
     behavior: "Bars the door until Reinhard has hold of Lyra, then opens it for him. Once she is in the river he cuts the mooring lines and casts off with the crate. Fights only if Reinhard is brought down, someone comes aboard or reaches in at a window, though he strikes at Lyra if she tries to slip past him."
+    limits:
+      - "Cuts the mooring lines only once Lyra is in the river, never while she is still aboard."
+      - "While barring the doorway, no one passes through his space without shoving him aside first."
     initialInitiative: 0
 image: "https://d1dkwd3w4hheqw.cloudfront.net/images/settings/realm-of-myr/covert-cargo/encounters/battle-on-the-boat/088f0e14-cd0f-4312-821b-fac650a518f6.png?t=1749324854329"
 ---

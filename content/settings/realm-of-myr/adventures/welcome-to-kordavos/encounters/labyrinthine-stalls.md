@@ -13,6 +13,8 @@ npcs:
   - id: "grendel-one-eye"
     side: "none"
     behavior: "Cunning, opportunistic, and always looking for a profitable exchange."
+    limits:
+      - "Never sells elven goods and is never the oily vendor."
   - id: "rae-the-scarred"
     behavior: "Confident, bold, and slightly taunting."
   - id: "mizrith-the-cackler"
@@ -22,7 +24,9 @@ npcs:
     side: "none"
     behavior: "Brash dwarven weapon dealer, proud of her blades. Haggles hard and calls everyone love."
   - id: "vesk-the-fence"
-    behavior: "The oily vendor of the stolen elven goods, at a shadowy corner stall. Acts only on a turn when a hero who has found his stall speaks to him or approaches him. Never seen or heard before a hero passes the Perception check that finds the stall."
+    behavior: "The oily vendor of the stolen elven goods, at a shadowy corner stall. Acts only on a turn when a hero who has found his stall speaks to him or approaches him."
+    limits:
+      - "Never seen or heard before a hero passes the Perception check that finds the stall."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726435567019"
 ---
 

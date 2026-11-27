@@ -101,7 +101,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
     console.log(`[advanceTurn] Setting NPC initiatives to 0 for first turn of encounter with skipInitialNpcTurns: ${nextEncounter.id}`)
   }
 
-  const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number; behavior?: string }) => {
+  const npcs: TurnCharacter[] = (nextEncounter.npc || []).map((npcRef: { id: string; initialInitiative?: number; behavior?: string; silent?: true; limits?: string[] }) => {
     const npc = args.plan.npcs[npcRef.id]
 
     let npcInitiative: number
@@ -119,6 +119,8 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
       hasReplied: false,
       initiative: npcInitiative,
       behavior: npcRef.behavior,
+      ...(npcRef.silent ? { silent: true as const } : {}),
+      ...(npcRef.limits?.length ? { limits: npcRef.limits } : {}),
     })
   })
 

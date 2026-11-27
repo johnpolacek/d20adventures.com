@@ -12,7 +12,7 @@ import { statBlockLines } from "../sheet/stat-block-actions"
 import { authoredText } from "../story/authored"
 import type { StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
-import { npcNoteRulesNote } from "../story/limits"
+import { npcLimitsNote } from "../story/limits"
 import { namesHeard, unheardNote } from "../story/names"
 import { storyRules } from "../story/prompt"
 import { storyNames } from "../story/render"
@@ -162,7 +162,7 @@ ${blockLines.length ? `- Stat Block, what it can do this turn:\n${blockLines.map
   return {
     contextString,
     npcDetails,
-    noteRules: npcNoteRulesNote(encounterContext?.instructions, npc, turn.characters),
+    noteRules: npcLimitsNote(npc),
     npcEquipmentList,
     playerCharacters,
     alivePlayerCharacters,

@@ -11,9 +11,13 @@ landmark: "kordavos/auction-hall"
 roundBudget: 2
 npcs:
   - id: "silverhand-representative"
+    silent: true
     behavior: "Leaves at once with the map case by the side exit, without a word."
   - id: "silverhand"
+    silent: true
     behavior: "Follows his representative out with his two silent guards, alert for anyone on his trail."
+    limits:
+      - "Never holds the map case."
   - id: "auctioneer"
     behavior: "Closes the sale and ends the night's auction. The map was the last lot. Pays the departing buyers no mind."
 image: "https://s3.us-east-1.amazonaws.com/d20-public/images/d20/1726458036467"
