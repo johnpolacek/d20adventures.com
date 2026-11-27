@@ -160,6 +160,8 @@ export const npcSchema = baseCharacterSchema.extend({
   side: z.enum(SIDES).optional(),
   // True when the encounter marks this NPC as never speaking aloud. Code drops any dialogue beat given to them.
   silent: z.literal(true).optional(),
+  // True when the encounter has this NPC wait to be addressed before it takes a turn (../services/npc-turn-service).
+  waits: z.literal(true).optional(),
   // Explicit hard limits set by the encounter for this NPC, passed directly to prompts (../story/limits).
   limits: z.array(z.string()).optional(),
 })

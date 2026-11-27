@@ -68,11 +68,11 @@ export function npcHadTurn(turns: { order?: number; encounterId: string; charact
   return (away < 0 ? earlier : earlier.slice(0, away)).some((t) => t.characters.some((character) => character.id === npcId))
 }
 
-// An NPC whose behavior says it acts only when spoken to, such as a festival vendor, and whom no hero has spoken to,
-// or gone to since its last turn. Five vendors who each took every turn made rounds of nine turns that said little.
-const WAITS = /\bacts? only\b[^.]*\bwhen\b[^.]*\b(?:spoken to|speaks to|talks to|addressed|addresses|approached|approaches)\b/i
+// An NPC the encounter marks `waits`, such as a festival vendor, whom no hero has spoken to or gone to since its last
+// turn. Five vendors who each took every turn made rounds of nine turns that said little. A pattern on the behavior
+// once found them, and missed any vendor whose waiting was written another way.
 export function waitsUnaddressed(npc: TurnCharacter, story: readonly StoryBeat[]): boolean {
-  if (!npc.behavior || !WAITS.test(npc.behavior)) return false
+  if (!("waits" in npc && npc.waits)) return false
   // Addressed is what the story's beats say by id: a line spoken to them, or an action aimed at them. Their first name
   // in the words once counted too, and a vendor named Rose woke when a hero "rose to his feet".
   return !story.some((b) => (b.by.step === "reply" || b.by.step === "roll") && ((b.kind === "line" && b.to === npc.id) || (b.kind === "action" && b.target === npc.id)))

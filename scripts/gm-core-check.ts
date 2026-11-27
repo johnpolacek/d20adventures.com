@@ -364,7 +364,7 @@ function adventureRules() {
 // An NPC who dies on its own turn is dead in the state. One who acts only when spoken to waits until a hero does. An
 // NPC reads its own turns from the scene's earlier rounds. Private chatter does not push recorded facts off the ledger.
 function npcTurnRules() {
-  const npc = { id: "karim", name: "Karim the Jewel Merchant", type: "npc", behavior: "Shrewd. Acts only on a turn when a hero has spoken to him." } as any
+  const npc = { id: "karim", name: "Karim the Jewel Merchant", type: "npc", behavior: "Shrewd.", waits: true } as any
   const turn = { id: "t", encounterId: "e", title: "", adventureId: "a", story: [], characters: [npc] } as any
   const died = handleSkipPassNpcTurn({ turn, npc, actionResult: { actionSummary: "", beats: [], actionType: "die" }, scene: { cast: [npc], places: [] } as any })
   assert.deepEqual([died.updatedCharacters[0].healthPercent, died.updatedCharacters[0].dead], [0, true])
@@ -373,7 +373,7 @@ function npcTurnRules() {
   assert.ok(!waitsUnaddressed(npc, [reply("How much?", "karim")]))
   // Only the beats' ids address them. A name in the words is not read: Rose stays waiting when a hero rises.
   assert.ok(waitsUnaddressed({ ...npc, id: "rose", name: "Rose" }, [reply("Rose to my feet, I did.")]))
-  assert.ok(!waitsUnaddressed({ ...npc, behavior: "Shrewd." }, []))
+  assert.ok(!waitsUnaddressed({ ...npc, waits: undefined }, []))
   const own = { kind: "action", by: { step: "npc", character: "karim" }, actor: "karim", text: "Karim lifts a sapphire." }
   const rows = [
     { order: 1, encounterId: "x", story: [own], characters: [npc] },

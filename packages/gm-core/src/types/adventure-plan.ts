@@ -78,6 +78,7 @@ export const encounterCharacterRefSchema = z.object({
   id: z.string(),
   behavior: z.string(),
   silent: z.literal(true).optional(),
+  waits: z.literal(true).optional(),
   limits: z.array(z.string()).optional(),
   initialInitiative: z.number().optional(),
 })

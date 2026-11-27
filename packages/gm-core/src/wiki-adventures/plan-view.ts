@@ -23,6 +23,7 @@ function toAdventureEncounter(encounter: RuntimeEncounter, locations: RuntimeArt
       id: ref.id,
       behavior: ref.behavior ?? "",
       ...(ref.silent ? { silent: true as const } : {}),
+      ...(ref.waits ? { waits: true as const } : {}),
       ...(ref.limits?.length ? { limits: ref.limits } : {}),
       initialInitiative: ref.initialInitiative,
     })),

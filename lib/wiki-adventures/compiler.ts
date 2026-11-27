@@ -55,6 +55,8 @@ const commonFrontmatterSchema = z.object({
           behavior: z.string().optional(),
           // True when this NPC never speaks aloud in this encounter. Enforced in code (story/clean.ts) and prompts.
           silent: z.boolean().optional(),
+          // True when this NPC takes a turn only once a hero speaks to it, acts on it or goes to it (services/npc-turn-service.ts).
+          waits: z.boolean().optional(),
           // Explicit hard limits for this NPC in this encounter, passed directly to prompts.
           limits: z.array(z.string().min(1)).optional(),
           initialInitiative: z.number().optional(),
@@ -182,10 +184,11 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
       landmarkId: frontmatter.landmark,
       npcRefs: (frontmatter.npcs ?? []).map((npc) => {
         if (typeof npc === "string") return { id: npc }
-        const { silent, limits, ...rest } = npc
+        const { silent, waits, limits, ...rest } = npc
         return {
           ...rest,
           ...(silent ? { silent: true as const } : {}),
+          ...(waits ? { waits: true as const } : {}),
           ...(limits?.length ? { limits } : {}),
         }
       }),

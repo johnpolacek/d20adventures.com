@@ -304,6 +304,8 @@ export default defineSchema({
         side: v.optional(v.union(v.literal("party"), v.literal("none"))),
         // Encounter-scoped NPC constraints: silent drops spoken lines in code; limits are passed directly to prompts.
         silent: v.optional(v.literal(true)),
+        // Waits to be spoken to or gone to before it takes a turn (a festival vendor).
+        waits: v.optional(v.literal(true)),
         limits: v.optional(v.array(v.string())),
         // A Beast's or another's form the character holds: a Druid's Wild Shape, or a spell's, with the spell and its caster.
         shape: v.optional(v.object({ form: v.string(), hours: v.number(), spell: v.optional(v.string()), by: v.optional(v.string()) })),

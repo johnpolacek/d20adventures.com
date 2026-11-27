@@ -24,6 +24,7 @@ npcs:
     side: "none"
     behavior: "Brash dwarven weapon dealer, proud of her blades. Haggles hard and calls everyone love."
   - id: "vesk-the-fence"
+    waits: true
     behavior: "The oily vendor of the stolen elven goods, at a shadowy corner stall. Acts only on a turn when a hero who has found his stall speaks to him or approaches him."
     limits:
       - "Never seen or heard before a hero passes the Perception check that finds the stall."
