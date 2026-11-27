@@ -10,7 +10,7 @@ header: /images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-
 
 An AI game master in [D20 Adventures](https://d20adventures.com) breaks in ways a real DM at a table would catch right away. A dead NPC chimes in, a character who’s supposed to stay silent starts talking, or a player claims a dragon is on the roof and the GM just buys it.
 
-So I have Claude Code agents playtest the game for me. Subagents play the heroes, a fresh Claude session judges every round against the encounter notes, and every fix turns into something we can test. (The 5E rules engine itself has [its own post](https://d20adventures.com/updates/training-an-ai-game-master-on-5e-rules).)
+So I have Claude Code agents playtest the game for me. Subagents play the heroes, a fresh Claude session judges every round against the encounter notes, and every fix turns into something we can test.
 
 ### A Headless Playtest
 
