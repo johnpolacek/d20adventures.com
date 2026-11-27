@@ -73,12 +73,18 @@ const rollPickSchema = z.object({
   mode: z.enum(rollModes).optional().describe('"advantage" or "disadvantage" when this moment\'s circumstances clearly help or hinder, else "normal"'),
   reason: z.string().max(120).optional().describe("What gives the Advantage or Disadvantage, in a few words"),
   spell: z.string().max(80).optional().describe('For "cast": the id of one of the character\'s own spells, from Their Spells'),
+  spellNamed: z
+    .string()
+    .max(80)
+    .optional()
+    .describe("The name of a spell the player's words cast, whether or not it is in Their Spells, and whatever \"check\" is. Left out when they cast no spell"),
   targets: z.array(z.string().max(80)).max(8).optional().describe('For "cast": the ids of everyone the spell is cast on, from Who Is Here or the character\'s own id'),
   ritual: z.boolean().optional().describe('For "cast": true when a spell marked ritual is cast slowly, outside a fight, to spare its slot'),
   fight: z.boolean().optional().describe('For "cast", and for a turn that moves: true when a fight is on in the scene, false when it is not'),
   slot: z.number().int().min(1).max(9).optional().describe('For "cast": the spell slot level, only when the player says they cast it with a higher slot'),
   damageType: z.string().max(20).optional().describe('For "cast": the damage type chosen, for a spell that offers several'),
   weapon: z.string().max(80).optional().describe("For an attack: the id of one of the character's own attacks"),
+  thrown: z.boolean().optional().describe('For an attack with a weapon marked "melee or thrown": true when the player\'s words throw it at the target, false when they strike with it in hand'),
   target: z.string().max(80).optional().describe('For an attack: the id of who is attacked, from Who Is Here. For "help": the id of the ally helped, or of the enemy an ally will attack'),
   helps: z.string().max(40).optional().describe('For "help" given to an ally\'s check, or a spell cast for one skill such as Guidance: the id of the skill it is for'),
   bonus: z.string().max(40).optional().describe("The id of one of the character's own Bonus Actions they also use this turn, from Their Bonus Actions"),
@@ -156,6 +162,8 @@ export type TurnReading = {
    * (../sheet/reactions `moveWithReactions`). Unset when a fight is on, or when the read did not say.
    */
   fight?: false
+  /** The SRD spell the player's words cast, as the game master read them, whether or not the hero can cast it. */
+  named?: { id: string; name: string }
 }
 
 // How a spell that stays on the floor is put, for the read's list of spells: a wall across the way to the one named, or
@@ -179,22 +187,18 @@ const MENU = (kind: "skill" | "ability" | "save") =>
 // used to tell it cast all the same with nothing coming of it: Lyra "casts Shocking Grasp on him", a cantrip she lacks,
 // and Reinhard took no harm. Lyra's second Magic Missile, with no slot left, struck Reinhard with "stinging bolts" that
 // did nothing. It is told now that she does not know it, or why she cannot cast it, and no spell is cast.
-const spellsByName = [...spellById.values()].sort((a, b) => b.name.length - a.name.length)
-const escaped = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-/** The first spell the words say is cast, by name. */
-export function spellNamed(action: string): { id: string; name: string } | undefined {
-  const said = action.replace(/[’']/g, "'")
-  for (const spell of spellsByName)
-    if (new RegExp(`\\bcast(?:s|ing)?\\s+(?:a |an |the |her |his |their |my )?${escaped(spell.name.replace(/’/g, "'"))}\\b`, "i").test(said)) return { id: spell.id, name: spell.name }
-  return undefined
+// The read names the spell the words cast, in "spellNamed", and it is found here by its name. A pattern on the player's
+// words once found it, and missed "fire a magic missile" and took "cast the light of my lantern" for Light.
+const plainName = (s: string) => s.trim().toLowerCase().replaceAll("’", "'")
+const spellsByName = new Map([...spellById.values()].flatMap((spell) => [[plainName(spell.name), spell] as const, [spell.id, spell] as const]))
+/** The SRD spell a name is, by its name or id. */
+export function spellCalled(name: string | undefined): { id: string; name: string } | undefined {
+  const spell = name ? spellsByName.get(plainName(name)) : undefined
+  return spell ? { id: spell.id, name: spell.name } : undefined
 }
-export function unknownSpellNamed(action: string, known: readonly string[]): { name: string } | undefined {
-  const named = spellNamed(action)
-  return named && !known.includes(named.id) ? { name: named.name } : undefined
-}
-function withUnknownSpell(action: string, character: Character, read: TurnReading): TurnReading {
+// The spell named is the read's own word to this step, and is not passed on.
+function withUnknownSpell(character: Character, { named, ...read }: TurnReading): TurnReading {
   if (read.ruling || read.cast || (read.roll && "cast" in read.roll) || read.bonus || !("sheet" in character) || !character.sheet) return read
-  const named = spellNamed(action)
   if (!named) return read
   const caster = character as Parameters<typeof spellsOf>[0]
   if (!spellsOf(caster).some((k) => k.spell.id === named.id)) return { ...read, ruling: { name: "Not Their Spell", text: `${character.name} does not know ${named.name}. The spell is not cast.` } }
@@ -203,9 +207,6 @@ function withUnknownSpell(action: string, character: Character, read: TurnReadin
   if ("problem" in cost) return { ...read, ruling: { name: "Cannot Cast", text: `${cost.problem} The spell is not cast.` } }
   return read
 }
-
-// Words that throw a weapon, for an attack where no floor measures whether it is thrown (../sheet/ammunition).
-const THROWS = /\b(?:throw|throws|threw|thrown|throwing|hurl|hurls|hurled|toss|tosses|tossed|fling|flings|flung|lob|lobs)\b/i
 
 // How far a hero may walk at once beside their Speed when no fight is on: any set's whole floor.
 const OUT_OF_FIGHT_FEET = 500
@@ -234,7 +235,7 @@ export function createRollRequirementService(ports: GmPorts) {
     const ruled = "id" in character ? ruledReading(character, (options?.present ?? []) as Parameters<typeof ruledReading>[1], options?.floor) : undefined
     if (ruled) return ruled
     const self = "id" in character ? character.id : undefined
-    const read = withUnknownSpell(action, character, await readPicked(action, character, options))
+    const read = withUnknownSpell(character, await readPicked(action, character, options))
     // One who is hidden and loud is heard before they act. An attack or a spell of the same turn is read again as made
     // in plain sight, so it takes no Advantage from a hiding that is over.
     const struck = !!read.cast || (!!read.roll && ("attack" in read.roll || "cast" in read.roll))
@@ -598,7 +599,7 @@ ${
     : ""
 }     A spell marked "told by the game master" is cast all the same: "check" is "cast" with everyone it is cast on, and the game spends what it costs. The game master tells what it does from its text. One marked "the rest told by the game master" is rolled in part by the game, and the rest is told.
      Every cast sets "fight": true when a fight is on in the scene, false when it is not. A spell marked "takes" a minute or more "to cast" cannot be cast while a fight is on, and the game will say so.
-     A spell that is not in Their Spells cannot be cast: "check" is "none". Magic that is no spell at all is "arcana".
+     A spell that is not in Their Spells cannot be cast: "check" is "none", and "spellNamed" is its name all the same. Magic that is no spell at all is "arcana".
 
 8) Set "difficulty" by name. It is the task's own difficulty, the same for anyone who tries it. The character's talent is already in the bonus the game adds, so never lower or raise it for who is trying.
    - very-easy (target 5), easy (10), medium (15), hard (20), very-hard (25), nearly-impossible (30).
@@ -753,7 +754,7 @@ Action: "${action}"
       }
       const quickChoice = quick ? choiceFor(quick.spell) : undefined
       // What the reading carries beside its roll: a Bonus Action, the move, and a ruling of space.
-      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices" | "loud" | "fight"> = used
+      const also: Pick<TurnReading, "bonus" | "move" | "ruling" | "choices" | "loud" | "fight" | "named"> = used
         ? { bonus: { feature: used.id, ...(used.targeted && pick.bonusTarget ? { target: pick.bonusTarget } : {}) } }
         : quick
           ? {
@@ -767,6 +768,8 @@ Action: "${action}"
           : {}
       // One who is hidden and makes a sound louder than a whisper gives themselves away.
       if (pick.loud === true && isHidden(character)) also.loud = true
+      const called = spellCalled(pick.spellNamed)
+      if (called) also.named = called
       // No fight is on, as the game master reads the scene, so a move draws no Opportunity Attack. The game master says
       // it, as for a long casting, since a talk runs in rounds as a fight does. An attack is a fight whatever the read says.
       if (pick.fight === false && pick.check !== "attack") also.fight = false
@@ -1063,7 +1066,7 @@ Action: "${action}"
           charged: also.move && acting.position && target.position ? chargedFeet(acting.position, also.move.path, target.position) : undefined,
           choices: onAttack,
           ...(forgo.length ? { forgo } : {}),
-          ...(!floor && THROWS.test(action) ? { throws: true } : {}),
+          ...(!floor && pick.thrown === true ? { throws: true } : {}),
           after: self ? attackAfter({ ...stood, id: self, name: character.name } as InScene, { actions, weapon: attack.id }) : undefined,
         })
         if ("ruling" in made) {

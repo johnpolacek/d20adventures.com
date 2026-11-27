@@ -369,7 +369,8 @@ function npcTurnRules() {
   const reply = (text: string, to?: string) => ({ kind: "line", by: { step: "reply", character: "milos" }, speaker: "milos", text, ...(to ? { to } : {}) }) as any
   assert.ok(waitsUnaddressed(npc, [reply("Lovely day.")]))
   assert.ok(!waitsUnaddressed(npc, [reply("How much?", "karim")]))
-  assert.ok(!waitsUnaddressed(npc, [reply("Karim, a fair price?")]))
+  // Only the beats' ids address them. A name in the words is not read: Rose stays waiting when a hero rises.
+  assert.ok(waitsUnaddressed({ ...npc, id: "rose", name: "Rose" }, [reply("Rose to my feet, I did.")]))
   assert.ok(!waitsUnaddressed({ ...npc, behavior: "Shrewd." }, []))
   const own = { kind: "action", by: { step: "npc", character: "karim" }, actor: "karim", text: "Karim lifts a sapphire." }
   const rows = [
@@ -565,7 +566,7 @@ async function npcFixedOutcome() {
   assert.deepEqual(await readAction("Lyra charms the owlbear.", spent, { present: [owlbear, spent] }), { roll: null })
   answer = { check: "cast", spell: "ray-of-frost" }
   assert.deepEqual((await readAction("Lyra casts Ray of Frost.", spent, { present: [owlbear, spent] })).roll?.rollType, "Ray of Frost")
-  answer = { check: "cast", spell: "fireball", targets: ["owlbear"] }
+  answer = { check: "none", spellNamed: "Fireball" }
   // The story is told that she does not know it, so it does not tell a spell cast with nothing coming of it.
   assert.deepEqual(await readAction("Lyra casts Fireball.", lyra, scene), { roll: null, ruling: { name: "Not Their Spell", text: "Lyra Silvanus does not know Fireball. The spell is not cast." } })
   // Identify is in her book and not prepared: only as a Ritual, which spends nothing. A utility spell names no one.

@@ -1,7 +1,6 @@
 import type { GmPorts } from "../ports"
 import { spotWords } from "../sheet/placement"
-import { castCost, spellsOf, spellWords } from "../sheet/spells"
-import { spellNamed } from "./roll-requirement-service"
+import { spellWords } from "../sheet/spells"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory } from "../story/clean"
 import { storyRules } from "../story/prompt"
@@ -30,10 +29,6 @@ export function createNarrativeGenerationService(ports: GmPorts) {
     // "waits where he stands in the cabin".
     const floor = await Promise.resolve(ports.content.floor?.(args.turn.encounterId)).catch(() => undefined)
     const where = floor ? spotWords(character, floor) : undefined
-    // A spell the player names that the hero does not know, or has no slot left for, is not cast, and the game tells so
-    // after: the reply tells the attempt, never the spell cast. Lyra out of slots "loosed darts of force" at Reinhard.
-    const named = spellNamed(playerInput)
-    const unknown = named && (!spellsOf(character).some((k) => k.spell.id === named.id) || "problem" in castCost(character, named.id)) ? named : undefined
     const context = characterScript(args.turn, character.id).split(/\n\n+/).slice(-3).join("\n\n")
     const prompt = `A player has written what their hero does. Write it into the story as beats.
 
@@ -53,7 +48,11 @@ Rules:
 - A bare action of a word or two ("attack", "hide", "look around") becomes one sentence of 8 to 16 words that shows how the hero sets about it, in the voice of the recent story. It may name a weapon the hero carries, a target the story has set before them, or one thing the recent story or the places below already hold, and nothing else. It names the hero, shows the attempt and stops before whether it works. "hide" in a wine cellar might become "${character.name} ducks behind the stacked casks and goes still."
 - Keep the player's intent exactly, even when it deceives, threatens, steals or is cruel.
 - Name the target with "to", and the effect of an attack or spell the hero makes, when the player's action shows one.
-- Never mention game mechanics, dice or rules.${unknown ? `\n- ${character.name} cannot cast ${unknown.name} now. Tell them reaching for magic, and never that ${unknown.name} is cast or what it does.` : ""}
+- Never mention game mechanics, dice or rules.${
+      spellWords(character)
+        ? `\n- A spell the player names that is not in Spells, or of a level with no slot left, is not cast: the game tells why after. Tell ${character.name} reaching for magic, and never that the spell is cast or what it does.`
+        : ""
+    }
 
 ${storyRules(scene)}
 

@@ -69,16 +69,13 @@ export function npcHadTurn(turns: { order?: number; encounterId: string; charact
 }
 
 // An NPC whose behavior says it acts only when spoken to, such as a festival vendor, and whom no hero has spoken to,
-// gone to or named since its last turn. Five vendors who each took every turn made rounds of nine turns that said little.
+// or gone to since its last turn. Five vendors who each took every turn made rounds of nine turns that said little.
 const WAITS = /\bacts? only\b[^.]*\bwhen\b[^.]*\b(?:spoken to|speaks to|talks to|addressed|addresses|approached|approaches)\b/i
 export function waitsUnaddressed(npc: TurnCharacter, story: readonly StoryBeat[]): boolean {
   if (!npc.behavior || !WAITS.test(npc.behavior)) return false
-  const first = npc.name.split(/\s+/)[0]?.toLowerCase()
-  return !story.some((b) => {
-    if (b.by.step !== "reply" && b.by.step !== "roll") return false
-    if ((b.kind === "line" && b.to === npc.id) || (b.kind === "action" && b.target === npc.id)) return true
-    return !!first && "text" in b && new RegExp(`\\b${first.replace(/[^a-z0-9]/g, "")}\\b`, "i").test(b.text)
-  })
+  // Addressed is what the story's beats say by id: a line spoken to them, or an action aimed at them. Their first name
+  // in the words once counted too, and a vendor named Rose woke when a hero "rose to his feet".
+  return !story.some((b) => (b.by.step === "reply" || b.by.step === "roll") && ((b.kind === "line" && b.to === npc.id) || (b.kind === "action" && b.target === npc.id)))
 }
 
 export function createNpcTurnService(ports: GmPorts) {

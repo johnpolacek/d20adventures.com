@@ -268,6 +268,8 @@ async function run(probe: Probe): Promise<Graded> {
       if ((reading.ruling?.name ?? "none") !== (probe.ruling ?? "none")) faults.push(`ruling ${reading.ruling?.name ?? "none"}, wanted ${probe.ruling ?? "none"}`)
       for (const reason of probe.reasons ?? []) if (!got?.reasons?.includes(reason)) faults.push(`reasons ${got?.reasons?.join(", ") || "none"}, wanted ${reason} among them`)
     }
+    // Off the floor, a ruling is graded only where the scene names one: a spell the hero cannot cast.
+    if (!probe.floor && probe.ruling && (reading.ruling?.name ?? "none") !== probe.ruling) faults.push(`ruling ${reading.ruling?.name ?? "none"}, wanted ${probe.ruling}`)
     if (got && probe.mode && got.mode !== probe.mode) faults.push(`${got.mode}, wanted ${probe.mode}`)
     if (got && isAttackRoll(got)) {
       // An attack is graded on the weapon and on who it lands on. Its target number is the Armor Class, not a pick.
