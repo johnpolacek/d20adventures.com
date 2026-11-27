@@ -14,12 +14,8 @@ import { PAINTERS, type Painter, paint, storeArt } from "./paint"
 console.log = console.warn = console.error = () => {}
 const bundled: Packs = JSON.parse(readFileSync(join(__dirname, "packs.json"), "utf8"))
 type Start = { adventureId: string; provider: string; model?: string; token: string; site: string; data: string }
-let stopped = false
-let wake: (() => void) | undefined
-const stop = () => {
-  stopped = true
-  wake?.()
-}
+const stopController = new AbortController()
+const stop = () => stopController.abort()
 process.on("SIGTERM", stop)
 process.on("SIGINT", stop)
 const parentWatch = setInterval(() => process.ppid === 1 && stop(), 2000)
@@ -74,22 +70,32 @@ async function main() {
         if (!name) throw new Error("No image CLI is installed.")
         const cwd = join(scratch, "paint")
         mkdirSync(cwd, { recursive: true })
-        const art = await paint(name, hero, cwd)
+        const art = await paint(name, hero, cwd, stopController.signal)
+        if (stopController.signal.aborted) throw new Error("aborted")
         storeArt(start.data, hero.id, art)
         return art
       },
       emit,
-      stopped: () => stopped,
+      stopped: () => stopController.signal.aborted,
       wait: (ms) =>
         new Promise<void>((resolve) => {
-          const timer = setTimeout(resolve, ms)
-          wake = () => {
+          if (stopController.signal.aborted) {
+            resolve()
+            return
+          }
+          const onAbort = () => {
             clearTimeout(timer)
             resolve()
           }
+          const timer = setTimeout(() => {
+            stopController.signal.removeEventListener("abort", onAbort)
+            resolve()
+          }, ms)
+          stopController.signal.addEventListener("abort", onAbort, { once: true })
         }),
     })
   } finally {
+    stop()
     model.close()
     rmSync(scratch, { recursive: true, force: true })
     clearInterval(parentWatch)

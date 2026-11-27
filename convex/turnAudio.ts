@@ -52,10 +52,12 @@ export const claimTurnAudioGeneration = serverMutation({
       // error, or stale generating: reclaim
     }
 
+    const attempt = (existing?.attempt ?? 0) + 1
     if (existing) {
       await ctx.db.patch(existing._id, {
         status: "generating" as const,
         storyHash: args.storyHash,
+        attempt,
         requestedBy: args.requestedBy,
         segments: undefined,
         usage: undefined,
@@ -68,12 +70,13 @@ export const claimTurnAudioGeneration = serverMutation({
         adventureId: args.adventureId,
         status: "generating" as const,
         storyHash: args.storyHash,
+        attempt,
         requestedBy: args.requestedBy,
         createdAt: now,
         updatedAt: now,
       })
     }
-    return { claimed: true, status: "generating" as const }
+    return { claimed: true, status: "generating" as const, attempt }
   },
 })
 
@@ -81,6 +84,7 @@ export const finalizeTurnAudio = serverMutation({
   args: {
     turnId: v.id("turns"),
     storyHash: v.string(),
+    attempt: v.optional(v.number()),
     segments: v.array(segmentValidator),
     usage: v.object({
       ttsInputTokens: v.number(),
@@ -93,7 +97,8 @@ export const finalizeTurnAudio = serverMutation({
       .query("turnAudio")
       .withIndex("by_turn", (q) => q.eq("turnId", args.turnId))
       .unique()
-    if (!existing || existing.storyHash !== args.storyHash) return false
+    if (!existing || existing.storyHash !== args.storyHash || existing.status !== "generating") return false
+    if (args.attempt !== undefined && existing.attempt !== args.attempt) return false
     await ctx.db.patch(existing._id, {
       status: "ready" as const,
       segments: args.segments,
@@ -109,6 +114,7 @@ export const failTurnAudio = serverMutation({
   args: {
     turnId: v.id("turns"),
     storyHash: v.string(),
+    attempt: v.optional(v.number()),
     error: v.string(),
   },
   handler: async (ctx, args) => {
@@ -116,9 +122,12 @@ export const failTurnAudio = serverMutation({
       .query("turnAudio")
       .withIndex("by_turn", (q) => q.eq("turnId", args.turnId))
       .unique()
-    if (!existing || existing.storyHash !== args.storyHash) return false
+    if (!existing || existing.storyHash !== args.storyHash || existing.status !== "generating") return false
+    if (args.attempt !== undefined && existing.attempt !== args.attempt) return false
     await ctx.db.patch(existing._id, {
       status: "error" as const,
+      segments: undefined,
+      usage: undefined,
       error: args.error,
       updatedAt: Date.now(),
     })

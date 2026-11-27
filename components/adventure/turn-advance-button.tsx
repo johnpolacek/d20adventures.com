@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@d20/ui/button"
 
 interface TurnAdvanceButtonProps {
@@ -11,21 +10,16 @@ interface TurnAdvanceButtonProps {
 }
 
 const TurnAdvanceButton = ({ advancing, onAdvance, navigationMode = false, navigationLabel }: TurnAdvanceButtonProps) => {
-  const [hasClicked, setHasClicked] = useState(false)
-
   return (
     <Button
       size="lg"
       variant="epic"
       disabled={advancing}
       onClick={() => {
-        if (!hasClicked) {
-          setHasClicked(true)
-          onAdvance()
-        }
+        if (!advancing) onAdvance()
       }}
     >
-      {hasClicked ? (navigationMode ? "Navigating..." : "Advancing...") : navigationLabel || (navigationMode ? "Go to Next Turn" : "Go to Next Turn")}
+      {advancing ? (navigationMode ? "Navigating..." : "Advancing...") : navigationLabel || "Go to Next Turn"}
     </Button>
   )
 }

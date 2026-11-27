@@ -154,8 +154,9 @@ export function Narration({
   }
   // A step back holds Continue, and the words read aloud go on.
   const [stayed, setStayed] = useState(false)
-  const pausedRef = useRef(paused || stayed)
-  pausedRef.current = paused || stayed
+  const held = paused || stayed
+  const pausedRef = useRef(held)
+  pausedRef.current = held
   const progressRef = useRef(progress)
   progressRef.current = progress
   const press = useRef(onContinue)
@@ -278,7 +279,14 @@ export function Narration({
               compact ? "text-2xs leading-snug" : "text-sm leading-[1.65]",
               "cursor-pointer"
             )}
-            onClick={() => setPaused(!paused)}
+            onClick={() => {
+              if (paused) {
+                setStayed(false)
+                setPaused(false)
+              } else {
+                setPaused(true)
+              }
+            }}
           >
             {shown}
           </p>
@@ -304,8 +312,19 @@ export function Narration({
                 <path d="M2 1.4v2.4h2.4" />
               </svg>
             </Control>
-            <Control label={paused ? "Play" : "Pause"} aria-pressed={paused} onClick={() => setPaused(!paused)}>
-              {paused ? (
+            <Control
+              label={held ? "Play" : "Pause"}
+              aria-pressed={held}
+              onClick={() => {
+                if (stayed) {
+                  setStayed(false)
+                  if (paused) setPaused(false)
+                  return
+                }
+                setPaused(!paused)
+              }}
+            >
+              {held ? (
                 <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                   <path d="M3.5 2.2v7.6L9.6 6z" />
                 </svg>

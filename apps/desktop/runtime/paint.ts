@@ -10,7 +10,7 @@ import type { Hero } from "./heroes"
 const run = runBounded as (
   binary: string,
   args: string[],
-  options?: { cwd?: string; input?: string; env?: Record<string, string | undefined>; timeout?: number; limit?: number }
+  options?: { cwd?: string; input?: string; env?: Record<string, string | undefined>; timeout?: number; limit?: number; signal?: AbortSignal }
 ) => Promise<{ code: number | null; stdout: string; timedOut: boolean; oversized: boolean }>
 
 // Painting a hero's standee through the player's own image-capable CLI, under their own sign-in. One image holds the
@@ -34,9 +34,11 @@ Style: a finished painted fantasy character illustration, stylized-realistic, wi
 Background: flat, perfectly solid bright green #00ff00 everywhere, edge to edge, with no gradient.`
 }
 
-export async function paint(provider: Painter, hero: Pick<Hero, "name" | "race" | "archetype" | "gender" | "appearance">, cwd: string): Promise<Art> {
+export async function paint(provider: Painter, hero: Pick<Hero, "name" | "race" | "archetype" | "gender" | "appearance">, cwd: string, signal?: AbortSignal): Promise<Art> {
+  if (signal?.aborted) throw new Error("aborted")
   const command = imageCommand(provider, cwd, paintPrompt(provider, hero), "standee")
-  const result = await run(command.executable, command.args, { cwd, env: command.env, input: command.input, timeout: 300_000, limit: 8_388_608 })
+  const result = await run(command.executable, command.args, { cwd, env: command.env, input: command.input, timeout: 300_000, limit: 8_388_608, signal })
+  if (signal?.aborted) throw new Error("aborted")
   if (result.code !== 0 || result.timedOut || result.oversized) throw new Error(`${provider} could not paint ${hero.name}. Check its sign-in or usage limit, then retry.`)
   const events = result.stdout.split("\n").flatMap((line: string) => {
     try {
@@ -51,15 +53,16 @@ export async function paint(provider: Painter, hero: Pick<Hero, "name" | "race" 
   } catch {
     throw new Error(`${provider} did not return a picture of ${hero.name}. Retry.`)
   }
-  return cutStandee(await readPicture(path, cwd), hero.race)
+  return cutStandee(await readPicture(path, cwd, signal), hero.race)
 }
 
 // A painted picture as PNG pixels. A Mac converts JPEGs with sips, as it always has. Elsewhere jpeg-js decodes them.
-async function readPicture(path: string, cwd: string) {
+async function readPicture(path: string, cwd: string, signal?: AbortSignal) {
+  if (signal?.aborted) throw new Error("aborted")
   if (path.toLowerCase().endsWith(".png")) return PNG.sync.read(readFileSync(path))
   if (process.platform === "darwin") {
     const converted = join(cwd, "standee.png")
-    if ((await run("/usr/bin/sips", ["-s", "format", "png", path, "--out", converted])).code !== 0) throw new Error("The painted picture could not be read.")
+    if ((await run("/usr/bin/sips", ["-s", "format", "png", path, "--out", converted], { signal })).code !== 0) throw new Error("The painted picture could not be read.")
     return PNG.sync.read(readFileSync(converted))
   }
   try {

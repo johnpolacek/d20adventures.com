@@ -182,11 +182,13 @@ class AntigravitySession {
     this.slug = model?.startsWith("gemini-") ? model : undefined
     this.requests = 0
     this.toolEvents = 0
+    this.closed = false
     this.start = performance.now()
   }
   async initialize() {
+    if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     const picked = this.slug ? { slug: this.slug } : await antigravityModel(this.cwd)
-    if (this.failure) throw new Error(this.failure)
+    if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     const agents = join(this.cwd, ".agents", "agents")
     mkdirSync(agents, { recursive: true })
     writeFileSync(join(agents, "d20-gm.md"), `---\nname: d20-gm\ndescription: The Game Master for D20 Adventures.\ntools: []\nmainAgent: true\nsubagent: false\n---\n\n${this.system}\n`)
@@ -195,7 +197,9 @@ class AntigravitySession {
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
-    this.child.on("close", () => this.fail("process_exited"))
+    this.child.on("close", () => {
+      if (!this.closed) this.fail("process_exited")
+    })
     this.bytes = 0
     this.child.stdout.on("data", (chunk) => {
       this.bytes += chunk.length
@@ -246,8 +250,9 @@ class AntigravitySession {
     this.close()
   }
   async ask(text) {
-    if (this.failure) throw new Error(this.failure)
+    if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     if (!this.child) await this.initialize()
+    if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     this.requests++
     return new Promise((resolve, reject) => {
       this.pending = { resolve, reject, timer: setTimeout(() => this.fail("request_timeout"), 120000) }
@@ -260,6 +265,8 @@ class AntigravitySession {
     return { name: picked?.name, effort: picked?.effort }
   }
   close() {
+    if (this.closed) return
+    this.closed = true
     if (!this.child) return
     stop(this.child)
   }

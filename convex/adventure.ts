@@ -90,6 +90,9 @@ export const joinAdventure = serverMutation({
     if ((adventure.runType ?? "campaign") === "practice") {
       throw new Error("Practice runs are private and do not allow joining")
     }
+    if (adventure.status !== "waitingForPlayers" || adventure.currentTurnId) {
+      throw new Error("This game has already started")
+    }
 
     // Check if user is already in the adventure. A hosted game's guest may take several held heroes.
     const existingPlayer = adventure.players?.find((p) => p.userId === args.userId && p.controlledBy !== "ai")

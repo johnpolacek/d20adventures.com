@@ -242,6 +242,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
     await convex.mutation(api.turnAudio.finalizeTurnAudio, {
       turnId: turn._id,
       storyHash,
+      attempt: claim.attempt,
       segments: manifestSegments,
       usage: { ttsInputTokens, ttsOutputTokens, chargedTokens },
     })
@@ -251,7 +252,7 @@ export async function generateTurnAudioIncremental(opts: { turn: TurnDoc; advent
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error("turn-audio: generation failed:", error)
-    await convex.mutation(api.turnAudio.failTurnAudio, { turnId: turn._id, storyHash, error: message }).catch((failError) => console.error("turn-audio: failed to record error state:", failError))
+    await convex.mutation(api.turnAudio.failTurnAudio, { turnId: turn._id, storyHash, attempt: claim.attempt, error: message }).catch((failError) => console.error("turn-audio: failed to record error state:", failError))
     return { ok: false, reason: "error" }
   }
 }

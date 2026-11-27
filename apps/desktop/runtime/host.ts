@@ -232,9 +232,15 @@ export async function hostLoop(opts: {
       if (!opts.paint) throw new Error("This app cannot paint.")
       if (!job.sheet?.name || !job.sheet.appearance) throw new Error("The hero's sheet could not be read.")
       const art = await opts.paint(job.sheet)
-      for (const picture of ["front", "back", "portrait"] as const) await opts.post(jobs, { op: "art", jobId: job._id, picture, data: art[picture].toString("base64") })
+      if (opts.stopped()) return
+      for (const picture of ["front", "back", "portrait"] as const) {
+        if (opts.stopped()) return
+        await opts.post(jobs, { op: "art", jobId: job._id, picture, data: art[picture].toString("base64") })
+      }
+      if (opts.stopped()) return
       await finish(job._id, { painted: true })
     } catch (error) {
+      if (opts.stopped()) return
       await finish(job._id, { error: error instanceof Error ? error.message : "The hero could not be painted." }).catch(() => {})
     }
   }
@@ -245,21 +251,27 @@ export async function hostLoop(opts: {
   let followed: string | null = null
   let offerUntil: number | null = null
   const follow = async () => {
-    offerUntil = null
+    const previousOfferUntil = offerUntil
     try {
       const adventure = (await opts.store.getAdventure({ adventureId: opts.adventureId })) as (AdventureRecord & { currentTurnId?: string; status?: string }) | null
-      if (!adventure?.currentTurnId || adventure.status === "completed") return false
+      if (!adventure?.currentTurnId || adventure.status === "completed") {
+        offerUntil = null
+        return false
+      }
       const turn = await opts.store.getTurn({ turnId: adventure.currentTurnId })
-      if (turn?.reaction && offerWaits(turn, Date.now())) offerUntil = turn.reaction.expiresAt
+      const waitingUntil = turn?.reaction && offerWaits(turn, Date.now()) ? turn.reaction.expiresAt : null
+      offerUntil = waitingUntil
       // An answered offer is played on by its own job.
-      if (turn?.reaction && (offerUntil !== null || turn.reaction.answer !== undefined)) return false
+      if (turn?.reaction && (waitingUntil !== null || turn.reaction.answer !== undefined)) return false
       const who = turn && selfRunning(turn.characters)
       const key = turn && who && `${turn._id}:${who}${turn.reaction ? `:${turn.reaction.expiresAt}` : ""}`
       if (!turn || !key || followed === key) return false
-      followed = key
       await opts.post(jobs, { op: "queue", turnId: turn._id, kind: "continue" })
+      followed = key
       return true
     } catch {
+      // Preserve any pending retry deadline so a transient network error retries on the next idle tick.
+      offerUntil = previousOfferUntil ?? Date.now()
       return false
     }
   }

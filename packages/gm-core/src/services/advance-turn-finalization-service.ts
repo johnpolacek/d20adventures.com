@@ -7,7 +7,7 @@ export function createAdvanceTurnFinalizationService(ports: GmPorts) {
   async function markAdventureCompleteWithoutNextEncounter(adventureId: string): Promise<void> {
     await ports.store.patchAdventure({
       adventureId,
-      patch: { endedAt: Date.now(), updatedAt: Date.now() },
+      patch: { endedAt: Date.now(), updatedAt: Date.now(), status: "completed" },
     })
   }
 

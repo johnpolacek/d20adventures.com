@@ -18,12 +18,14 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
   type Session = ReturnType<typeof createSession>
   const open = new Set<Session>()
   let kept: Session | undefined
+  let closed = false
   const start = () => {
     const session = createSession(provider, cwd, SYSTEM, model)
     open.add(session)
     return session
   }
   const take = () => {
+    if (closed) throw new Error("closed")
     if (!perProcess.includes(provider)) return (kept ??= start())
     const session = kept ?? start()
     // Claude starts its process at once, so the spare is ready by the next call. The others start on their first ask.
@@ -39,6 +41,7 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
     let result
     // A session that failed stays failed, so it is replaced and the request tried once more.
     for (let attempt = 0; !result; attempt++) {
+      if (closed) throw new Error("closed")
       const session = take()
       try {
         const started = Date.now()
@@ -49,6 +52,7 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
         if (perProcess.includes(provider)) done(session)
       } catch (error) {
         done(session)
+        if (closed) throw new Error("closed")
         // The session's own reason goes with it: a failed lockdown or a timeout is not a usage limit.
         const reason = error instanceof Error && error.message !== "failed" ? ` (${error.message})` : ""
         if (attempt > 0) throw new Error(`${provider} could not finish this request${reason}. Check its sign-in or usage limit, then retry.`)
@@ -59,6 +63,7 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
   return {
     llm: schemaLlm(ask, validatePatch, strict),
     close: () => {
+      closed = true
       for (const session of open) session.close()
       open.clear()
       kept = undefined

@@ -437,6 +437,8 @@ export default defineSchema({
     adventureId: v.id("adventures"),
     status: v.union(v.literal("generating"), v.literal("ready"), v.literal("error")),
     storyHash: v.string(),
+    // Monotonic claim counter; guards finalize/fail against stale workers reclaiming after STALE_GENERATION_MS.
+    attempt: v.optional(v.number()),
     requestedBy: v.string(), // Clerk User ID of the player who triggered generation
     segments: v.optional(
       v.array(

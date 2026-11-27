@@ -68,15 +68,21 @@ export function stop(child, signal = "SIGTERM") {
     process.kill(-child.pid, signal)
   } catch {}
 }
-export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeout = 10000, limit = 1_048_576 } = {}) {
+export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeout = 10000, limit = 1_048_576, signal } = {}) {
   return new Promise((resolve) => {
     const start = performance.now()
+    if (signal?.aborted) {
+      resolve({ code: null, stdout: "", stderr: "", timedOut: false, oversized: false, elapsedMs: 0 })
+      return
+    }
     const child = launch(binary, args, { cwd, env, stdio: ["pipe", "pipe", "pipe"] })
     let stdout = "",
       stderr = "",
       timedOut = false,
       oversized = false
     const kill = () => stop(child, "SIGKILL")
+    const onAbort = () => kill()
+    signal?.addEventListener("abort", onAbort, { once: true })
     const timer = setTimeout(() => {
       timedOut = true
       kill()
@@ -100,6 +106,7 @@ export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeo
     child.on("error", () => {})
     child.on("close", (code) => {
       clearTimeout(timer)
+      signal?.removeEventListener("abort", onAbort)
       resolve({ code, stdout, stderr, timedOut, oversized, elapsedMs: Math.round(performance.now() - start) })
     })
     child.stdin.end(input ?? "")
@@ -173,6 +180,7 @@ export class ClaudeSession {
   constructor(cwd, system, model) {
     this.start = performance.now()
     this.requests = 0
+    this.closed = false
     // Each GM call is one prompt in a new process, so nothing it writes to the prompt cache is read again, and a cache
     // write costs up to twice plain input. With caching off a call costs about half.
     const env = { ...minimalEnv(), DISABLE_PROMPT_CACHING: "1" }
@@ -180,7 +188,9 @@ export class ClaudeSession {
     this.child.stdin.on("error", () => {})
     this.child.stderr.on("data", () => {})
     this.child.on("error", () => this.fail("launch_failed"))
-    this.child.on("close", () => this.fail("process_exited"))
+    this.child.on("close", () => {
+      if (!this.closed) this.fail("process_exited")
+    })
     this.bytes = 0
     this.child.stdout.on("data", (chunk) => {
       this.bytes += chunk.length
@@ -248,16 +258,16 @@ export class ClaudeSession {
     }
   }
   fail(reason) {
-    this.failure = reason
+    this.failure ??= reason
     if (this.pending) {
       clearTimeout(this.pending.timer)
-      this.pending.reject(new Error(reason))
+      this.pending.reject(new Error(this.failure))
       this.pending = null
     }
     this.close()
   }
   ask(text) {
-    if (this.failure) return Promise.reject(new Error(this.failure))
+    if (this.failure || this.closed) return Promise.reject(new Error(this.failure ?? "closed"))
     this.requests++
     return new Promise((resolve, reject) => {
       this.pending = { resolve, reject, timer: setTimeout(() => this.fail("request_timeout"), 120000) }
@@ -266,13 +276,15 @@ export class ClaudeSession {
   }
   // The model this CLI would run, asked over the control channel. No prompt is sent, so nothing is used.
   describe() {
-    if (this.failure) return Promise.reject(new Error(this.failure))
+    if (this.failure || this.closed) return Promise.reject(new Error(this.failure ?? "closed"))
     return new Promise((resolve, reject) => {
       this.pending = { resolve, reject, timer: setTimeout(() => this.fail("request_timeout"), 120000) }
       this.child.stdin.write(`${JSON.stringify({ type: "control_request", request_id: "describe", request: { subtype: "initialize" } })}\n`)
     })
   }
   close() {
+    if (this.closed) return
+    this.closed = true
     stop(this.child)
   }
 }
