@@ -1,7 +1,7 @@
 ---
 title: "Keep an AI Game Master Honest with Claude Code Playtest Agents"
 date: 2026-11-26
-description: "The loop D20 Adventures uses to catch an AI game master going off script: Claude Code agents play every seat, a second Claude judges each round, and each fix is a rule we can test."
+description: "D20 Adventures uses an agent loop in Claude Code to catch an AI game master going off script: subagents play the heroes, another agent judges each round, and each fix gets tested along the way."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents/final-confrontation.webp"
 header: /images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents.webp
 draft: true
