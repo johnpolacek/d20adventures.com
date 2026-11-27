@@ -1,23 +1,22 @@
 ---
 title: "Keep an AI Game Master Honest with Claude Code Playtest Agents"
-date: 2026-11-26
+date: 2026-11-27
 description: "D20 Adventures uses an agent loop in Claude Code to catch an AI game master going off script: subagents play the heroes, another agent judges each round, and each fix gets tested along the way."
 image: "https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents/final-confrontation.webp"
 header: /images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents.webp
-draft: true
 ---
 
 <!-- Pictures not made: a terminal capture of a probe and the agents' progress bars (shown as code and a table instead), Silverhand before and after (no saved probe transcripts), the drake story card and Vesk's stall (need the desktop app, which was off limits, and Vesk has no portrait or figure yet), the Covert Cargo tug sight line (item cut for length) and the owlbear sneak on the stage (the probe itself instead). -->
 
-An AI game master breaks in ways a person at the table would catch at once. A dead NPC speaks. A silent one talks. A player says the drake is on the roof, and the GM believes it.
+An AI game master in [D20 Adventures](https://d20adventures.com) breaks in ways a real DM at a table would catch right away. A dead NPC chimes in, a character who’s supposed to stay silent starts talking, or a player claims a dragon is on the roof and the GM just buys it.
 
-So Claude Code agents play [D20 Adventures](https://d20adventures.com), a second Claude judges every round, and each fix becomes a rule we can test. The rules engine has [its own post](https://d20adventures.com/updates/training-an-ai-game-master-on-5e-rules).
+So I have Claude Code agents playtest the game for me. Subagents play the heroes, a fresh Claude session judges every round against the encounter notes, and every fix turns into something we can test. (The 5E rules engine itself has [its own post](https://d20adventures.com/updates/training-an-ai-game-master-on-5e-rules).)
 
 ### A Headless Playtest
 
-A [scene probe](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/scripts/scene-probe.ts) starts a fresh game at one encounter. Code copies the last turns from a real save, feeds the player’s hero scripted replies that push at the scene’s exits, and rolls the dice. Claude plays the GM, every NPC and the AI heroes.
+To test one encounter without playing a whole adventure, I run a [scene probe](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/scripts/scene-probe.ts). A script starts a fresh game right at that scene, copies the last few turns from a real save for context, feeds the player’s hero scripted replies that push on the scene’s exits, and rolls the dice. Claude plays the GM, every NPC, and the rest of the party.
 
-Then a fresh Claude session judges each round against the scene as written:
+Once a run finishes, a separate Claude session judges each round against the encounter as written:
 
 *apps/desktop/scripts/scene-judge.ts*
 
@@ -32,13 +31,17 @@ findings: z.array(z.object({
 contentGap: z.string().nullable(),
 ```
 
-The judge is a model too, so it gets the same loop as the GM. When it flags something that wasn’t wrong, the judge gets the fix, and the saved rounds get judged again.
+The judge is a model too, so it gets an improvement loop just like the GM. When it flags something that wasn’t wrong, the judge gets the fix, and the saved rounds get judged again.
 
 ### Agents in Parallel
 
+I had Claude Code run probes across all of [Welcome to Kordavos](https://d20adventures.com/settings/realm-of-myr/welcome-to-kordavos):
+
 > use agents to do playtesting loops and agents to fix all in parallel. watch for system performance degradation though and don’t use all the system memory
 
-Four agents each took one act of [Welcome to Kordavos](https://d20adventures.com/settings/realm-of-myr/welcome-to-kordavos). Each fixed only its own act’s files, so no two edited the same one. A fifth fixed the GM. At most four probes ran at once, each one run with two rounds judged together (`--runs 1 --jobs 2`), under a watchdog that stopped work below 22% free memory. It never got below 30%.
+Four agents each took an act, touching only their own act’s files so they wouldn’t step on each other, while a fifth worked on the GM code. We capped it at four probes running at once (`--runs 1 --jobs 2`, judging two rounds in parallel per probe) with a memory watchdog set to pause if free memory dropped below 22%. It never dipped under 30%.
+
+Here’s what the baseline probes flagged as off-script rounds:
 
 | Act | Off-script rounds per probe |
 |---|---|
@@ -46,23 +49,37 @@ Four agents each took one act of [Welcome to Kordavos](https://d20adventures.com
 | 2 | 1/13, 1/11, 3/13 |
 | 3 | 2/11, 1/12, 2/11 |
 
-One run is noisy. Act 1’s recheck rose from 3 to 4 of 16.
-
 ### NPCs Who Should Be Silent
 
-A round end put a line under dead Thaddeus’s name. Silverhand, who “says nothing”, answered a hero. Loric said “move along”, though he never sends the party away. So [code](https://github.com/johnpolacek/d20adventures.com/blob/main/packages/gm-core/src/story/limits.ts) finds each sentence that starts with an NPC’s name and holds one of these words, and restates it on that NPC’s turn:
+Claude kept making characters talk when the notes said they shouldn’t. At the end of one round, the GM gave a line to an NPC that was dead. Another NPC whose notes say he “says nothing”, talks anyway.
 
-*packages/gm-core/src/story/limits.ts*
+Burying those rules inside prose notes wasn’t enough, so we put them right in the encounter frontmatter: `silent: true` for NPCs who never speak, and a `limits` list for hard constraints:
 
-```ts
-const ABSOLUTE = /\b(?:never|nothing|no one|silent|wordless)\b/i
+*content/settings/realm-of-myr/adventures/welcome-to-kordavos/encounters/a-relic-of-old-valkara.md*
+
+```yaml
+- id: "silverhand"
+  silent: true
+  behavior: "Watches from behind his representative and lets him bid. His stare warns off rivals."
 ```
 
-The first Act 1 replay after this and four content fixes went 0 of 16 rounds off the rails. A rule phrased any other way still relies on Claude reading the notes.
+*content/settings/realm-of-myr/adventures/welcome-to-kordavos/encounters/arrival-at-the-docks.md*
+
+```yaml
+- id: "loric-windrider"
+  side: "none"
+  behavior: "Gruff but fair. He’s a hard worker and expects the same from others. Deeply loyal to his friends."
+  limits:
+    - "Never sends the party away from the docks or toward the Lower Districts."
+```
+
+Now [code](https://github.com/johnpolacek/d20adventures.com/blob/main/packages/gm-core/src/story/clean.ts) enforces silence directly: any spoken line given to a `silent` NPC gets dropped, and dead characters can’t get spoken lines either. [The limits helper](https://github.com/johnpolacek/d20adventures.com/blob/main/packages/gm-core/src/story/limits.ts) passes each NPC’s `limits` straight into its turn, roll outcomes, and round ends. Silence is guaranteed in code now, though behavioral `limits` still rely on Claude following the prompt.
 
 ### The GM Believing the Player
 
-The drake was never on a roof. Mara the urchin’s theft always works unless a hero spots it, yet the GM rolled for her and she failed. Two prompt rules fixed both:
+In one playtest, a player wrote an action that a forest drake was up on a roof when it never was, and the GM just went along with it. In another, Mara the urchin’s theft is supposed to always succeed unless a hero spots her, yet the GM rolled for her anyway and she failed.
+
+Two prompt rules took care of both:
 
 *packages/gm-core/src/services/adventure-roll-result-service.ts*
 
@@ -78,30 +95,34 @@ When the encounter instructions say what this NPC does here always happens or wo
 
 ### Give a Background NPC a Sheet
 
-The GM kept playing Grendar as the oily vendor of stolen elven goods, because the vendor wasn’t in the cast. Now he is [Vesk the Fence](https://github.com/johnpolacek/d20adventures.com/blob/main/content/settings/realm-of-myr/npcs/vesk-the-fence.md), with his own sheet and a line in the scene’s cast:
+In the Black Market, the GM kept turning Grendar (a different merchant there) into the oily vendor selling stolen elven goods, because that vendor wasn’t in the cast. Now he’s [Vesk the Fence](https://github.com/johnpolacek/d20adventures.com/blob/main/content/settings/realm-of-myr/npcs/vesk-the-fence.md), with his own sheet and a line in the scene’s cast:
 
 *content/settings/realm-of-myr/adventures/welcome-to-kordavos/encounters/labyrinthine-stalls.md*
 
-```
+```yaml
 - id: "vesk-the-fence"
-  behavior: "...Never seen or heard before a hero passes the Perception check that finds the stall."
+  behavior: "The oily vendor of the stolen elven goods, at a shadowy corner stall..."
+  limits:
+    - "Never seen or heard before a hero passes the Perception check that finds the stall."
 ```
 
 ### Every Seat, Start to Finish
 
-An agent played the whole adventure as a hosted game, two players with two heroes each, plus Thalbern on AI. It took 67 rounds over 33 encounters and about six hours. It found bugs no single scene showed, like an old roll result carried into the next round. The agent’s driver once sent Branka’s text as Milos, so the agent added an actor check.
+We also had an agent play the whole adventure start to finish as a hosted game: two players running two heroes each, plus Thalbern on AI. The playthrough ran 67 rounds across 33 encounters and took about six hours.
+
+Playing it all the way through turned up bugs no single-scene probe would hit, like an old roll result carrying over into the next round. The agent’s own test script even messed up once and sent one hero’s reply under another hero’s name, so it caught that and added a check for it too.
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents/final-confrontation.webp" alt="Final Confrontation at round 65: Joran bound before the altar, the party portraits along the top, the city map in the corner and Adventure complete" width="1372" height="870" />
 
 ### Replace a Failed Session
 
-At round 26 every GM turn failed with “Check its sign-in or usage limit.” The host was holding a broken Claude session. Now a [failed session is replaced](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/runtime/llm.ts) and the request tried once more. The last 40 rounds had no GM failures.
+At round 26 of that playthrough, every GM turn started failing with “Check its sign-in or usage limit.” The host was stuck on a broken Claude session. Now when a session fails, [the host replaces it](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/runtime/llm.ts) and retries the request. The last 40 rounds finished with no GM failures.
 
-Weeks later the message came back on [Covert Cargo](https://d20adventures.com/settings/realm-of-myr/covert-cargo).
+Weeks later, that same error popped back up on [Covert Cargo](https://d20adventures.com/settings/realm-of-myr/covert-cargo).
 
 > i don’t see any usage limit.
 
-The CLI was failing its startup check in under a second, and each retry waited out a 2-minute timeout. Now the error gives the real reason:
+Turns out it wasn’t a usage limit at all. The CLI was failing its startup check in under a second, and each retry was waiting out a 2-minute timeout. Now the error shows the real reason:
 
 *apps/desktop/runtime/llm.ts*
 
@@ -111,15 +132,13 @@ if (attempt > 0) throw new Error(`${provider} could not finish this request${rea
 
 ### One Map for the Whole City
 
-The GM made up directions. Agents pulled 463 spatial claims from the adventures, I ruled on the conflicts, and every landmark in the city layout cites its source lines. The GM now gets each scene’s place, what’s near and where each exit leads.
+The GM also kept making up directions around the city. So agents pulled 463 spatial claims out of the adventure files, I ruled on the conflicts, and now every landmark in the city layout cites its source lines. Each scene hands the GM where it sits, what’s nearby, and where every exit leads.
 
 <img src="https://d20-public.s3.us-east-1.amazonaws.com/images/updates/keep-an-ai-game-master-honest-with-claude-code-playtest-agents/city-map.webp" alt="The in-game map of the Asterian Quarter, with the Blackthorn Mansion, the Drain Grate and the underground route to the Forgotten Temple" width="1372" height="870" />
 
-Whether it cut made-up directions is untested.
-
 ### Rerun on the Last Commit
 
-A [check probe](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/scripts/check-probes.json) has Thalbern sneak past the owlbear and grades the check Claude picks. After new rules code landed, it failed 5 of 5 runs. The commit before failed the same way, with an identical prompt, so the new code wasn’t the cause. The scene never showed the hero hidden, so the fix went there:
+We also have a [check probe](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/desktop/scripts/check-probes.json) where Thalbern tries to sneak past the owlbear and we grade the check Claude picks. Right after new rules code went in, it failed 5 out of 5 runs. Rerunning it on the previous commit failed the exact same way with an identical prompt, so the new code wasn’t the cause. The probe’s scene text never actually showed Thalbern hidden, so the fix went there:
 
 *apps/desktop/scripts/check-probes.json*
 
@@ -127,6 +146,6 @@ A [check probe](https://github.com/johnpolacek/d20adventures.com/blob/main/apps/
 "narrative": "Thalbern is quicker than the beast. Before its eyes find him he has dropped behind a bank of brambles, hidden from it."
 ```
 
-### Play It Yourself
+### Human Playtesting
 
-[Become a playtester](https://d20adventures.com/playtest) and host a game for friends, the same setup the agents played. All of it is [on Github](https://github.com/johnpolacek/d20adventures.com).
+Would you like to try the game and help with playtesting? You can [become a playtester](https://d20adventures.com/playtest) and host a game for friends with the same setup the agents played, all at [d20adventures.com](https://d20adventures.com). The code and playtest scripts are [on Github](https://github.com/johnpolacek/d20adventures.com).
