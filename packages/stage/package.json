@@ -10,7 +10,8 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json"
+    "check": "tsc -p tsconfig.json",
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
     "three": "0.183.2",

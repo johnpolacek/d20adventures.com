@@ -72,7 +72,8 @@ export interface EffectHost {
   camera: THREE.Camera
 }
 
-type Live = { t: number; duration: number; update: (t: number, dt: number, self: Live) => void; done: () => void; objects: THREE.Object3D[] }
+type EffectOutcome = "completed" | "cancelled"
+type Live = { t: number; duration: number; update: (t: number, dt: number, self: Live) => void; done: (outcome: EffectOutcome) => void; objects: THREE.Object3D[] }
 
 const ease = (t: number) => t * t * (3 - 2 * t)
 const fade = (t: number, inEnd: number, outStart: number) => Math.min(THREE.MathUtils.clamp(t / inEnd, 0, 1), 1 - THREE.MathUtils.clamp((t - outStart) / (1 - outStart), 0, 1))
@@ -149,7 +150,7 @@ export class Effects {
     this.light.intensity = intensity
   }
 
-  private add(duration: number, objects: THREE.Object3D[], update: Live["update"]): Promise<void> {
+  private add(duration: number, objects: THREE.Object3D[], update: Live["update"]): Promise<EffectOutcome> {
     for (const o of objects) this.group.add(o)
     return new Promise((resolve) => {
       const live: Live = { t: 0, duration, update, objects, done: resolve }
@@ -163,10 +164,10 @@ export class Effects {
       l.t += dt
       const t = Math.min(1, l.t / l.duration)
       l.update(t, dt, l)
-      if (t >= 1) this.finish(l)
+      if (t >= 1) this.finish(l, "completed")
     }
   }
-  private finish(l: Live) {
+  private finish(l: Live, outcome: EffectOutcome = "completed") {
     this.live = this.live.filter((x) => x !== l)
     for (const o of l.objects) {
       this.group.remove(o)
@@ -181,11 +182,11 @@ export class Effects {
       this.light.intensity = 0
       this.lightOwner = null
     }
-    l.done()
+    l.done(outcome)
   }
   // Ends everything at once, as when the scene changes or the reader steps back.
   clear() {
-    for (const l of [...this.live]) this.finish(l)
+    for (const l of [...this.live]) this.finish(l, "cancelled")
   }
   dispose() {
     this.clear()
@@ -195,29 +196,38 @@ export class Effects {
 
   // ── Effects ──
   // `shot`: what an arrow's flight carries instead, a stone from a sling or a thrown knife (stage.ts).
-  play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element, shot?: Shot): Promise<void> {
+  async play(kind: EffectKind, from: EffectEnd, to: EffectEnd | undefined, element?: Element, shot?: Shot): Promise<void> {
     const target = to ?? from
     const flies = kind === "arrow" ? shot : undefined
     this.host.event?.({ type: "effect", kind, element, phase: "start", struck: !!target.id, ...(flies ? { shot: flies } : {}) })
     switch (kind) {
       case "arrow":
-        return this.missile(from, target, element, flies ?? "arrow")
+        await this.missile(from, target, element, flies ?? "arrow")
+        return
       case "bolt":
-        return this.missile(from, target, element, "bolt")
+        await this.missile(from, target, element, "bolt")
+        return
       case "beam":
-        return this.beam(from, target, element)
+        await this.beam(from, target, element)
+        return
       case "burst":
-        return this.burst(target, element)
+        await this.burst(target, element)
+        return
       case "aura":
-        return this.aura(target, element)
+        await this.aura(target, element)
+        return
       case "sparkles":
-        return this.sparkles(target, element)
+        await this.sparkles(target, element)
+        return
       case "slash":
-        return this.slash(target, element)
+        await this.slash(target, element)
+        return
       case "impact":
-        return this.impact(target, element)
+        await this.impact(target, element)
+        return
       case "mist":
-        return this.mist(target, element)
+        await this.mist(target, element)
+        return
     }
   }
 
@@ -290,7 +300,8 @@ export class Effects {
       trail.forEach((s, i) => pointAt(Math.max(0, t - (i + 1) * 0.035), s.position))
       if (kind === "bolt") this.lamp(self, p, color, 2.4)
     })
-    return flight.then(() => {
+    return flight.then((outcome) => {
+      if (outcome === "cancelled") return
       this.host.event?.({ type: "effect", kind: kind === "bolt" ? "bolt" : "arrow", element, phase: "land", struck: !!to.id, ...(kind === "stone" || kind === "knife" ? { shot: kind } : {}) })
       return kind === "bolt" ? this.burst(to, element, 0.55) : this.impact(to, element, kind === "arrow" ? 0.6 : 0.5)
     })
@@ -615,7 +626,7 @@ export class Effects {
       item.scale.setScalar(k)
       item.visible = k > 0.02
       if (lit) this.lamp(self, item.position, "#ffb35c", 1.8 * k)
-    })
+    }).then(() => {})
   }
   // An object taken in hand or handed over, for the host to sound.
   announce(kind: PropKind, passed: boolean) {

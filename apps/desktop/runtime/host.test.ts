@@ -375,3 +375,63 @@ test("the website store sends each operation to the host store route", async () 
   assert.deepEqual(calls, [["/api/desktop/host/store", { op: "getTurn", args: { turnId: "t1" } }]])
   await assert.rejects(() => store.createTurn({} as never), /authored adventures only/)
 })
+
+test("follow retries after a transient error on reaction expiry or a failed queue post", async () => {
+  const { store, turn, adventureId, cleanup } = await hosted()
+  try {
+    // Everyone complete so selfRunning returns "round", and a reaction that has already expired.
+    for (const c of store.current().characters) Object.assign(c, { isComplete: true, hasReplied: true })
+    ;(store.current() as { reaction?: unknown }).reaction = {
+      offer: { kind: "shield", to: store.current().characters[0].id, from: "npc", against: "attack" },
+      text: "Shield?",
+      expiresAt: Date.now() - 1000,
+      npc: "npc",
+      resume: { action: null, reading: null, dice: [], answers: [] },
+    }
+    store.save()
+
+    let getTurnCalls = 0
+    let queueCalls = 0
+    const queued: unknown[] = []
+    const flakyStore = Object.assign(Object.create(store), {
+      getAdventure: (args: { adventureId: string }) => store.getAdventure(args),
+      getTurn: async (args: { turnId: string }) => {
+        getTurnCalls++
+        // First call: fail transiently while checking expired reaction.
+        if (getTurnCalls === 1) throw new Error("transient store blip")
+        return store.getTurn(args)
+      },
+    })
+    const post: HostPost = async (_path, body) => {
+      const b = body as { op: string; turnId?: string; kind?: string }
+      if (b.op === "claim") return { job: null }
+      if (b.op === "queue") {
+        queueCalls++
+        // First queue post fails; second must still retry (followed was not latched prematurely).
+        if (queueCalls === 1) throw new Error("transient queue blip")
+        queued.push(b)
+        return { jobId: "auto-1" }
+      }
+      return { ok: true }
+    }
+    let ticks = 0
+    await hostLoop({
+      adventureId,
+      post,
+      store: flakyStore,
+      packs,
+      llm: failLlm,
+      emit: () => {},
+      stopped: () => ticks >= 4 || queued.length > 0,
+      wait: async () => {
+        ticks++
+      },
+    })
+    assert.equal(getTurnCalls, 3)
+    assert.equal(queueCalls, 2)
+    assert.equal(queued.length, 1)
+    assert.deepEqual(queued[0], { op: "queue", turnId: turn._id, kind: "continue" })
+  } finally {
+    cleanup()
+  }
+})

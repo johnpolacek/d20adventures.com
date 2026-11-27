@@ -4,6 +4,7 @@ import { resolve } from "node:path"
 import { createGmCore, type GmPorts, type Store } from "@d20/gm-core"
 import { assertPlayerCharacterControl } from "@d20/gm-core/access"
 import { buildNextTurnFromProgression } from "@d20/gm-core/services/advance-turn-builder-service"
+import { createAdvanceTurnFinalizationService } from "@d20/gm-core/services/advance-turn-finalization-service"
 import { handleSkipPassNpcTurn } from "@d20/gm-core/services/npc-turn-branch-service"
 import { npcEarlierTurns, waitsUnaddressed } from "@d20/gm-core/services/npc-turn-service"
 import { createRollRequirementService } from "@d20/gm-core/services/roll-requirement-service"
@@ -19,7 +20,8 @@ import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, pac
 import { build } from "esbuild"
 import ts from "typescript"
 import { z } from "zod"
-import { commitWikiTurnAdvance, submitReply } from "../convex/adventure"
+import { commitWikiTurnAdvance, joinAdventure, submitReply } from "../convex/adventure"
+import { claimTurnAudioGeneration, failTurnAudio, finalizeTurnAudio } from "../convex/turnAudio"
 import { compileAdventureSourceTree } from "../lib/wiki-adventures/compiler"
 import { getLocalWikiAdventureDefinition, loadLocalWikiAdventureRuntime, readLocalWikiAdventureSourceFiles } from "../lib/wiki-adventures/local-runtime"
 
@@ -835,6 +837,71 @@ async function quietRoundEnd() {
   }
 }
 
+async function phase0Guards() {
+  process.env.STORE_SERVER_SECRET ??= "gm-core-check"
+  const call = (fn: unknown, ctx: unknown, args: object): Promise<any> =>
+    (fn as { _handler(ctx: unknown, args: unknown): Promise<any> })._handler(ctx, { ...args, secret: process.env.STORE_SERVER_SECRET })
+
+  // 0.1: legacy completion sets status: "completed" alongside endedAt.
+  const patches: any[] = []
+  const game = memoryGame()
+  game.ports.store.patchAdventure = async (args) => {
+    patches.push(args)
+  }
+  await createAdvanceTurnFinalizationService(game.ports).markAdventureCompleteWithoutNextEncounter("adv-1")
+  assert.equal(patches.length, 1)
+  assert.equal(patches[0].patch.status, "completed")
+  assert.equal(typeof patches[0].patch.endedAt, "number")
+
+  // 0.2: joinAdventure rejects active/started games.
+  const advs = new Map<string, any>([
+    ["active", { _id: "active", status: "active", runType: "campaign", players: [], playerIds: [] }],
+    ["started", { _id: "started", status: "waitingForPlayers", currentTurnId: "t1", runType: "campaign", players: [], playerIds: [] }],
+  ])
+  const joinDb = { get: async (id: string) => advs.get(id) ?? null }
+  await assert.rejects(() => call(joinAdventure, { db: joinDb }, { adventureId: "active", userId: "u2", characterId: "c2" }), /already started/)
+  await assert.rejects(() => call(joinAdventure, { db: joinDb }, { adventureId: "started", userId: "u2", characterId: "c2" }), /already started/)
+
+  // 0.3: turnAudio attempt + status guards stop stale workers from overwriting ready rows.
+  let audioRow: any = null
+  const audioDb = {
+    query: (table: string) => {
+      assert.equal(table, "turnAudio")
+      return {
+        withIndex: () => ({ unique: async () => (audioRow ? clone(audioRow) : null) }),
+      }
+    },
+    insert: async (_table: string, doc: any) => {
+      audioRow = { _id: "audio-1", ...clone(doc) }
+      return "audio-1"
+    },
+    patch: async (_id: string, patch: any) => {
+      audioRow = { ...audioRow, ...clone(patch) }
+    },
+  }
+  const first = await call(claimTurnAudioGeneration, { db: audioDb }, { turnId: "t1", adventureId: "a1", storyHash: "h1", requestedBy: "u1" })
+  assert.equal(first.claimed, true)
+  assert.equal(first.attempt, 1)
+  // Simulate stale reclaim after >5 min.
+  audioRow.updatedAt = Date.now() - 10 * 60 * 1000
+  const second = await call(claimTurnAudioGeneration, { db: audioDb }, { turnId: "t1", adventureId: "a1", storyHash: "h1", requestedBy: "u2" })
+  assert.equal(second.claimed, true)
+  assert.equal(second.attempt, 2)
+  // Worker 1 (stale attempt 1) cannot finalize or fail while worker 2 owns attempt 2.
+  assert.equal(await call(failTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", attempt: 1, error: "timed out" }), false)
+  assert.equal(audioRow.status, "generating")
+  // Worker 2 finalizes cleanly.
+  assert.equal(
+    await call(finalizeTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", attempt: 2, segments: [], usage: { ttsInputTokens: 1, ttsOutputTokens: 1, chargedTokens: 1 } }),
+    true
+  )
+  assert.equal(audioRow.status, "ready")
+  // Neither stale attempt nor untagged fail can overwrite a ready row.
+  assert.equal(await call(failTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", attempt: 1, error: "late error" }), false)
+  assert.equal(await call(failTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", error: "late error" }), false)
+  assert.equal(audioRow.status, "ready")
+}
+
 async function main() {
   const originalRandom = Math.random
   const originalConsole = { ...console }
@@ -855,6 +922,7 @@ async function main() {
     await characterPrompts()
     await accessAndInstanceIsolation()
     await extraAttack()
+    await phase0Guards()
   } finally {
     Math.random = originalRandom
     Object.assign(console, originalConsole)

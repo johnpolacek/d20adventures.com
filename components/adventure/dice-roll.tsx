@@ -25,28 +25,28 @@ export default function DiceRoll({
   dice?: 1 | 2
   onRoll?: (result: number, second?: number) => void
 }) {
-  const [rolling, setRolling] = useState(false)
-  const [result, setResult] = useState<number[] | null>(null)
-  const [display, setDisplay] = useState<number | null>(null)
+  const [roll, setRoll] = useState<{ phase: "idle" } | { phase: "rolling"; display: number | null } | { phase: "landed"; result: number[] }>({ phase: "idle" })
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleRoll = () => {
-    setRolling(true)
-    setResult(null)
+    if (roll.phase !== "idle" || intervalRef.current !== null) return
+    setRoll({ phase: "rolling", display: null })
     let elapsed = 0
     intervalRef.current = setInterval(() => {
       const animRoll = rollD20()
-      setDisplay(animRoll)
       elapsed += ROLL_ANIMATION_INTERVAL
       if (elapsed >= ROLL_ANIMATION_DURATION) {
-        if (intervalRef.current) clearInterval(intervalRef.current)
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+        }
         const final = dice === 2 ? [rollD20(), rollD20()] : [rollD20()]
-        setDisplay(final[0])
-        setResult(final)
-        setRolling(false)
+        setRoll({ phase: "landed", result: final })
         if (onRoll) {
           onRoll(final[0], final[1])
         }
+      } else {
+        setRoll({ phase: "rolling", display: animRoll })
       }
     }, ROLL_ANIMATION_INTERVAL)
   }
@@ -54,24 +54,30 @@ export default function DiceRoll({
   // Clean up interval on unmount
   React.useEffect(() => {
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
   }, [])
 
-  if (result !== null) {
+  if (roll.phase === "landed") {
     return (
-      <div className={cn("enter-pop flex", result.length > 1 && "scale-75 -mx-8")}>
-        {result.map((die, i) => (
+      <div className={cn("enter-pop flex", roll.result.length > 1 && "scale-75 -mx-8")}>
+        {roll.result.map((die, i) => (
           <DiceRollResult key={i} result={die} />
         ))}
       </div>
     )
   }
 
+  const rolling = roll.phase === "rolling"
+
   return (
     <Button
       variant="plain"
       aria-label="Roll D20"
+      disabled={rolling}
       className={cn(
         "group text-2xl text-action-50 brightness-125 contrast-150 font-display transition-[scale,filter] duration-1000 ease-in-out not-disabled:hover:scale-105 disabled:saturate-50 select-none flex gap-[7px] justify-center items-center pt-[2px] pb-0 px-3 bg-action-600 rounded-full ring-4 ring-action-800 border border-action-400/50 tex-buried",
         className,
@@ -92,7 +98,7 @@ export default function DiceRoll({
         alt=""
       />
       <span style={textShadow} className="pt-[2px] w-16 text-center">
-        {rolling ? (display ?? "") : dice === 2 ? "2D20" : "D20"}
+        {rolling ? (roll.display ?? "") : dice === 2 ? "2D20" : "D20"}
       </span>
     </Button>
   )
