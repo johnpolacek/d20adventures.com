@@ -276,9 +276,19 @@ async function build(b: Brief) {
   }
   if (made(dir, "lod0.glb", "rig") && !redo.includes("model") && !redo.includes("joints") && !redo.includes("face")) say("rig", "kept")
   else {
-    type Report = { weights?: { solve: string; unweighted: number }; lods?: { triangles: number; megabytes: number; joints: number; turnedAtRest: string[] }[] }
+    type Report = {
+      weights?: { solve: string; unweighted: number; mostBonesOnAPoint?: number; overFour?: number }
+      materials?: { errors?: string[]; warnings?: string[] }
+      lods?: { triangles: number; megabytes: number; joints: number; turnedAtRest: string[] }[]
+    }
     const report = last(run("rig", BLENDER, ["-b", "-P", "asset-library/pipeline/rig.py", "--", `${dir}/source.glb`, `${dir}/joints.json`, dir, "."]), "RIG") as Report | null
-    const bad = report?.weights?.solve !== "heat" || report.weights.unweighted || report.lods?.some((l) => l.joints !== 18 || l.turnedAtRest.length)
+    const bad =
+      report?.weights?.solve !== "heat" ||
+      report.weights.unweighted ||
+      (report.weights.overFour ?? 0) > 0 ||
+      (report.weights.mostBonesOnAPoint ?? 0) > 4 ||
+      (report.materials?.errors?.length ?? 0) > 0 ||
+      report.lods?.some((l) => l.joints !== 18 || l.turnedAtRest.length)
     say("rig", `${bad ? "LOOK AT rig.json: " : ""}${report?.weights?.solve} solve, ${report?.lods?.map((l) => `${l.triangles} tris ${l.megabytes} MB`).join(", ")}`)
     // A face painted close is fitted to the model's own face, which the rig has just drawn out, and rigged again.
     if (b.face === "close" && existsSync(`${dir}/apose-face.png`) && existsSync(`${dir}/head-own.png`)) {

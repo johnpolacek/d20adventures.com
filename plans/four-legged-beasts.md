@@ -55,6 +55,7 @@ Its quadruped is a robot of rigid parts on 13 bones, with no skin. What carries 
 
 - The drake's wings: opened for a roar, beaten for its flight to the roofs. Bones in a `dragon` skeleton, or wings built in code as the staff is.
 - Breath: no stock clip. A head thrust forward with the jaw open, written as a turn.
+- Custom beast clips when stock libraries run out: [`patch-gg/anymove`](https://github.com/patch-gg/anymove) (Apache 2.0) turns a split-screen AI video (front + side) into 24 fps GLB clips for any skeleton (bat-like dragon wings, quadrupeds, rearing/roaring/slamming beasts) at about $3/usable move (~$17 for a 5-move creature). Keep parked until a boss monster truly needs it: training its per-creature DINOv2 joint reader requires a 12–24 GB NVIDIA CUDA GPU (cloud GPU), it builds its own Blender rig rather than dropping onto Hyper3D's, and its own benchmarks drop tail swipes, bird wings and 8-legged walks. Nine pre-made CC0 reference packs (`anymove:ogre`, `centaur`, `trex`, etc.) are downloadable free via `pnpm patch:assets info anymove:ogre`.
 
 ## Done
 

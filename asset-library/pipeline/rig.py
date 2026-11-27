@@ -458,8 +458,13 @@ bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 # A point the stand-in's weights missed is patched the same way, so nothing is left behind.
 patched = patch(body)
+if patched:
+    bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
+    bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 unweighted = len(body.data.vertices) - weighted(body)
-most = max((sum(1 for g in v.groups if g.weight > 1e-4) for v in body.data.vertices), default=0)
+counts = [sum(1 for g in v.groups if g.weight > 1e-4) for v in body.data.vertices]
+most = max(counts, default=0)
+over_four = sum(1 for c in counts if c > 4)
 body.parent = rig
 skin = body.modifiers.new("skeleton", "ARMATURE")
 skin.object = rig
@@ -723,6 +728,57 @@ if (json.load(open(brief_file)) if os.path.exists(brief_file) else {}).get("face
         other.update()
         del R
 
+DATA_INPUTS = {"Roughness", "Metallic", "Normal", "Alpha", "Specular IOR Level", "Coat Weight", "Coat Roughness"}
+DATA_NODES = {"NORMAL_MAP", "BUMP", "DISPLACEMENT", "VECTOR_DISPLACEMENT"}
+
+
+def _feeds(sock, depth=4):
+    out = set()
+    for lk in sock.links:
+        n = lk.to_node
+        out.add((n.type, lk.to_socket.name))
+        if depth and n.type not in DATA_NODES and n.type != "BSDF_PRINCIPLED":
+            for o in n.outputs:
+                out |= _feeds(o, depth - 1)
+    return out
+
+
+def audit_materials(ob):
+    """Checks material slots and texture colorspaces (adapted from patch-gg/cloud-blender-skills qa_check.py)."""
+    me, slots = ob.data, ob.material_slots
+    errors, warnings = [], []
+    idx = [0] * len(me.polygons)
+    me.polygons.foreach_get("material_index", idx)
+    used = set(idx)
+    bad = sorted(i for i in used if i >= len(slots) or slots[i].material is None)
+    if bad or not slots:
+        errors.append(f"faces use empty/missing material slot(s) {bad or [0]}")
+    unused = [s.name or str(i) for i, s in enumerate(slots) if i not in used]
+    if unused:
+        warnings.append(f"unused material slot(s) {unused}")
+    for i in sorted(used):
+        mat = slots[i].material if i < len(slots) else None
+        if mat is None or not mat.node_tree:
+            continue
+        for n in mat.node_tree.nodes:
+            if n.type != "TEX_IMAGE":
+                continue
+            img = n.image
+            if img is None:
+                if n.outputs["Color"].is_linked or n.outputs["Alpha"].is_linked:
+                    warnings.append(f"{mat.name}: image node {n.name!r} has no image")
+                continue
+            reach = _feeds(n.outputs["Color"])
+            data_use = sorted({s for t, s in reach if t == "BSDF_PRINCIPLED" and s in DATA_INPUTS} | {t.lower() for t, _ in reach if t in DATA_NODES})
+            if data_use and not img.colorspace_settings.is_data:
+                errors.append(f"{mat.name}: {img.name} feeds {data_use} as {img.colorspace_settings.name} (expected Non-Color)")
+            if img.colorspace_settings.is_data and ("BSDF_PRINCIPLED", "Base Color") in reach:
+                warnings.append(f"{mat.name}: {img.name} is Non-Color but drives Base Color")
+    return {"errors": errors, "warnings": warnings}
+
+
+material_audit = audit_materials(body)
+
 made = []
 for i, (triangles, width, colour_width) in enumerate(LODS):
     copy = body.copy()
@@ -731,8 +787,18 @@ for i, (triangles, width, colour_width) in enumerate(LODS):
     bpy.context.scene.collection.objects.link(copy)
     active(copy)
     if triangles and triangles < source_triangles:
+        clean = bmesh.new()
+        clean.from_mesh(copy.data)
+        bmesh.ops.dissolve_degenerate(clean, edges=clean.edges[:], dist=1e-5)
+        loose = [v for v in clean.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(clean, geom=loose, context="VERTS")
+        clean.to_mesh(copy.data)
+        clean.free()
+        copy.data.update()
         thin = copy.modifiers.new("thin", "DECIMATE")
         thin.ratio = triangles / source_triangles
+        thin.use_collapse_triangulate = True
         bpy.ops.object.modifier_move_to_index(modifier=thin.name, index=0)
         bpy.ops.object.modifier_apply(modifier=thin.name)
     for img in bpy.data.images:
@@ -779,7 +845,8 @@ report = {
     "sourceTriangles": source_triangles,
     "weldedPoints": welded,
     "quarterTurns": quarter,
-    "weights": {"solve": solve, "standIn": stand_in, "patched": patched, "unweighted": unweighted, "mostBonesOnAPoint": most},
+    "weights": {"solve": solve, "standIn": stand_in, "patched": patched, "unweighted": unweighted, "mostBonesOnAPoint": most, "overFour": over_four},
+    "materials": material_audit,
     "slungPoints": slung,
     "hang": hang,
     "holds": holds or None,

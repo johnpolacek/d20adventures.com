@@ -72,6 +72,7 @@
     "images:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/images-sync.ts",
     "stage:verify": "tsx scripts/stage-verify.ts",
     "stage:director": "tsx scripts/stage-director-check.ts",
+    "patch:assets": "tsx scripts/patch-assets.ts",
     "test:wiki-adventures:batch-a": "tsx scripts/wiki-adventures-batch-a-check.ts",
     "test:wiki-adventures:batch-b": "tsx scripts/wiki-adventures-batch-b-check.ts",
     "test:wiki-adventures:batch-c": "tsx scripts/wiki-adventures-batch-c-check.ts",
