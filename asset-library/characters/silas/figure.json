@@ -14,7 +14,7 @@
     "triangles": 196940,
     "cost": 2.3,
     "made": "2026-11-20",
-    "built": "2026-11-25"
+    "built": "2026-11-27"
   },
   "rig": {
     "bones": 0,
@@ -69,19 +69,19 @@
     {
       "file": "lod0.glb",
       "triangles": 196940,
-      "megabytes": 13.26,
+      "megabytes": 13.32,
       "texture": 4096
     },
     {
       "file": "lod1.glb",
       "triangles": 19982,
-      "megabytes": 1.95,
+      "megabytes": 2.02,
       "texture": 1024
     },
     {
       "file": "lod2.glb",
       "triangles": 5994,
-      "megabytes": 1.05,
+      "megabytes": 1.11,
       "texture": 512
     }
   ]

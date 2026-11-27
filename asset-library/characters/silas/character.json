@@ -16,6 +16,7 @@
   "maker": "hi3d",
   "face": "close",
   "gloss": 0.5,
+  "cloak": true,
   "borrowed": {
     "Idle": "ual1:Idle_Loop",
     "Walk": "ual1:Walk_Loop",
