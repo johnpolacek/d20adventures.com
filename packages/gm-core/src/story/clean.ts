@@ -23,14 +23,12 @@ export interface StoryScene {
 
 const QUOTE = /["“”]([^"“”]+)["“”]/g
 const SAID_ONLY = /^["“][^"“”]+["”]$/
-const QUOTED = /["“][^"“”]+["”]/
 // What is left of a sentence once its quote is taken out, when it only said who spoke ("she says.", ", Wollandora
 // replies,").
 const TAG_ONLY =
   /^[\s,.:]*(?:(?:he|she|they|it|[A-Z][\w'-]*(?:\s[A-Z][\w'-]*)?)\s+)?(?:says|said|asks|asked|replies|replied|whispers|murmurs|growls|calls|shouts|adds|answers|mutters|snaps|warns|continues)(?:\s+(?:softly|quietly|firmly|gently|again|coldly|calmly))?[\s,.:]*$/i
 
 const lower = (s: string) => s.trim().toLowerCase()
-const literal = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 // What a beat says once its quotes are taken out, without the bare speech tags they leave behind.
 const unspoken = (text: string) =>
@@ -42,12 +40,6 @@ const unspoken = (text: string) =>
     .replace(/\s+([,.!?])/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim()
-
-// The one listed character a text names, by full or first name, when it names exactly one.
-function soleNamed(scene: StoryScene, text: string): StoryCast | undefined {
-  const named = scene.cast.filter((c) => [c.name, c.name.split(/\s+/)[0]].some((n) => n.length > 2 && new RegExp(`\\b${literal(n)}\\b`).test(text)))
-  return named.length === 1 ? named[0] : undefined
-}
 
 export function findCharacter(scene: StoryScene, value: string | undefined): StoryCast | undefined {
   if (!value?.trim()) return undefined
@@ -136,11 +128,9 @@ export function cleanStory(output: StoryOutput, scene: StoryScene, by: StoryBy):
       said(text)
       continue
     }
-    // Words in a narration that names one listed character, and no one else, are that character's lines.
-    const speaker = QUOTED.test(text) ? soleNamed(scene, text.replace(QUOTE, " ")) : undefined
-    const rest = speaker && maySpeak(speaker, by) ? unspoken(text) : text
-    if (rest && /\w/.test(rest)) beats.push({ kind: "narration", by, text: rest, ...(place ? { place } : {}), ...(out.sound ? { sound: out.sound } : {}) })
-    if (speaker && rest !== text) for (const m of text.matchAll(QUOTE)) line(speaker, m[1])
+    // Quoted words in a narration stay in it. They were once given to the one character the narration named, and
+    // "Kara hears the guard shout \"Halt!\"" put the guard's word in Kara's mouth. A speaker is the line beat's to say.
+    if (/\w/.test(text)) beats.push({ kind: "narration", by, text, ...(place ? { place } : {}), ...(out.sound ? { sound: out.sound } : {}) })
   }
   return beats
 }

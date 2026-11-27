@@ -14,7 +14,7 @@ const ALLOWED: Record<string, { count: number; why: string }> = {
   "services/npc-turn-generation-service.ts": { count: 1, why: "splits the story text into paragraphs" },
   "services/roll-requirement-service.ts": { count: 4, why: "menu punctuation, a choice id; the target fallback when the model leaves it out" },
   "story/authored.ts": { count: 13, why: "parses the adventure markdown's paragraph labels" },
-  "story/clean.ts": { count: 19, why: "quote marks and spacing in beats; debt: soleNamed gives quoted words to a name in the narration" },
+  "story/clean.ts": { count: 15, why: "quote marks, speech tags and spacing in beats" },
   "story/knowledge.ts": { count: 7, why: "fact ids the game writes, and slugs" },
   "story/names.ts": { count: 3, why: "debt: a hero's name heard in a spoken line, which wants a `names` field on line beats" },
   "story/prompt.ts": { count: 5, why: "pronouns and short names from authored fields" },
