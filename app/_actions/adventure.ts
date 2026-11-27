@@ -128,7 +128,6 @@ export async function getAdventuresForUser() {
 
   // Fetch all adventures for this user (all statuses)
   const allStatuses: ("active" | "waitingForPlayers" | "completed")[] = ["active", "waitingForPlayers", "completed"]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let adventures: any[] = []
   for (const status of allStatuses) {
     const result = await convex.query(api.adventure.getAdventuresByPlayer, {

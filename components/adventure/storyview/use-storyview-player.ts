@@ -186,7 +186,6 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
       clearTimers()
       stopAudio()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, turnId])
 
   const currentSlide = slides[slideIndex] ?? null
@@ -251,7 +250,6 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
       audio.onerror = null
       audio.pause()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, currentSlide, segmentIndex, advance])
 
   const cycleSpeed = useCallback(() => {

@@ -23,7 +23,7 @@ const BONES = [
     [`shin${s}`, `foot${s}`],
     [`foot${s}`, `toe${s}`],
   ]),
-] // prettier-ignore
+]
 const file = `${dir}/apose-front.png`
 const { width, height } = await sharp(file).metadata()
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">

@@ -68,7 +68,6 @@ export default function StoryviewOverlay({
     if (player.status === "ready" && !player.playing && !player.finished && player.slideIndex === 0 && player.segmentIndex === 0) {
       player.play()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player.status])
 
   const newTurnAvailable = currentTurn && currentTurn.id !== snapshot.turnId

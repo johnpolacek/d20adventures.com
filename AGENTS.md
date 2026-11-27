@@ -50,7 +50,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - A push to `main` does not deploy the site. `pnpm deploy:site` sends what `origin/main` holds to production, since the Hobby plan allows 100 deploys a day. Convex functions reach production only by `pnpm convex:deploy`. Never edit `convex/_generated`, which `npx convex codegen` writes.
 - Auto mode blocks `pnpm convex:deploy`, `pnpm deploy:site`, `vercel env` and `pnpm assets:sync`. Ask John to run them with `!`. Ask for `! pnpm convex:deploy --yes`: the `!` shell cannot answer Convex's prompt to push to production. It also blocks `pnpm desktop:release`, paid or destructive asset runs (`assets:pilot --pay`, `assets:archive`), `aws s3`, force pushes, and `git checkout` or `git restore` on files you did not change. Ask John instead of trying another way.
 - `proxy.ts` is the Clerk middleware.
-- There is no `wiki/`, `tailwind.config.ts`, ESLint, Prettier or Biome. Never run them through `npx`. Match the formatting of the file you edit.
+- No linter or formatter is set up. Don't add one or run one through `npx`. Match the formatting of the file you edit.
 - Scratchpad scripts cannot resolve `@d20/*` imports, or any other package such as `playwright` or `three`. Import a `@d20` package's source file by absolute path. For others, put the script in the repo root and delete it after. Import Playwright from `@playwright/test`, since plain `playwright` is not installed.
 - When root `tsc` reports errors in `.next/types`, they name pages that no longer exist. Delete `.next/types` and run it again.
 - Pull with `git pull --rebase --autostash`. Plain `--rebase` fails on unstaged changes.

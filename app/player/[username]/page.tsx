@@ -47,9 +47,7 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
   // Fetch adventure plan images for each adventure (cache by planId)
   const planImageCache: Record<string, string> = {}
   for (const adv of adventures) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const planId = (adv as any).planId || (adv as any).adventurePlanId
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const settingId = (adv as any).settingId
     if (planId && settingId && !planImageCache[planId]) {
       try {
@@ -94,7 +92,6 @@ export default async function PlayerProfilePage(props: { params: Promise<{ usern
               </Heading>
               {adventures.length > 0 ? (
                 <div className="flex flex-wrap gap-6 justify-center">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {adventures.map((adv: any, i: number) => (
                     <div key={adv._id} className="enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4" style={{ "--i": Math.min(i, 8) } as CSSProperties}>
                       <div className="bg-black rounded-lg overflow-hidden flex flex-col items-center ring-8 ring-black/30 border border-white/10 pb-6 font-display">

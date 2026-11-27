@@ -29,7 +29,6 @@ export function createGenerateAppearanceBackgroundAction(ports: GmPorts) {
       let attributesText = ""
       if (attributes) {
         attributesText = Object.entries(attributes)
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           .filter(([_, v]) => v !== undefined && v !== "")
           .map(([k, v]) => `${k.charAt(0).toUpperCase() + k.slice(1)}: ${v}`)
           .join(", ")
