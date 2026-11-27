@@ -57,6 +57,7 @@ import { MeshoptSimplifier } from "meshoptimizer"
 import sharp from "sharp"
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js"
 import { dataUri, fal, fetchBuffer } from "../../lab/stage-art/gen"
+import { cloak } from "./cloak"
 import { facing } from "./facing"
 import { measureGaits } from "./gait"
 import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qunit, qup } from "./quat"
@@ -1909,6 +1910,8 @@ interface Brief {
   lit?: { hue: [number, number]; strength: number }
   // False to leave out the bones between arm and trunk, for a figure kept to measure against.
   helpers?: boolean
+  // A cloak or long coat that hangs behind the legs: its back is hung on chains from the hips (cloak.ts).
+  cloak?: boolean
   // The share of its gloss a figure keeps where it is not metal, of 1: 0.5 makes a roughness of 0.6 one of 0.8.
   gloss?: number
   // The model laid again with so many faces by Hyper3D Low Poly before the rig, its textures baked onto the new mesh.
@@ -2599,6 +2602,11 @@ async function rodinHyper(brief: Brief) {
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
   const rolled = four || args.includes("--rolls=off") ? null : rolls(doc, big)
   if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})`)
+  // A cloak's back on chains of its own, swung clear of the legs (cloak.ts). `--cloak=off` leaves it on the legs.
+  if (brief.cloak && !four && !args.includes("--cloak=off")) {
+    const hung = cloak(doc, big)
+    say("cloak", hung ? `${hung.moved} points on ${hung.links} links, swung back ${hung.most.toFixed(0)}° at the most (${hung.where})` : "none found behind the legs")
+  }
   // What the brief says it carries, as rig.py leaves it on its skeleton: "staff:R:2.1".
   const hips = doc
     .getRoot()
