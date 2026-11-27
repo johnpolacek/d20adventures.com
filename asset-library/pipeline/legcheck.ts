@@ -10,6 +10,7 @@
 //   hitch   angular velocity kink or speed dip across the loop seam (ported from patch-gg/cloud-blender-skills loop_check.py)
 //   knee    the most a knee bends the wrong way: behind the line from hip to ankle, while bent
 //   hips    how far the hips rise and fall
+//   and under it, how much of each knee's and ankle's cross-section is left at its thinnest and thickest (pinch.ts)
 // And for each gait, a walk, a sneak, a run or a sprint, the speed it goes at (gait.ts). The game plays a gait at the
 // speed `motion.gaits` in figure.json gives it, and a walk with none at 1.2 metres a second: `slip` is how far a planted
 // foot slides in a step at that speed.
@@ -21,6 +22,7 @@ import { readFile } from "node:fs/promises"
 import { NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
 import { type Gaits, gaitSpeed, plantedSpans } from "./gait"
+import { pinch, pinchLines } from "./pinch"
 import { angle, type Mat, mul, posed, skinPoint } from "./pose"
 import { type Quat, qinv, qmul, qunit } from "./quat"
 
@@ -274,6 +276,9 @@ async function main() {
       `${cm((Math.max(...heights) - Math.min(...heights)) * scale)}`.padEnd(8),
       walk
     )
+    const thin = pinchLines(name, pinch(doc, [clip], ["knee", "ankle"]))
+    console.log(thin.lines.join("\n"))
+    bad.push(...thin.bad)
   }
   console.log(bad.length ? `\n${bad.length} over a limit:\n${bad.map((b) => `  ${b}`).join("\n")}` : "\nNothing over a limit.")
 }

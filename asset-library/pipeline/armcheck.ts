@@ -19,10 +19,14 @@
 //
 // The shoulder is measured as a part of its own: the edges that join the upper arm to the trunk, where a pauldron
 // is pulled out after the arm.
+//
+// Under each clip, how much of each elbow's and wrist's cross-section is left at its thinnest and its thickest
+// (pinch.ts): a wrist that twists thin like a sweet wrapper.
 
 import { readFile } from "node:fs/promises"
 import { type Accessor, type Node, NodeIO } from "@gltf-transform/core"
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
+import { pinch, pinchLines } from "./pinch"
 import { angle, local, type Mat, mul } from "./pose"
 import { reader } from "./retarget"
 
@@ -216,6 +220,9 @@ async function main() {
       )
     }
     for (const line of Object.values(lies)) console.log(`    ${line}`)
+    const thin = pinchLines(clip.getName(), pinch(doc, [clip], ["elbow", "wrist"]))
+    console.log(thin.lines.join("\n"))
+    bad.push(...thin.bad)
   }
   console.log(bad.length ? `\n${bad.length} over a limit:\n${bad.map((b) => `  ${b}`).join("\n")}` : "\nNothing over a limit.")
 }
