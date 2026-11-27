@@ -332,16 +332,8 @@ function pierSet() {
     if (x >= -0.6 || !clearOf(x, zz, 1.4)) continue
     objects.push(rnd() < 0.5 ? { type: "bush", at: [r2(x), 0, r2(zz)], size: r2(rnd(1.0, 2.2)), materials: shrubs } : { type: "fern", at: [r2(x), 0, r2(zz)], size: r2(rnd(0.9, 1.5)) })
   }
-  // Mist in banks down the river and along the hill, and a low sheet over the water. The hill's nearest card stands past
-  // the tug's bow: one abreast of the boat was a flat pale wall to every camera on deck.
-  for (const [x, zz, w, h, layers, spacing] of [
-    [9, -22, 34, 9, 3, 12],
-    [10, -62, 54, 13, 3, 16],
-    [-14, -22, 22, 11, 2, 10],
-    [-16, -48, 30, 13, 2, 14],
-  ])
-    objects.push({ type: "mist", at: [x, -0.8, zz], width: w, height: h, layers, spacing })
-  objects.push({ type: "mist", at: [9, -0.88, -34], width: 30, height: 56, layers: 1, flat: true })
+  // Ground-hugging river mist is handled volumetrically in `atmosphere.fog.ground` rather than flat cards,
+  // so orbiting and elevated cameras never see a flat wall slicing through the river or hillside.
   // Stones and roots along both banks hide the cut where the ground meets the water.
   for (let zz = 40; zz >= -90; zz -= rnd(1.6, 3)) {
     if (zz > -7 && zz < 16) continue
@@ -483,7 +475,12 @@ function pierSet() {
       },
       hemisphere: { sky: "#2f7cb2", ground: "#0b2430", intensity: 0.8 },
       sky: { horizon: "#8ae2f2", mid: "#1f6a98", zenith: "#0a2c4c", gain: 0.95, clouds: 0.06, stars: 0 },
-      fog: { density: 0.03, color: "#3a88ac", start: 18 },
+      fog: {
+        density: 0.022,
+        color: "#204e6e",
+        start: 10,
+        ground: { density: 0.055, level: -1, height: 3.4, color: "#5092b0", start: 8, wisp: 0.72 },
+      },
       glow: "#c2f4f2",
       fill: { color: "#ffffff", intensity: 3.5, distance: 12 },
       lights: [

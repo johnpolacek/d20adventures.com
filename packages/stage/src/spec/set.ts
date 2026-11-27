@@ -354,7 +354,26 @@ export const setSpecSchema = z
         sky: z.object({ horizon: color, mid: color, zenith: color, gain: num(0, 2).default(1), clouds: unit.default(1), stars: unit.default(0), moon: num(0, 10).default(0) }).strict(),
         // `color` sets mist apart from the sky: pale mist glowing between dark trees on a moonlit night.
         // `start` keeps the near ground clear: haze builds only beyond it, in metres, as in a painting's aerial depth.
-        fog: z.object({ density: num(0, 0.05), color: color.optional(), start: num(0, 200).default(0) }).strict(),
+        // `ground` adds a volumetric low-lying mist layer that hugs `level` (e.g. a river) and thins with `height`,
+        // broken into drifting pockets by 3D world-space noise — natural from every camera angle, with no flat cards.
+        fog: z
+          .object({
+            density: num(0, 0.05),
+            color: color.optional(),
+            start: num(0, 200).default(0),
+            ground: z
+              .object({
+                density: num(0, 0.25),
+                level: num(-20, 20).default(0),
+                height: size(40).default(3.5),
+                color: color.optional(),
+                start: num(0, 200).default(6),
+                wisp: unit.default(0.65),
+              })
+              .strict()
+              .optional(),
+          })
+          .strict(),
         // The sky's glow around the sun (or moon) and the haze toward it. Warm sunlight when unset.
         glow: color.optional(),
         // A soft light that travels with the camera, keeping nearby characters readable at night (a game convention):

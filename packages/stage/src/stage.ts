@@ -324,7 +324,14 @@ export class Stage {
     // Fog takes the horizon as the sky draws it, dimmed by its gain, so distant trees fade into the night sky, unless
     // the set gives the mist its own colour.
     this.shared.fogStart.value = A.fog.start
-    this.scene.fog = new THREE.FogExp2(A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain), A.fog.density)
+    const fogColor = A.fog.color ? new THREE.Color(A.fog.color) : horizon.clone().multiplyScalar(A.sky.gain)
+    this.scene.fog = new THREE.FogExp2(fogColor, A.fog.density)
+    if (A.fog.ground) {
+      const g = A.fog.ground
+      this.shared.groundMist.value.set(g.density, g.level, g.height, g.start)
+      this.shared.groundMistColor.value.set(g.color ?? fogColor)
+      this.shared.groundMistWisp.value = g.wisp
+    }
     this.camera = new THREE.PerspectiveCamera(58, 1, set.camera.near, set.camera.far)
     this.scene.add(this.world)
 
@@ -367,14 +374,15 @@ export class Stage {
     const skyColors = { horizon, mid: new THREE.Color(A.sky.mid), zenith: new THREE.Color(A.sky.zenith) }
     const glow = A.glow ? new THREE.Color(A.glow) : undefined
     if (glow) this.shared.sunTint.value.set(glow.r, glow.g, glow.b).multiplyScalar(1.45)
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
+    const skyOpts = { ...A.sky, glow, fogColor, fogDensity: A.fog.density }
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(Math.min(set.camera.far * 0.62, 1500), 48, 24), skyMaterial(this.shared, skyColors, skyOpts))
     this.sky.renderOrder = -1
     this.sky.frustumCulled = false
     this.scene.add(this.sky)
     if (set.painted) this.painted = new Painted(renderer, set.painted, this.shared, (this.sky.geometry as THREE.SphereGeometry).parameters.radius)
     const pmrem = new THREE.PMREMGenerator(renderer)
     const envScene = new THREE.Scene()
-    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, { ...A.sky, glow }))
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(100, 32, 16), skyMaterial(this.shared, skyColors, skyOpts))
     envScene.add(envSky)
     this.envTexture = pmrem.fromScene(envScene, 0.04).texture
     envSky.geometry.dispose()

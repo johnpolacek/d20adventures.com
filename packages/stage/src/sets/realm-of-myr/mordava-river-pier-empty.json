@@ -6,7 +6,11 @@
   "locationId": "mordava-river-pier",
   "title": "The pier after the tug has gone",
   "seed": 4212,
-  "ambience": ["river", "night", "wind"],
+  "ambience": [
+    "river",
+    "night",
+    "wind"
+  ],
   "atmosphere": {
     "sun": {
       "direction": [
@@ -51,9 +55,17 @@
       "stars": 0
     },
     "fog": {
-      "density": 0.03,
-      "color": "#3a88ac",
-      "start": 18
+      "density": 0.02,
+      "color": "#286080",
+      "start": 12,
+      "ground": {
+        "density": 0.055,
+        "level": -1,
+        "height": 3.4,
+        "color": "#5ea2be",
+        "start": 8,
+        "wisp": 0.72
+      }
     },
     "glow": "#c2f4f2",
     "fill": {
@@ -23073,66 +23085,6 @@
         "leaves": "shrub",
         "leavesDark": "shrubDark"
       }
-    },
-    {
-      "type": "mist",
-      "at": [
-        9,
-        -0.8,
-        -22
-      ],
-      "width": 34,
-      "height": 9,
-      "layers": 3,
-      "spacing": 12
-    },
-    {
-      "type": "mist",
-      "at": [
-        10,
-        -0.8,
-        -62
-      ],
-      "width": 54,
-      "height": 13,
-      "layers": 3,
-      "spacing": 16
-    },
-    {
-      "type": "mist",
-      "at": [
-        -14,
-        -0.8,
-        -22
-      ],
-      "width": 22,
-      "height": 11,
-      "layers": 2,
-      "spacing": 10
-    },
-    {
-      "type": "mist",
-      "at": [
-        -16,
-        -0.8,
-        -48
-      ],
-      "width": 30,
-      "height": 13,
-      "layers": 2,
-      "spacing": 14
-    },
-    {
-      "type": "mist",
-      "at": [
-        9,
-        -0.88,
-        -34
-      ],
-      "width": 30,
-      "height": 56,
-      "layers": 1,
-      "flat": true
     },
     {
       "type": "rock",

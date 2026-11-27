@@ -9,7 +9,11 @@ export interface SkyColors {
 
 // A painted sky: deep cerulean overhead, pale haze at the horizon, and heaped cumulus lit from the sun's side with cool
 // shadowed undersides. The horizon colour is also the fog colour, so the land dissolves seamlessly into the sky.
-export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 1, clouds = 1, stars = 0, moon = 0, glow = new THREE.Color(1, 0.78, 0.5) } = {}) {
+export function skyMaterial(
+  shared: SharedUniforms,
+  colors: SkyColors,
+  { gain = 1, clouds = 1, stars = 0, moon = 0, glow = new THREE.Color(1, 0.78, 0.5), fogColor, fogDensity = 0 }: { gain?: number; clouds?: number; stars?: number; moon?: number; glow?: THREE.Color; fogColor?: THREE.Color; fogDensity?: number } = {}
+) {
   return new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
@@ -17,6 +21,11 @@ export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 
     uniforms: {
       uTime: shared.time,
       uSun: shared.sun,
+      uSunTint: shared.sunTint,
+      uGroundMist: shared.groundMist,
+      uGroundMistColor: shared.groundMistColor,
+      uFogColor: { value: fogColor ?? colors.horizon.clone().multiplyScalar(gain) },
+      uFogDensity: { value: fogDensity },
       uHorizon: { value: colors.horizon },
       uZenith: { value: colors.zenith },
       uMid: { value: colors.mid },
@@ -27,7 +36,7 @@ export function skyMaterial(shared: SharedUniforms, colors: SkyColors, { gain = 
       uGlow: { value: glow },
     },
     vertexShader: "varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }",
-    fragmentShader: `varying vec3 vDir; uniform float uTime, uGain, uClouds, uStars, uMoon; uniform vec3 uHorizon, uZenith, uMid, uSun, uGlow;
+    fragmentShader: `varying vec3 vDir; uniform float uTime, uGain, uClouds, uStars, uMoon, uFogDensity; uniform vec3 uHorizon, uZenith, uMid, uSun, uSunTint, uGlow, uFogColor, uGroundMistColor; uniform vec4 uGroundMist;
 ${NOISE}
 float cfbm(vec2 p){ float s = 0.0, a = .5; for (int i = 0; i < 6; i++){ s += a * mnoise(p); p = p * 2.03 + vec2(4.1, 1.3); a *= .5; } return s; }
 // Heaped cumulus: broad low-frequency masses with billowed, eroded edges.
@@ -73,7 +82,24 @@ void main(){
   c += vec3(.8, .86, 1.0) * step(.9982, h) * (.4 + .6 * fract(h * 37.0)) * smoothstep(.04, .25, y) * uStars / max(uGain, .05);
  }
  c = mix(c, uHorizon * .92, smoothstep(0.0, -.08, d.y));
- gl_FragColor = vec4(c * uGain, 1.0);
+ vec3 outC = c * uGain;
+ if (uGroundMist.x > 0.0) {
+  // Match the river/land horizon haze so distant water dissolves seamlessly into the mist with no hard horizon line.
+  float skyD = 420.0;
+  float gmH = max(uGroundMist.z, 0.25);
+  float ya = max((cameraPosition.y - uGroundMist.y) * 0.35, 0.0);
+  float dy = y * skyD / gmH;
+  float gOpt = uGroundMist.x * skyD * exp(-ya / gmH) * (dy > 1e-3 ? (1.0 - exp(-dy)) / dy : 1.0);
+  float k = 0.0085;
+  float ry = y * skyD * k;
+  float bOpt = uFogDensity * exp(-k * max(cameraPosition.y, 0.0)) * skyD * (ry > 1e-4 ? (1.0 - exp(-ry)) / ry : 1.0);
+  vec3 baseHaze = mix(uFogColor, uFogColor * uSunTint, pow(s, 5.0) * .75);
+  vec3 mistCol = mix(uGroundMistColor, uGroundMistColor * uSunTint, pow(s, 4.0) * .55);
+  vec3 horizonHaze = mix(baseHaze, mistCol, gOpt / max(bOpt + gOpt, 1e-5));
+  float mistBand = (1.0 - exp(-gOpt)) * smoothstep(0.24, 0.0, y);
+  outC = mix(outC, horizonHaze, mistBand);
+ }
+ gl_FragColor = vec4(outC, 1.0);
 }`,
   })
 }

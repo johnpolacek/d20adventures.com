@@ -6,7 +6,11 @@
   "locationId": "mordava-river-pier",
   "title": "A quiet pier on the Mordava",
   "seed": 4212,
-  "ambience": ["river", "night", "wind"],
+  "ambience": [
+    "river",
+    "night",
+    "wind"
+  ],
   "atmosphere": {
     "sun": {
       "direction": [
@@ -51,9 +55,17 @@
       "stars": 0
     },
     "fog": {
-      "density": 0.042,
-      "color": "#2f7298",
-      "start": 14
+      "density": 0.022,
+      "color": "#204e6e",
+      "start": 10,
+      "ground": {
+        "density": 0.055,
+        "level": -1,
+        "height": 3.4,
+        "color": "#5092b0",
+        "start": 8,
+        "wisp": 0.72
+      }
     },
     "glow": "#4c7a92",
     "fill": {
@@ -243,7 +255,10 @@
           "distance": 3.5
         }
       ],
-      "ambience": ["hull", "night"]
+      "ambience": [
+        "hull",
+        "night"
+      ]
     }
   ],
   "camera": {
@@ -25118,66 +25133,6 @@
       }
     },
     {
-      "type": "mist",
-      "at": [
-        9,
-        -0.8,
-        -22
-      ],
-      "width": 34,
-      "height": 9,
-      "layers": 3,
-      "spacing": 12
-    },
-    {
-      "type": "mist",
-      "at": [
-        10,
-        -0.8,
-        -62
-      ],
-      "width": 54,
-      "height": 13,
-      "layers": 3,
-      "spacing": 16
-    },
-    {
-      "type": "mist",
-      "at": [
-        -14,
-        -0.8,
-        -22
-      ],
-      "width": 22,
-      "height": 11,
-      "layers": 2,
-      "spacing": 10
-    },
-    {
-      "type": "mist",
-      "at": [
-        -16,
-        -0.8,
-        -48
-      ],
-      "width": 30,
-      "height": 13,
-      "layers": 2,
-      "spacing": 14
-    },
-    {
-      "type": "mist",
-      "at": [
-        9,
-        -0.88,
-        -34
-      ],
-      "width": 30,
-      "height": 56,
-      "layers": 1,
-      "flat": true
-    },
-    {
       "type": "rock",
       "at": [
         -1.8,
@@ -28126,7 +28081,14 @@
         -8.6
       ],
       "label": "the tug's stern deck, behind the aft cabin"
-    }, "windows": {"at": [-0.6, 0.5], "label": "the bank below the main cabin's open windows"},
+    },
+    "windows": {
+      "at": [
+        -0.6,
+        0.5
+      ],
+      "label": "the bank below the main cabin's open windows"
+    },
     "reeds": {
       "at": [
         -1.2,
