@@ -12,6 +12,8 @@ import { build } from "esbuild"
 //   pnpm --dir apps/desktop playtest:sweep --score <label>
 //   pnpm --dir apps/desktop playtest:sweep --compare <before scorecard.json> <after scorecard.json>
 // Each sweep writes scorecard.json beside its runs, under .logs/sweeps/<label>.
+// Read the load row first. Where the pacer's time differs between sweeps, or between runs of one, the machine was busier
+// and every call is slower: compare only the runs whose load agrees.
 
 const here = fileURLToPath(new URL(".", import.meta.url))
 const argv = process.argv.slice(2)
@@ -48,6 +50,9 @@ type Card = {
   errors: number
   minutes: number
   prompts: Record<string, Prompt>
+  // The machine's load, read off one prompt no change here touches: the pacer's average time in each run of the plans.
+  // A sweep on a busy machine is slower in every call, so two sweeps compare only where these agree.
+  load: number[]
   each: { plan: string; run: number; ended: string; minutes?: number; dead?: number; repeats: string[]; errors: string[] }[]
 }
 
@@ -76,6 +81,18 @@ function promptsOf(file: string, into: Record<string, Prompt>) {
   }
 }
 
+// The pacer's call times in a run's GM trace: a short prompt with a short answer, the same in every sweep.
+const PACER = "You keep the pace"
+function paceOf(file: string): number[] {
+  if (!existsSync(file)) return []
+  return readFileSync(file, "utf8")
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line) as { ms: number; head: string })
+    .filter((t) => t.head.trim().startsWith(PACER))
+    .map((t) => t.ms)
+}
+
 function recorded(file: string) {
   if (!existsSync(file)) return { facts: 0, threads: 0 }
   const db = new DatabaseSync(file, { readOnly: true })
@@ -89,7 +106,11 @@ function recorded(file: string) {
 }
 
 function score(label: string, out: string, plans: string[], runs: number): Card {
-  const card: Card = { label, runs, plans, ended: {}, calls: {}, deadContinues: 0, repeats: 0, rulings: 0, facts: 0, threads: 0, errors: 0, minutes: 0, prompts: {}, each: [] }
+  const card: Card = { label, runs, plans, ended: {}, calls: {}, deadContinues: 0, repeats: 0, rulings: 0, facts: 0, threads: 0, errors: 0, minutes: 0, prompts: {}, load: [], each: [] }
+  for (let r = 1; r <= runs; r++) {
+    const paced = plans.flatMap((plan) => paceOf(join(out, `run${r}`, plan, "gm-trace.jsonl")))
+    card.load.push(paced.length ? Math.round(paced.reduce((a, b) => a + b, 0) / paced.length) : 0)
+  }
   for (const plan of plans)
     for (let r = 1; r <= runs; r++) {
       const dir = join(out, `run${r}`, plan)
@@ -120,6 +141,7 @@ function table(cards: Card[]) {
   row("runs", (c) => `${c.plans.length}×${c.runs}`)
   row("ended", (c) => Object.entries(c.ended).map(([k, v]) => `${k} ${v}`).join(", "))
   row("minutes played", (c) => String(c.minutes))
+  row("load: pacer by run", (c) => (c.load?.length ? c.load.map(sec).join(" / ") : "-"))
   row("dead continues", (c) => String(c.deadContinues))
   row("REPEAT lines", (c) => String(c.repeats))
   row("rulings", (c) => String(c.rulings))
