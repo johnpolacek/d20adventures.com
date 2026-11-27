@@ -56,6 +56,7 @@
     "assets:pilot": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/pilot.ts",
     "assets:arms": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/armcheck.ts",
     "assets:legs": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/legcheck.ts",
+    "assets:weights": "tsx asset-library/pipeline/weightcheck.ts",
     "assets:parts": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/parts.ts",
     "assets:sync": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/sync.ts",
     "assets:archive": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx asset-library/pipeline/archive.ts",
