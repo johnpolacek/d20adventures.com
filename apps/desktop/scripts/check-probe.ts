@@ -19,6 +19,7 @@ import { isAttackRoll, isCastRoll } from "@d20/gm-core/validations/roll-requirem
 import { encounterFloor } from "../runtime/floor"
 import { localLlm } from "../runtime/llm"
 import { loadPack } from "./scene-judge"
+import { PROBE_TRACE, probeCost, usageGate } from "./usage-gate"
 
 // Shows that the game master picks sensible checks. Each scene in check-probes.json is one action by a premade hero in
 // a real encounter, with the picks that are right for it written beside it: the check off the menu, the target from
@@ -308,6 +309,11 @@ async function run(probe: Probe): Promise<Graded> {
     model.close()
   }
 }
+
+// Each probe is one call. Its tokens are traced, so the next run can project from them.
+const each = probeCost()
+await usageGate(`check probes: ${probes.length} of ${all.length}${only ? "" : ". Pass --only id,id to run the ones a change touches"}`, each ? { calls: probes.length, fresh: each.fresh * probes.length, cached: each.cached * probes.length } : undefined)
+process.env.D20_GM_TRACE ??= PROBE_TRACE
 
 const log = console.log
 // The core logs every prompt and pick. Only the grades are wanted here, unless PROBE_LOG is set.

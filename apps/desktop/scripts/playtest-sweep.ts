@@ -4,6 +4,7 @@ import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { DatabaseSync } from "node:sqlite"
 import { build } from "esbuild"
+import { planCosts, usageGate } from "./usage-gate"
 
 // The playtest scorecard: every plan, played some times each, summed into one table. One run of a plan is noisy, as the
 // path drifts with the GM, so a change is judged on the sum. The code is bundled when the sweep starts, so the source
@@ -188,6 +189,14 @@ async function main() {
   for (const p of plans) if (!all.includes(p)) throw new Error(`No plan ${p}. Plans: ${all.join(", ")}`)
   const runs = Number(opt("--runs") ?? 2)
   const jobs = Math.max(1, Math.min(4, Number(opt("--jobs") ?? 4)))
+  const costs = planCosts(plans)
+  const known = plans.filter((plan) => costs.get(plan))
+  const sum = (key: "calls" | "fresh" | "cached") => runs * known.reduce((total, plan) => total + costs.get(plan)![key], 0)
+  await usageGate(
+    `sweep: ${plans.length} plans × ${runs} runs = ${plans.length * runs} playthroughs`,
+    known.length ? { calls: sum("calls"), fresh: sum("fresh"), cached: sum("cached") } : undefined,
+    plans.filter((plan) => !costs.get(plan))
+  )
   const label = opt("--label") ?? new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")
   const out = resolve(here, "../.logs/sweeps", label)
   mkdirSync(out, { recursive: true })

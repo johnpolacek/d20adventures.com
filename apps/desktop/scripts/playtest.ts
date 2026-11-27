@@ -10,6 +10,7 @@ import { type GameCommand, game, type Packs, transitionsOf } from "../runtime/ga
 import { localLlm } from "../runtime/llm"
 import { LocalStore } from "../runtime/store"
 import { loadPack } from "./scene-judge"
+import { planCosts, usageGate } from "./usage-gate"
 
 // Plays a whole adventure headless on a scripted path: what the hero says in each encounter and the d20s they roll, from
 // playtest-plans.json. In process, on the current prompts and content. Each run writes a transcript (log.txt) and a
@@ -257,6 +258,10 @@ async function main() {
   const out = opt("--out") ? resolve(opt("--out")!) : mkdtempSync(join(tmpdir(), "d20-playtest-"))
   if (argv.includes("--single")) return single(names[0], out)
   const jobs = Math.max(1, Math.min(4, Number(opt("--jobs") ?? 2)))
+  const costs = planCosts(names)
+  const known = names.filter((name) => costs.get(name))
+  const sum = (key: "calls" | "fresh" | "cached") => known.reduce((total, name) => total + costs.get(name)![key], 0)
+  await usageGate(`playtest: ${names.length} playthroughs`, known.length ? { calls: sum("calls"), fresh: sum("fresh"), cached: sum("cached") } : undefined, names.filter((name) => !costs.get(name)))
   console.log(`playtest: ${names.join(", ")} into ${out}`)
   const queue = [...names]
   const extra = opt("--plans") ? ["--plans", resolve(opt("--plans")!)] : []

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process"
-import { accessSync, constants, readFileSync, realpathSync } from "node:fs"
+import { accessSync, constants, readFileSync, realpathSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { delimiter, dirname, isAbsolute, join } from "node:path"
 import { createInterface } from "node:readline"
@@ -205,6 +205,14 @@ export class ClaudeSession {
         return
       }
       this.lockdownVerified = true
+    }
+    // The plan's usage window, which Claude reports with each call. A playtest or a probe run reads it to say what is
+    // left before it starts (scripts/usage-gate.ts). Written only where D20_LIMIT_FILE asks for it.
+    if (event.type === "rate_limit_event" && event.rate_limit_info && process.env.D20_LIMIT_FILE) {
+      try {
+        writeFileSync(process.env.D20_LIMIT_FILE, `${JSON.stringify({ at: Date.now(), ...event.rate_limit_info })}\n`)
+      } catch {}
+      return
     }
     if (event.type === "control_response" && this.pending) {
       const pending = this.pending

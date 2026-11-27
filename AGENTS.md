@@ -31,6 +31,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Character and adventure types: `packages/gm-core/src/types`. `types/*.ts` at the root only re-export them.
 - Desktop screens: `apps/desktop/src/pages.tsx` for saved and hosted games, `play.tsx` and `stage-play.tsx` for play. The game itself runs in `apps/desktop/runtime/game.ts`.
 - How the GM rules on a check, probed against the model: `apps/desktop/scripts/check-probe.ts` with cases in `check-probes.json`. Scenes: `scene-probe.ts` beside it. A whole adventure on scripted paths, with timings, the hero's health and repeated NPC lines: `pnpm --dir apps/desktop playtest <plan>`, plans in `playtest-plans.json`. Every plan twice, summed into one scorecard to judge a change by: `pnpm --dir apps/desktop playtest:sweep`, and `--compare` on two scorecards. Watched in the app: `record:playthrough` with `VITE_D20_TRACE=1`, which logs each shot, who is in frame and each stage's load wait to `apps/desktop/.logs/window.log`.
+- Probes and playtests spend the person's Claude usage. Each one first prints its size, the tokens projected from past traces, and the usage window the CLI last reported (`apps/desktop/scripts/usage-gate.ts`), then asks. Without a terminal it stops there: show the summary, and run again with `--yes` once they agree. Run the plans and probes a change touches (`--only id,id`, `--runs 1`), not all of them.
 - The asset library is `asset-library/` at the repo root, not under `public/`.
 
 ## Where New Code Goes
