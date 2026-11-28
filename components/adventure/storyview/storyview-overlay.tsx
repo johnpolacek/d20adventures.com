@@ -62,14 +62,6 @@ export default function StoryviewOverlay({
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [close])
 
-  // Start playback automatically once audio is ready (the click that opened the
-  // overlay is the user gesture that unlocks audio).
-  useEffect(() => {
-    if (player.status === "ready" && !player.playing && !player.finished && player.slideIndex === 0 && player.segmentIndex === 0) {
-      player.play()
-    }
-  }, [player.status])
-
   const newTurnAvailable = currentTurn && currentTurn.id !== snapshot.turnId
 
   const getSpeaker = (speakerId: string) => {

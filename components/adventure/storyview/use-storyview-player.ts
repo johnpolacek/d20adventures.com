@@ -2,8 +2,9 @@
 
 import type { FeatureBeat, RollBeat, StoryBeat } from "@d20/gm-core/story/beats"
 import { storyParagraphs } from "@d20/gm-core/story/render"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { StoryviewAutoStatus, TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
+import type { TurnAudioManifestResponse, TurnAudioSegmentWithUrl } from "@/types/turn-audio"
+import { MAX_POLL_ATTEMPTS, storyviewReducer } from "./storyview-machine"
 
 const GENERATION_POLL_MS = 2000
 const DICE_SLIDE_DWELL_MS = 4000
@@ -33,20 +34,14 @@ interface UseStoryviewPlayerArgs {
 }
 
 export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStoryviewPlayerArgs) {
-  const [status, setStatus] = useState<StoryviewStatus>("loading")
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [storyviewAuto, setStoryviewAuto] = useState<StoryviewAutoStatus | undefined>(undefined)
-  const [segments, setSegments] = useState<TurnAudioSegmentWithUrl[]>([])
-  const [slideIndex, setSlideIndex] = useState(0)
-  const [segmentIndex, setSegmentIndex] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [finished, setFinished] = useState(false)
+  const [state, dispatch] = useReducer(storyviewReducer, { kind: "closed" })
   const [speed, setSpeed] = useState(loadStoredSpeed)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const diceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const abortedRef = useRef(false)
+  const onGeneratedRef = useRef(onGenerated)
+  onGeneratedRef.current = onGenerated
+
+  const segments = state.kind === "ready" ? state.segments : []
 
   const slides = useMemo<StoryviewSlide[]>(() => {
     if (segments.length === 0) return []
@@ -75,146 +70,156 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
     return result
   }, [story, segments])
 
-  const clearTimers = useCallback(() => {
-    if (diceTimerRef.current) {
-      clearTimeout(diceTimerRef.current)
-      diceTimerRef.current = null
-    }
-    if (pollTimerRef.current) {
-      clearTimeout(pollTimerRef.current)
-      pollTimerRef.current = null
-    }
-  }, [])
+  const slideSegmentCounts = useMemo(() => slides.map((s) => (s.type === "paragraph" ? s.segments.length : 0)), [slides])
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
+      audioRef.current.onended = null
+      audioRef.current.onerror = null
       audioRef.current.pause()
       audioRef.current.removeAttribute("src")
     }
   }, [])
 
-  const applyManifest = useCallback((manifest: TurnAudioManifestResponse) => {
-    if (manifest.storyviewAuto) setStoryviewAuto(manifest.storyviewAuto)
-    if (manifest.status === "ready" && manifest.segments && manifest.segments.length > 0) {
-      setSegments(manifest.segments)
-      setStatus("ready")
-      return true
-    }
-    return false
-  }, [])
-
-  // Fetch (and generate if needed) the manifest while the overlay is open.
+  // Isolated manifest fetch / bounded generation poll effect (owns its own AbortController + poll timer).
   useEffect(() => {
-    if (!open) return
-    abortedRef.current = false
-    setStatus("loading")
-    setErrorMessage(null)
-    setSegments([])
-    setSlideIndex(0)
-    setSegmentIndex(0)
-    setPlaying(false)
-    setFinished(false)
+    if (!open) {
+      dispatch({ type: "CLOSE" })
+      stopAudio()
+      return
+    }
+
+    const controller = new AbortController()
+    let pollTimer: ReturnType<typeof setTimeout> | null = null
+    let attempts = 0
+
+    const clearPoll = () => {
+      if (pollTimer !== null) {
+        clearTimeout(pollTimer)
+        pollTimer = null
+      }
+    }
+
+    dispatch({ type: "OPEN" })
+
+    const applyReady = (manifest: TurnAudioManifestResponse): boolean => {
+      if (manifest.status === "ready" && manifest.segments && manifest.segments.length > 0) {
+        dispatch({ type: "MANIFEST_READY", segments: manifest.segments, storyviewAuto: manifest.storyviewAuto })
+        return true
+      }
+      return false
+    }
+
+    const schedulePoll = () => {
+      clearPoll()
+      if (controller.signal.aborted) return
+      pollTimer = setTimeout(poll, GENERATION_POLL_MS)
+    }
 
     const poll = async () => {
-      if (abortedRef.current) return
+      pollTimer = null
+      if (controller.signal.aborted) return
       try {
-        const response = await fetch(`/api/adventure/turn-audio/${turnId}`)
+        const response = await fetch(`/api/adventure/turn-audio/${turnId}`, { signal: controller.signal })
         const manifest = (await response.json()) as TurnAudioManifestResponse
-        if (abortedRef.current) return
-        if (applyManifest(manifest)) return
+        if (controller.signal.aborted) return
+        if (applyReady(manifest)) return
         if (manifest.status === "error") {
-          setStatus("error")
-          setErrorMessage(manifest.error ?? "Narration generation failed.")
+          dispatch({
+            type: "FAILED",
+            code: "error",
+            message: manifest.error ?? "Narration generation failed.",
+            storyviewAuto: manifest.storyviewAuto,
+          })
           return
         }
-        pollTimerRef.current = setTimeout(poll, GENERATION_POLL_MS)
+        attempts++
+        dispatch({ type: "POLL_TICK", storyviewAuto: manifest.storyviewAuto })
+        if (attempts < MAX_POLL_ATTEMPTS) schedulePoll()
       } catch {
-        if (!abortedRef.current) {
-          setStatus("error")
-          setErrorMessage("Could not load narration.")
+        if (!controller.signal.aborted) {
+          dispatch({ type: "FAILED", code: "error", message: "Could not load narration." })
         }
       }
     }
 
     const start = async () => {
       try {
-        const response = await fetch(`/api/adventure/turn-audio/${turnId}`)
+        const response = await fetch(`/api/adventure/turn-audio/${turnId}`, { signal: controller.signal })
         const manifest = (await response.json()) as TurnAudioManifestResponse
-        if (abortedRef.current) return
+        if (controller.signal.aborted) return
 
-        if (!manifest.stale && applyManifest(manifest)) return
+        if (!manifest.stale && applyReady(manifest)) return
         if (!manifest.stale && manifest.status === "generating") {
-          setStatus("generating")
-          pollTimerRef.current = setTimeout(poll, GENERATION_POLL_MS)
+          dispatch({ type: "GENERATING", storyviewAuto: manifest.storyviewAuto })
+          schedulePoll()
           return
         }
 
         // No audio yet (or narrative changed since it was made): generate.
-        setStatus("generating")
-        const postResponse = await fetch(`/api/adventure/turn-audio/${turnId}`, { method: "POST" })
+        dispatch({ type: "GENERATING", storyviewAuto: manifest.storyviewAuto })
+        const postResponse = await fetch(`/api/adventure/turn-audio/${turnId}`, { method: "POST", signal: controller.signal })
         const postManifest = (await postResponse.json()) as TurnAudioManifestResponse & { error?: string }
-        if (abortedRef.current) return
+        if (controller.signal.aborted) return
 
         if (postResponse.status === 402) {
-          setStatus("insufficient-tokens")
-          setErrorMessage(postManifest.error ?? "Not enough tokens for narration.")
+          dispatch({
+            type: "FAILED",
+            code: "insufficient-tokens",
+            message: postManifest.error ?? "Not enough tokens for narration.",
+            storyviewAuto: postManifest.storyviewAuto,
+          })
           return
         }
         if (!postResponse.ok) {
-          setStatus("error")
-          setErrorMessage(postManifest.error ?? "Narration generation failed.")
+          dispatch({
+            type: "FAILED",
+            code: "error",
+            message: postManifest.error ?? "Narration generation failed.",
+            storyviewAuto: postManifest.storyviewAuto,
+          })
           return
         }
-        if (applyManifest(postManifest)) {
-          onGenerated?.()
+        if (applyReady(postManifest)) {
+          onGeneratedRef.current?.()
           return
         }
         // Lost the generation claim to another player: poll until ready.
-        pollTimerRef.current = setTimeout(poll, GENERATION_POLL_MS)
+        schedulePoll()
       } catch {
-        if (!abortedRef.current) {
-          setStatus("error")
-          setErrorMessage("Could not load narration.")
+        if (!controller.signal.aborted) {
+          dispatch({ type: "FAILED", code: "error", message: "Could not load narration." })
         }
       }
     }
 
-    start()
+    void start()
 
     return () => {
-      abortedRef.current = true
-      clearTimers()
+      controller.abort()
+      clearPoll()
       stopAudio()
     }
-  }, [open, turnId])
+  }, [open, turnId, stopAudio])
 
+  const slideIndex = state.kind === "ready" ? state.playback.slideIndex : 0
+  const segmentIndex = state.kind === "ready" ? state.playback.segmentIndex : 0
+  const playing = state.kind === "ready" && state.playback.kind === "playing"
+  const finished = state.kind === "ready" && state.playback.kind === "finished"
   const currentSlide = slides[slideIndex] ?? null
 
   const advance = useCallback(() => {
-    const slide = slides[slideIndex]
-    if (!slide) return
-    if (slide.type === "paragraph" && segmentIndex < slide.segments.length - 1) {
-      setSegmentIndex(segmentIndex + 1)
-      return
-    }
-    if (slideIndex < slides.length - 1) {
-      setSlideIndex(slideIndex + 1)
-      setSegmentIndex(0)
-      return
-    }
-    setPlaying(false)
-    setFinished(true)
-  }, [slides, slideIndex, segmentIndex])
+    dispatch({ type: "ADVANCE", slideSegmentCounts })
+  }, [slideSegmentCounts])
 
-  // Drive playback: play the current segment's audio, or dwell on dice slides.
+  // Isolated playback effect (owns ONLY the dice/feature dwell timer + HTMLAudioElement).
   useEffect(() => {
-    clearTimers()
     if (!playing || !currentSlide) return
 
     if (currentSlide.type === "diceroll" || currentSlide.type === "feature") {
       stopAudio()
-      diceTimerRef.current = setTimeout(advance, DICE_SLIDE_DWELL_MS / speed)
-      return
+      const dwellTimer = setTimeout(advance, DICE_SLIDE_DWELL_MS / speed)
+      return () => clearTimeout(dwellTimer)
     }
 
     const segment = currentSlide.segments[segmentIndex]
@@ -233,7 +238,7 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
     audio.onerror = advance
     audio.play().catch(() => {
       // Autoplay rejection (e.g. tab lost its gesture unlock): surface as paused.
-      setPlaying(false)
+      dispatch({ type: "PAUSE" })
     })
 
     // Preload the next segment in the background.
@@ -250,7 +255,7 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
       audio.onerror = null
       audio.pause()
     }
-  }, [playing, currentSlide, segmentIndex, advance])
+  }, [playing, currentSlide, segmentIndex, slideIndex, slides, speed, advance, stopAudio])
 
   const cycleSpeed = useCallback(() => {
     setSpeed((current) => {
@@ -263,16 +268,11 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
   }, [])
 
   const play = useCallback(() => {
-    if (finished) {
-      setSlideIndex(0)
-      setSegmentIndex(0)
-      setFinished(false)
-    }
-    setPlaying(true)
-  }, [finished])
+    dispatch({ type: "PLAY" })
+  }, [])
 
   const pause = useCallback(() => {
-    setPlaying(false)
+    dispatch({ type: "PAUSE" })
     if (audioRef.current) audioRef.current.pause()
   }, [])
 
@@ -280,12 +280,21 @@ export function useStoryviewPlayer({ turnId, story, open, onGenerated }: UseStor
     (index: number) => {
       if (index < 0 || index >= slides.length) return
       stopAudio()
-      setSlideIndex(index)
-      setSegmentIndex(0)
-      setFinished(false)
+      dispatch({ type: "GO_TO_SLIDE", index, slideCount: slides.length })
     },
     [slides.length, stopAudio]
   )
+
+  const status: StoryviewStatus =
+    state.kind === "ready"
+      ? "ready"
+      : state.kind === "generating"
+        ? "generating"
+        : state.kind === "error"
+          ? state.code
+          : "loading"
+  const errorMessage = state.kind === "error" ? state.message : null
+  const storyviewAuto = state.kind === "closed" ? undefined : state.storyviewAuto
 
   return {
     status,
