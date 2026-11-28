@@ -30,6 +30,17 @@ export default function LicensesPage() {
           </a>
           .
         </p>
+        <p>
+          Stage spell effects: Procedural shaders adapted from{" "}
+          <a href="https://git.patch.gg/patch/elements" target="_blank" rel="noopener noreferrer">
+            Patch Elements
+          </a>{" "}
+          / Ultra Elements (MIT, Patch &amp; Humpalumps),{" "}
+          <a href="https://git.patch.gg/blendi/small-magic" target="_blank" rel="noopener noreferrer">
+            Small Magic
+          </a>{" "}
+          (MIT, Patch), and Hash without Sine (MIT, David Hoskins).
+        </p>
       </div>
     </LedgerPage>
   )

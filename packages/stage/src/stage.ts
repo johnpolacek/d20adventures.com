@@ -1627,6 +1627,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.mirrorScale = f.mirror ?? t.mirror
     this.crowd.setMode(f.crowd)
     this.crowd.setRadius(f.cardRadius ?? t.cardRadius)
+    this.effects.setTier(this.tier)
     const shadowSize = Math.min(t.shadow, this.shadowCap)
     if (this.sun.shadow.mapSize.x !== shadowSize) {
       this.sun.shadow.mapSize.setScalar(shadowSize)
@@ -1651,6 +1652,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
     const buffer = this.renderer.getDrawingBufferSize(new THREE.Vector2())
+    this.effects.setViewportHeight(buffer.y)
     this.mirror?.setScale(this.mirrorScale, buffer.x, buffer.y)
   }
 
@@ -1855,6 +1857,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.renderer.info.reset()
     this.mirror?.render(this.camera)
     this.pipeline.render()
+    this.effects.warmed()
     this.stats0 = { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles }
   }
 

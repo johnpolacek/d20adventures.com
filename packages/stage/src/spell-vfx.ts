@@ -135,6 +135,7 @@ const PREMUL_BLENDING: THREE.ShaderMaterialParameters = {
   transparent: true,
   depthWrite: false,
   depthTest: true,
+  toneMapped: false,
   blending: THREE.CustomBlending,
   blendEquation: THREE.AddEquation,
   blendSrc: THREE.OneFactor,
@@ -177,6 +178,19 @@ mat3 basisFrom(vec3 n) {
   vec3 t = perpVec(n);
   return mat3(t, cross(t, n), n);
 }
+// Artist fire ramp (blendi/small-magic flames.js): deep red -> orange -> gold -> incandescent white
+vec3 fireRamp(float hot) {
+  vec3 c = mix(vec3(0.55, 0.03, 0.0), vec3(1.0, 0.26, 0.02), smoothstep(0.0, 0.34, hot));
+  c = mix(c, vec3(1.0, 0.64, 0.12), smoothstep(0.3, 0.65, hot));
+  c = mix(c, vec3(1.0, 0.94, 0.7), smoothstep(0.65, 0.98, hot));
+  return c * (1.0 + 1.45 * hot * hot);
+}
+`
+
+// Vertex-only helpers (uses `projectionMatrix`, which Three.js defines in vertex shaders only).
+const VERT_COMMON_GLSL =
+  COMMON_GLSL +
+  /* glsl */ `
 vec3 stripSide(vec3 p, vec3 tangent) {
   vec3 s = cross(tangent, p - cameraPosition);
   float l = length(s);
@@ -189,13 +203,6 @@ float wireHalfWidth(float width, float viewZ, float viewportH, out float aa) {
   float clamped = max(px, 1.5);
   aa = px / clamped;
   return 0.5 * width * clamped / max(px, 1e-6);
-}
-// Artist fire ramp (blendi/small-magic flames.js): deep red -> orange -> gold -> incandescent white
-vec3 fireRamp(float hot) {
-  vec3 c = mix(vec3(0.55, 0.03, 0.0), vec3(1.0, 0.26, 0.02), smoothstep(0.0, 0.34, hot));
-  c = mix(c, vec3(1.0, 0.64, 0.12), smoothstep(0.3, 0.65, hot));
-  c = mix(c, vec3(1.0, 0.94, 0.7), smoothstep(0.65, 0.98, hot));
-  return c * (1.0 + 1.45 * hot * hot);
 }
 `
 
@@ -233,7 +240,7 @@ function boltGeometry(): THREE.BufferGeometry {
 }
 
 const BOLT_VERT =
-  COMMON_GLSL +
+  VERT_COMMON_GLSL +
   /* glsl */ `
 uniform vec3 uA;
 uniform vec3 uB;
@@ -299,7 +306,7 @@ void main() {
 
   if (strand > 0) {
     bool isSub = strand > ${BOLT_MAX_BRANCHES};
-    int bi = isSub ? int(mod(float(strand - ${BOLT_MAX_BRANCHES + 1}), float(max(nb, 1)))) : strand - 1;
+    int bi = isSub ? int(mod(float(strand - ${BOLT_MAX_BRANCHES + 1}), max(float(nb), 1.0))) : strand - 1;
     if (isSub ? (strand - ${BOLT_MAX_BRANCHES + 1} >= ns || nb == 0) : bi >= nb) {
       gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
       return;
@@ -494,7 +501,7 @@ function ribbonGeometry(withHelix: boolean): THREE.BufferGeometry {
 }
 
 const RIBBON_VERT =
-  COMMON_GLSL +
+  VERT_COMMON_GLSL +
   /* glsl */ `
 uniform vec3 uA;
 uniform vec3 uB;
@@ -704,7 +711,7 @@ export interface ParticleSeed {
 }
 
 const PARTICLE_VERT =
-  COMMON_GLSL +
+  VERT_COMMON_GLSL +
   /* glsl */ `
 attribute vec4 aOrigin; // xyz, birthTime
 attribute vec4 aVel;    // vx, vy, vz, lifeDuration
@@ -893,28 +900,36 @@ void main() {
 
   if (kind < 4.5) {
     // 4: Noise-eroded volumetric puff (smoke, frost fog, shadow mist, spores)
-    float n = vNoise(vUv * 1.85 + seed * 19.0 + vec2(0.0, -u * 0.85)) * 0.62
-            + vNoise(vUv * 4.2 + seed * 7.0 + vec2(u * 0.3, -u * 1.3)) * 0.38;
-    float edge = 1.0 - smoothstep(0.28 - 0.22 * u, 1.0, r + (n - 0.5) * (0.65 + 0.55 * u));
-    float fade = smoothstep(0.0, 0.14, u) * (1.0 - smoothstep(0.42, 1.0, u));
+    float n1 = vNoise(vUv * 2.1 + seed * 19.0 + vec2(0.0, -u * 0.85));
+    float n2 = vNoise(vUv * 4.8 + seed * 7.0 + vec2(u * 0.35, -u * 1.4));
+    float n3 = vNoise(vUv * 9.5 - seed * 11.0 + vec2(-u * 0.4, -u * 1.9));
+    float n = n1 * 0.52 + n2 * 0.32 + n3 * 0.16;
+    float edge = 1.0 - smoothstep(0.18 - 0.15 * u, 0.96, r + (n - 0.48) * (0.85 + 0.45 * u));
+    float fade = smoothstep(0.0, 0.14, u) * (1.0 - smoothstep(0.45, 1.0, u));
     float a = edge * fade * uTone.z * gain;
     if (a < 0.004) discard;
-    float topLit = 0.55 + 0.45 * smoothstep(-0.65, 0.75, vUv.y + (n - 0.5) * 0.7);
-    vec3 baseCol = mix(uColDark, uColMid, uTone.w > 0.5 ? (1.0 - edge) * 0.55 : topLit * 0.55);
+    float topLit = 0.48 + 0.52 * smoothstep(-0.65, 0.75, vUv.y + (n1 - 0.5) * 0.8);
+    // For shadow/smoke, keep dark wispy pockets driven by fbm noise instead of concentric rings
+    vec3 baseCol = uTone.w > 0.5
+      ? mix(uColDark, uColMid, smoothstep(0.32, 0.82, n) * (0.45 + 0.35 * (1.0 - edge)))
+      : mix(uColDark, uColMid, topLit * (0.35 + 0.45 * n));
     vec3 col = baseCol * topLit;
-    // Subtle internal rim glow for shadow / arcane / frost mist
-    float rim = edge * (1.0 - edge) * 3.0 * (1.0 - u * 0.5);
-    col += uColMid * rim * 0.22 * uTone.x;
+    float rim = smoothstep(0.1, 0.45, edge) * (1.0 - smoothstep(0.45, 0.85, edge)) * n2 * (1.0 - u * 0.45);
+    col += uColMid * rim * 0.32 * uTone.x;
     gl_FragColor = vec4(col * a, a);
     return;
   }
 
-  // 5: Tumbling leaf / petal (blendi/small-magic fx.js)
-  float flip = 0.24 + 0.76 * abs(sin(u * 9.5 + seed * 23.0));
-  float leaf = 1.0 - smoothstep(0.54, 0.64, abs(vUv.x) / flip / max(pow(max(1.0 - vUv.y * vUv.y, 0.0), 0.65), 1e-3));
+  // 5: Tumbling botanical leaf / petal (blendi/small-magic fx.js)
+  float flip = 0.26 + 0.74 * abs(sin(u * 8.5 + seed * 23.0));
+  float tapered = pow(max(1.0 - vUv.y * vUv.y, 0.0), 0.72);
+  float lx = abs(vUv.x) / flip / max(tapered * 0.58, 1e-3);
+  float leaf = 1.0 - smoothstep(0.76, 0.96, lx);
   float a = leaf * smoothstep(0.0, 0.08, u) * (1.0 - smoothstep(0.75, 1.0, u)) * gain;
   if (a < 0.01) discard;
-  vec3 col = mix(uColMid, uColCore, 0.25 + 0.55 * flip * (vUv.y * 0.5 + 0.5));
+  float vein = exp(-pow(abs(vUv.x) / max(flip * 0.06, 0.01), 2.0)) * 0.45;
+  float shade = 0.35 + 0.65 * flip * (vUv.y * 0.45 + 0.55);
+  vec3 col = mix(uColDark, uColMid, shade) + uColCore * (vein * 0.55 + (1.0 - lx) * 0.12);
   gl_FragColor = vec4(col * a, a);
 }
 `
@@ -1182,19 +1197,22 @@ void main() {
     return;
   }
 
-  // Style 4: Frost creeping fern-fingered hoarfrost ring
+  // Style 4: Frost creeping fern-fingered hoarfrost & radial ice cracks
   if (style == 4) {
     float ang = atan(q.y, q.x);
-    float fern = vNoise(vec2(ang * 4.5 + seed * 5.0, r * 4.0)) * 0.65 + vNoise(q * 9.0 + seed) * 0.35;
-    float reach = reveal * (0.72 + 0.34 * fern);
-    float disc = 1.0 - smoothstep(reach - 0.14, reach, r);
+    float spoke = abs(sin(ang * 6.0 + vNoise(q * 5.0 + seed) * 1.4));
+    float fern = vNoise(vec2(ang * 5.5 + seed * 5.0, r * 5.5)) * 0.55 + vNoise(q * 11.0 + seed) * 0.45;
+    float reach = reveal * (0.64 + 0.38 * fern + 0.08 * (1.0 - spoke));
+    float disc = 1.0 - smoothstep(reach - 0.16, reach, r);
     if (disc <= 0.003) discard;
-    float rim = exp(-pow((r - reach * 0.9) / 0.08, 2.0)) * (0.6 + 0.6 * fern);
-    float crystal = smoothstep(0.76, 0.94, vNoise(q * 24.0 + seed * 11.0)) * (0.6 + 0.4 * sin(uTime * 11.0 + q.x * 30.0));
-    float a = disc * fade * 0.46;
-    vec3 col = mix(uPrimary, uCore, clamp(rim * 0.7 + crystal, 0.0, 1.0));
-    vec3 emit = col * (rim * 1.15 + crystal * 1.4 + disc * 0.25) * fade * intensity;
-    gl_FragColor = vec4(uDark * a * 0.55 + emit, a);
+    float crack = pow(1.0 - spoke, 7.0) * (1.0 - smoothstep(0.1, reach * 0.95, r));
+    float rim = exp(-pow((r - reach * 0.88) / 0.07, 2.0)) * (0.55 + 0.65 * fern);
+    float crystal = smoothstep(0.74, 0.92, vNoise(q * 26.0 + seed * 11.0)) * (0.6 + 0.4 * sin(uTime * 11.0 + q.x * 30.0));
+    float a = disc * fade * (0.22 + 0.22 * fern);
+    vec3 iceDeep = uPrimary * 0.32;
+    vec3 col = mix(uPrimary, uCore, clamp(rim * 0.6 + crack * 0.8 + crystal, 0.0, 1.0));
+    vec3 emit = col * (rim * 0.78 + crack * 0.95 + crystal * 1.35 + disc * 0.08) * fade * intensity;
+    gl_FragColor = vec4(iceDeep * a + emit, a);
     return;
   }
 
@@ -1793,17 +1811,17 @@ export function createShardBurst(
 
 export function createCrystalLance(palette: ElementPalette): { mesh: THREE.Mesh; dispose: () => void } {
   const mat = new THREE.MeshStandardMaterial({
-    color: palette.primary,
-    emissive: palette.core,
-    emissiveIntensity: 0.9,
-    roughness: 0.15,
-    metalness: 0.15,
+    color: palette.secondary,
+    emissive: palette.primary,
+    emissiveIntensity: 0.7,
+    roughness: 0.12,
+    metalness: 0.2,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.92,
   })
   const mesh = new THREE.Mesh(shardBaseGeometry(), mat)
   mesh.rotation.x = Math.PI / 2
-  mesh.scale.set(0.32, 0.72, 0.32)
+  mesh.scale.set(0.32, 0.78, 0.32)
   return {
     mesh,
     dispose() {
@@ -1816,12 +1834,15 @@ export function createCrystalLance(palette: ElementPalette): { mesh: THREE.Mesh;
 // Held on `Effects.group` at zero-area/collapsed state so `Stage.load()`'s `renderer.compileAsync(scene, camera)`
 // compiles all 6 spell shader programs off the main thread before the first frame — zero recompiles on cast.
 
+let warmupRefs = 0
+
 export interface WarmupPack {
   group: THREE.Group
   dispose(): void
 }
 
 export function createSpellWarmup(): WarmupPack {
+  warmupRefs++
   const group = new THREE.Group()
   group.name = "spell-vfx-warmup"
   const p = ELEMENT_PALETTES.arcane
@@ -1839,11 +1860,18 @@ export function createSpellWarmup(): WarmupPack {
   veil.update(0, 0)
   const shards = createShardBurst([{ x: 0, y: 0, z: 0, birth: 10, vx: 0, vy: 0, vz: 0, life: 0.1, size: 0 }], p)
   shards.update(0)
+  const lance = createCrystalLance(ELEMENT_PALETTES.frost)
+  lance.mesh.scale.setScalar(0.0001)
+  lance.mesh.position.set(0, -100, 0)
+  lance.mesh.frustumCulled = false
 
-  group.add(bolt.mesh, ribbon.mesh, particles.mesh, ground.mesh, shock.mesh, veil.mesh, shards.mesh)
+  group.add(bolt.mesh, ribbon.mesh, particles.mesh, ground.mesh, shock.mesh, veil.mesh, shards.mesh, lance.mesh)
+  let disposed = false
   return {
     group,
     dispose() {
+      if (disposed) return
+      disposed = true
       bolt.dispose()
       ribbon.dispose()
       particles.dispose()
@@ -1851,18 +1879,22 @@ export function createSpellWarmup(): WarmupPack {
       shock.dispose()
       veil.dispose()
       shards.dispose()
-      sharedBoltGeo?.dispose()
-      sharedBoltGeo = null
-      sharedRibbonGeo?.dispose()
-      sharedRibbonGeo = null
-      sharedRibbonHelixGeo?.dispose()
-      sharedRibbonHelixGeo = null
-      sharedGroundGeo?.dispose()
-      sharedGroundGeo = null
-      sharedVeilGeo?.dispose()
-      sharedVeilGeo = null
-      sharedShardBase?.dispose()
-      sharedShardBase = null
+      lance.dispose()
+      warmupRefs = Math.max(0, warmupRefs - 1)
+      if (warmupRefs === 0) {
+        sharedBoltGeo?.dispose()
+        sharedBoltGeo = null
+        sharedRibbonGeo?.dispose()
+        sharedRibbonGeo = null
+        sharedRibbonHelixGeo?.dispose()
+        sharedRibbonHelixGeo = null
+        sharedGroundGeo?.dispose()
+        sharedGroundGeo = null
+        sharedVeilGeo?.dispose()
+        sharedVeilGeo = null
+        sharedShardBase?.dispose()
+        sharedShardBase = null
+      }
     },
   }
 }
