@@ -15,13 +15,15 @@ import { sendFeedback } from "@/lib/feedback/client"
 import { cn } from "@/lib/utils"
 
 type State = Parameters<typeof hostedSave>[0] & { hostOnline: boolean; userId: string; chat: ChatLine[] }
+type HostedMutation = { kind: "idle" } | { kind: "acting" } | { kind: "chatting" }
 
-// A guest's view of a hosted game, polled from the website. Actions queue for the host's app, which runs the GM.
+// A guest's view of a hosted game, polled sequentially from the website. Actions queue for the host's app, which runs the GM.
 export function HostedPlay({ adventureId }: { adventureId: string }) {
   const [state, setState] = useState<State | null>(null)
-  const [sending, setSending] = useState(false)
+  const [mutation, setMutation] = useState<HostedMutation>({ kind: "idle" })
   const [error, setError] = useState<string | null>(null)
   const shownFailure = useRef<string | null>(null)
+  const mutationSeqRef = useRef(0)
   const portrait = usePhonePortrait()
   // The scenes come from the repo's stage, loaded before the stage shows.
   const scenes = useScenes("repo")
@@ -32,19 +34,29 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
     return () => window.removeEventListener("pointerdown", lock)
   }, [])
   useEffect(() => {
-    let live = true
+    const controller = new AbortController()
+    let timer: ReturnType<typeof setTimeout> | null = null
     const tick = async () => {
-      const res = await fetch(`/api/hosted/${adventureId}`, { cache: "no-store" }).catch(() => null)
-      if (!live || !res) return
-      const body = await res.json().catch(() => null)
-      if (!res.ok) return setError(body?.error ?? "Could not load the game.")
-      setState(body)
+      const seqAtStart = mutationSeqRef.current
+      try {
+        const res = await fetch(`/api/hosted/${adventureId}`, { cache: "no-store", signal: controller.signal }).catch(() => null)
+        if (controller.signal.aborted || !res) return
+        const body = await res.json().catch(() => null)
+        if (controller.signal.aborted) return
+        if (!res.ok) {
+          setError(body?.error ?? "Could not load the game.")
+          return
+        }
+        // Drop poll responses that started before an optimistic local mutation (e.g. sent chat).
+        if (seqAtStart === mutationSeqRef.current) setState(body)
+      } finally {
+        if (!controller.signal.aborted) timer = setTimeout(tick, 1500)
+      }
     }
     void tick()
-    const timer = setInterval(tick, 1500)
     return () => {
-      live = false
-      clearInterval(timer)
+      controller.abort()
+      if (timer !== null) clearTimeout(timer)
     }
   }, [adventureId])
   const work = state ? hostedWork(state) : null
@@ -55,7 +67,8 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
     }
   }, [work?.failed])
   const act = async (action: Parameters<typeof queueHostedAction>[0]) => {
-    setSending(true)
+    mutationSeqRef.current++
+    setMutation({ kind: "acting" })
     setError(null)
     try {
       await queueHostedAction(action)
@@ -64,18 +77,23 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       setError(e instanceof Error ? e.message : "The action was not sent.")
       return false
     } finally {
-      setSending(false)
+      setMutation({ kind: "idle" })
     }
   }
   // A line in the table chat. The answer is the chat with the line in it, shown without waiting for the next poll.
   const say = async (text: string) => {
+    mutationSeqRef.current++
+    setMutation({ kind: "chatting" })
     try {
       const chat = await sendHostedChat({ adventureId, text })
+      mutationSeqRef.current++
       setState((s) => s && { ...s, chat })
       return true
     } catch (e) {
       setError(e instanceof Error ? e.message : "The message was not sent.")
       return false
+    } finally {
+      setMutation({ kind: "idle" })
     }
   }
   const suggest = useHostedSuggest(state, (turnId, characterId) => queueHostedAction({ turnId, kind: "suggest", characterId }))
@@ -85,7 +103,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   return (
     <StagePlay
       save={save}
-      busy={sending || Boolean(work?.busy)}
+      busy={mutation.kind === "acting" || Boolean(work?.busy)}
       art={state ? hostedArt(state) : {}}
       controls={(c) => (c as { userId?: string }).userId === state?.userId && (c as { controlledBy?: string }).controlledBy !== "ai"}
       status={state ? (state.hostOnline ? "Hosted · GM online" : "Hosted · GM offline") : ""}
