@@ -199,38 +199,79 @@ function failNarrator() {
 // it was heard. `pause` holds the words where they are and `resume` goes on from there. `progress` is how much of the
 // paragraph has been heard, 0 to 1, each piece weighed by its length, so it moves steadily while later ones are still
 // being made.
-export type Speaking = { done: Promise<boolean>; stop: () => void; pause: () => void; resume: () => void; progress: () => number }
+export type SpeakPhase =
+  | { kind: "buffering" }
+  | { kind: "playing" }
+  | { kind: "paused"; heldAt: number }
+  | { kind: "stopped" }
 
-// Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `onSentence` is told as each
-// sentence is heard, by its place in sentences(text), so what the stage shows keeps time with the words. A speaker's
-// gender says their quoted words in the voice for them (voiceFor).
-export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void, speaker?: Spoken): Speaking | null {
-  const c = audio()
-  // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
-  if (!c || state !== "ready") return null
+export type Speaking = { done: Promise<boolean>; stop: () => void; pause: () => void; resume: () => void; progress: () => number; phase?: () => SpeakPhase }
+
+export interface SpeakRuntime {
+  context: Pick<AudioContext, "currentTime" | "createGain" | "createBufferSource" | "createBuffer">
+  voiceBus: AudioNode
+  duck: () => () => void
+  onSoundOff: (cb: () => void) => () => void
+  synthesize: (text: string, voice: NarratorVoice) => Promise<NarratorClip>
+  hasSpokenOnce: () => boolean
+  markSpoken: () => void
+  onStalled: () => void
+  lateMs?: number
+  stalledMs?: number
+}
+
+export function createSpeaking(
+  text: string,
+  voice: NarratorVoice,
+  runtime: SpeakRuntime,
+  onSentence?: (index: number) => void,
+  speaker?: Spoken
+): Speaking | null {
   const lines = pieces(text, voice, speaker)
   if (!lines.length) return null
-  const made = lines.map((p) => say(p.text, p.voice))
+  const c = runtime.context
+  const lateMs = runtime.lateMs ?? LATE_MS
+  const stalledMs = runtime.stalledMs ?? STALLED_MS
+  const made = lines.map((p) => runtime.synthesize(p.text, p.voice))
   for (const m of made) m.catch(() => {})
   const total = lines.reduce((n, p) => n + p.text.length, 0)
   // Each piece's place on the paragraph's own clock, which stands still while paused. `base` is when that clock read
-  // zero on the context's, and `held` is where it stopped.
+  // zero on the context's, and `phase.heldAt` is where it stopped when paused.
   type Piece = { buffer: AudioBuffer; start: number; weight: number; sentence: number; first: boolean; src?: AudioBufferSourceNode }
   const placed: Piece[] = []
   let base = c.currentTime + 0.05
-  let held: number | null = null
-  const now = () => held ?? c.currentTime - base
+  let phase: SpeakPhase = { kind: "buffering" }
+  const isStopped = () => phase.kind === "stopped"
+  const isPaused = () => phase.kind === "paused"
+  const now = () => (phase.kind === "paused" ? phase.heldAt : c.currentTime - base)
   let skipped = 0
-  let stopped = false
   let all = false
   let heardAny = false
   let finish = () => {}
   // The ambience dips while the words are heard, and eases back after (engine.ts, DUCK).
   let unduck: (() => void) | null = null
   const heard: ReturnType<typeof setTimeout>[] = []
+  let lateTimer: ReturnType<typeof setTimeout> | null = null
+  let cancelLate: (() => void) | null = null
+  let stalledTimer: ReturnType<typeof setTimeout> | null = null
   const gain = c.createGain()
   gain.gain.value = LIFT
-  gain.connect(bus("voice"))
+  gain.connect(runtime.voiceBus)
+  const clearStalled = () => {
+    if (stalledTimer !== null) {
+      clearTimeout(stalledTimer)
+      stalledTimer = null
+    }
+  }
+  const clearLate = () => {
+    if (lateTimer !== null) {
+      clearTimeout(lateTimer)
+      lateTimer = null
+    }
+    const wake = cancelLate
+    cancelLate = null
+    wake?.()
+  }
   const silence = (p: Piece) => {
     if (!p.src) return
     p.src.onended = null
@@ -238,19 +279,25 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
     p.src = undefined
   }
   const stop = () => {
-    if (stopped) return
-    stopped = true
+    if (phase.kind === "stopped") return
+    phase = { kind: "stopped" }
+    clearLate()
+    clearStalled()
     heard.forEach(clearTimeout)
+    heard.length = 0
     placed.forEach(silence)
     gain.disconnect()
     unduck?.()
+    unduck = null
     finish()
   }
   // The last piece has ended once they are all made and none is left to play.
   const ended = () => {
-    if (all && held === null && placed.every((p) => !p.src) && now() >= (placed.at(-1)?.start ?? 0) + (placed.at(-1)?.buffer.duration ?? 0) - 0.01) stop()
+    if (phase.kind === "stopped" || phase.kind === "paused") return
+    if (all && placed.every((p) => !p.src) && now() >= (placed.at(-1)?.start ?? 0) + (placed.at(-1)?.buffer.duration ?? 0) - 0.01) stop()
   }
   const play = (p: Piece) => {
+    if (phase.kind === "stopped" || phase.kind === "paused") return
     const offset = Math.max(0, now() - p.start)
     if (offset >= p.buffer.duration) return
     const src = c.createBufferSource()
@@ -262,11 +309,12 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
       ended()
     }
     p.src = src
-    if (!unduck) unduck = duck()
-    if (onSentence && p.first && offset === 0) heard.push(setTimeout(() => !stopped && onSentence(p.sentence), Math.max(0, (base + p.start - c.currentTime) * 1000)))
+    phase = { kind: "playing" }
+    if (!unduck) unduck = runtime.duck()
+    if (onSentence && p.first && offset === 0) heard.push(setTimeout(() => phase.kind !== "stopped" && onSentence(p.sentence), Math.max(0, (base + p.start - c.currentTime) * 1000)))
   }
   // Sound turned off mid-sentence holds the context, so the narration would never end: it stops instead.
-  const unsound = onSoundSetting((on) => !on && stop())
+  const unsound = runtime.onSoundOff(stop)
   const done = new Promise<boolean>((resolve) => {
     finish = () => {
       unsound()
@@ -275,18 +323,39 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
     void (async () => {
       let at = 0
       for (const [i, m] of made.entries()) {
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const late = new Promise<"late">((r) => {
-          const wait = () => (timer = setTimeout(() => (held === null || stopped ? r("late") : wait()), LATE_MS))
+        if (isStopped()) return
+        const late = new Promise<"late" | "stopped">((r) => {
+          cancelLate = () => r("stopped")
+          const wait = () => {
+            lateTimer = setTimeout(() => {
+              lateTimer = null
+              if (isStopped()) return r("stopped")
+              if (!isPaused()) return r("late")
+              wait()
+            }, lateMs)
+          }
           wait()
         })
         const clip = await Promise.race([m.catch(() => null), late])
-        clearTimeout(timer)
-        if (stopped) return
+        if (lateTimer !== null) {
+          clearTimeout(lateTimer)
+          lateTimer = null
+        }
+        cancelLate = null
+        if (isStopped() || clip === "stopped") return
         if (clip === "late") {
-          if (!spokeOnce) {
-            const stalled = setTimeout(failNarrator, STALLED_MS)
-            m.then(() => clearTimeout(stalled), () => (clearTimeout(stalled), failNarrator()))
+          if (!runtime.hasSpokenOnce()) {
+            stalledTimer = setTimeout(() => {
+              stalledTimer = null
+              if (!isStopped()) runtime.onStalled()
+            }, stalledMs)
+            m.then(
+              () => clearStalled(),
+              () => {
+                clearStalled()
+                if (!isStopped()) runtime.onStalled()
+              }
+            )
           }
           break
         }
@@ -294,15 +363,16 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
           skipped += lines[i].text.length
           continue
         }
-        spokeOnce = true
+        runtime.markSpoken()
         heardAny = true
         const buffer = c.createBuffer(1, clip.audio.length, clip.rate)
         buffer.copyToChannel(clip.audio as Float32Array<ArrayBuffer>, 0)
         const p: Piece = { buffer, start: Math.max(at, now()), weight: lines[i].text.length, sentence: lines[i].sentence, first: lines[i - 1]?.sentence !== lines[i].sentence }
         at = p.start + buffer.duration
         placed[i] = p
-        if (held === null) play(p)
+        if (!isPaused()) play(p)
       }
+      if (isStopped()) return
       all = true
       // Pieces given up leave holes, so the list is closed up before the end is looked for.
       for (let i = placed.length - 1; i >= 0; i--) if (!placed[i]) placed.splice(i, 1)
@@ -311,8 +381,8 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
     })()
   })
   const pause = () => {
-    if (stopped || held !== null) return
-    held = Math.max(0, now())
+    if (phase.kind === "stopped" || phase.kind === "paused") return
+    phase = { kind: "paused", heldAt: Math.max(0, now()) }
     heard.forEach(clearTimeout)
     heard.length = 0
     placed.forEach(silence)
@@ -320,18 +390,45 @@ export function speak(text: string, voice: NarratorVoice, onSentence?: (index: n
     unduck = null
   }
   const resume = () => {
-    if (stopped || held === null) return
-    base = c.currentTime + 0.05 - held
-    held = null
+    if (phase.kind !== "paused") return
+    base = c.currentTime + 0.05 - phase.heldAt
+    phase = placed.some(Boolean) ? { kind: "playing" } : { kind: "buffering" }
     for (const p of placed) if (p) play(p)
     ended()
   }
   const progress = () => {
-    if (stopped) return heardAny ? 1 : 0
+    if (phase.kind === "stopped") return heardAny ? 1 : 0
     const t = now()
     let got = skipped
     for (const p of placed) if (p) got += p.weight * Math.min(1, Math.max(0, (t - p.start) / p.buffer.duration))
     return total ? Math.min(1, got / total) : 0
   }
-  return { done, stop, pause, resume, progress }
+  return { done, stop, pause, resume, progress, phase: () => phase }
+}
+
+// Reads a paragraph aloud on the voice bus. Null when there is no sound to play it on. `onSentence` is told as each
+// sentence is heard, by its place in sentences(text), so what the stage shows keeps time with the words. A speaker's
+// gender says their quoted words in the voice for them (voiceFor).
+export function speak(text: string, voice: NarratorVoice, onSentence?: (index: number) => void, speaker?: Spoken): Speaking | null {
+  const c = audio()
+  // A context still waking from the first touch, or held while the tab is hidden, plays the words once it runs.
+  if (!c || state !== "ready") return null
+  return createSpeaking(
+    text,
+    voice,
+    {
+      context: c,
+      voiceBus: bus("voice"),
+      duck,
+      onSoundOff: (cb) => onSoundSetting((on) => !on && cb()),
+      synthesize: say,
+      hasSpokenOnce: () => spokeOnce,
+      markSpoken: () => {
+        spokeOnce = true
+      },
+      onStalled: failNarrator,
+    },
+    onSentence,
+    speaker
+  )
 }

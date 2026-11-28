@@ -33,7 +33,8 @@
     "./*": "./src/*.tsx"
   },
   "scripts": {
-    "check": "node scripts/check-imports.mjs && tsc -p tsconfig.json"
+    "check": "node scripts/check-imports.mjs && tsc -p tsconfig.json",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@d20/gm-core": "workspace:*",
