@@ -1,6 +1,6 @@
 import { Heading } from "@d20/ui/typography/heading"
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
-import { ArrowLeft, Check } from "lucide-react"
+import { ArrowLeft, Check, Dices } from "lucide-react"
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 import { HeroRules } from "@d20/ui/heroes/hero-rules"
@@ -30,6 +30,13 @@ const figure = (chosen: boolean) =>
     chosen ? "border-primary-400 ring-2 ring-primary-500" : "border-white/10 opacity-70 hover:opacity-100"
   )
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
+const pickOne = <T,>(items: readonly T[]): T => items[Math.floor(Math.random() * items.length)]
+// Pick a different item when more than one exists, so clicking Randomize always rolls something fresh.
+const pickAnother = <T,>(items: readonly T[], current?: T): T => {
+  if (items.length <= 1 || current === undefined) return pickOne(items)
+  const others = items.filter((item) => item !== current)
+  return pickOne(others.length ? others : items)
+}
 const STEPS = ["pick", "rules", "review"] as const
 const STEP_LABELS: Record<(typeof STEPS)[number], string> = { pick: "Identity", rules: "Rules", review: "Review" }
 const dialogFooter = "sticky -bottom-7 z-10 -mx-7 -mb-7 flex flex-wrap items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4"
@@ -90,15 +97,36 @@ export function HeroCreator(props: {
       },
     [kit, props.options]
   )
+  const hooks = props.adventure?.hooks
   useEffect(() => {
-    if (menu && !pick && menu.species.length && menu.classes.length) setPick({ species: menu.species[0].id, class: menu.classes[0].id as CreationPick["class"], background: menu.backgrounds[0].id })
-  }, [menu, pick])
+    if (!menu || pick || !menu.species.length || !menu.classes.length || !menu.backgrounds.length) return
+    setPick({
+      species: pickOne(menu.species).id,
+      class: pickOne(menu.classes).id as CreationPick["class"],
+      background: pickOne(menu.backgrounds).id,
+    })
+    if (hooks?.length) {
+      setIdea((current) => (current.hook ? current : { ...current, hook: pickOne(hooks) }))
+    }
+  }, [menu, pick, hooks])
   const built = useMemo(() => (kit && pick && choices ? kit.build(pick, choices) : undefined), [kit, pick, choices])
   const problems = built && "problems" in built ? built.problems : []
   const view = built && "view" in built ? built.view : undefined
   const sheet = useSheetView(step === "review" ? hero?.sheet : undefined, undefined, undefined)
 
   const set = <K extends keyof HeroIdea>(key: K, value: HeroIdea[K]) => setIdea((i) => ({ ...i, [key]: value }))
+  const randomize = () => {
+    if (!menu || !menu.species.length || !menu.classes.length || !menu.backgrounds.length) return
+    setPick({
+      species: pickAnother(menu.species, menu.species.find((s) => s.id === pick?.species)).id,
+      class: pickAnother(menu.classes, menu.classes.find((c) => c.id === pick?.class)).id as CreationPick["class"],
+      background: pickAnother(menu.backgrounds, menu.backgrounds.find((b) => b.id === pick?.background)).id,
+    })
+    setChoices(null)
+    if (hooks?.length) {
+      setIdea((current) => ({ ...current, hook: pickAnother(hooks, current.hook || undefined) }))
+    }
+  }
   const toRules = () => {
     if (!kit || !pick) return
     // The rules start filled in. Coming back to the same picks keeps what the player changed.
@@ -193,7 +221,13 @@ export function HeroCreator(props: {
                       <p className="font-sans text-sm text-white/60 italic">Loading species, classes, and backgrounds…</p>
                     ) : (
                       <>
-                        <Choice label="Species" values={menu.species} value={pick.species} onPick={(id) => repick({ species: id })} />
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <Choice label="Species" values={menu.species} value={pick.species} onPick={(id) => repick({ species: id })} />
+                          <Button variant="outline" size="xs" type="button" onClick={randomize} className="shrink-0 gap-1.5">
+                            <Dices aria-hidden="true" className="size-3.5 text-accent-300" />
+                            <span>Randomize</span>
+                          </Button>
+                        </div>
                         <Choice label="Class" values={menu.classes} value={pick.class} onPick={(id) => repick({ class: id as CreationPick["class"] })} />
                         <Choice label="Background" values={menu.backgrounds} value={pick.background} onPick={(id) => repick({ background: id })} />
                       </>
@@ -469,6 +503,10 @@ export function HeroCreator(props: {
                 </div>
               )}
               <div className={dialogFooter}>
+                <Button variant="outline" type="button" disabled={!menu || !pick} onClick={randomize} className="mr-auto gap-1.5">
+                  <Dices aria-hidden="true" className="size-4 text-accent-300" />
+                  <span>Randomize</span>
+                </Button>
                 <Button variant="epic" className="text-lg" disabled={!kit || !pick || !idea.name.trim()} onClick={toRules}>
                   Choose Rules
                 </Button>
