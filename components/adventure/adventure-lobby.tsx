@@ -293,7 +293,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           <div className={cn(siteLabel, "mb-2")}>
             Party · {party?.length ?? 0} of {seats}
           </div>
-          <ul className="grid gap-2">
+          <ul className="grid gap-2.5 lg:grid-cols-2">
             <HeroRows>
               {seated.map((pc) => (
                 <HeroRow
@@ -319,7 +319,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
         </section>
         {/* Start Adventure Button for signed-in users with a character */}
         <Presence show={Boolean(isSignedIn && userCharacter && guestOfHost)} motion="fade" asChild>
-          <Heading variant="h2" as="h3" className="mb-6 opacity-70 text-center">Waiting for the host to start...</Heading>
+          <Heading variant="h2" as="h3" className="mb-6 text-center opacity-70 md:text-left">Waiting for the host to start...</Heading>
         </Presence>
         <Presence show={Boolean(isSignedIn && userCharacter && !guestOfHost)} motion="fade">
           <StartAdventureButton
@@ -367,7 +367,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                   <Presence show={ownChoices.length + availableCharacters.length > 0} motion="fade" asChild>
                     <section className="w-full">
                       <div className={cn(siteLabel, "mb-2")}>{userCharacter ? "Add Another Hero" : "Choose Your Hero"}</div>
-                      <ul className="grid gap-2">
+                      <ul className="grid gap-2.5 lg:grid-cols-2">
                         <HeroRows>
                           {ownChoices.map((char) => {
                             const charJoinId = `characters/${user?.id}/${slugify(char.name, { lower: true, strict: true })}.json`
@@ -398,9 +398,9 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
                   </Presence>
                   <Presence show={!invite || bringOwn} motion="fade" asChild>
                     {(!invite || bringOwn) && (
-                      <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full">
-                        {/* At rest an epic button is scaled up. Here it keeps the list's width. */}
-                        <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02]">
+                      <Link href={`/player/${user?.username}/characters/new?redirectToAdventure=${encodeURIComponent(window.location.pathname + window.location.search)}`} className="mt-6 w-full md:w-auto md:self-start">
+                        {/* At rest an epic button is scaled up. Here it keeps the list's width on mobile. */}
+                        <Button variant="epic" size="lg" className="w-full scale-100 hover:scale-[1.02] md:w-auto">
                           Create New Character
                         </Button>
                       </Link>
@@ -431,7 +431,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
               <p className="mt-4 mb-6 text-sm text-white/70 text-center max-w-2xl">
                 AI companions fill open slots and take their own turns in character, so you can start without waiting for more players.
               </p>
-              <ul className="mb-4 grid w-full gap-2">
+              <ul className="mb-4 grid w-full gap-2.5 lg:grid-cols-2">
                 <HeroRows>
                   {availableCharacters.map((char) => (
                     <HeroRow

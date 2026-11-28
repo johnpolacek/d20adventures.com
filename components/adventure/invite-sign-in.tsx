@@ -14,14 +14,14 @@ export function InviteSignIn(props: { plan: AdventurePlan; redirectUrl: string }
   return (
     <LobbyIntro plan={props.plan}>
       <div data-intro="sign-in">
-        <AccountRequired redirectUrl={props.redirectUrl} />
+        <AccountRequired redirectUrl={props.redirectUrl} className="md:justify-start" />
       </div>
     </LobbyIntro>
   )
 }
 
-// An adventure's lobby on any screen: its cover and first sentence over what follows, in one narrow column.
-// Each piece enters in turn. Only transforms and opacity move, so nothing shifts the layout.
+// An adventure's lobby on any screen: one column on a phone, and a two-column spread on a laptop with the cover and
+// first sentence pinned beside the party and heroes. Each piece enters in turn with transforms and opacity only.
 export function LobbyIntro(props: { plan: AdventurePlan; children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null)
   const teaser = /^.*?[.!?](?=\s|$)/.exec(props.plan.teaser)?.[0] ?? props.plan.teaser
@@ -61,13 +61,17 @@ export function LobbyIntro(props: { plan: AdventurePlan; children: ReactNode }) 
   )
 
   return (
-    <div ref={root} className="flex min-h-screen flex-col items-center gap-5 px-4 pt-20 pb-10">
-      <ModuleCover id={props.plan.id} title={props.plan.title} players={props.plan.party} className="max-w-sm" />
-      <p data-intro="teaser" className="w-full max-w-sm pl-2 text-left text-white/80">
-        {teaser}
-      </p>
-      <div data-intro="rest" className="w-full max-w-sm">
-        {props.children}
+    <div ref={root} className="mx-auto min-h-screen w-full max-w-6xl px-4 pt-20 pb-12 sm:px-6 md:px-8 md:pt-24">
+      <div className="grid gap-6 md:grid-cols-[minmax(260px,340px)_1fr] md:items-start md:gap-8 lg:gap-10">
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-4 md:sticky md:top-24 md:mx-0 md:max-w-none">
+          <ModuleCover id={props.plan.id} title={props.plan.title} players={props.plan.party} className="border border-white/15" />
+          <p data-intro="teaser" className="pl-1 text-left text-white/80">
+            {teaser}
+          </p>
+        </div>
+        <div data-intro="rest" className="mx-auto w-full min-w-0 max-w-sm md:mx-0 md:max-w-none">
+          {props.children}
+        </div>
       </div>
     </div>
   )

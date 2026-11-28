@@ -29,7 +29,7 @@ export function InviteLink({ inviteLink }: InviteLinkProps) {
   return (
     <div className="mb-6 border border-white/30 bg-primary-800/70 rounded-lg pt-2 pb-6 px-4">
       <p className="text-sm text-accent-400 pt-3 pb-2 font-display font-bold text-xl text-center">Invite Players</p>
-      <div className="flex items-center gap-2 bg-black rounded-lg p-3 max-w-md mx-auto">
+      <div className="flex items-center gap-2 bg-black rounded-lg p-3 max-w-xl mx-auto">
         <Share2 className="w-4 h-4 text-action-400 flex-shrink-0" />
         <code className="flex-1 text-xs text-zinc-300 truncate">{inviteLink}</code>
         <Button size="sm" variant="outline" onClick={handleCopyInvite} className="flex-shrink-0 h-7 px-2">
