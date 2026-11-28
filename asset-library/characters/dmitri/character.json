@@ -1,0 +1,28 @@
+{
+  "id": "dmitri",
+  "name": "Dmitri Volkov",
+  "role": "Merchant of the Volkov trading house",
+  "cast": [
+    "npcs-1749870310278"
+  ],
+  "height": 1.8,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-back.webp"
+  },
+  "who": "Dmitri Volkov, a sturdy human merchant of about sixty with neatly combed white hair and a full neatly trimmed white beard, shrewd keen eyes, wearing a broad-brimmed brown leather hat, a tailored deep-red riding coat with a cream fur collar over a dark charcoal buttoned doublet with a leather cross-strap and belt, brown leather gloves, dark riding trousers, and tall cuffed brown leather riding boots",
+  "stow": "Although the reference card shows him mounted on a horse, paint ONLY Dmitri STANDING UPRIGHT on both feet on the ground, with NO horse, NO saddle, NO saddlebags, NO blanket roll, NO reins and NO stirrups anywhere in the picture. His red riding coat hangs straight down past his hips clear of his outstretched arms, and both gloved hands are empty and open.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Talk": "m2m/idle-talking",
+    "Greet": "m2m/greeting",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

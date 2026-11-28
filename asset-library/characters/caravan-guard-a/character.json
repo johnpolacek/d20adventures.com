@@ -1,0 +1,28 @@
+{
+  "id": "caravan-guard-a",
+  "name": "Caravan Guard",
+  "role": "Volkov house guard",
+  "cast": [
+    "caravan-guard-a"
+  ],
+  "height": 1.82,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/caravan-guard-a-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/caravan-guard-a-back.webp"
+  },
+  "who": "a weathered, watchful human male caravan guard of about forty with tall human proportions and a short dark beard, wearing a steel kettle helm, a padded brown quilted gambeson under a saffron yellow tabard bearing a black wolf's head emblem, leather bracers, dark trousers, and brown leather boots",
+  "stow": "He has no spear: the spear is left out of the picture entirely. The round wooden shield is slung flat across his back, and the sword stays sheathed at his left hip. Both hands are empty and open.",
+  "arms": 45,
+  "maker": "rodin",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Swing": "ual1:Sword_Attack@0-0.44 > ual1:Sword_Attack@1.0-1.53~8",
+    "Block": "ual2:Sword_Block",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

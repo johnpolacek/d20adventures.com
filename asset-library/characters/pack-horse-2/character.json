@@ -1,0 +1,30 @@
+{
+  "id": "pack-horse-2",
+  "name": "Pack Horse (Chestnut)",
+  "role": "Caravan pack horse",
+  "cast": [
+    "pack-horse-2"
+  ],
+  "height": 1.96,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/pack-horse-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/pack-horse-back.webp"
+  },
+  "who": "a sturdy warm chestnut pack horse with saddle packs",
+  "variantOf": "pack-horse-1",
+  "recolor": [
+    {
+      "hue": [
+        5,
+        45
+      ],
+      "minSat": 0.12,
+      "shift": 8,
+      "sat": 1.25,
+      "light": 1.22,
+      "keepSkin": false,
+      "keepMetal": true,
+      "keepFace": false
+    }
+  ]
+}

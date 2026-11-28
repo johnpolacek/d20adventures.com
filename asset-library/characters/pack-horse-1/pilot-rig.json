@@ -1,0 +1,64 @@
+{
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab43fd2/ktKRkGCuRszX9j0Gt6YcU_source.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "source.glb",
+    "file_size": 4683568
+  },
+  "rigged_character_glb": {
+    "url": "https://v3b.fal.media/files/b/0ab43fd2/l3DyFroKLc92SuMcwDJDe_rigged_character.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "rigged_character.glb",
+    "file_size": 4648260
+  },
+  "animations": [
+    {
+      "action_id": "canine_000001",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab43fd2/Vl9JbPqiJE1DVgPA9-ISs_animation_1.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_1.glb",
+        "file_size": 4655192
+      }
+    },
+    {
+      "action_id": "canine_000007",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab43fd3/Zsbbh79Ob4p0aFaOWor14_animation_2.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_2.glb",
+        "file_size": 4655304
+      }
+    },
+    {
+      "action_id": "canine_000013",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab43fd3/r2MOA3mZJXFJYR7xWDoRG_animation_3.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_3.glb",
+        "file_size": 4655392
+      }
+    },
+    {
+      "action_id": "canine_000018",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab43fd3/14Shl9szXhsuLlpIqPtz0_animation_4.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_4.glb",
+        "file_size": 4655392
+      }
+    },
+    {
+      "action_id": "canine_000033",
+      "animation_glb": {
+        "url": "https://v3b.fal.media/files/b/0ab43fd3/nFnh-nL5HaNaoKemr_gTn_animation_5.glb",
+        "content_type": "model/gltf-binary",
+        "file_name": "animation_5.glb",
+        "file_size": 4655392
+      }
+    }
+  ],
+  "fbx_file": null,
+  "additional_files": [],
+  "textures": []
+}

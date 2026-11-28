@@ -1,0 +1,29 @@
+{
+  "id": "draft-horse-2",
+  "name": "Draft Horse (Bay)",
+  "role": "Caravan wagon horse",
+  "cast": [
+    "draft-horse-2"
+  ],
+  "height": 2.15,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/draft-horse-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/draft-horse-back.webp"
+  },
+  "who": "a big, heavy warm bay-brown draft horse in dark leather wagon harness",
+  "variantOf": "draft-horse-1",
+  "recolor": [
+    {
+      "lightness": [
+        0.22,
+        0.92
+      ],
+      "tint": "#6b482e",
+      "strength": 0.58,
+      "light": 0.82,
+      "keepSkin": false,
+      "keepMetal": true,
+      "keepFace": false
+    }
+  ]
+}

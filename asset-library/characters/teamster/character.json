@@ -1,0 +1,26 @@
+{
+  "id": "teamster",
+  "name": "Teamster",
+  "role": "Volkov wagon driver",
+  "cast": [
+    "teamster"
+  ],
+  "height": 1.76,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/teamster-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/teamster-back.webp"
+  },
+  "who": "a broad, ruddy human male wagon driver of about fifty with a grey-stubbled jaw and a battered grey-brown felt hat, wearing a faded saffron work shirt with rolled sleeves, a worn brown leather apron-vest with belt pouches, dark grey work trousers, and sturdy dusty boots",
+  "stow": "He has no whip in his hands: the coiled leather whip hangs flat from his belt or is left out of the picture. Both hands are empty and open.",
+  "arms": 45,
+  "maker": "rodin",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Talk": "m2m/idle-talking",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

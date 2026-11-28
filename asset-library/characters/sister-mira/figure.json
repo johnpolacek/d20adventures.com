@@ -1,0 +1,65 @@
+{
+  "id": "sister-mira",
+  "name": "Sister Mira",
+  "role": "Cleric of Valkara",
+  "cast": [
+    "npcs-1749870721240"
+  ],
+  "party": false,
+  "height": 1.7,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 199999,
+    "cost": 2.3,
+    "made": "2026-11-28",
+    "built": "2026-11-28"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Staff Idle",
+    "Pray",
+    "Cast"
+  ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "gaits": {
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.81
+      }
+    }
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 199999,
+      "megabytes": 13.57,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19996,
+      "megabytes": 1.9,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5978,
+      "megabytes": 1,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

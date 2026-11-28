@@ -1,0 +1,62 @@
+{
+  "id": "teamster",
+  "name": "Teamster",
+  "role": "Volkov wagon driver",
+  "cast": [
+    "teamster"
+  ],
+  "party": false,
+  "height": 1.76,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
+    "triangles": 50000,
+    "cost": 0.6,
+    "made": "2026-11-28",
+    "built": "2026-11-28"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Hit",
+    "Fall",
+    "Talk"
+  ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "gaits": {
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.83
+      }
+    }
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 50000,
+      "megabytes": 3.88,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 20000,
+      "megabytes": 1.46,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5998,
+      "megabytes": 0.71,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

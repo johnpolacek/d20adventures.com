@@ -1,0 +1,7 @@
+{
+  "Idle": "canine_000001",
+  "Walk": "canine_000007",
+  "Run": "canine_000033",
+  "Hit": "canine_000013",
+  "Fall": "canine_000018"
+}

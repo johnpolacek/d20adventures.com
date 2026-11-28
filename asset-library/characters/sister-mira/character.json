@@ -1,0 +1,34 @@
+{
+  "id": "sister-mira",
+  "name": "Sister Mira",
+  "role": "Cleric of Valkara",
+  "cast": [
+    "npcs-1749870721240"
+  ],
+  "height": 1.7,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/sister-mira-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/sister-mira-back.webp"
+  },
+  "who": "Sister Mira, a sturdy human woman in her late twenties with sun-kissed, freckled skin, kind grey-green eyes, and long curly brown hair worn in two braids over her shoulders, in well-kept brown leather armour with a short pale fur collar over simple undyed cream wool robes, a silver sunburst and scales holy symbol of Valkara on a chain at her chest, leather bracers and belt pouches, brown boots, and a travelling pack with a bedroll on her back",
+  "stow": "She has no staff: the wooden walking staff is left out of the picture entirely. Both hands are empty and open. Her sleeves fit close to her arms and her leather coat panels hang straight at her sides, leaving a clear gap of background between each arm and her body.",
+  "arms": 45,
+  "holds": {
+    "what": "staff",
+    "hand": "R",
+    "length": 1.9
+  },
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "m2m/walk-female",
+    "Staff Idle": "m2m/polearm-idle",
+    "Pray": "m2m/pray",
+    "Cast": "ual1:Spell_Simple_Enter > ual1:Spell_Simple_Shoot > ual1:Spell_Simple_Exit",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

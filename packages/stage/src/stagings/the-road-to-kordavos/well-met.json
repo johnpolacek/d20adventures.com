@@ -8,7 +8,7 @@
       "id": "npcs-1749870310278",
       "name": "Dmitri Volkov",
       "role": "Merchant of the Volkov trading house",
-      "height": 2.6,
+      "height": 1.8,
       "art": {
         "front": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-front.webp",
         "back": "/stage/fixtures/the-road-to-kordavos/dmitri-mounted-back.webp",
@@ -266,11 +266,11 @@
     },
     "dmitri": {
       "subject": "npcs-1749870310278",
-      "distance": 4.4,
+      "distance": 3,
       "angle": 18,
-      "height": 1.5,
-      "lookHeight": 2.1,
-      "fov": 46,
+      "height": 1.55,
+      "lookHeight": 1.45,
+      "fov": 44,
       "label": "Dmitri"
     },
     "elaraen": {

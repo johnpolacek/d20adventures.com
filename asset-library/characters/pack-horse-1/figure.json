@@ -1,0 +1,56 @@
+{
+  "id": "pack-horse-1",
+  "name": "Pack Horse",
+  "role": "Caravan pack horse",
+  "cast": [
+    "pack-horse-1"
+  ],
+  "party": false,
+  "height": 2,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hyper3D Low Poly on fal, rigged by Hyper3D",
+    "triangles": 9166,
+    "cost": 0.4,
+    "made": "2026-11-28",
+    "built": "2026-11-28"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Fall",
+    "Hit"
+  ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall"
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 9166,
+      "megabytes": 3.16,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 9166,
+      "megabytes": 1.1,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.8,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

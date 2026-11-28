@@ -106,7 +106,7 @@ ${
 
 Pose, in every view: standing square on all four feet, as an animal stands at rest, with each leg straight under the body and a clear gap of background between the legs. Not rearing, not crouching, nothing raised. ${b.stow} The head held level and forward on the neck, mouth closed, looking straight ahead. Calm.
 
-Keep this creature's head, colouring, markings, build and proportions. Render it as real scales, skin, claws and horn.
+Keep this creature's head, colouring, markings, build and proportions. Render it as real fur, hair, scales, skin, hooves, claws, horn, leather and worn gear as fits this creature.
 
 Lighting: soft, even, shadowless studio light from the front, the same in both views, with no rim light and no cast shadow. Background: flat, plain mid-grey, edge to edge. No text, no labels, no props, no floor line.`
 

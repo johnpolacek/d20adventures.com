@@ -1,0 +1,64 @@
+{
+  "id": "caravan-guard-a",
+  "name": "Caravan Guard",
+  "role": "Volkov house guard",
+  "cast": [
+    "caravan-guard-a"
+  ],
+  "party": false,
+  "height": 1.82,
+  "front": "front.webp",
+  "source": {
+    "generator": "Rodin Gen-2.5 on fal, rigged by Hyper3D",
+    "triangles": 50000,
+    "cost": 0.6,
+    "made": "2026-11-28",
+    "built": "2026-11-28"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swing",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Block"
+  ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "gaits": {
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.8
+      }
+    }
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 50000,
+      "megabytes": 3.78,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19998,
+      "megabytes": 1.51,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 5998,
+      "megabytes": 0.76,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "borina",
+  "name": "Borina Runetongue",
+  "role": "Dwarf fortune teller",
+  "cast": [
+    "npcs-1749870598631"
+  ],
+  "height": 1.38,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/borina-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/borina-back.webp"
+  },
+  "who": "Borina Runetongue, a stout, very broad old dwarf woman with stout dwarf proportions, a weathered, deeply lined face and piercing blue eyes, long dark grey-streaked hair bound by an embroidered headband in braids threaded with silver beads, wearing layered dark navy and charcoal embroidered robes with red and gold borders over an olive embroidered vest and brown leather belt, silver necklaces and amulets, wide silver bracelets, rings, and sturdy brown leather boots",
+  "stow": "Although the reference card shows her seated on a stool, paint her STANDING UPRIGHT on both feet with NO stool and NO chair anywhere in the picture. Her long navy robes hang straight down to her boots. Keep her robe sleeves close and fitted to her arms, ending at the silver bracelets at her wrists with no wide hanging cuffs, so there is a clear gap of background between each arm and her body all the way down.",
+  "arms": 45,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "m2m/sitting-idle",
+    "Stand Idle": "ual1:Idle_Loop",
+    "Talk": "m2m/sitting-talking",
+    "Walk": "ual1:Walk_Loop",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

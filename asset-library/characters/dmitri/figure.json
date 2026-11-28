@@ -1,0 +1,64 @@
+{
+  "id": "dmitri",
+  "name": "Dmitri Volkov",
+  "role": "Merchant of the Volkov trading house",
+  "cast": [
+    "npcs-1749870310278"
+  ],
+  "party": false,
+  "height": 1.8,
+  "front": "front.webp",
+  "source": {
+    "generator": "Hi3D v3.0 on fal, rigged by Hyper3D",
+    "triangles": 200000,
+    "cost": 2.3,
+    "made": "2026-11-28",
+    "built": "2026-11-28"
+  },
+  "rig": {
+    "bones": 0,
+    "weights": "hyper3d"
+  },
+  "clips": [
+    "Idle",
+    "Walk",
+    "Sidestep",
+    "Hit",
+    "Fall",
+    "Talk",
+    "Greet"
+  ],
+  "motion": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "hit": "Hit",
+    "fall": "Fall",
+    "gaits": {
+      "walk": {
+        "clip": "Walk",
+        "speed": 0.88
+      }
+    }
+  },
+  "lods": [
+    {
+      "file": "lod0.glb",
+      "triangles": 200000,
+      "megabytes": 11,
+      "texture": 4096
+    },
+    {
+      "file": "lod1.glb",
+      "triangles": 19998,
+      "megabytes": 1.54,
+      "texture": 1024
+    },
+    {
+      "file": "lod2.glb",
+      "triangles": 6000,
+      "megabytes": 0.85,
+      "texture": 512
+    }
+  ],
+  "thumb": "thumb.webp"
+}

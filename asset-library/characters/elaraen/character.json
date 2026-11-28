@@ -1,0 +1,28 @@
+{
+  "id": "elaraen",
+  "name": "Elaraen Whisperwind",
+  "role": "Half-elf bard",
+  "cast": [
+    "npcs-1749870658664"
+  ],
+  "height": 1.8,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/elaraen-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/elaraen-back.webp"
+  },
+  "who": "Elaraen Whisperwind, a lean half-elf man of about thirty with expressive green eyes, slightly pointed ears, tousled dark hair, and a charming, easy expression, in a moss-green quilted vest over a loose cream shirt with rolled sleeves, a colourful patterned red, teal and gold scarf wound round his neck, a small silver brooch, brown trousers, worn brown boots, and a travelling pack with a bedroll on his back",
+  "stow": "He has no lute: the lute is left out of the picture entirely. Both hands are empty and open. The ends of his patterned scarf lie flat against his chest and waist, and his travelling pack sits neatly on his back, leaving a clear gap of background between each arm and his torso.",
+  "arms": 40,
+  "maker": "hi3d",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "ual1:Walk_Loop",
+    "Talk": "m2m/idle-talking",
+    "Greet": "m2m/greeting",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

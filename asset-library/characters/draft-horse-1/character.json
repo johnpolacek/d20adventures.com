@@ -1,0 +1,25 @@
+{
+  "id": "draft-horse-1",
+  "name": "Draft Horse",
+  "role": "Caravan wagon horse",
+  "cast": [
+    "draft-horse-1"
+  ],
+  "height": 2.15,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/draft-horse-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/draft-horse-back.webp"
+  },
+  "who": "a big, heavy dapple-grey draft horse with a pale cream mane and tail and feathered hooves, wearing a snug dark brown leather harness with a padded leather collar around its neck, brass buckles, and a leather bridle with blinkers",
+  "stow": "No wagon, no rider, and no long loose harness traces or shafts sticking out from its sides: keep all leather harness straps snug and flat against the horse's neck, chest and back so nothing protrudes or floats. Its tail hangs naturally straight down behind its hindquarters, clear of the hind legs.",
+  "arms": 0,
+  "creature": true,
+  "stance": "four",
+  "maker": "lowpoly",
+  "low": {
+    "faces": 10000
+  },
+  "rig": "quadruped",
+  "stock": "canine",
+  "gloss": 0.5
+}

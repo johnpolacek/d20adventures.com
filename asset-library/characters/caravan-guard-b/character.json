@@ -1,0 +1,26 @@
+{
+  "id": "caravan-guard-b",
+  "name": "Caravan Guard (Scout)",
+  "role": "Volkov house guard",
+  "cast": [
+    "caravan-guard-b"
+  ],
+  "height": 1.72,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/caravan-guard-b-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/caravan-guard-b-back.webp"
+  },
+  "who": "a lean, alert human female caravan guard of about thirty with sun-browned skin and short cropped black hair, wearing a short brown leather jerkin over a saffron yellow tunic bearing a black wolf's head emblem, leather bracers, a grey travelling cloak draped behind her shoulders, dark trousers, and grey-brown boots",
+  "stow": "She has no crossbow in her hands: the crossbow is left out of the picture entirely. The quiver of bolts stays buckled tightly at her hip, and her grey cloak hangs straight behind her back clear of the gap between her outstretched arms and her torso. Both hands are empty and open.",
+  "arms": 45,
+  "maker": "rodin",
+  "face": "close",
+  "gloss": 0.5,
+  "borrowed": {
+    "Idle": "ual1:Idle_Loop",
+    "Walk": "m2m/walk-female",
+    "Sidestep": "m2m/dodge-left",
+    "Hit": "ual1:Hit_Chest",
+    "Fall": "ual1:Death01"
+  }
+}

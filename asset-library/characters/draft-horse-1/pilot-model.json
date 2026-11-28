@@ -1,0 +1,12 @@
+{
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab43fa8/T8KTiN3QvENJwp42axfbx_base_high_pbr.glb",
+    "content_type": "model/gltf-binary",
+    "file_name": "base_high_pbr.glb",
+    "file_size": 6489128
+  },
+  "model_meshes": [],
+  "textures": [],
+  "rigged_model_mesh": null,
+  "rigged_model_meshes": []
+}

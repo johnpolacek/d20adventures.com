@@ -1,0 +1,25 @@
+{
+  "id": "pack-horse-1",
+  "name": "Pack Horse",
+  "role": "Caravan pack horse",
+  "cast": [
+    "pack-horse-1"
+  ],
+  "height": 2.0,
+  "card": {
+    "front": "/stage/fixtures/the-road-to-kordavos/pack-horse-front.webp",
+    "back": "/stage/fixtures/the-road-to-kordavos/pack-horse-back.webp"
+  },
+  "who": "a sturdy dark-bay pack horse with a black mane and tail, wearing a plain leather halter and a neat wooden pack saddle tightly loaded with rolled canvas blankets, oilskin cloth bundles, and a small wooden cask strapped close to its back",
+  "stow": "No rider and no hanging lead rope dangling under the neck or legs: leave the lead rope off completely. Keep the pack saddle, cask and rolled cloth bundles strapped tightly and neatly to the horse's back so nothing dangles down near the legs. Its tail hangs naturally straight down behind its hindquarters, clear of the hind legs.",
+  "arms": 0,
+  "creature": true,
+  "stance": "four",
+  "maker": "lowpoly",
+  "low": {
+    "faces": 10000
+  },
+  "rig": "quadruped",
+  "stock": "canine",
+  "gloss": 0.5
+}

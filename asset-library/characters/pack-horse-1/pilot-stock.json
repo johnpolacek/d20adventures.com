@@ -1,0 +1,632 @@
+[
+  {
+    "animation_id": "canine_000030",
+    "category": "canine",
+    "display_name": "action scratching",
+    "content_description": "Scratching a post with front paws",
+    "frames": 252,
+    "duration_seconds": 8.366666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000010",
+    "category": "canine",
+    "display_name": "jump over obstacle",
+    "content_description": "Jumping over an obstacle",
+    "frames": 391,
+    "duration_seconds": 13,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000014",
+    "category": "canine",
+    "display_name": "aggressive",
+    "content_description": "Aggressive, threatening stance in place",
+    "frames": 301,
+    "duration_seconds": 10,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 300,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000015",
+    "category": "canine",
+    "display_name": "attack aggressive legs",
+    "content_description": "Aggressive lunge, attacking with front paws",
+    "frames": 31,
+    "duration_seconds": 1,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 30,
+      "displacement": [
+        -1.341104507446289e-7,
+        0,
+        1.95144584774971
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000034",
+    "category": "canine",
+    "display_name": "attack kick",
+    "content_description": "Kick attack backward with hind legs",
+    "frames": 30,
+    "duration_seconds": 0.9666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 29,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000011",
+    "category": "canine",
+    "display_name": "attack left",
+    "content_description": "Swiping attack with left front paw",
+    "frames": 31,
+    "duration_seconds": 1,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 30,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000012",
+    "category": "canine",
+    "display_name": "attack right",
+    "content_description": "Swiping attack with right front paw",
+    "frames": 31,
+    "duration_seconds": 1,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 30,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000016",
+    "category": "canine",
+    "display_name": "death",
+    "content_description": "Death: leaping up, then collapsing",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000018",
+    "category": "canine",
+    "display_name": "death",
+    "content_description": "Death: falling onto its side",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000017",
+    "category": "canine",
+    "display_name": "eating",
+    "content_description": "Eating with head lowered",
+    "frames": 194,
+    "duration_seconds": 6.433333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 193,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000019",
+    "category": "canine",
+    "display_name": "eating",
+    "content_description": "Eating with head lowered",
+    "frames": 187,
+    "duration_seconds": 6.2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 186,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000000",
+    "category": "canine",
+    "display_name": "frightened",
+    "content_description": "Cowering in a frightened pose",
+    "frames": 60,
+    "duration_seconds": 1.9666666666666666,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000033",
+    "category": "canine",
+    "display_name": "gallop",
+    "content_description": "Galloping at full speed",
+    "frames": 17,
+    "duration_seconds": 0.5333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "next",
+      "period_frames": 17,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000013",
+    "category": "canine",
+    "display_name": "hit chest l heavy",
+    "content_description": "Reacting to a heavy hit on the chest",
+    "frames": 36,
+    "duration_seconds": 1.1666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 35,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000001",
+    "category": "canine",
+    "display_name": "idle",
+    "content_description": "Standing idle",
+    "frames": 108,
+    "duration_seconds": 3.566666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 107,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000020",
+    "category": "canine",
+    "display_name": "jump run",
+    "content_description": "Running, then making a big leap",
+    "frames": 27,
+    "duration_seconds": 0.8666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000031",
+    "category": "canine",
+    "display_name": "loco run ip",
+    "content_description": "Running in place",
+    "frames": 78,
+    "duration_seconds": 2.566666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000021",
+    "category": "canine",
+    "display_name": "loco sneak",
+    "content_description": "Sneaking forward on tiptoe",
+    "frames": 120,
+    "duration_seconds": 3.966666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000022",
+    "category": "canine",
+    "display_name": "loco swim",
+    "content_description": "Swimming forward",
+    "frames": 31,
+    "duration_seconds": 1,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 30,
+      "displacement": [
+        3.552713678800501e-15,
+        0,
+        1.2500008940696716
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000023",
+    "category": "canine",
+    "display_name": "loco trot",
+    "content_description": "Trotting forward",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 19,
+      "displacement": [
+        2.4121254682540894e-7,
+        0,
+        1.6007840409874916
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000024",
+    "category": "canine",
+    "display_name": "loco walk l",
+    "content_description": "Walking while turning left",
+    "frames": 36,
+    "duration_seconds": 1.1666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000025",
+    "category": "canine",
+    "display_name": "loco walk back",
+    "content_description": "Walking backward",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000026",
+    "category": "canine",
+    "display_name": "lying",
+    "content_description": "Lying down, resting",
+    "frames": 576,
+    "duration_seconds": 19.166666666666668,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 575,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000002",
+    "category": "canine",
+    "display_name": "run",
+    "content_description": "Galloping at full speed",
+    "frames": 24,
+    "duration_seconds": 0.7666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 23,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000032",
+    "category": "canine",
+    "display_name": "sitting",
+    "content_description": "Sitting idle",
+    "frames": 350,
+    "duration_seconds": 11.633333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 349,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000003",
+    "category": "canine",
+    "display_name": "stand",
+    "content_description": "Standing up from four legs onto hind legs",
+    "frames": 81,
+    "duration_seconds": 2.6666666666666665,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 80,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000009",
+    "category": "canine",
+    "display_name": "stand",
+    "content_description": "Standing and pawing at something",
+    "frames": 441,
+    "duration_seconds": 14.666666666666666,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 440,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000004",
+    "category": "canine",
+    "display_name": "start walk",
+    "content_description": "Starting to walk from standing",
+    "frames": 28,
+    "duration_seconds": 0.9,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000027",
+    "category": "canine",
+    "display_name": "trans lying to sitting",
+    "content_description": "Transition from lying down to sitting",
+    "frames": 71,
+    "duration_seconds": 2.3333333333333335,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000028",
+    "category": "canine",
+    "display_name": "trans lying to sleeping",
+    "content_description": "Lying down, lowering head to sleep",
+    "frames": 82,
+    "duration_seconds": 2.7,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000029",
+    "category": "canine",
+    "display_name": "trans sitting to stand",
+    "content_description": "Transition from sitting to standing up",
+    "frames": 48,
+    "duration_seconds": 1.5666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000008",
+    "category": "canine",
+    "display_name": "trans turn l on spot",
+    "content_description": "Turning 90 degrees left on the spot",
+    "frames": 71,
+    "duration_seconds": 2.3333333333333335,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000005",
+    "category": "canine",
+    "display_name": "trot",
+    "content_description": "Trotting",
+    "frames": 16,
+    "duration_seconds": 0.5,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 15,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000007",
+    "category": "canine",
+    "display_name": "walk",
+    "content_description": "Walking",
+    "frames": 39,
+    "duration_seconds": 1.2666666666666666,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 38,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "canine_000006",
+    "category": "canine",
+    "display_name": "walk stop",
+    "content_description": "Walking, then coming to a stop",
+    "frames": 34,
+    "duration_seconds": 1.1,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  }
+]

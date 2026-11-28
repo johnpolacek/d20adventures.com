@@ -1,0 +1,2036 @@
+[
+  {
+    "animation_id": "human_000000",
+    "category": "human",
+    "display_name": "arm stretching",
+    "content_description": "Stretching arms",
+    "frames": 267,
+    "duration_seconds": 8.866666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 266,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000001",
+    "category": "human",
+    "display_name": "batter on deck",
+    "content_description": "Baseball batter on deck, warming up and swinging",
+    "frames": 1121,
+    "duration_seconds": 37.333333333333336,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 1120,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000002",
+    "category": "human",
+    "display_name": "big jump",
+    "content_description": "Big running jump into a flip",
+    "frames": 72,
+    "duration_seconds": 2.3666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000003",
+    "category": "human",
+    "display_name": "big stomach hit",
+    "content_description": "Reacting to a big hit to the stomach",
+    "frames": 43,
+    "duration_seconds": 1.4,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 42,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000004",
+    "category": "human",
+    "display_name": "boxing",
+    "content_description": "Boxing",
+    "frames": 53,
+    "duration_seconds": 1.7333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 52,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000005",
+    "category": "human",
+    "display_name": "brutal assassination",
+    "content_description": "Brutal assassination: hit in the stomach, dying",
+    "frames": 149,
+    "duration_seconds": 4.933333333333334,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000006",
+    "category": "human",
+    "display_name": "crawl backwards",
+    "content_description": "Crawling backwards, face up",
+    "frames": 120,
+    "duration_seconds": 3.966666666666667,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 119,
+      "displacement": [
+        -0.00001136737409979105,
+        0,
+        -3.1296130679547787
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000007",
+    "category": "human",
+    "display_name": "cross jumps rotation",
+    "content_description": "Warm-up cross jumps, alternating feet",
+    "frames": 62,
+    "duration_seconds": 2.033333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 61,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000008",
+    "category": "human",
+    "display_name": "rifle stealth walk",
+    "content_description": "Rifle stealth walk, moving slowly forward",
+    "frames": 52,
+    "duration_seconds": 1.7,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 51,
+      "displacement": [
+        0.00235004723072052,
+        0,
+        1.6136489901691675
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000073",
+    "category": "human",
+    "display_name": "crouched walking",
+    "content_description": "Crouched walking, sneaking forward",
+    "frames": 32,
+    "duration_seconds": 1.0333333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 31,
+      "displacement": [
+        -0.000029712915420532227,
+        0,
+        1.4718301175162196
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000009",
+    "category": "human",
+    "display_name": "dancing maraschino step",
+    "content_description": "Dancing the Maraschino step",
+    "frames": 98,
+    "duration_seconds": 3.2333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 97,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000010",
+    "category": "human",
+    "display_name": "dancing twerk",
+    "content_description": "Twerk dancing",
+    "frames": 457,
+    "duration_seconds": 15.2,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000011",
+    "category": "human",
+    "display_name": "death from right",
+    "content_description": "Death from the right, falling down",
+    "frames": 100,
+    "duration_seconds": 3.3,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000012",
+    "category": "human",
+    "display_name": "drunk idle",
+    "content_description": "Drunk idle, swaying in place",
+    "frames": 223,
+    "duration_seconds": 7.4,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 222,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000013",
+    "category": "human",
+    "display_name": "dwarf idle",
+    "content_description": "Dwarf idle, standing and fanning oneself",
+    "frames": 211,
+    "duration_seconds": 7,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 210,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000014",
+    "category": "human",
+    "display_name": "dying",
+    "content_description": "Dying: stepping back twice, then falling forward",
+    "frames": 133,
+    "duration_seconds": 4.4,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000074",
+    "category": "human",
+    "display_name": "dying",
+    "content_description": "Dying: kneeling down, then falling forward",
+    "frames": 174,
+    "duration_seconds": 5.766666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000015",
+    "category": "human",
+    "display_name": "entry",
+    "content_description": "Cheering entrance",
+    "frames": 312,
+    "duration_seconds": 10.366666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 311,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000016",
+    "category": "human",
+    "display_name": "fishing cast",
+    "content_description": "Fishing cast: casting the rod and reeling in",
+    "frames": 264,
+    "duration_seconds": 8.766666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 263,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000017",
+    "category": "human",
+    "display_name": "flare",
+    "content_description": "Breakdance flare spin",
+    "frames": 31,
+    "duration_seconds": 1,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 30,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000018",
+    "category": "human",
+    "display_name": "flying kick",
+    "content_description": "Jumping flying kick",
+    "frames": 46,
+    "duration_seconds": 1.5,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000019",
+    "category": "human",
+    "display_name": "forward jump",
+    "content_description": "Standing forward jump",
+    "frames": 74,
+    "duration_seconds": 2.433333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 73,
+      "displacement": [
+        -1.0477378964424133e-8,
+        0,
+        1.319525996223092
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000020",
+    "category": "human",
+    "display_name": "frisbee throw",
+    "content_description": "Throwing a frisbee",
+    "frames": 100,
+    "duration_seconds": 3.3,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 99,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000021",
+    "category": "human",
+    "display_name": "goalie throw",
+    "content_description": "Goalkeeper throwing the ball",
+    "frames": 116,
+    "duration_seconds": 3.8333333333333335,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000022",
+    "category": "human",
+    "display_name": "goalkeeper overhand throw",
+    "content_description": "Goalkeeper running up and throwing overhand",
+    "frames": 86,
+    "duration_seconds": 2.8333333333333335,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000023",
+    "category": "human",
+    "display_name": "golf drive",
+    "content_description": "Golf drive swing",
+    "frames": 177,
+    "duration_seconds": 5.866666666666666,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000024",
+    "category": "human",
+    "display_name": "goofy running",
+    "content_description": "Goofy running, comical jog",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 19,
+      "displacement": [
+        -0.00039509590715169907,
+        0,
+        1.1312428154051304
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000025",
+    "category": "human",
+    "display_name": "happy idle",
+    "content_description": "Happy idle, standing cheerfully",
+    "frames": 89,
+    "duration_seconds": 2.933333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 88,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000026",
+    "category": "human",
+    "display_name": "head hit",
+    "content_description": "Reacting to a hit to the head",
+    "frames": 44,
+    "duration_seconds": 1.4333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 43,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000027",
+    "category": "human",
+    "display_name": "hip hop dancing",
+    "content_description": "Hip hop dancing",
+    "frames": 135,
+    "duration_seconds": 4.466666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 134,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000075",
+    "category": "human",
+    "display_name": "hip hop dancing",
+    "content_description": "Hip hop dancing",
+    "frames": 414,
+    "duration_seconds": 13.766666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 413,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000090",
+    "category": "human",
+    "display_name": "idle",
+    "content_description": "Standing idle",
+    "frames": 251,
+    "duration_seconds": 8.333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 250,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000091",
+    "category": "human",
+    "display_name": "idle",
+    "content_description": "Standing idle, body turned sideways",
+    "frames": 60,
+    "duration_seconds": 1.9666666666666666,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 59,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000092",
+    "category": "human",
+    "display_name": "idle",
+    "content_description": "Standing idle",
+    "frames": 500,
+    "duration_seconds": 16.633333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 499,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000093",
+    "category": "human",
+    "display_name": "idle",
+    "content_description": "Standing idle",
+    "frames": 251,
+    "duration_seconds": 8.333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 250,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000028",
+    "category": "human",
+    "display_name": "injured run",
+    "content_description": "Injured run, running with a limp",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 19,
+      "displacement": [
+        -0.00012219883501529694,
+        0,
+        1.5637438632547855
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000029",
+    "category": "human",
+    "display_name": "jogging",
+    "content_description": "Jogging",
+    "frames": 78,
+    "duration_seconds": 2.566666666666667,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 77,
+      "displacement": [
+        2.444721758365631e-8,
+        0,
+        5.073431425727904
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000030",
+    "category": "human",
+    "display_name": "joyful jump",
+    "content_description": "Joyful jump, jumping happily",
+    "frames": 57,
+    "duration_seconds": 1.8666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 56,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000031",
+    "category": "human",
+    "display_name": "jumping",
+    "content_description": "Running jump, vaulting over an obstacle",
+    "frames": 36,
+    "duration_seconds": 1.1666666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000032",
+    "category": "human",
+    "display_name": "kicking",
+    "content_description": "Flying kick in place",
+    "frames": 67,
+    "duration_seconds": 2.2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 66,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000076",
+    "category": "human",
+    "display_name": "kicking",
+    "content_description": "Kicking in place",
+    "frames": 46,
+    "duration_seconds": 1.5,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 45,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000033",
+    "category": "human",
+    "display_name": "kidney hit",
+    "content_description": "Reacting to a kidney hit from the side",
+    "frames": 35,
+    "duration_seconds": 1.1333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 34,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000034",
+    "category": "human",
+    "display_name": "kip up",
+    "content_description": "Kip up from the ground",
+    "frames": 62,
+    "duration_seconds": 2.033333333333333,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000035",
+    "category": "human",
+    "display_name": "leg sweep",
+    "content_description": "Leg sweep, spinning low kick",
+    "frames": 87,
+    "duration_seconds": 2.8666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 86,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000036",
+    "category": "human",
+    "display_name": "low crawl",
+    "content_description": "Low crawl, crawling slowly",
+    "frames": 71,
+    "duration_seconds": 2.3333333333333335,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 70,
+      "displacement": [
+        -5.4016709327697754e-8,
+        0,
+        1.4474131688475609
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000084",
+    "category": "human",
+    "display_name": "martelo",
+    "content_description": "Martelo high kick",
+    "frames": 40,
+    "duration_seconds": 1.3,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 39,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000037",
+    "category": "human",
+    "display_name": "moonwalk",
+    "content_description": "Moonwalking",
+    "frames": 32,
+    "duration_seconds": 1.0333333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 31,
+      "displacement": [
+        1.210719347000122e-8,
+        0,
+        -1.0075325891375542
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000038",
+    "category": "human",
+    "display_name": "mutant jump attack",
+    "content_description": "Mutant jump attack, big leap",
+    "frames": 112,
+    "duration_seconds": 3.7,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 111,
+      "displacement": [
+        0.14367959881201386,
+        0,
+        1.7199619533494115
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000039",
+    "category": "human",
+    "display_name": "northern soul spin",
+    "content_description": "Northern soul spin dance move",
+    "frames": 122,
+    "duration_seconds": 4.033333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 121,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000040",
+    "category": "human",
+    "display_name": "offensive idle",
+    "content_description": "Offensive idle, warming up in fighting stance",
+    "frames": 318,
+    "duration_seconds": 10.566666666666666,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 317,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000041",
+    "category": "human",
+    "display_name": "pointing forward",
+    "content_description": "Pointing forward",
+    "frames": 142,
+    "duration_seconds": 4.7,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 141,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000042",
+    "category": "human",
+    "display_name": "quick roll to run",
+    "content_description": "Quick roll into a run",
+    "frames": 43,
+    "duration_seconds": 1.4,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000043",
+    "category": "human",
+    "display_name": "receiving an uppercut",
+    "content_description": "Receiving an uppercut, staggering back",
+    "frames": 51,
+    "duration_seconds": 1.6666666666666667,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 50,
+      "displacement": [
+        4.842877388000488e-8,
+        0,
+        -1.1316373529843986
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000046",
+    "category": "human",
+    "display_name": "naruto run",
+    "content_description": "Naruto run",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 19,
+      "displacement": [
+        2.9336661100387573e-8,
+        0,
+        2.6998540591448545
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000077",
+    "category": "human",
+    "display_name": "sideways run",
+    "content_description": "Running sideways",
+    "frames": 23,
+    "duration_seconds": 0.7333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 22,
+      "displacement": [
+        7.450580596923828e-9,
+        0,
+        2.5028324518352747
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000044",
+    "category": "human",
+    "display_name": "run backward",
+    "content_description": "Running backward",
+    "frames": 20,
+    "duration_seconds": 0.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 19,
+      "displacement": [
+        0.00041672721272334456,
+        0,
+        2.0068491753190756
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000045",
+    "category": "human",
+    "display_name": "run look back",
+    "content_description": "Running and looking back over the shoulder",
+    "frames": 68,
+    "duration_seconds": 2.2333333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 67,
+      "displacement": [
+        2.3283064365386963e-9,
+        0,
+        4.186304446309805
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000049",
+    "category": "human",
+    "display_name": "carry run",
+    "content_description": "Running while carrying something",
+    "frames": 39,
+    "duration_seconds": 1.2666666666666666,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 38,
+      "displacement": [
+        -2.0265360944904387e-8,
+        0,
+        3.7772902147844434
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000078",
+    "category": "human",
+    "display_name": "turn run",
+    "content_description": "Turning around, then running",
+    "frames": 50,
+    "duration_seconds": 1.6333333333333333,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000047",
+    "category": "human",
+    "display_name": "running jump",
+    "content_description": "Running jump",
+    "frames": 28,
+    "duration_seconds": 0.9,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 27,
+      "displacement": [
+        0.0010444107465445995,
+        0,
+        4.452687652781606
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000048",
+    "category": "human",
+    "display_name": "running slide",
+    "content_description": "Running into a slide",
+    "frames": 47,
+    "duration_seconds": 1.5333333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 46,
+      "displacement": [
+        -5.9371814131736755e-9,
+        0,
+        6.697434553876519
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000050",
+    "category": "human",
+    "display_name": "sad idle",
+    "content_description": "Sad idle, standing dejectedly",
+    "frames": 85,
+    "duration_seconds": 2.8,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 84,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000051",
+    "category": "human",
+    "display_name": "salsa dancing",
+    "content_description": "Salsa dancing",
+    "frames": 360,
+    "duration_seconds": 11.966666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 359,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000079",
+    "category": "human",
+    "display_name": "salsa dancing",
+    "content_description": "Salsa dancing",
+    "frames": 136,
+    "duration_seconds": 4.5,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 135,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000052",
+    "category": "human",
+    "display_name": "salute",
+    "content_description": "Saluting",
+    "frames": 86,
+    "duration_seconds": 2.8333333333333335,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 85,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000053",
+    "category": "human",
+    "display_name": "scary clown walk",
+    "content_description": "Scary clown walk, monster-like gait",
+    "frames": 46,
+    "duration_seconds": 1.5,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 45,
+      "displacement": [
+        -2.2351741790771484e-8,
+        0,
+        1.6778094600886106
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000054",
+    "category": "human",
+    "display_name": "shoulder hit and fall",
+    "content_description": "Shoulder hit on the left, falling down",
+    "frames": 94,
+    "duration_seconds": 3.1,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000055",
+    "category": "human",
+    "display_name": "singing",
+    "content_description": "Singing with a microphone in hand",
+    "frames": 420,
+    "duration_seconds": 13.966666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 419,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000056",
+    "category": "human",
+    "display_name": "sitting",
+    "content_description": "Sitting and jiggling legs",
+    "frames": 36,
+    "duration_seconds": 1.1666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 35,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000080",
+    "category": "human",
+    "display_name": "sit shake foot",
+    "content_description": "Sitting and shaking a foot",
+    "frames": 64,
+    "duration_seconds": 2.1,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 63,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000085",
+    "category": "human",
+    "display_name": "sitting",
+    "content_description": "Sitting with hands on legs",
+    "frames": 288,
+    "duration_seconds": 9.566666666666666,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 287,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000057",
+    "category": "human",
+    "display_name": "sit ups",
+    "content_description": "Doing sit-ups",
+    "frames": 68,
+    "duration_seconds": 2.2333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 67,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000058",
+    "category": "human",
+    "display_name": "snake hip hop dance",
+    "content_description": "Snake hip hop dancing",
+    "frames": 459,
+    "duration_seconds": 15.266666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 458,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000081",
+    "category": "human",
+    "display_name": "standing death backward",
+    "content_description": "Standing death: hit from behind, falling down",
+    "frames": 78,
+    "duration_seconds": 2.566666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000059",
+    "category": "human",
+    "display_name": "standing melee kick",
+    "content_description": "Standing melee front kick",
+    "frames": 44,
+    "duration_seconds": 1.4333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 43,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000060",
+    "category": "human",
+    "display_name": "standing react death left",
+    "content_description": "Standing death: hit, falling sideways",
+    "frames": 109,
+    "duration_seconds": 3.6,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000061",
+    "category": "human",
+    "display_name": "swimming",
+    "content_description": "Swimming breaststroke",
+    "frames": 137,
+    "duration_seconds": 4.533333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 136,
+      "displacement": [
+        -4.842877388000488e-8,
+        0,
+        2.1890550181269646
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000062",
+    "category": "human",
+    "display_name": "swing dancing",
+    "content_description": "Swing dancing",
+    "frames": 742,
+    "duration_seconds": 24.7,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 741,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000063",
+    "category": "human",
+    "display_name": "taunt",
+    "content_description": "Taunt, tapping wrist",
+    "frames": 86,
+    "duration_seconds": 2.8333333333333335,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 85,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000064",
+    "category": "human",
+    "display_name": "throw",
+    "content_description": "Throwing in place",
+    "frames": 67,
+    "duration_seconds": 2.2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 66,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000065",
+    "category": "human",
+    "display_name": "throwing",
+    "content_description": "Throwing an object",
+    "frames": 168,
+    "duration_seconds": 5.566666666666666,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000066",
+    "category": "human",
+    "display_name": "twist dance",
+    "content_description": "Twist dancing",
+    "frames": 284,
+    "duration_seconds": 9.433333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 283,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000067",
+    "category": "human",
+    "display_name": "two cycle sprint",
+    "content_description": "Two-cycle sprint, running fast",
+    "frames": 33,
+    "duration_seconds": 1.0666666666666667,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 32,
+      "displacement": [
+        -1.4901161193847656e-8,
+        0,
+        6.783180206082761
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000068",
+    "category": "human",
+    "display_name": "two handed sword death",
+    "content_description": "Two-handed sword death, falling backward",
+    "frames": 73,
+    "duration_seconds": 2.4,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000069",
+    "category": "human",
+    "display_name": "limping walk",
+    "content_description": "Limping walk",
+    "frames": 50,
+    "duration_seconds": 1.6333333333333333,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 49,
+      "displacement": [
+        0.000027470290660858154,
+        0,
+        0.9277007449418306
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000082",
+    "category": "human",
+    "display_name": "staggering walk",
+    "content_description": "Staggering walk",
+    "frames": 64,
+    "duration_seconds": 2.1,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 63,
+      "displacement": [
+        0.00003703264519572258,
+        0,
+        2.995531833730638
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000086",
+    "category": "human",
+    "display_name": "tiptoe walk",
+    "content_description": "Tiptoe walk, sneaking quietly",
+    "frames": 139,
+    "duration_seconds": 4.6,
+    "loop": {
+      "kind": "travel",
+      "alignment": "next",
+      "period_frames": 139,
+      "displacement": [
+        -0.0009249740396626294,
+        0,
+        1.3301982628181577
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000087",
+    "category": "human",
+    "display_name": "staggering walk",
+    "content_description": "Staggering, wobbly walk",
+    "frames": 76,
+    "duration_seconds": 2.5,
+    "loop": {
+      "kind": "travel",
+      "alignment": "next",
+      "period_frames": 76,
+      "displacement": [
+        -0.005651063518598676,
+        0,
+        2.7273527728393674
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000088",
+    "category": "human",
+    "display_name": "elegant walk",
+    "content_description": "Elegant walk",
+    "frames": 42,
+    "duration_seconds": 1.3666666666666667,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 41,
+      "displacement": [
+        -0.00002344720996916294,
+        0,
+        1.4365337416529655
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000089",
+    "category": "human",
+    "display_name": "walking",
+    "content_description": "Walking",
+    "frames": 32,
+    "duration_seconds": 1.0333333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 31,
+      "displacement": [
+        1.1903466656804085e-8,
+        0,
+        1.8452243665233254
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000070",
+    "category": "human",
+    "display_name": "zombie crawl",
+    "content_description": "Zombie crawl, dragging forward with hands",
+    "frames": 155,
+    "duration_seconds": 5.133333333333334,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 154,
+      "displacement": [
+        -2.176966518163681e-8,
+        0,
+        2.2397908684797585
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000071",
+    "category": "human",
+    "display_name": "zombie scratch idle",
+    "content_description": "Zombie idle, hunched and scratching itchily",
+    "frames": 142,
+    "duration_seconds": 4.7,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 141,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000072",
+    "category": "human",
+    "display_name": "zombie stumbling",
+    "content_description": "Zombie stumbling, hunched, then falling down",
+    "frames": 149,
+    "duration_seconds": 4.933333333333334,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000094",
+    "category": "human",
+    "display_name": "aiming gun",
+    "content_description": "Picking up a gun and aiming forward",
+    "frames": 73,
+    "duration_seconds": 2.4,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000095",
+    "category": "human",
+    "display_name": "drawing gun",
+    "content_description": "Drawing a gun and aiming one-handed",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000096",
+    "category": "human",
+    "display_name": "female peek and aim",
+    "content_description": "Female peeking out to aim, then gun raised",
+    "frames": 79,
+    "duration_seconds": 2.6,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 78,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000097",
+    "category": "human",
+    "display_name": "femme peek around corner",
+    "content_description": "Gun raised, peeking around a corner",
+    "frames": 74,
+    "duration_seconds": 2.433333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 73,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000112",
+    "category": "human",
+    "display_name": "gunplay",
+    "content_description": "Gunplay: hunched ready stance, gun held low",
+    "frames": 121,
+    "duration_seconds": 4,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 120,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000113",
+    "category": "human",
+    "display_name": "gunplay",
+    "content_description": "Gunplay: rising from crouch to aim, then crouching",
+    "frames": 96,
+    "duration_seconds": 3.1666666666666665,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000098",
+    "category": "human",
+    "display_name": "gunplay",
+    "content_description": "Gunplay: two-handed aiming stance",
+    "frames": 7,
+    "duration_seconds": 0.2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 6,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000099",
+    "category": "human",
+    "display_name": "pistol idle",
+    "content_description": "Pistol idle, standing with two-handed aim",
+    "frames": 41,
+    "duration_seconds": 1.3333333333333333,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 40,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000100",
+    "category": "human",
+    "display_name": "pistol jump",
+    "content_description": "Jumping in place while aiming a pistol",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 60,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000101",
+    "category": "human",
+    "display_name": "pistol kneeling idle",
+    "content_description": "Pistol kneeling idle, aiming on one knee",
+    "frames": 115,
+    "duration_seconds": 3.8,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 114,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000102",
+    "category": "human",
+    "display_name": "gun prone left",
+    "content_description": "Turning left while lying prone with a gun",
+    "frames": 32,
+    "duration_seconds": 1.0333333333333334,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 31,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000103",
+    "category": "human",
+    "display_name": "reloading",
+    "content_description": "Reloading a gun while stepping",
+    "frames": 111,
+    "duration_seconds": 3.6666666666666665,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 110,
+      "displacement": [
+        -9.313225746154785e-10,
+        0,
+        4.019696109928191
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000104",
+    "category": "human",
+    "display_name": "rifle crouch backward walk",
+    "content_description": "Crouched walking backward with a rifle",
+    "frames": 61,
+    "duration_seconds": 2,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 60,
+      "displacement": [
+        2.60770320892334e-8,
+        0,
+        -0.6714148707687855
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000105",
+    "category": "human",
+    "display_name": "rifle run to dying",
+    "content_description": "Running with a rifle, shot, falling dead",
+    "frames": 75,
+    "duration_seconds": 2.466666666666667,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000106",
+    "category": "human",
+    "display_name": "rifle run to stop",
+    "content_description": "Running with a rifle, then stopping",
+    "frames": 45,
+    "duration_seconds": 1.4666666666666666,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000107",
+    "category": "human",
+    "display_name": "rifle idle",
+    "content_description": "Rifle idle, standing with rifle held low",
+    "frames": 232,
+    "duration_seconds": 7.7,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 231,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000108",
+    "category": "human",
+    "display_name": "shooting",
+    "content_description": "Standing and shooting a gun forward",
+    "frames": 36,
+    "duration_seconds": 1.1666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "duplicate",
+      "period_frames": 35,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000109",
+    "category": "human",
+    "display_name": "gun turn left",
+    "content_description": "Crouched aiming a gun, turning left",
+    "frames": 27,
+    "duration_seconds": 0.8666666666666667,
+    "loop": {
+      "kind": "in_place",
+      "alignment": "next",
+      "period_frames": 27,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000110",
+    "category": "human",
+    "display_name": "gun turn right",
+    "content_description": "Crouched aiming a gun, turning right",
+    "frames": 26,
+    "duration_seconds": 0.8333333333333334,
+    "loop": {
+      "kind": "none",
+      "alignment": "none",
+      "period_frames": null,
+      "displacement": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  {
+    "animation_id": "human_000111",
+    "category": "human",
+    "display_name": "walk with rifle",
+    "content_description": "Walking with a rifle held low",
+    "frames": 34,
+    "duration_seconds": 1.1,
+    "loop": {
+      "kind": "travel",
+      "alignment": "duplicate",
+      "period_frames": 33,
+      "displacement": [
+        -0.0000049122609198093414,
+        0,
+        1.443190909922123
+      ]
+    }
+  }
+]
