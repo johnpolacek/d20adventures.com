@@ -5,6 +5,7 @@ import { type CSSProperties, useState } from "react"
 import { setStandingOrders } from "@/app/_actions/adventure"
 import { DeathSaveMarks } from "@d20/ui/stage/roll-parts"
 import { standingOf, standingWords, WOUND_TONE } from "@d20/ui/stage/standing"
+import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
 import { Presence } from "@d20/ui/presence"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -75,7 +76,8 @@ export default function TurnCharacterList() {
                 )}
                 style={{ "--i": Math.min(index, 8) } as CSSProperties}
               >
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   aria-label={character.name}
                   onClick={() => handleCharacterClick(character)}

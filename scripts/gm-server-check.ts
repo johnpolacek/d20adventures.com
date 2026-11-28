@@ -114,9 +114,18 @@ async function main() {
   assert.equal(delays.at(-1), 2000)
   assert.equal(charges.length, 3)
 
+  const spendsBeforeCleaned = spends.length
   responses = [Object.assign(new Error("JSON parsing failed"), { text: '```json\n{"text":"Cleaned.","characterId":"pc"}\n```', usage: { totalTokens: 3 } })]
   assert.equal((await adapter.generateObject(args)).object.text, "Cleaned.")
   assert.equal(charges.length, 4)
+  assert.equal(spends.length, spendsBeforeCleaned + 1, "cleaned JSON recovery must still record daily budget spend")
+
+  // Cleaned JSON that violates the Zod schema must be rejected rather than returned unvalidated.
+  responses = [
+    Object.assign(new Error("JSON parsing failed"), { text: '```json\n{"text":123}\n```', usage: { totalTokens: 2 } }),
+    Object.assign(new Error("JSON parsing failed"), { text: '```json\n{"text":456}\n```', usage: { totalTokens: 2 } }),
+  ]
+  await assert.rejects(adapter.generateObject(args))
 
   for (const code of ["INSUFFICIENT_TOKENS", "CHARGE_FAILED"]) {
     chargeResult = { success: false, errorCode: code }

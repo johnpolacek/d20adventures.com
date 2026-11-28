@@ -326,7 +326,7 @@ export function section(doc: string, heading: string): string {
 
 // John's voice is one guide shared with johnpolacek.com, read live so what he teaches there reaches every run: his
 // checkout of that site on his Mac, else the copy the site serves.
-const SHARED_VOICE = "/Users/johnpolacek/Projects/johnpolacek-com-nextjs/writing/voice.md"
+const SHARED_VOICE = process.env.SHARED_VOICE_PATH || path.join(os.homedir(), "Projects/johnpolacek-com-nextjs/writing/voice.md")
 export function sharedVoice(): string {
   if (fs.existsSync(SHARED_VOICE)) return fs.readFileSync(SHARED_VOICE, "utf8")
   return execFileSync("curl", ["-sf", "https://johnpolacek.com/voice.md"], { encoding: "utf8" })

@@ -2,7 +2,7 @@
 
 Posts for `/updates` (`content/updates/*.md`) are written in John Polacek’s voice. The voice itself lives in one shared guide, used by this site and johnpolacek.com:
 
-- On John’s Mac: `/Users/johnpolacek/Projects/johnpolacek-com-nextjs/writing/voice.md`
+- On John’s Mac: `~/Projects/johnpolacek-com-nextjs/writing/voice.md`
 - Anywhere else: `curl -s https://johnpolacek.com/voice.md`
 
 Read it in full before drafting and run its self-check. The rules below are only what differs on this site. Where they conflict with the shared guide, these win. The shared guide’s Images and Frontmatter sections are for johnpolacek.com, so use the ones here instead.

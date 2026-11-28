@@ -1,5 +1,5 @@
 import { generateText, streamText } from "ai"
-import type { NextRequest } from "next/server"
+import { after, type NextRequest } from "next/server"
 import { currentModel } from "@/lib/ai/llm"
 import { composeSystemPrompt } from "@/lib/ai/style"
 import { budgetOpen, costOf, paid, recordSpend } from "@/lib/gm-server/budget"
@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { input, stream = true } = body
+  if (typeof input !== "string" || !input.trim()) {
+    return Response.json({ error: "Input prompt is required." }, { status: 400 })
+  }
 
   // If stream is false, use non-streaming generateText
   if (!stream) {
@@ -34,7 +37,13 @@ export async function POST(request: NextRequest) {
     model: currentModel,
     system: composeSystemPrompt(),
     prompt: input,
-    onFinish: ({ usage }) => recordSpend(costOf(currentModel.modelId, usage)),
+  })
+  after(async () => {
+    try {
+      await recordSpend(costOf(currentModel.modelId, await result.usage))
+    } catch {
+      // Stream ended before usage was reported.
+    }
   })
 
   return result.toTextStreamResponse()

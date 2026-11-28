@@ -106,8 +106,8 @@ export function createServerLlm(billing: Billing = serverBilling) {
           console.log("Original text:", rawText)
           console.log("Cleaned text:", cleanedText)
 
-          // Try to parse the cleaned JSON manually
-          const parsedObject = JSON.parse(cleanedText)
+          // Try to parse and validate the cleaned JSON manually
+          const parsedObject = schema.parse(JSON.parse(cleanedText))
 
           // Return the result in the expected format
           result = {
@@ -117,7 +117,8 @@ export function createServerLlm(billing: Billing = serverBilling) {
 
           console.log("Successfully parsed cleaned JSON response")
 
-          // Handle token decrementation for successful parse
+          // Record daily budget spend (paid() threw before recording) and token decrementation
+          await recordSpend(costOf(MODEL, result.usage))
           const totalTokens = result.usage?.totalTokens ?? 0
           await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (cleaned parse)")
 
@@ -181,8 +182,8 @@ export function createServerLlm(billing: Billing = serverBilling) {
             console.log("Retry - Original text:", rawText)
             console.log("Retry - Cleaned text:", cleanedText)
 
-            // Try to parse the cleaned JSON manually
-            const parsedObject = JSON.parse(cleanedText)
+            // Try to parse and validate the cleaned JSON manually
+            const parsedObject = schema.parse(JSON.parse(cleanedText))
 
             // Return the result in the expected format
             result = {
@@ -192,7 +193,8 @@ export function createServerLlm(billing: Billing = serverBilling) {
 
             console.log("Successfully parsed cleaned JSON response on retry")
 
-            // Handle token decrementation for successful parse
+            // Record daily budget spend (paid() threw before recording) and token decrementation
+            await recordSpend(costOf(MODEL, result.usage))
             const totalTokens = result.usage?.totalTokens ?? 0
             await chargeForUsageOrThrow(totalTokens, "usage_generate_object", "generateObject operation (retry cleaned parse)")
 

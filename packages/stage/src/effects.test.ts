@@ -45,10 +45,11 @@ test("Effects.clear() and dispose() cancel a missile flight without emitting lan
     fx.clear()
     await done
 
-    // No land event, no hit flash, and no follow-up burst left in the scene graph (only the shared light).
+    // No land event, no hit flash, and no follow-up burst left in the scene graph (only the shared light + shader warmup group).
     assert.equal(events.length, 1)
     assert.deepEqual(hits, [])
-    assert.equal(fx.group.children.length, 1)
+    assert.equal(fx.group.children.length, 2)
+    assert.ok(fx.group.children.includes(fx.light))
 
     // Repeat for arrow + dispose().
     const arrowDone = fx.play("arrow", { at: new THREE.Vector3(0, 1, 0) }, { at: new THREE.Vector3(10, 1, 0), id: "target-2" })
@@ -59,6 +60,7 @@ test("Effects.clear() and dispose() cancel a missile flight without emitting lan
     assert.equal(events.filter((e) => e.type === "effect" && e.phase === "land").length, 0)
     assert.deepEqual(hits, [])
     assert.equal(fx.group.children.length, 1)
+    assert.equal(fx.group.children[0], fx.light)
   } finally {
     restore()
   }
