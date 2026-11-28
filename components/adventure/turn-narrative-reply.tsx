@@ -5,11 +5,12 @@ import { SparklesIcon } from "@heroicons/react/24/solid"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
-import { useRef, useState } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
 import { createAdventureWithFirstTurn, resolvePlayerRollResult } from "@/app/_actions/adventure"
 import { deferOrSkipTurn } from "@/app/_actions/defer-turn"
 import { useGenerateText } from "@/app/_hooks/useGenerateText"
 import CharacterDiceRoll from "@/components/adventure/character-dice-roll"
+import { initialReplyPhase, replyReducer } from "@/components/adventure/reply-machine"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@d20/ui/alert-dialog"
 import { Button, buttonClassName } from "@d20/ui/button"
 import { Textarea } from "@d20/ui/textarea"
@@ -29,29 +30,51 @@ type TurnNarrativeReplyProps = {
 }
 
 export default function TurnNarrativeReply({ character, submitReply }: TurnNarrativeReplyProps) {
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [generating, setGenerating] = useState(false)
-  const [deferring, setDeferring] = useState(false)
-  const [skipOpen, setSkipOpen] = useState(false)
-  // The reply box stays a moment while it fades out. A second send from it is dropped.
-  const sending = useRef(false)
   const router = useRouter()
   const { user, isSignedIn } = useUser()
   const currentTurn = useTurn()
   const { settingId, adventurePlanId, adventure } = useAdventure()
   const { streamText } = useGenerateText()
 
-  if (!currentTurn) {
+  const characterState = currentTurn?.characters.find((c: { id: string }) => c.id === character.id) as TurnCharacter | undefined
+  const isComplete = hasBooleanProp(characterState, "isComplete") ? characterState.isComplete : undefined
+  const rollResult = hasNumberProp(characterState, "rollResult") ? characterState.rollResult : null
+  const showDiceRoll = Boolean(characterState?.rollRequired && rollResult == null)
+
+  const [state, dispatch] = useReducer(replyReducer, showDiceRoll, initialReplyPhase)
+  const [skipOpen, setSkipOpen] = useState(false)
+  const genAbortRef = useRef<AbortController | null>(null)
+  const slotKey = `${currentTurn?.id ?? ""}:${character.id}`
+  const prevSlotKeyRef = useRef(slotKey)
+
+  const abortGeneration = () => {
+    if (genAbortRef.current) {
+      genAbortRef.current.abort()
+      genAbortRef.current = null
+    }
+  }
+
+  useEffect(() => () => abortGeneration(), [])
+
+  useEffect(() => {
+    if (prevSlotKeyRef.current !== slotKey) {
+      prevSlotKeyRef.current = slotKey
+      abortGeneration()
+      dispatch({ type: "reset", needsRoll: showDiceRoll })
+      return
+    }
+    dispatch({ type: "sync_server", needsRoll: showDiceRoll })
+  }, [slotKey, showDiceRoll])
+
+  if (!currentTurn || isComplete) {
     return null
   }
 
-  const characterState = currentTurn.characters.find((c: { id: string }) => c.id === character.id) as TurnCharacter | undefined
-  const isComplete = hasBooleanProp(characterState, "isComplete") ? characterState.isComplete : undefined
-  const rollResult = hasNumberProp(characterState, "rollResult") ? characterState.rollResult : null
-  if (isComplete) return null
+  const input = "input" in state ? state.input : ""
+  const isBusy = state.kind === "submitting" || state.kind === "submittingRoll"
+  const isDeferring = state.kind === "submitting" && state.mode === "defer"
+  const isGenerating = state.kind === "generating"
+  const error = state.kind === "composing" || state.kind === "awaitingRoll" ? state.error : null
 
   // Build lower-initiative candidates to defer behind (PCs or NPCs)
   const playerInitiative = characterState?.initiative ?? 0
@@ -60,15 +83,15 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
 
   const handleDefer = async (afterId?: string, skipEntire?: boolean) => {
-    if (!currentTurn || typeof currentTurn.id !== "string") return
+    if (!currentTurn || typeof currentTurn.id !== "string" || isBusy) return
+    abortGeneration()
     console.log("[TurnNarrativeReply] handleDefer clicked", {
       afterId,
       skipEntire,
       turnId: currentTurn?.id,
       characterId: character.id,
     })
-    setError(null)
-    setDeferring(true)
+    dispatch({ type: "submit_started", mode: "defer" })
     try {
       const turnId = currentTurn.id as Id<"turns">
       const res = await deferOrSkipTurn({
@@ -79,134 +102,114 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
       })
       console.log("[TurnNarrativeReply] deferOrSkipTurn result", res)
       if (res.status === "deferred" || res.status === "skipped") {
-        setInput("")
-        setHasSubmitted(true)
+        dispatch({ type: "submit_succeeded" })
         // Force a refresh in case SSE hasn't pushed the update yet
         try {
           router.refresh()
         } catch {}
+      } else {
+        dispatch({ type: "submit_failed", error: null })
       }
     } catch (err) {
       console.error("[handleDefer] Error:", err)
-      setError(err instanceof Error ? err.message : "Failed to defer/skip turn. Please try again.")
-    } finally {
-      setDeferring(false)
+      dispatch({ type: "submit_failed", error: err instanceof Error ? err.message : "Failed to defer/skip turn. Please try again." })
     }
   }
 
-  const handleDemoReply = async () => {
-    if (!user || !user.id || !currentTurn) return
+  const handleDemoReply = async (replyText: string) => {
+    if (!user || !user.id || !currentTurn) return false
     const userId = user.id
-    setError(null)
-    try {
-      const payload = {
-        planId: adventurePlanId,
-        settingId,
-        title: adventure.title,
-        ownerId: userId,
-        playerIds: [userId],
-        startedAt: Date.now(),
-        playerInput: input,
-        turn: {
-          encounterId: currentTurn.encounterId,
-          // The intro. The server writes the player's words into it as their hero's beats.
-          story: currentTurn.story,
-          characters: (currentTurn.characters as TurnCharacter[]).map((c) => ({
-            ...c,
-            hasReplied: c.id === character.id,
-            isComplete: c.id === character.id,
-            rollRequired: undefined,
-            rollResult: undefined,
-          })),
-          order: 0,
-        },
-      }
-      setHasSubmitted(true)
-      const res = await createAdventureWithFirstTurn(payload)
-      if (res?.adventureId) {
-        router.push(`/${settingId}/${adventurePlanId}/${res.adventureId}`, {
-          scroll: false,
-        })
-        return
-      }
-    } catch (err) {
-      console.error("[handleDemoReply] Error calling createAdventureWithFirstTurn:", err)
-      setError(err instanceof Error ? err.message : "Failed to create adventure. Please try again.")
-      setLoading(false)
+    const payload = {
+      planId: adventurePlanId,
+      settingId,
+      title: adventure.title,
+      ownerId: userId,
+      playerIds: [userId],
+      startedAt: Date.now(),
+      playerInput: replyText,
+      turn: {
+        encounterId: currentTurn.encounterId,
+        // The intro. The server writes the player's words into it as their hero's beats.
+        story: currentTurn.story,
+        characters: (currentTurn.characters as TurnCharacter[]).map((c) => ({
+          ...c,
+          hasReplied: c.id === character.id,
+          isComplete: c.id === character.id,
+          rollRequired: undefined,
+          rollResult: undefined,
+        })),
+        order: 0,
+      },
     }
-  }
-
-  const handleCharacterReply = async () => {
-    if (!currentTurn || !currentTurn.id || !submitReply) return
-    setError(null)
-    try {
-      if (typeof currentTurn.id !== "string") {
-        console.error("[handleCharacterReply] currentTurn.id is not a string:", currentTurn.id)
-        setError("Invalid turn ID. Please try again.")
-        setLoading(false)
-        return
-      }
-      setHasSubmitted(true)
-      // The GM writes the reply into the story on the server, as the hero's beats.
-      await submitReply({ turnId: currentTurn.id, characterId: character.id, playerInput: input.trim() })
-    } catch (err) {
-      console.error("[handleCharacterReply] Error:", err)
-      // The reply was not taken, so the box comes back with the player's words still in it. Being out of tokens is
-      // told by the turn's own alert.
-      setHasSubmitted(false)
-      if (await demoLimitReached()) setError(DEMO_LIMIT_MESSAGE)
-      else if (!(err instanceof Error && err.message.includes("Insufficient tokens"))) setError("The game master could not read that reply. Send it again.")
-      setLoading(false)
+    const res = await createAdventureWithFirstTurn(payload)
+    if (res?.adventureId) {
+      dispatch({ type: "submit_succeeded" })
+      router.push(`/${settingId}/${adventurePlanId}/${res.adventureId}`, {
+        scroll: false,
+      })
+      return true
     }
+    return false
   }
 
   const handleReply = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!input.trim() || sending.current) return
-    sending.current = true
-    setLoading(true)
-    setError(null)
+    const trimmed = input.trim()
+    if (!trimmed || (state.kind !== "composing" && state.kind !== "generating")) return
+    abortGeneration()
+    dispatch({ type: "submit_started", mode: "reply" })
     const isDemoTurn = currentTurn?.id.includes("demo")
     try {
       if (isDemoTurn) {
-        await handleDemoReply()
+        const created = await handleDemoReply(input)
+        if (!created) dispatch({ type: "submit_failed", error: "Failed to create adventure. Please try again." })
       } else {
-        await handleCharacterReply()
+        if (!currentTurn || typeof currentTurn.id !== "string" || !submitReply) {
+          dispatch({ type: "submit_failed", error: "Invalid turn ID. Please try again." })
+          return
+        }
+        // The GM writes the reply into the story on the server, as the hero's beats.
+        await submitReply({ turnId: currentTurn.id, characterId: character.id, playerInput: trimmed })
+        dispatch({ type: "submit_succeeded" })
       }
     } catch (err) {
       console.error("[handleReply] Error:", err)
-      if (!error) {
-        setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.")
+      if (isDemoTurn) {
+        dispatch({ type: "submit_failed", error: err instanceof Error ? err.message : "Failed to create adventure. Please try again." })
+      } else if (await demoLimitReached()) {
+        dispatch({ type: "submit_failed", error: DEMO_LIMIT_MESSAGE })
+      } else if (err instanceof Error && err.message.includes("Insufficient tokens")) {
+        // Being out of tokens is told by the turn's own alert.
+        dispatch({ type: "submit_failed", error: null })
+      } else {
+        dispatch({ type: "submit_failed", error: "The game master could not read that reply. Send it again." })
       }
-    } finally {
-      sending.current = false
-      setLoading(false)
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value)
-    setError(null)
+    if (isGenerating) abortGeneration()
+    dispatch({ type: "input_changed", value: e.target.value })
   }
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault()
-      handleReply()
+      void handleReply()
     }
   }
 
   const handleRollResult = async (result: number, second?: number) => {
+    if (state.kind !== "awaitingRoll") return
     let turnId: Id<"turns"> | undefined
     if (currentTurn && typeof currentTurn.id === "string") {
       turnId = currentTurn.id as Id<"turns">
     }
     if (!turnId) {
-      setError("Cannot process roll: current turn ID is missing.")
+      dispatch({ type: "roll_submit_failed", error: "Cannot process roll: current turn ID is missing." })
       return
     }
-    setLoading(true)
-    setError(null)
+    dispatch({ type: "roll_submit_started" })
     try {
       await resolvePlayerRollResult({
         turnId,
@@ -214,28 +217,28 @@ export default function TurnNarrativeReply({ character, submitReply }: TurnNarra
         result,
         second,
       })
+      dispatch({ type: "roll_submit_succeeded" })
     } catch (err) {
       console.error("[handleRollResult] Error in resolvePlayerRollResult:", err)
+      let msg = "Failed to process roll result. Please try again."
       if (await demoLimitReached()) {
-        setError(DEMO_LIMIT_MESSAGE)
+        msg = DEMO_LIMIT_MESSAGE
       } else if (err instanceof Error && err.message.includes("Insufficient tokens")) {
-        setError("You do not have enough tokens to perform this action. Please add more tokens to your account.")
+        msg = "You do not have enough tokens to perform this action. Please add more tokens to your account."
       } else if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError("Failed to process roll result. Please try again.")
+        msg = err.message
       }
-    } finally {
-      setInput("")
-      setLoading(false)
+      dispatch({ type: "roll_submit_failed", error: msg })
     }
   }
 
   const handleGenerate = async () => {
-    if (!characterState) return
-    setGenerating(true)
-    setError(null)
-    setInput("") // Clear textarea at start
+    if (!characterState || state.kind !== "composing") return
+    abortGeneration()
+    const controller = new AbortController()
+    genAbortRef.current = controller
+    const priorInput = input
+    dispatch({ type: "generate_started" })
     try {
       // Build the LLM prompt
       const prompt = `You are the PLAYER (not the GM) roleplaying as the character below. Players describe their character's intent and attempt only. The GM determines all outcomes, results, and perceptions.
@@ -266,25 +269,37 @@ ${characterState.archetype ? `Class/Archetype: ${characterState.archetype}\n` : 
 
 Recent Narrative:
 ${storyText(currentTurn.story, storyNames(currentTurn.characters))}
-${input ? `\nPlayer Input: ${input}` : ""}`
-      await streamText(prompt, (output) => {
-        setInput(output)
-      })
+${priorInput ? `\nPlayer Input: ${priorInput}` : ""}`
+      await streamText(
+        prompt,
+        (output) => {
+          if (!controller.signal.aborted) dispatch({ type: "generate_chunk", value: output })
+        },
+        controller.signal
+      )
+      if (!controller.signal.aborted) dispatch({ type: "generate_finished" })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate reply. Please try again.")
+      if (controller.signal.aborted) return
+      dispatch({ type: "generate_failed", error: err instanceof Error ? err.message : "Failed to generate reply. Please try again." })
     } finally {
-      setGenerating(false)
+      if (genAbortRef.current === controller) genAbortRef.current = null
     }
   }
 
-  const showDiceRoll = characterState?.rollRequired && rollResult == null
   // An attack's target, by name, for the roll card. A spell attack is thrown at the spell's first target.
   const asked = characterState?.rollRequired
   const attackTargetId = asked && "attack" in asked ? asked.attack.target : asked && "cast" in asked ? asked.cast.targets[0] : undefined
   const attackTarget = attackTargetId ? currentTurn.characters.find((c: { id: string }) => c.id === attackTargetId)?.name : undefined
 
-  // One part at a time: the reply box, the roll, the wait after sending, or nothing once the reply is in.
-  const view = showDiceRoll ? "roll" : loading ? "sending" : hasSubmitted ? "sent" : "compose"
+  // One mutually-exclusive view at a time: compose, roll, sending (never simultaneous with roll), or sent.
+  const view =
+    state.kind === "awaitingRoll"
+      ? "roll"
+      : state.kind === "submittingRoll" || (state.kind === "submitting" && state.mode === "reply")
+        ? "sending"
+        : state.kind === "awaitingServer"
+          ? "sent"
+          : "compose"
   // A first-time tip for what the box asks: typing an action, a roll or an attack.
   // Tips wait while the first-look tour is up.
   const touring = useTour().open
@@ -306,12 +321,12 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
               onKeyDown={handleInputKeyDown}
             />
             <div className="flex justify-start -mt-1">
-              {generating ? (
+              {isGenerating ? (
                 <div className="enter-fade flex items-center justify-center w-[80px] h-8">
                   <Loader2 className="animate-spin w-4 h-4 text-primary-400" />
                 </div>
               ) : (
-                <Button variant="outline" size="sm" className="enter-fade text-xs" type="button" onClick={handleGenerate} disabled={generating}>
+                <Button variant="outline" size="sm" className="enter-fade text-xs" type="button" onClick={handleGenerate} disabled={isGenerating || isBusy}>
                   <SparklesIcon className="w-4 h-4 text-accent-400 mr-0.5" />
                   Generate
                 </Button>
@@ -325,8 +340,8 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                 <>
                   {/* Unified Skip menu */}
                   <AlertDialog open={skipOpen} onOpenChange={setSkipOpen}>
-                    <AlertDialogTrigger className={buttonClassName("ghost", "sm", "text-sm font-display disable:bg-transparent")} disabled={deferring}>
-                      {deferring ? (
+                    <AlertDialogTrigger className={buttonClassName("ghost", "sm", "text-sm font-display disable:bg-transparent")} disabled={isDeferring || isBusy}>
+                      {isDeferring ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin w-3 h-3" />
                           Loading...
@@ -361,7 +376,7 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                         )}
                         <AlertDialogAction
                           variant="outline"
-                                className="justify-start"
+                          className="justify-start"
                           onClick={() => {
                             console.log("[TurnNarrativeReply] Skip entire turn selected")
                             void handleDefer(undefined, true)
@@ -374,8 +389,8 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
                       </div>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <Button type="submit" disabled={!input.trim() || loading} variant="epic" size="lg">
-                    {loading ? (
+                  <Button type="submit" disabled={!input.trim() || isBusy} variant="epic" size="lg">
+                    {isBusy ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="animate-spin w-4 h-4" />
                         Sending...
@@ -395,17 +410,22 @@ ${input ? `\nPlayer Input: ${input}` : ""}`
             </div>
           </>
         )}
-        {showDiceRoll && characterState?.rollRequired && (
-          <CharacterDiceRoll
-            character={characterState as TurnCharacter}
-            rollRequired={characterState.rollRequired}
-            target={attackTarget}
-            rollResult={rollResult ?? null}
-            onRoll={handleRollResult}
-            inputKey={input}
-          />
+        {view === "roll" && characterState?.rollRequired && (
+          <>
+            <CharacterDiceRoll
+              character={characterState as TurnCharacter}
+              rollRequired={characterState.rollRequired}
+              target={attackTarget}
+              rollResult={rollResult ?? null}
+              onRoll={handleRollResult}
+              inputKey={input}
+            />
+            <Presence show={Boolean(error)} motion="drop" asChild>
+              <p className="text-sm text-red-500 text-center mt-2">{error}</p>
+            </Presence>
+          </>
         )}
-        {loading && <LoadingAnimation />}
+        {view === "sending" && <LoadingAnimation />}
       </Swap>
     </form>
   )
