@@ -75,6 +75,7 @@ function toggleHookInText(current: string, hook: string): { nextText: string; ac
 }
 
 const STEPS = ["pick", "rules", "review"] as const
+const RANDOM_GENDERS = ["Male", "Female"] as const
 const STEP_LABELS: Record<(typeof STEPS)[number], string> = { pick: "Identity", rules: "Rules", review: "Review" }
 const dialogFooter = "sticky -bottom-7 z-10 -mx-7 -mb-7 flex flex-wrap items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4"
 const inlineWell = "rounded-xl border border-white/10 bg-black/40 p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.45)] sm:p-5"
@@ -144,6 +145,7 @@ export function HeroCreator(props: {
       class: classId,
       background: backgroundForClass(classId, menu.backgrounds),
     })
+    setIdea((current) => (current.gender ? current : { ...current, gender: pickOne(RANDOM_GENDERS) }))
   }, [menu, pick])
   const built = useMemo(() => (kit && pick && choices ? kit.build(pick, choices) : undefined), [kit, pick, choices])
   const problems = built && "problems" in built ? built.problems : []
@@ -169,6 +171,7 @@ export function HeroCreator(props: {
       class: nextClass,
       background: backgroundForClass(nextClass, menu.backgrounds),
     })
+    setIdea((current) => ({ ...current, gender: pickOne(RANDOM_GENDERS) }))
     setChoices(null)
   }
   const toggleHook = (h: string) => {
@@ -274,32 +277,29 @@ export function HeroCreator(props: {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <ol aria-label="Creation steps" className="flex items-center gap-2 font-sans text-xs">
-              {STEPS.map((s, idx) => {
-                const active = idx === stepIndex
-                const done = idx < stepIndex
-                return (
-                  <li
-                    key={s}
-                    aria-current={active ? "step" : undefined}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
-                      active
-                        ? "border-accent-300/45 bg-accent-300/12 font-medium text-accent-200"
-                        : done
-                          ? "border-roll-success/35 bg-roll-success/10 text-roll-success"
-                          : "border-white/10 bg-white/[0.02] text-white/40"
-                    )}
-                  >
-                    {done ? <Check aria-hidden="true" className="size-3" /> : <span className="font-mono text-4xs">{idx + 1}</span>}
-                    <span>{STEP_LABELS[s]}</span>
-                  </li>
-                )
-              })}
-            </ol>
-            {step === "pick" && autoGenerateButton}
-          </div>
+          <ol aria-label="Creation steps" className="flex items-center gap-2 font-sans text-xs">
+            {STEPS.map((s, idx) => {
+              const active = idx === stepIndex
+              const done = idx < stepIndex
+              return (
+                <li
+                  key={s}
+                  aria-current={active ? "step" : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
+                    active
+                      ? "border-accent-300/45 bg-accent-300/12 font-medium text-accent-200"
+                      : done
+                        ? "border-roll-success/35 bg-roll-success/10 text-roll-success"
+                        : "border-white/10 bg-white/[0.02] text-white/40"
+                  )}
+                >
+                  {done ? <Check aria-hidden="true" className="size-3" /> : <span className="font-mono text-4xs">{idx + 1}</span>}
+                  <span>{STEP_LABELS[s]}</span>
+                </li>
+              )
+            })}
+          </ol>
         </div>
 
         <Swap id={step} motion={back ? "left" : "right"} exit={back ? "right" : "left"} className="relative flex flex-col">
@@ -320,19 +320,28 @@ export function HeroCreator(props: {
                           </Button>
                         </div>
                         <Choice label="Class" values={menu.classes} value={pick.class} onPick={(id) => repick({ class: id as CreationPick["class"] })} />
+                        <GenderChoice value={idea.gender} disabled={generating} onChange={(value) => set("gender", value)} />
                       </>
                     )}
                   </Swap>
                 </div>
 
                 <div className={cn(inlineWell, "flex flex-col gap-4")}>
-                  <div className="grid gap-3.5 sm:grid-cols-[2fr_1fr]">
-                    <Labeled label="Name">
-                      <Input placeholder="e.g. Rowan Brightwood" value={idea.name} maxLength={80} disabled={generating} onChange={(e) => set("name", e.target.value)} />
-                    </Labeled>
-                    <Labeled label="Gender">
-                      <Input placeholder="Optional" value={idea.gender} maxLength={40} disabled={generating} onChange={(e) => set("gender", e.target.value)} />
-                    </Labeled>
+                  <div className="grid gap-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Label plain htmlFor="hero-name-inline" className={siteLabel}>
+                        Name
+                      </Label>
+                      {autoGenerateButton}
+                    </div>
+                    <Input
+                      id="hero-name-inline"
+                      placeholder="e.g. Rowan Brightwood"
+                      value={idea.name}
+                      maxLength={80}
+                      disabled={generating}
+                      onChange={(e) => set("name", e.target.value)}
+                    />
                   </div>
                   <Labeled label="Background">
                     <Textarea
@@ -565,13 +574,10 @@ export function HeroCreator(props: {
             <>
               <div className="flex flex-wrap items-center justify-between gap-3 pr-8">
                 <Heading variant="h2">New Hero</Heading>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="xs" type="button" disabled={!menu || !pick || generating} onClick={randomize} className="gap-1.5">
-                    <Dices aria-hidden="true" className="size-3.5 text-accent-300" />
-                    <span>Randomize</span>
-                  </Button>
-                  {autoGenerateButton}
-                </div>
+                <Button variant="outline" size="xs" type="button" disabled={!menu || !pick || generating} onClick={randomize} className="gap-1.5">
+                  <Dices aria-hidden="true" className="size-3.5 text-accent-300" />
+                  <span>Randomize</span>
+                </Button>
               </div>
               <Swap id={!menu || !pick ? "loading" : "menu"} className="flex flex-col gap-5">
                 {!menu || !pick ? (
@@ -580,16 +586,18 @@ export function HeroCreator(props: {
                   <>
                     <Choice label="Species" values={menu.species} value={pick.species} onPick={(id) => repick({ species: id })} />
                     <Choice label="Class" values={menu.classes} value={pick.class} onPick={(id) => repick({ class: id as CreationPick["class"] })} />
+                    <GenderChoice value={idea.gender} disabled={generating} onChange={(value) => set("gender", value)} />
                   </>
                 )}
               </Swap>
-              <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-                <Labeled label="Name">
-                  <Input value={idea.name} maxLength={80} disabled={generating} onChange={(e) => set("name", e.target.value)} />
-                </Labeled>
-                <Labeled label="Gender">
-                  <Input value={idea.gender} maxLength={40} disabled={generating} onChange={(e) => set("gender", e.target.value)} />
-                </Labeled>
+              <div className="grid gap-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label plain htmlFor="hero-name-dialog" className={siteLabel}>
+                    Name
+                  </Label>
+                  {autoGenerateButton}
+                </div>
+                <Input id="hero-name-dialog" value={idea.name} maxLength={80} disabled={generating} onChange={(e) => set("name", e.target.value)} />
               </div>
               <Labeled label="Background">
                 <Textarea
@@ -795,6 +803,33 @@ function Choice({ label, values, value, onPick }: { label: string; values: { id:
             {v.name}
           </Option>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function GenderChoice({ value, disabled, onChange }: { value: string; disabled?: boolean; onChange: (value: string) => void }) {
+  const isPreset = value === "Male" || value === "Female"
+  return (
+    <div>
+      <div className={cn(siteLabel, "mb-2")}>Gender</div>
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="radiogroup" aria-label="Gender" className="flex items-center gap-2">
+          {RANDOM_GENDERS.map((g) => (
+            <Option key={g} role="radio" aria-checked={value === g} active={value === g} disabled={disabled} onClick={() => onChange(g)}>
+              {g}
+            </Option>
+          ))}
+        </div>
+        <Input
+          aria-label="Custom gender"
+          placeholder="Other (optional)"
+          value={isPreset ? "" : value}
+          maxLength={40}
+          disabled={disabled}
+          className="h-8 w-44 text-sm"
+          onChange={(e) => onChange(e.target.value)}
+        />
       </div>
     </div>
   )
