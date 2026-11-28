@@ -22,6 +22,15 @@ import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
 import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
+import {
+  CommandQueue,
+  type CommandMode,
+  type CommandQueueState,
+  escapeUserRoute,
+  HostedPollController,
+  resolveAppRoute,
+  type UserRoute,
+} from "./play-machine"
 import { useRealm } from "./realm"
 import { StagePlay } from "./stage-play"
 
@@ -103,17 +112,17 @@ export function DesktopGame() {
       return next
     })
   }, [])
-  const [busy, setBusy] = useState(false)
-  const busyRef = useRef(false)
+  const [queueState, setQueueState] = useState<CommandQueueState>({ phase: "idle", shown: false, writing: false })
+  const queueRef = useRef<CommandQueue | null>(null)
+  if (!queueRef.current) queueRef.current = new CommandQueue(setQueueState)
+  const busy = queueState.shown
   // Continue in local play: the GM writes the next NPC's or AI hero's turn, often while the story before it is read.
-  const [writing, setWriting] = useState(false)
+  const writing = queueState.writing
   const working = busy || writing
-  // The game action running. One runs at a time, so the next waits for it.
-  const running = useRef<Promise<unknown>>(Promise.resolve())
   const [error, setError] = useState<string | null>(null)
-  // Over the stage: the title screen on launch and from the Home button, its pages, or party setup. Null in play.
-  const [screen, setScreen] = useState<"home" | Page | "new" | null>("home")
-  const navigate = (page: Page | "home") => setScreen(page)
+  // Explicit user route behind account/boot resolution (AppRoute: booting | gate | menu | setup | local_play | hosted).
+  const [userRoute, setUserRoute] = useState<UserRoute>({ kind: "menu", page: "home" })
+  const navigate = (page: Page | "home") => setUserRoute({ kind: "menu", page })
   const chosen = adventures.find((a) => a.id === adventure)
   const [stageState, setStageState] = useState<{ waiting: boolean; progress: number | null; error: string | null }>({ waiting: false, progress: null, error: null })
   const stageError = stageState.error
@@ -125,60 +134,53 @@ export function DesktopGame() {
   // it has been read. A shown command asked while another is waiting or running is dropped, as a second click. A quiet
   // one, such as a hero's standing orders, shows nothing at work.
   const invoke = useCallback(
-    async (command: GameCommand | HeroCommand, how: "shown" | "writing" | "quiet" = "shown") => {
-      if (how === "shown") {
-        if (busyRef.current) return
-        busyRef.current = true
-        setBusy(true)
-      }
-      const turn = running.current
-      let done = () => {}
-      running.current = new Promise<void>((resolve) => {
-        done = resolve
-      })
-      await turn
-      if (how === "writing") setWriting(true)
-      setError(null)
-      try {
-        const res = await send(command)
-        setSave(res.state)
-        if (res.adventures) {
-          const playable = res.adventures
-          setAdventures(playable)
-          if (!pickedAdventure.current && playable.length) setAdventure((cur) => (playable.some((a) => a.id === cur) ? cur : playable[0].id))
+    (command: GameCommand | HeroCommand, how: CommandMode = "shown") =>
+      queueRef.current!.run(how, async () => {
+        setError(null)
+        try {
+          const res = await send(command)
+          setSave(res.state)
+          if (res.adventures) {
+            const playable = res.adventures
+            setAdventures(playable)
+            if (!pickedAdventure.current && playable.length) setAdventure((cur) => (playable.some((a) => a.id === cur) ? cur : playable[0].id))
+          }
+          if (res.catalog) setCatalog(res.catalog)
+          if (res.heroes) setHeroes(res.heroes.filter(playableHero))
+          if (res.saves) setSaves(res.saves)
+          if (res.art && Object.keys(res.art).length) keepArt(res.art)
+          if (res.options) setOptions(res.options)
+          if (res.providers) {
+            setProviders(res.providers)
+            setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
+          }
+          if (res.error) setError(res.error)
+          return res
+        } catch (e) {
+          setError(String(e))
+          return null
+        } finally {
+          setLoaded(true)
         }
-        if (res.catalog) setCatalog(res.catalog)
-        if (res.heroes) setHeroes(res.heroes.filter(playableHero))
-        if (res.saves) setSaves(res.saves)
-        if (res.art && Object.keys(res.art).length) keepArt(res.art)
-        if (res.options) setOptions(res.options)
-        if (res.providers) {
-          setProviders(res.providers)
-          setProvider((p) => (res.providers!.includes(p) ? p : (res.providers![0] ?? "claude")))
-        }
-        if (res.error) setError(res.error)
-        return res
-      } catch (e) {
-        setError(String(e))
-        return null
-      } finally {
-        if (how === "shown") {
-          busyRef.current = false
-          setBusy(false)
-        }
-        if (how === "writing") setWriting(false)
-        setLoaded(true)
-        done()
-      }
-    },
+      }),
     [keepArt]
   )
   // Playing needs a linked account. Home holds at the link step until there is one.
   const acct = useAccount({ onPacks: () => void invoke({ kind: "load" }) })
+  const route = resolveAppRoute(userRoute, { accountReady: acct.ready, gated: acct.gated, loaded })
+  const routeRef = useRef(route)
+  routeRef.current = route
   // The title screen and its pages wait for the account check and the first load.
-  const ready = acct.ready && !acct.gated && loaded
+  const ready = route.kind !== "booting" && route.kind !== "gate"
+  // Derived screen key for the menu/setup/gate overlay shell (null while in local_play or hosted).
+  const screen: "home" | Page | "new" | null =
+    route.kind === "menu" ? route.page : route.kind === "setup" ? "new" : route.kind === "booting" || route.kind === "gate" ? "home" : null
+  const hosting = route.kind === "hosted" ? route.adventureId : null
   useEffect(() => {
-    if (acct.gated) setScreen("home")
+    if (acct.gated) {
+      setHosted(null)
+      setUserRoute({ kind: "menu", page: "home" })
+    }
   }, [acct.gated])
   useEffect(() => {
     void invoke({ kind: "load" })
@@ -199,7 +201,7 @@ export function DesktopGame() {
     if (!next || next.adventure._id === save?.adventure._id) return
     setCreated(null)
     setCarried(null)
-    setScreen(null)
+    setUserRoute({ kind: "local_play" })
   }
   // The development autopilot starts its play full screen, once the recorder has had a moment to start.
   const piloted = useRef(false)
@@ -212,14 +214,14 @@ export function DesktopGame() {
       await mark("ready", { at: Date.now() })
       await new Promise((r) => setTimeout(r, 4000))
       const res = await invoke({ kind: "start", provider: provider as "claude", model: pickedModel, adventure: play.adventure, party: play.party.map((id) => ({ id, ai: false })), replace: true })
-      if (res?.state) setScreen(null)
+      if (res?.state) setUserRoute({ kind: "local_play" })
       else await mark("done", { spans: [], problems: [res?.error ?? "The game did not start."], at: Date.now() })
     })()
   }, [ready, providers, provider, pickedModel, invoke])
   const resume = async (archiveId: number) => {
     const res = await invoke({ kind: "resume", archiveId })
     if (!res || res.error) return
-    setScreen(null)
+    setUserRoute({ kind: "local_play" })
   }
   // The heroes of the adventure just finished, offered to the next one's party when the player continues the story.
   const [carried, setCarried] = useState<PartyChoice[] | null>(null)
@@ -242,7 +244,7 @@ export function DesktopGame() {
   }
   // A hero made from a party screen is made for that adventure. One made from the Characters page is not.
   const draftHero = async ({ hook, ...idea }: HeroIdea, making: HeroMaking) =>
-    (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, making, ...(screen === "new" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
+    (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, making, ...(route.kind === "setup" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
   const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }, making?: HeroMaking) => {
     const before = new Set(heroes.map((h) => h.id))
     const res = await invoke({ kind: "saveHero", hero, ...(making ? { making } : {}) })
@@ -251,11 +253,12 @@ export function DesktopGame() {
     setCreated(res.heroes?.find((h) => !before.has(h.id))?.id ?? null)
     return true
   }
-  // Hosted games: the one on screen, its state from the website, and every game this account hosts. While a game is
-  // on screen the app polls it, and the host worker runs its GM jobs, even after the host goes home.
-  const [hosting, setHosting] = useState<string | null>(null)
+  // Hosted games: state from the website, and every game this account hosts. While route.kind === "hosted"
+  // the app polls it sequentially (AbortController-backed), and the host worker runs its GM jobs.
   const [hosted, setHosted] = useState<HostedState | null>(null)
   const [hostedList, setHostedList] = useState<HostedSummary[]>([])
+  const pollRef = useRef<HostedPollController<HostedState, HostWorkerState> | null>(null)
+  if (!pollRef.current) pollRef.current = new HostedPollController<HostedState, HostWorkerState>()
   // Guests' heroes the worker painted are read from the data folder, as the app shows only local pictures.
   const guestArt = hosted ? Object.keys(hostedArt(hosted)).join() : ""
   useEffect(() => {
@@ -270,25 +273,27 @@ export function DesktopGame() {
   const shownFailure = useRef<string | null>(null)
   const linked = acct.state?.linked === true
   useEffect(() => {
-    if (!linked || screen !== "home") return
+    if (!linked || route.kind !== "menu" || route.page !== "home") return
     void host({ kind: "hostList" }).then((r) => r.hosted && setHostedList(r.hosted))
-  }, [linked, screen])
+  }, [linked, route.kind, route.kind === "menu" ? route.page : null])
+  // Sequential host poll loop: active ONLY when route.kind === "hosted" (stops immediately on acct.gated or route exit).
   useEffect(() => {
-    if (!hosting) return
-    let live = true
-    const tick = async () => {
-      const [res, w] = await Promise.all([host({ kind: "hostState", adventureId: hosting }), hostRunning().catch(() => null)])
-      if (!live) return
-      if (res.state) setHosted(res.state)
-      if (res.error) setError(res.error)
-      setWorker(w)
+    const poller = pollRef.current!
+    if (!hosting) {
+      poller.stop()
+      return
     }
-    void tick()
-    const timer = setInterval(tick, 1500)
-    return () => {
-      live = false
-      clearInterval(timer)
-    }
+    poller.start(hosting, {
+      intervalMs: 1500,
+      poll: async (adventureId) => {
+        const [res, w] = await Promise.all([host({ kind: "hostState", adventureId }), hostRunning().catch(() => null)])
+        return { state: res.state, error: res.error, worker: w }
+      },
+      onState: setHosted,
+      onWorker: setWorker,
+      onError: setError,
+    })
+    return () => poller.stop()
   }, [hosting])
   const work = hosting && hosted ? hostedWork(hosted) : null
   useEffect(() => {
@@ -299,8 +304,7 @@ export function DesktopGame() {
   }, [work?.failed])
   const openHosted = async (adventureId: string) => {
     setHosted(null)
-    setHosting(adventureId)
-    setScreen(null)
+    setUserRoute({ kind: "hosted", adventureId })
     await hostStart(adventureId, provider, pickedModel).catch((e) => setError(String(e)))
   }
   const hostGame = async (you: string[], invites: string[], ais: string[], open: number, approve: boolean, watch: boolean, each?: number, bring?: number, flex = false) => {
@@ -318,6 +322,7 @@ export function DesktopGame() {
     if (res.error) setError(res.error)
   }
   const act = async (fn: () => ReturnType<typeof host>) => {
+    pollRef.current?.beginMutation()
     setSending(true)
     const res = await fn()
     setSending(false)
@@ -328,6 +333,7 @@ export function DesktopGame() {
   // A line in the table chat. It does not mark the GM busy, as an action does.
   const say = async (text: string) => {
     if (!hosting) return false
+    pollRef.current?.beginMutation()
     const res = await host({ kind: "hostChat", adventureId: hosting, text })
     if (res.state) setHosted(res.state)
     if (res.error) setError(res.error)
@@ -341,9 +347,8 @@ export function DesktopGame() {
     return res.jobId
   })
   const goHome = () => {
-    setHosting(null)
     setHosted(null)
-    setScreen("home")
+    setUserRoute({ kind: "menu", page: "home" })
   }
   // Where the story goes after a finished local adventure: the next adventure's party setup, with its heroes.
   const nextId = !hosting && save?.adventure.status === "completed" ? adventures.find((a) => a.id === save.adventure.planId)?.next : null
@@ -352,7 +357,7 @@ export function DesktopGame() {
     if (!save || !nextUp) return
     pickAdventure(nextUp.id)
     setCarried(partyOf(save))
-    setScreen("new")
+    setUserRoute({ kind: "setup" })
   }
   const gmLabel = (() => {
     if (!hosting) return ""
@@ -362,7 +367,10 @@ export function DesktopGame() {
   })()
   const hostedView = hosting && hosted ? hostedSave(hosted) : null
   // Escape steps back: party setup to Adventures, a page to the title screen, then into play.
-  const onEscape = useCallback(() => setScreen((s) => (s === "new" ? "adventures" : s === "adventures" || s === "characters" || s === "settings" ? "home" : saveRef.current ? null : s)), [])
+  const onEscape = useCallback(() => {
+    const next = escapeUserRoute(routeRef.current, Boolean(saveRef.current))
+    if (next) setUserRoute(next)
+  }, [])
   const onError = useCallback((message: string) => setError(message), [])
   return (
     <StagePlay
@@ -480,7 +488,7 @@ export function DesktopGame() {
                 {ready && (
                   <>
                     {screen === "home" && (
-                      <Home save={save} art={art} busy={working} next={nextUp?.title} onContinue={() => setScreen(null)} onNext={continueStory} onBegin={() => setScreen("adventures")} />
+                      <Home save={save} art={art} busy={working} next={nextUp?.title} onContinue={() => setUserRoute({ kind: "local_play" })} onNext={continueStory} onBegin={() => setUserRoute({ kind: "menu", page: "adventures" })} />
                     )}
                     {screen === "adventures" && (
                       <AdventuresPage
@@ -490,13 +498,13 @@ export function DesktopGame() {
                         locked={locked}
                         listPrices={listPrices}
                         busy={working}
-                        onContinue={() => setScreen(null)}
+                        onContinue={() => setUserRoute({ kind: "local_play" })}
                         onResume={(id) => void resume(id)}
                         onRemove={(archiveId) => void invoke({ kind: "remove", archiveId })}
                         onArchive={(archiveId, restore) => void invoke({ kind: "archive", archiveId, restore })}
                         onAdventure={(id) => {
                           pickAdventure(id)
-                          setScreen("new")
+                          setUserRoute({ kind: "setup" })
                         }}
                         hosted={hostedList}
                         hostingNow={worker?.adventureId ?? null}
@@ -544,7 +552,7 @@ export function DesktopGame() {
                             painting={painting}
                             onPaint={painter ? (hero) => void paintHero(hero) : undefined}
                             onDelete={(hero) => void invoke({ kind: "deleteHero", id: hero.id })}
-                            onCancel={() => setScreen("adventures")}
+                            onCancel={() => setUserRoute({ kind: "menu", page: "adventures" })}
                             locked={locked}
                             listPrices={listPrices}
                             linked={acct.state?.linked ?? false}
