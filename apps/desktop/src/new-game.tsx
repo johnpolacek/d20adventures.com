@@ -1,5 +1,5 @@
 import { type AnimationEventHandler, type CSSProperties, useEffect, useState } from "react"
-import { ModuleCover } from "@d20/ui/adventure/module-cover"
+import { ModuleCover, playersLine } from "@d20/ui/adventure/module-cover"
 import { Button, buttonClassName, Option } from "@d20/ui/button"
 import { Presence, Swap } from "@d20/ui/presence"
 import { tourAgain } from "@d20/ui/stage/tips"
@@ -45,11 +45,11 @@ export function LockIcon() {
 const TUTORIAL = "the-midnight-summons"
 
 // Party setup for the adventure chosen on the Adventures page: who goes, who plays each hero, and which CLI runs the
-// GM. The first hero is the player's, the rest default to AI. A hero set to Invite makes it a game hosted on the
-// website, with that hero held for a friend. With every hero on Invite, guests choose first and the player gets a
-// hero they leave. A party of one invited hero leaves the player none, so they watch. Roster heroes appear only where
-// the adventure accepts their race and class. Keyed by adventure, so each starts from its own suggested party, or
-// from the heroes of the adventure just finished when the player continues the story.
+// GM. The suggested party starts on You; each hero can also be handed to AI or invited. A hero set to Invite makes
+// it a game hosted on the website, with that hero held for a friend. With every hero on Invite, guests choose first
+// and the player gets a hero they leave. A party of one invited hero leaves the player none, so they watch. Roster
+// heroes appear only where the adventure accepts their race and class. Keyed by adventure, so each starts from its
+// own suggested party, or from the heroes of the adventure just finished when the player continues the story.
 export function NewGame(props: {
   adventures: AdventureInfo[]
   adventure: string
@@ -190,35 +190,32 @@ export function NewGame(props: {
     })
   const seatsFor = (n: number) => Array.from({ length: Math.max(0, n) }, (_, i): Seat => ({ id: `open-${Date.now()}-${i}`, who: "invite", open: true }))
   // The shortcuts over the party. Each sets the cards, which stay editable after.
+  const premadeIds = new Set((info.premades ?? []).map((p) => p.id))
   const others = (info.premades ?? []).map((p) => p.id).filter((id) => !held.some((c) => c.id === id))
-  const me = yours[0]?.id ?? held[0]?.id ?? picks[0]?.id
   const modes = {
-    // The player and AI heroes.
-    solo: () => setParty(held.length ? held.map((c) => ({ id: c.id, who: c.who === "you" || (!yours.length && c.id === me) ? "you" : "ai" })) : me ? [{ id: me, who: "you" }] : []),
-    // Guests choose among the premades and the heroes chosen here, and the player plays one they leave.
-    premades: () => {
-      setLastYou(yours[0]?.id ?? null)
-      setParty([...held.map((c) => c.id), ...others].slice(0, max).map((id) => ({ id, who: "invite" })))
+    // The suggested premades (or currently held heroes), all played by the player.
+    solo: () => {
+      const ids = flex
+        ? [...held.map((c) => c.id).filter((id) => !premadeIds.has(id)), ...info.party]
+        : held.length
+          ? held.map((c) => c.id)
+          : info.party
+      setParty(ids.slice(0, max).map((id) => ({ id, who: "you" })))
     },
-    // Every seat takes a guest's own hero. The player picks a hero of their own on its card, or watches.
-    own: () => setParty(seatsFor(max)),
     // Every seat takes a premade or a guest's own hero. The player picks a hero of their own on its card, or watches.
     open: () => setParty([...[...held.map((c) => c.id), ...others].map((id): Seat => ({ id, who: "invite" })), ...seatsFor(max)]),
   }
-  const mode = flex ? "open" : !hosting ? "solo" : guestsChoose && !open ? "premades" : open && !invites.length && !ais.length ? "own" : null
+  const mode = flex ? "open" : !hosting ? "solo" : null
   const MODES = [
     ["solo", "Solo", false],
-    ["premades", "Premades", held.length + others.length < 2],
-    ["own", "Bring Their Own", !info.options],
     ["open", "Open Invite", !info.options],
   ] as const
-  const range = min === max ? `${min}` : `${min}–${max}`
   return (
     <section className={cn(cardVariants({ variant: "frame" }), "flex max-h-[94%] w-[min(72rem,96vw)] flex-col text-left backdrop-blur-xl")}>
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
-            <ModuleCover id={info.id} title={info.title} players={info.players} />
+            <ModuleCover id={info.id} title={info.title} players={info.players} className="border border-white/15" />
             {props.listPrices[info.id] && (
               <Chip tone="amber" className="absolute bottom-3 left-3">
                 <s className="mr-1.5 font-normal opacity-70">{price(props.listPrices[info.id])}</s>
@@ -234,28 +231,28 @@ export function NewGame(props: {
               </div>
             )}
             <div>
-              <div className={cn(siteLabel, "mb-2")}>
-                Party · {size} of {range}
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className={siteLabel}>Party · {playersLine(info.players)}</div>
+                {canInvite && (
+                  <fieldset className="flex flex-wrap" aria-label="Who plays">
+                    {MODES.map(([key, label, off], i) => (
+                      <Option
+                        key={key}
+                        active={mode === key}
+                        aria-pressed={mode === key}
+                        disabled={off}
+                        className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < MODES.length - 1 && "rounded-r-none")}
+                        onClick={() => {
+                          setFlex(key === "open")
+                          modes[key]()
+                        }}
+                      >
+                        {label}
+                      </Option>
+                    ))}
+                  </fieldset>
+                )}
               </div>
-              {canInvite && (
-                <fieldset className="mb-3 flex flex-wrap" aria-label="Who plays">
-                  {MODES.map(([key, label, off], i) => (
-                    <Option
-                      key={key}
-                      active={mode === key}
-                      aria-pressed={mode === key}
-                      disabled={off}
-                      className={cn(i > 0 && "-ml-0.5 rounded-l-none", i < MODES.length - 1 && "rounded-r-none")}
-                      onClick={() => {
-                        setFlex(key === "open")
-                        modes[key]()
-                      }}
-                    >
-                      {label}
-                    </Option>
-                  ))}
-                </fieldset>
-              )}
               <Presence show={guestPlays} motion="drop" asChild>
                 <div className="mb-3 flex flex-wrap items-center gap-3">
                   <span className={siteLabel}>{theirs.length > 1 ? "Guests play" : "Guest plays"}</span>
@@ -308,9 +305,6 @@ export function NewGame(props: {
                   </fieldset>
                   <span className={siteLabel}>{Math.min(bring, open) === 1 ? "character" : "characters"}</span>
                 </div>
-              </Presence>
-              <Presence show={watching} motion="drop" asChild>
-                <p className="mb-3 text-sm text-white/70">{size - ais.length > 1 ? "You watch your guests play." : "You watch your guest play."}</p>
               </Presence>
               {/* One grid: a hero's card adds it to the party, and a party hero's card says who plays it. */}
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-2">
@@ -615,7 +609,7 @@ function LockedAdventure(props: { info: Locked; linked: boolean | "offline"; onL
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-7 pb-5">
         <div className="grid gap-7 md:grid-cols-[minmax(240px,330px)_1fr]">
           <div className="relative md:sticky md:top-0 md:self-start">
-            <ModuleCover id={info.id} title={info.title} players={info.players} className="[filter:grayscale(.55)_brightness(.7)]" />
+            <ModuleCover id={info.id} title={info.title} players={info.players} className="border border-white/15 [filter:grayscale(.55)_brightness(.7)]" />
             <div className="absolute inset-0 grid place-items-center">
               <div className="grid h-16 w-16 place-items-center rounded-full border-2 border-white/30 bg-black/70 text-accent-300">
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-7 w-7 fill-current">

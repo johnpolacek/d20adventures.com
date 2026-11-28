@@ -31,9 +31,9 @@ test("the three intro adventures lead into Welcome to Kordavos, in order", () =>
 })
 
 test("continuing the story keeps the heroes who can go on, on the seats they had", () => {
-  // A fresh game is the suggested party, the player on its first hero.
-  assert.deepEqual(openingParty(info("covert-cargo"), []), [you(LYRA), ai(POPPEN), ai(THALBERN)])
-  assert.deepEqual(openingParty(info("covert-cargo"), [], []), [you(LYRA), ai(POPPEN), ai(THALBERN)])
+  // A fresh game is the suggested party, all played by the player.
+  assert.deepEqual(openingParty(info("covert-cargo"), []), [you(LYRA), you(POPPEN), you(THALBERN)])
+  assert.deepEqual(openingParty(info("covert-cargo"), [], []), [you(LYRA), you(POPPEN), you(THALBERN)])
 
   // The Midnight Summons into Covert Cargo: Thalbern stays the player's, and the others join on the AI.
   assert.deepEqual(openingParty(info("covert-cargo"), [], [you(THALBERN)]), [you(THALBERN), ai(LYRA), ai(POPPEN)])
@@ -63,7 +63,7 @@ test("a hero made on the party screen is the player's, and the hero they had goe
   const davos = openingParty(info("welcome-to-kordavos"), []).map((c) => seat(c.id, c.ai ? "ai" : "you"))
   assert.deepEqual(
     davos.map((c) => c.who),
-    ["you", "ai", "ai"]
+    ["you", "you", "you"]
   )
   assert.deepEqual(seatCreated(davos, "hero-a", 5), [seat("branka-stoneveil", "ai"), ...davos.slice(1), seat("hero-a", "you")])
   // A full party: the new hero takes the player's seat.
