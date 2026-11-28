@@ -143,66 +143,69 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     // Of the story so far, only the chapters this hero lived.
     heroPremise: async (_setting, plan, hero) => premiseWithStory(packFor(plan).artifacts.manifest.premise, store.state?.adventure.planId === plan ? store.state.story : undefined, hero),
   }
-  let inferenceFailure: unknown
-  const tracked: Llm = {
-    async generateText(args) {
-      try {
-        return await llm.generateText({ ...args, prompt: args.prompt + characterContext(store.current().characters, false, args.viewer) })
-      } catch (error) {
-        inferenceFailure = error
-        throw error
-      }
-    },
-    async generateObject(args) {
-      try {
-        const advancement = args.schema instanceof z.ZodObject && "adventurePatch" in args.schema.shape
-        const result = await llm.generateObject({ ...args, prompt: args.prompt + characterContext(store.current().characters, advancement, args.viewer) })
-        if (advancement) {
-          const patch = desktopPatchSchema.parse((result.object as { adventurePatch?: unknown }).adventurePatch ?? {})
-          applyCharacterUpdates(store.current().characters, patch.characterUpdates)
-        }
-        return result
-      } catch (error) {
-        inferenceFailure = error
-        throw error
-      }
-    },
-  }
   // Some inherited web services recover failed inference with default prose or no roll.
   // Desktop must preserve a retryable checkpoint instead of committing that fallback.
+  // Each command invocation gets its own `inferenceFailure` guard (matching host.ts) so overlapping calls never collide.
   const writes = new Set(["submitReply", "updateTurn", "patchAdventure", "createTurn", "commitWikiTurnAdvance", "createAdventureWithFirstTurn"])
-  const guardedStore = new Proxy(store, {
-    get(target, key) {
-      const value = Reflect.get(target, key)
-      if (typeof value !== "function") return value
-      return (...args: unknown[]) => {
-        if (writes.has(String(key)) && inferenceFailure) throw inferenceFailure
-        return value.apply(target, args)
-      }
-    },
-  })
-  // One NPC or AI hero per call, so each turn is on screen as soon as it is written. A run of five took up to two
-  // minutes behind one thinking card.
-  const core = createGmCore({
-    llm: tracked,
-    store: guardedStore,
-    content,
-    narration: { afterTurn() {} },
-    identity: async () => "local-player",
-    sleep: async () => {},
-    npcTurnsPerCall: 1,
-  })
-  async function autonomous() {
-    const before = findCurrentActor(store.current().characters)
-    await core.processNpcTurnsAfterCurrent(store.current()._id)
-    const actor = findCurrentActor(store.current().characters)
-    // A turn that stopped to offer a hero a reaction is not a failure: the round waits on the answer.
-    if (store.current().reaction) return
-    if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai"))
-      throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
+  const createInvocation = () => {
+    let inferenceFailure: unknown
+    const tracked: Llm = {
+      async generateText(args) {
+        try {
+          return await llm.generateText({ ...args, prompt: args.prompt + characterContext(store.current().characters, false, args.viewer) })
+        } catch (error) {
+          inferenceFailure = error
+          throw error
+        }
+      },
+      async generateObject(args) {
+        try {
+          const advancement = args.schema instanceof z.ZodObject && "adventurePatch" in args.schema.shape
+          const result = await llm.generateObject({ ...args, prompt: args.prompt + characterContext(store.current().characters, advancement, args.viewer) })
+          if (advancement) {
+            const patch = desktopPatchSchema.parse((result.object as { adventurePatch?: unknown }).adventurePatch ?? {})
+            applyCharacterUpdates(store.current().characters, patch.characterUpdates)
+          }
+          return result
+        } catch (error) {
+          inferenceFailure = error
+          throw error
+        }
+      },
+    }
+    const guardedStore = new Proxy(store, {
+      get(target, key) {
+        const value = Reflect.get(target, key)
+        if (typeof value !== "function") return value
+        return (...args: unknown[]) => {
+          if (writes.has(String(key)) && inferenceFailure) throw inferenceFailure
+          return value.apply(target, args)
+        }
+      },
+    })
+    // One NPC or AI hero per call, so each turn is on screen as soon as it is written. A run of five took up to two
+    // minutes behind one thinking card.
+    const core = createGmCore({
+      llm: tracked,
+      store: guardedStore,
+      content,
+      narration: { afterTurn() {} },
+      identity: async () => "local-player",
+      sleep: async () => {},
+      npcTurnsPerCall: 1,
+    })
+    async function autonomous() {
+      const before = findCurrentActor(store.current().characters)
+      await core.processNpcTurnsAfterCurrent(store.current()._id)
+      const actor = findCurrentActor(store.current().characters)
+      // A turn that stopped to offer a hero a reaction is not a failure: the round waits on the answer.
+      if (store.current().reaction) return
+      if (actor && actor.id === before?.id && (actor.type === "npc" || actor.controlledBy === "ai"))
+        throw inferenceFailure ?? new Error("The GM could not finish this character's turn. Continue to retry.")
+    }
+    return { core, autonomous }
   }
   return async (input: GameCommand) => {
-    inferenceFailure = undefined
     const command = commandSchema.parse(input)
     if (command.kind === "load") return store.state
     if (command.kind === "resume") {
@@ -293,6 +296,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       return store.state
     }
     const turn = store.turn(command.turnId)
+    const { core, autonomous } = createInvocation()
     if (command.kind === "level") {
       // The level a finished adventure owes the hero, with the player's choices for it.
       const taken = await core.levelUpHero({ turnId: turn._id, characterId: command.characterId, choices: command.choices })

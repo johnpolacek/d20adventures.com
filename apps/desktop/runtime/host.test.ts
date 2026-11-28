@@ -8,7 +8,7 @@ import { storyText } from "@d20/gm-core/story/render"
 import { turnScript } from "@d20/gm-core/story/turn"
 import type { z } from "zod"
 import { game, type Packs } from "./game"
-import { type HostEvent, type HostJob, type HostPost, hostLoop, remoteStore, selfRunning } from "./host"
+import { type HostEvent, type HostJob, type HostPost, type HostWorkerPhase, hostLoop, remoteStore, selfRunning } from "./host"
 import { LocalStore } from "./store"
 
 // The first of a fake model's answers that the asked-for schema takes.
@@ -431,6 +431,48 @@ test("follow retries after a transient error on reaction expiry or a failed queu
     assert.equal(queueCalls, 2)
     assert.equal(queued.length, 1)
     assert.deepEqual(queued[0], { op: "queue", turnId: turn._id, kind: "continue" })
+  } finally {
+    cleanup()
+  }
+})
+
+test("hostLoop transitions through explicit HostWorkerPhase states (offline -> working -> idle -> stopping)", async () => {
+  const { store, turn, pc, adventureId, cleanup } = await hosted()
+  try {
+    const phases: HostWorkerPhase[] = []
+    let claimCount = 0
+    let stop = false
+    const skip = job({ adventureId, turnId: turn._id, kind: "skip", userId: "guest", characterId: pc.id }, "skip-1")
+    const post: HostPost = async (_path, body) => {
+      const b = body as { op: string }
+      if (b.op === "claim") {
+        claimCount++
+        if (claimCount === 1) throw new Error("network down")
+        if (claimCount === 2) return { job: skip }
+        return { job: null }
+      }
+      if (b.op === "queue") return { jobId: "auto-1" }
+      return { ok: true }
+    }
+    await hostLoop({
+      adventureId,
+      post,
+      store,
+      packs,
+      llm: failLlm,
+      emit: () => {},
+      onPhase: (p) => phases.push(p),
+      stopped: () => stop,
+      wait: async () => {
+        if (claimCount >= 3) stop = true
+      },
+    })
+    assert.deepEqual(
+      phases.map((p) => p.phase),
+      ["offline", "working", "idle", "stopping"]
+    )
+    assert.equal(phases[0].phase === "offline" && phases[0].error, "network down")
+    assert.equal(phases[1].phase === "working" && phases[1].job._id, "skip-1")
   } finally {
     cleanup()
   }

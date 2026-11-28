@@ -202,6 +202,14 @@ export type HostEvent =
   | { type: "failed"; jobId: string; error: string }
   | { type: "offline"; error: string }
 
+/** Explicit lifecycle phase of the desktop host worker loop. */
+export type HostWorkerPhase =
+  | { phase: "starting" }
+  | { phase: "idle"; retryFollowAt: number | null }
+  | { phase: "working"; job: Pick<HostJob, "_id" | "kind" | "characterId"> }
+  | { phase: "offline"; error: string; retryFollowAt: number | null }
+  | { phase: "stopping" }
+
 /** Claims and runs jobs until stopped. Waits between polls while there is no work or the website cannot be reached. */
 export async function hostLoop(opts: {
   adventureId: string
@@ -212,11 +220,17 @@ export async function hostLoop(opts: {
   // Paints a guest's hero through the host's image CLI. It throws where there is none.
   paint?: (hero: PCTemplate) => Promise<Art>
   emit: (event: HostEvent) => void
+  // Optional observer for worker phase transitions (used by tests and diagnostics).
+  onPhase?: (phase: HostWorkerPhase) => void
   stopped: () => boolean
   wait: (ms: number) => Promise<void>
 }) {
   const jobs = `/api/desktop/host/${opts.adventureId}/jobs`
-  let idle = false
+  let worker: HostWorkerPhase = { phase: "starting" }
+  const transition = (next: HostWorkerPhase): HostWorkerPhase => {
+    opts.onPhase?.(next)
+    return next
+  }
   // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
   // every later one for ten minutes.
   const finish = async (jobId: string, report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; painted?: boolean; error?: string }) => {
@@ -251,32 +265,32 @@ export async function hostLoop(opts: {
   // Turns that need no player run on their own: the worker queues a Continue for them. Each is queued once, so one
   // that fails waits for a player's Continue instead of being retried for ever. A reaction offered to a hero holds the
   // round: nothing is queued while it waits on its answer, and once it runs out unanswered a Continue is queued once,
-  // which plays it by the hero's standing order. `offerUntil` is when the offer runs out, to look again then.
-  let followed: string | null = null
-  let offerUntil: number | null = null
+  // which plays it by the hero's standing order. `retryFollowAt` tracks when an active offer expires or when a failed
+  // follow check should be retried.
+  let followedKey: string | null = null
+  let retryFollowAt: number | null = null
   const follow = async () => {
-    const previousOfferUntil = offerUntil
+    const previousRetryAt = retryFollowAt
     try {
       const adventure = (await opts.store.getAdventure({ adventureId: opts.adventureId })) as (AdventureRecord & { currentTurnId?: string; status?: string }) | null
       if (!adventure?.currentTurnId || adventure.status === "completed") {
-        offerUntil = null
+        retryFollowAt = null
         return false
       }
       const turn = await opts.store.getTurn({ turnId: adventure.currentTurnId })
       const phase = reactionPhaseOf(turn?.reaction, Date.now())
-      const waitingUntil = phase === "offered" ? turn!.reaction!.expiresAt : null
-      offerUntil = waitingUntil
+      retryFollowAt = phase === "offered" ? turn!.reaction!.expiresAt : null
       // An answered offer is played on by its own job.
       if (phase === "offered" || phase === "answered") return false
       const who = turn && selfRunning(turn.characters)
       const key = turn && who && `${turn._id}:${who}${turn.reaction ? `:${turn.reaction.expiresAt}` : ""}`
-      if (!turn || !key || followed === key) return false
+      if (!turn || !key || followedKey === key) return false
       await opts.post(jobs, { op: "queue", turnId: turn._id, kind: "continue" })
-      followed = key
+      followedKey = key
       return true
     } catch {
       // Preserve any pending retry deadline so a transient network error retries on the next idle tick.
-      offerUntil = previousOfferUntil ?? Date.now()
+      retryFollowAt = previousRetryAt ?? Date.now()
       return false
     }
   }
@@ -285,17 +299,24 @@ export async function hostLoop(opts: {
     try {
       job = ((await opts.post(jobs, { op: "claim" })) as { job: HostJob | null }).job
     } catch (error) {
-      opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) })
-      idle = false
+      const message = error instanceof Error ? error.message : String(error)
+      worker = transition({ phase: "offline", error: message, retryFollowAt })
+      opts.emit({ type: "offline", error: message })
       await opts.wait(5000)
       continue
     }
     if (!job) {
+      const enteringIdle = worker.phase !== "idle"
+      const retryDue = worker.phase === "idle" && worker.retryFollowAt !== null && Date.now() >= worker.retryFollowAt
       // Going idle, in case the game was left on such a turn: the app reopened, or a job stopped partway. And once a
-      // reaction offer the round waits on runs out.
-      if ((!idle || (offerUntil !== null && Date.now() >= offerUntil)) && (await follow())) continue
-      if (!idle) opts.emit({ type: "idle" })
-      idle = true
+      // reaction offer the round waits on runs out (or a previous follow check failed transiently).
+      if ((enteringIdle || retryDue) && (await follow())) continue
+      if (enteringIdle) {
+        worker = transition({ phase: "idle", retryFollowAt })
+        opts.emit({ type: "idle" })
+      } else if (worker.phase === "idle" && worker.retryFollowAt !== retryFollowAt) {
+        worker = transition({ phase: "idle", retryFollowAt })
+      }
       await opts.wait(1500)
       continue
     }
@@ -303,8 +324,9 @@ export async function hostLoop(opts: {
       void paintHero(job)
       continue
     }
-    idle = false
-    opts.emit({ type: "working", job: { _id: job._id, kind: job.kind, characterId: job.characterId } })
+    const activeJob = { _id: job._id, kind: job.kind, characterId: job.characterId }
+    worker = transition({ phase: "working", job: activeJob })
+    opts.emit({ type: "working", job: activeJob })
     let result: { suggestions?: ActionSuggestion[]; arrival?: Arrival } | { error: string }
     try {
       if (job.kind === "arrival") {
@@ -324,4 +346,5 @@ export async function hostLoop(opts: {
     await finish(job._id, result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
     opts.emit("error" in result ? { type: "failed", jobId: job._id, error: result.error } : { type: "done", jobId: job._id })
   }
+  worker = transition({ phase: "stopping" })
 }

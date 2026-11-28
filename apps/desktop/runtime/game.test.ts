@@ -411,3 +411,39 @@ test("new game archives the saved adventure, even a finished one, and a plain st
     cleanup()
   }
 })
+test("overlapping commands isolate inferenceFailure per invocation", async () => {
+  const { store, cleanup } = setup()
+  try {
+    let releaseFail!: () => void
+    const heldFail = new Promise<void>((resolve) => {
+      releaseFail = resolve
+    })
+    const flakyLlm: Llm = {
+      generateText: async () => {
+        await heldFail
+        throw new Error("cli crashed mid-call")
+      },
+      generateObject: async () => {
+        await heldFail
+        throw new Error("cli crashed mid-call")
+      },
+    }
+    const run = game(store, packs, flakyLlm)
+    await run({ kind: "start", provider: "claude" })
+    const turn = store.current()
+    const pc = findCurrentActor(turn.characters)!
+    const before = JSON.stringify(store.state)
+
+    // Start a reply whose inference will fail, then run a concurrent `load` before the failure resolves.
+    const inFlight = run({ kind: "reply", turnId: turn._id, characterId: pc.id, text: "I inspect the gate." })
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    await run({ kind: "load" })
+    releaseFail()
+
+    await assert.rejects(() => inFlight, /cli crashed mid-call/)
+    // The failed invocation must still preserve the retryable checkpoint and never commit fallback state.
+    assert.equal(JSON.stringify(store.state), before)
+  } finally {
+    cleanup()
+  }
+})
