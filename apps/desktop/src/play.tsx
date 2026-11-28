@@ -350,6 +350,8 @@ export function DesktopGame() {
     if (!hosting) return undefined
     const res = await host({ kind: "hostAct", adventureId: hosting, turnId, action: { kind: "suggest", characterId } })
     if (res.error) throw new Error(res.error)
+    // The replies come with a poll, so it runs now rather than at an idle pace.
+    pollRef.current?.wake()
     return res.jobId
   })
   const goHome = () => {

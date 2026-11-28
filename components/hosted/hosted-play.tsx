@@ -109,7 +109,12 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       setMutation({ kind: "idle" })
     }
   }
-  const suggest = useHostedSuggest(state, (turnId, characterId) => queueHostedAction({ turnId, kind: "suggest", characterId }))
+  // The replies come with a poll, so it runs once the job is queued rather than at an idle pace.
+  const suggest = useHostedSuggest(state, async (turnId, characterId) => {
+    const jobId = await queueHostedAction({ turnId, kind: "suggest", characterId })
+    paceRef.current?.wake()
+    return jobId
+  })
   const onError = useCallback((message: string) => setError(message), [])
   const save = state ? hostedSave(state) : null
   if (!scenes) return null
