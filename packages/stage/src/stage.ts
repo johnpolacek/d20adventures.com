@@ -5,6 +5,7 @@ import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
 import { type ActiveTakeMove, CameraController } from "./camera-controller"
 import { ScreenCurtain } from "./curtain"
+import { HandPropCoordinator } from "./hand-props"
 import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type Shot, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { SLUNG } from "./figures/clips"
@@ -177,6 +178,7 @@ export class Stage {
   readonly painted: Painted | null = null
   private readonly cam = new CameraController()
   private readonly curtain: ScreenCurtain
+  private readonly handProps: HandPropCoordinator
   private look: LookControls | null = null
   // Loops whose line is being put in its new place under a dip.
   private closing = new Set<QueueLoop>()
@@ -285,6 +287,29 @@ export class Stage {
     this.canvas = document.createElement("canvas")
     this.canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none"
     this.curtain = new ScreenCurtain(this.canvas)
+    this.handProps = new HandPropCoordinator({
+      createProp: (kind) => propMesh(kind),
+      facePair: (holder, receiver) => {
+        this.faceCast(holder, receiver)
+        this.faceCast(receiver, holder)
+      },
+      hold: (id, item, out, instant) => this.models.hold(id, item, out, instant),
+      letGo: (id, slow, only, keepAlive) => this.models.letGo(id, slow, only, keepAlive),
+      cutTo: (id, angle) => {
+        const c = this.member(id)
+        const close: StagingShot = {
+          subject: c.id,
+          distance: 2.6,
+          angle,
+          height: c.height * 0.85 + (c.y ?? 0),
+          lookHeight: c.height * 0.68 + (c.y ?? 0),
+          fov: 38,
+        }
+        this.shot(close, { instant: true })
+      },
+      announce: (kind, handed) => this.effects.announce(kind, handed),
+      fallbackEffect: (kind, holder, receiver) => this.effects.prop(kind, this.chest(holder), receiver ? this.chest(receiver) : undefined),
+    })
     o.container.appendChild(this.canvas)
     const renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: "high-performance" })
     this.renderer = renderer
@@ -1990,91 +2015,17 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // in. The cut hides the moment the hands meet. Held up with no receiver, it is shown and brought down. Whoever ends
   // up with it keeps it at their side if the host says they keep it (keepObject), and puts it away if not. Someone shown
   // as a card has no hand, so the object is shown beside them (effects.ts).
-  private handing = 0
   prop(kind: PropKind, holder: string, receiver?: string): Promise<void> {
     if (!this.motion) return Promise.resolve()
-    const turn = ++this.handing
-    const wait = (ms: number) => new Promise<boolean>((r) => setTimeout(() => r(turn === this.handing), ms))
-    const h = this.member(holder)
-    const r = receiver ? this.member(receiver) : undefined
-    // Each on the same side of the line between the two, so the cut keeps who stands where on screen.
-    const close = (c: CastMember, angle: number): StagingShot => ({ subject: c.id, distance: 2.6, angle, height: c.height * 0.85 + (c.y ?? 0), lookHeight: c.height * 0.68 + (c.y ?? 0), fov: 38 })
-    if (r) {
-      this.faceCast(holder, r.id)
-      this.faceCast(r.id, holder)
-    }
-    const item = propMesh(kind)
-    const ends = r ? [holder, r.id] : [holder]
-    // What either kept in hand till now gives way to this.
-    for (const id of ends) {
-      this.handingNow.add(id)
-      this.keptHave.delete(id)
-    }
-    const done = () => {
-      for (const id of ends) {
-        this.handingNow.delete(id)
-        this.applyKept(id)
-      }
-    }
-    if (!this.models.hold(holder, item, true)) {
-      done()
-      if (r) void wait(1600).then((on) => on && this.shot(close(r, -35), { instant: true }))
-      return this.effects.prop(kind, this.chest(holder), r ? this.chest(r.id) : undefined)
-    }
-    this.effects.announce(kind, !!r)
-    // Whoever has it at the end keeps it, or puts it away.
-    const end = (id: string, slow: boolean) => {
-      if (this.keptWant.get(id) === kind) {
-        this.models.hold(id, item, false)
-        this.keptHave.set(id, { kind, item })
-      } else this.models.letGo(id, slow, item)
-    }
-    // Another hand-off begun first ends this one where it stands.
-    const drop = () => {
-      this.models.letGo(holder, false, item)
-      if (r) this.models.letGo(r.id, false, item)
-      done()
-    }
-    return (async () => {
-      if (r) this.shot(close(h, 35), { instant: true })
-      if (!(await wait(r ? 1700 : 2600))) return drop()
-      if (!r) {
-        end(holder, true)
-        return done()
-      }
-      // Out of the giver's hand and into the receiver's, held out where the giver's was, across the cut.
-      this.models.letGo(holder, false, item)
-      if (!this.models.hold(r.id, item, true, true)) return done()
-      this.shot(close(r, -35), { instant: true })
-      if (!(await wait(350))) return drop()
-      // Brought in to the side, and kept a moment before it is put away, unless it is kept.
-      this.models.hold(r.id, item, false)
-      if (this.keptWant.get(r.id) !== kind && !(await wait(1900))) return drop()
-      end(r.id, true)
-      done()
-    })()
+    // Ensure cast ids are valid before starting the hand-off.
+    this.member(holder)
+    if (receiver) this.member(receiver)
+    return this.handProps.prop(kind, holder, receiver)
   }
   // What a cast member keeps in hand, at their side, till the host says otherwise: what they were last handed in the
   // encounter. Null empties the hand. One in the middle of a hand-off takes it up once the hand-off is over.
-  private keptWant = new Map<string, PropKind>()
-  private keptHave = new Map<string, { kind: PropKind; item: THREE.Object3D }>()
-  private handingNow = new Set<string>()
   keepObject(id: string, kind: PropKind | null) {
-    if (kind) this.keptWant.set(id, kind)
-    else this.keptWant.delete(id)
-    if (!this.handingNow.has(id)) this.applyKept(id)
-  }
-  private applyKept(id: string) {
-    const want = this.keptWant.get(id)
-    const have = this.keptHave.get(id)
-    if (have?.kind === want) return
-    if (have) {
-      this.models.letGo(id, true, have.item)
-      this.keptHave.delete(id)
-    }
-    if (!want) return
-    const item = propMesh(want)
-    if (this.models.hold(id, item, false, true)) this.keptHave.set(id, { kind: want, item })
+    this.handProps.keepObject(id, kind)
   }
   // A sound the story names, from where a cast member stands when it is theirs.
   sound(cue: SoundCue, from?: string) {
@@ -2186,6 +2137,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.controls?.dispose()
     this.look?.dispose()
     this.curtain.dispose()
+    this.handProps.dispose()
     this.cam.dispose()
     this.painted?.dispose()
     for (const m of this.statics) m.geometry.dispose()

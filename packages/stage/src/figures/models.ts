@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import { type SharedUniforms, stageMaterial } from "../materials/atmosphere"
+import { disposePropObject } from "../hand-props"
 import type { MaskSource } from "../render/character-mask"
 import { crouchClip, figureClips, isRigged, MOVE_NAMES, STRIKE } from "./clips"
 import { type Armed, arm } from "./fight"
@@ -73,6 +74,7 @@ interface Given {
   // Seconds since it began to be put away, shrinking, or null while held.
   gone: number | null
   opened?: boolean
+  disposeOnDone?: boolean
 }
 // How long an arm takes to go out or come back, and an object to shrink away once put away.
 const REACH_S = 0.5
@@ -488,20 +490,31 @@ export class Models {
     const side = this.readied.get(id) === "blade" ? "L" : "R"
     const arm = armBones(m.root, side)
     if (!arm) return false
-    if (m.given?.item && m.given.item !== item) m.given.item.removeFromParent()
-    m.given = { item, side, arm, out, w: instant ? (out ? 1 : 0) : (m.given?.w ?? 0), gone: null }
+    // Switching hands opens the previous hand's fingers so they do not stay clenched on air.
+    if (m.given && m.given.side !== side && !m.given.opened) {
+      m.grasps?.[m.given.side]?.open()
+    }
+    if (m.given?.item && m.given.item !== item) disposePropObject(m.given.item)
+    const sameSide = m.given?.side === side
+    m.given = { item, side, arm, out, w: instant ? (out ? 1 : 0) : sameSide ? (m.given?.w ?? 0) : 0, gone: null, disposeOnDone: true }
     this.group.add(item)
     return true
   }
   // Put away what a figure holds: it shrinks from its hand, or is gone at once, and the arm comes back to its side.
   // With `only`, it lets go of that object alone, not one it was given since.
-  letGo(id: string, slow = true, only?: THREE.Object3D) {
+  // With `keepAlive`, the item is detached without disposing its GPU resources (for hand-to-hand transfers).
+  letGo(id: string, slow = true, only?: THREE.Object3D, keepAlive = false) {
     const g = this.items.get(id)?.given
     if (!g || (only && g.item !== only)) return
     g.out = false
-    if (slow && g.item) g.gone = 0
-    else {
-      g.item?.removeFromParent()
+    if (slow && g.item) {
+      g.gone = 0
+      g.disposeOnDone = !keepAlive
+    } else {
+      if (g.item) {
+        if (keepAlive) g.item.removeFromParent()
+        else disposePropObject(g.item)
+      }
       g.item = null
     }
   }
@@ -535,7 +548,8 @@ export class Models {
       g.item.scale.setScalar(size / held.seat.getWorldScale(new THREE.Vector3()).x)
       held.close(1)
       if (g.gone !== null && g.gone >= STOW_S) {
-        g.item.removeFromParent()
+        if (g.disposeOnDone === false) g.item.removeFromParent()
+        else disposePropObject(g.item)
         g.item = null
       }
     } else if (g.item) {
@@ -549,7 +563,8 @@ export class Models {
       g.item.scale.setScalar(HELD * (g.gone === null ? 1 : Math.max(0.001, 1 - g.gone / STOW_S)))
       g.item.visible = root.visible
       if (g.gone !== null && g.gone >= STOW_S) {
-        g.item.removeFromParent()
+        if (g.disposeOnDone === false) g.item.removeFromParent()
+        else disposePropObject(g.item)
         g.item = null
       }
     }
@@ -736,7 +751,7 @@ export class Models {
       m.mixer.stopAllAction()
       m.carried?.dispose()
       m.armed?.dispose()
-      m.given?.item?.removeFromParent()
+      if (m.given?.item) disposePropObject(m.given.item)
       for (const mesh of m.meshes) mesh.geometry.dispose()
       for (const mat of m.materials) {
         mat.map?.dispose()
