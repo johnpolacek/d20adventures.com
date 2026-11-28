@@ -243,6 +243,8 @@ export function DesktopGame() {
     setPainting(null)
   }
   // A hero made from a party screen is made for that adventure. One made from the Characters page is not.
+  const generateHero = async (input: { race: string; archetype: string; hook?: string }) =>
+    (await invoke({ kind: "heroConcept", provider: provider as "claude", model: pickedModel, ...input, ...(route.kind === "setup" ? { adventure } : {}) }))?.concept
   const draftHero = async ({ hook, ...idea }: HeroIdea, making: HeroMaking) =>
     (await invoke({ kind: "heroDraft", provider: provider as "claude", model: pickedModel, ...idea, making, ...(route.kind === "setup" ? { adventure, ...(hook.trim() ? { hook } : {}) } : {}) }))?.draft
   const saveHero = async (hero: Omit<Hero, "id"> & { id?: string }, making?: HeroMaking) => {
@@ -579,6 +581,7 @@ export function DesktopGame() {
           editing={creator.editing}
           painted={creator.editing ? art[creator.editing.id] : undefined}
           busy={working}
+          onGenerate={generateHero}
           onDraft={draftHero}
           onSave={saveHero}
           onClose={closeCreator}

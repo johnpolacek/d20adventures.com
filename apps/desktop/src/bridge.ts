@@ -1,3 +1,4 @@
+import type { HeroConcept } from "@d20/gm-core/character/hero-draft"
 import type { NarratorEngine } from "@d20/ui/sound/narrator"
 import { invoke } from "@tauri-apps/api/core"
 import type { AccountCommand, AccountResponse } from "../runtime/account"
@@ -16,6 +17,7 @@ export type GameResponse = {
   saves?: SaveSummary[]
   options?: { races: string[]; archetypes: string[] }
   draft?: HeroDraft
+  concept?: HeroConcept
   // Painted hero art as data URLs, by hero id.
   art?: Record<string, { front: string; back: string; portrait: string }>
   error?: string

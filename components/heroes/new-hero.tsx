@@ -1,10 +1,11 @@
 "use client"
 
+import type { HeroConcept } from "@d20/gm-core/character/hero-draft"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import slugify from "slugify"
 import { toast } from "@d20/ui/toast"
-import { draftHero } from "@/app/_actions/hero-draft"
+import { draftHero, generateHeroIdea } from "@/app/_actions/hero-draft"
 import { joinAdventure, requestSeat } from "@/app/_actions/join-adventure"
 import { saveCharacterTemplateAction } from "@/app/_actions/save-character-template"
 import type { HeroDraft } from "@/apps/desktop/runtime/heroes"
@@ -15,6 +16,23 @@ import type { PCTemplate } from "@/types/character"
 
 // The lobby a hero is made from: it joins that game once saved, then the player goes back to the lobby's link.
 export type HeroLobby = { href: string; settingId: string; planId: string; adventureId: string; hosted: boolean }
+
+const POLL_INTERVAL_MS = 900
+const HOST_GENERATE_TIMEOUT_MS = 60_000
+
+const sleep = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    if (signal.aborted) return resolve()
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort)
+      resolve()
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(timer)
+      resolve()
+    }
+    signal.addEventListener("abort", onAbort, { once: true })
+  })
 
 // The website's hero creator: the app's, with the races, classes and hooks of the adventure it is made for. In a hosted
 // game the hero takes an open seat with the hook the player chose, for the host's GM to write their arrival.
@@ -36,10 +54,79 @@ export function NewHero({
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const hook = useRef("")
+  const generateAbort = useRef<AbortController | null>(null)
+
+  useEffect(() => () => generateAbort.current?.abort(), [])
+
   const leave = () => {
+    generateAbort.current?.abort()
     if (onClose) return onClose()
     if (lobby) router.push(lobby.href)
     else router.back()
+  }
+
+  // Generates a starting name, gender, and background. In a hosted game this runs on the GM Host's AI via gmJobs.
+  const onGenerate = async (input: { race: string; archetype: string; hook?: string }): Promise<HeroConcept | undefined> => {
+    generateAbort.current?.abort()
+    const controller = new AbortController()
+    generateAbort.current = controller
+
+    if (lobby?.hosted) {
+      try {
+        const startRes = await fetch(`/api/adventure/${lobby.adventureId}/hero-idea`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+          signal: controller.signal,
+        })
+        const startJson = (await startRes.json().catch(() => ({}))) as { jobId?: string; hostOnline?: boolean; error?: string }
+        if (!startRes.ok || !startJson.jobId) {
+          toast.error(startJson.error ?? "Could not reach the GM Host.")
+          return undefined
+        }
+        if (startJson.hostOnline === false) {
+          toast("Waiting for the GM Host's app to come online…")
+        }
+
+        const deadline = Date.now() + HOST_GENERATE_TIMEOUT_MS
+        while (!controller.signal.aborted && Date.now() < deadline) {
+          await sleep(POLL_INTERVAL_MS, controller.signal)
+          if (controller.signal.aborted) return undefined
+          const pollRes = await fetch(`/api/adventure/${lobby.adventureId}/hero-idea?jobId=${encodeURIComponent(startJson.jobId)}`, {
+            cache: "no-store",
+            signal: controller.signal,
+          })
+          const pollJson = (await pollRes.json().catch(() => ({}))) as { status?: string; heroConcept?: HeroConcept; error?: string }
+          if (!pollRes.ok) {
+            toast.error(pollJson.error ?? "Could not generate a hero idea.")
+            return undefined
+          }
+          if (pollJson.status === "done" && pollJson.heroConcept) {
+            return pollJson.heroConcept
+          }
+          if (pollJson.status === "failed") {
+            toast.error(pollJson.error ?? "The GM Host could not generate a hero idea.")
+            return undefined
+          }
+        }
+        if (!controller.signal.aborted) {
+          toast.error("The GM Host didn't respond in time. Make sure the host has D20 Adventures open.")
+        }
+        return undefined
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          toast.error(error instanceof Error ? error.message : "Could not reach the GM Host.")
+        }
+        return undefined
+      }
+    }
+
+    const { concept, error } = await generateHeroIdea({ ...input, planId: creation.adventure?.planId }).catch(() => ({
+      concept: undefined,
+      error: "Could not generate a hero idea right now. Retry.",
+    }))
+    if (error) toast.error(error)
+    return concept
   }
 
   const onDraft = async (idea: HeroIdea, making: HeroMaking) => {
@@ -95,6 +182,7 @@ export function NewHero({
       inline={inline}
       saveLabel={lobby ? "Save & Join Table" : "Save Hero"}
       busy={busy}
+      onGenerate={onGenerate}
       onDraft={onDraft}
       onSave={onSave}
       onClose={leave}

@@ -1,3 +1,4 @@
+import { heroConceptSchema } from "@d20/gm-core/character/hero-draft"
 import { NextResponse } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -18,6 +19,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
       error?: string
       suggestions?: unknown
       arrival?: unknown
+      heroConcept?: unknown
       painted?: unknown
       picture?: unknown
       data?: unknown
@@ -47,6 +49,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
         : undefined
       // An arrival job finishes with the hero's arrival.
       const arrival = reportedArrival(body.arrival)
+      // A heroIdea job finishes with a generated name, gender, and background.
+      const parsedConcept = body.heroConcept ? heroConceptSchema.safeParse(body.heroConcept) : undefined
+      const heroConcept = parsedConcept?.success ? parsedConcept.data : undefined
       await hostedAdventure(adventureId, device.userId)
       const art = body.painted === true && !body.error ? await paintedArt(adventureId, body.jobId) : undefined
       const outcome = await convex.mutation(api.hosting.finishJob, {
@@ -57,6 +62,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
         suggestions,
         ...(arrival ? { arrival } : {}),
         ...(art ? { art } : {}),
+        ...(heroConcept ? { heroConcept } : {}),
       })
       return NextResponse.json({ ok: true, finished: outcome.finished, status: outcome.status })
     }

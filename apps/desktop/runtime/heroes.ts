@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import type { Llm } from "@d20/gm-core"
-import { type Arrival, arrivalSchema, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import { type Arrival, arrivalSchema, draftHeroConcept, type HeroConcept, playableHero, withArrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { allowsHero, buildHero, heroMakingSchema, makeHero, withStoryOf } from "@d20/gm-core/character/hero-make"
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
 import { type PCTemplate, pcTemplateSchema } from "@d20/gm-core/types/character"
@@ -30,12 +30,21 @@ export const gmModelSchema = z
   .optional()
 export const heroCommandSchema = z.discriminatedUnion("kind", [
   z.object({
+    kind: z.literal("heroConcept"),
+    provider,
+    model: gmModelSchema,
+    race: text(60).min(1),
+    archetype: text(60).min(1),
+    adventure: text(100).optional(),
+    hook: text(300).optional(),
+  }),
+  z.object({
     kind: z.literal("heroDraft"),
     provider,
     model: gmModelSchema,
     name: text(80).min(1),
     gender: text(40).optional(),
-    idea: text(600).optional(),
+    idea: text(1200).optional(),
     adventure: text(100).optional(),
     // Why the hero came, from the adventure's hooks or the player's own words.
     hook: text(300).optional(),
@@ -71,8 +80,27 @@ export async function heroCommand(
   packs: Packs,
   llm: Llm,
   files?: { data: string; scratch: string }
-): Promise<{ draft?: HeroDraft; art?: ReturnType<typeof readArt> }> {
+): Promise<{ draft?: HeroDraft; concept?: HeroConcept; art?: ReturnType<typeof readArt> }> {
   const command = heroCommandSchema.parse(input)
+  if (command.kind === "heroConcept") {
+    const pack = command.adventure ? packs[command.adventure] : undefined
+    const avoidNames = [
+      ...roster.heroes().map((h) => h.name),
+      ...(pack
+        ? Object.values(pack.artifacts.characterSheets.premadeCharacters)
+            .map((c) => (c.sheet as { name?: string } | undefined)?.name)
+            .filter((name): name is string => Boolean(name))
+        : []),
+    ]
+    const concept = await draftHeroConcept(llm, {
+      race: command.race,
+      archetype: command.archetype,
+      adventure: pack && heroAdventure(pack),
+      hook: command.hook || undefined,
+      avoidNames,
+    })
+    return { concept }
+  }
   if (command.kind === "deleteHero") {
     roster.deleteHero(command.id)
     return {}

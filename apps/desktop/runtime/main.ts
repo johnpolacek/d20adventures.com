@@ -111,7 +111,7 @@ async function main() {
         process.stdout.write(`${JSON.stringify({ suggestions: await suggest(save, packs, model.llm, suggestCommandSchema.parse(input)) })}\n`)
         return
       }
-      const command = ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
+      const command = ["heroConcept", "heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(input?.kind) ? heroCommandSchema.parse(input) : commandSchema.parse(input)
       const packs = await loadPacks(bundled, dirname(savePath))
       store = new LocalStore(savePath, transitionsOf(packs))
       store.acquire()
@@ -126,8 +126,8 @@ async function main() {
         true,
         picked.model
       )
-      let hero: { draft?: HeroDraft; art?: unknown } = {}
-      if ("kind" in command && ["heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(command.kind))
+      let hero: { draft?: HeroDraft; concept?: unknown; art?: unknown } = {}
+      if ("kind" in command && ["heroConcept", "heroDraft", "saveHero", "deleteHero", "paintHero", "art"].includes(command.kind))
         hero = await heroCommand(command as HeroCommand, store, packs, model.llm, { data: dirname(savePath), scratch })
       else await game(store, packs, model.llm)(command as GameCommand)
       const state = store.state

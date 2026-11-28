@@ -58,6 +58,43 @@ export const heroStorySchema = z.object({
 })
 export type HeroStory = z.infer<typeof heroStorySchema>
 
+/** A generated starting concept for Step 1 of hero creation: name, gender, and background (including why they came). */
+export const heroConceptSchema = z.object({
+  name: text(80).min(1),
+  gender: text(40).min(1),
+  background: text(1200).min(1),
+})
+export type HeroConcept = z.infer<typeof heroConceptSchema>
+
+/** Prompt that invents a fresh name, gender, and background for a chosen species and class in an adventure. */
+export function heroConceptPrompt(opts: { race: string; archetype: string; adventure?: HeroAdventure; hook?: string; avoidNames?: string[] }) {
+  return [
+    `Invent an original ${opts.race} ${opts.archetype} player character for the Realm of Myr, a medieval fantasy world.`,
+    opts.adventure ? about(opts.adventure) : "",
+    opts.hook
+      ? `Why they came to this adventure: ${opts.hook.replace(/\.?$/, ".")} Weave this naturally into their background.`
+      : opts.adventure?.hooks?.length
+        ? `Pick one of these reasons for why they came (or invent a fitting one in the same spirit) and weave it naturally into their background: ${opts.adventure.hooks.join(" | ")}`
+        : "",
+    opts.avoidNames?.length ? `Do not reuse any of these names already at the table: ${opts.avoidNames.join(", ")}.` : "",
+    WORLD,
+    "Return:",
+    "- name: a grounded, memorable medieval fantasy full name fitting their species (no clichés, no titles like 'The Brave').",
+    "- gender: a short word such as Male, Female, or Non-binary.",
+    "- background: two to four vivid sentences describing who they are, their past, and why they have come on this adventure. No numbers or game mechanics.",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+/** Uses the game master's LLM to generate a starting name, gender, and background for a chosen species and class. */
+export async function draftHeroConcept(
+  llm: Llm,
+  opts: { race: string; archetype: string; adventure?: HeroAdventure; hook?: string; avoidNames?: string[] }
+): Promise<HeroConcept> {
+  return (await llm.generateObject({ prompt: heroConceptPrompt(opts), schema: heroConceptSchema })).object
+}
+
 const listed = (items: string[]) => items.join(", ")
 
 /** The prompt that writes a hero's story in one call. With an adventure that has hooks and an opening, the same call writes their arrival. */

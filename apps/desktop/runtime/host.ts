@@ -1,5 +1,5 @@
 import { type AdventureRecord, type Content, createGmCore, type Llm, type Store } from "@d20/gm-core"
-import { type Arrival, writeArrival } from "@d20/gm-core/character/hero-draft"
+import { type Arrival, draftHeroConcept, type HeroConcept, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { characterScript } from "@d20/gm-core/story/turn"
@@ -25,7 +25,7 @@ export type HostJob = {
   adventureId: string
   // None for an arrival job, which is written before the first turn.
   turnId?: string
-  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint" | "react"
+  kind: "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint" | "react" | "heroIdea"
   userId: string
   characterId?: string
   // A reply's text, or the hook a created hero's player chose for an arrival job.
@@ -195,6 +195,30 @@ export async function runArrivalJob(job: HostJob, store: Store, packs: Packs, ll
   return writeArrival(llm, job.sheet, { ...about, hooks, opening }, job.text)
 }
 
+/** Generates a starting name, gender, and background for a player building a hero in the lobby. */
+export async function runHeroIdeaJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<HeroConcept> {
+  const adventure = (await store.getAdventure({ adventureId: job.adventureId })) as (AdventureRecord & { currentTurnId?: string }) | null
+  if (!adventure) throw new Error("The hosted game is missing.")
+  if (adventure.currentTurnId) throw new Error("This game has already started.")
+  let req: { race?: string; archetype?: string; hook?: string } = {}
+  try {
+    req = JSON.parse(job.text ?? "{}") as { race?: string; archetype?: string; hook?: string }
+  } catch {
+    throw new Error("The hero concept request could not be read.")
+  }
+  const race = req.race?.trim()
+  const archetype = req.archetype?.trim()
+  if (!race || !archetype) throw new Error("Choose a species and class first.")
+  const pack = packs[adventure.planId]
+  const about = pack ? heroAdventure(pack) : undefined
+  const avoidNames = pack
+    ? Object.values(pack.artifacts.characterSheets.premadeCharacters)
+        .map((c) => (c.sheet as { name?: string } | undefined)?.name)
+        .filter((name): name is string => Boolean(name))
+    : []
+  return draftHeroConcept(llm, { race, archetype, adventure: about, hook: req.hook?.trim() || undefined, avoidNames })
+}
+
 export type HostEvent =
   | { type: "idle" }
   | { type: "working"; job: Pick<HostJob, "_id" | "kind" | "characterId"> }
@@ -233,7 +257,7 @@ export async function hostLoop(opts: {
   }
   // A report the website missed is sent again. Finishing a job twice changes nothing, and a job left running holds
   // every later one for ten minutes.
-  const finish = async (jobId: string, report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; painted?: boolean; error?: string }) => {
+  const finish = async (jobId: string, report: { suggestions?: ActionSuggestion[]; arrival?: Arrival; heroConcept?: HeroConcept; painted?: boolean; error?: string }) => {
     for (let attempt = 0; ; attempt++) {
       try {
         return await opts.post(jobs, { op: "finish", jobId, ...report })
@@ -327,10 +351,16 @@ export async function hostLoop(opts: {
     const activeJob = { _id: job._id, kind: job.kind, characterId: job.characterId }
     worker = transition({ phase: "working", job: activeJob })
     opts.emit({ type: "working", job: activeJob })
-    let result: { suggestions?: ActionSuggestion[]; arrival?: Arrival } | { error: string }
+    let result: { suggestions?: ActionSuggestion[]; arrival?: Arrival; heroConcept?: HeroConcept } | { error: string }
     try {
       if (job.kind === "arrival") {
         result = { arrival: await runArrivalJob(job, opts.store, opts.packs, opts.llm) }
+        await finish(job._id, result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
+        opts.emit({ type: "done", jobId: job._id })
+        continue
+      }
+      if (job.kind === "heroIdea") {
+        result = { heroConcept: await runHeroIdeaJob(job, opts.store, opts.packs, opts.llm) }
         await finish(job._id, result).catch((error) => opts.emit({ type: "offline", error: error instanceof Error ? error.message : String(error) }))
         opts.emit({ type: "done", jobId: job._id })
         continue

@@ -1,12 +1,35 @@
 "use server"
 
 import { auth } from "@clerk/nextjs/server"
+import { draftHeroConcept, type HeroConcept } from "@d20/gm-core/character/hero-draft"
 import { allowsHero, buildHero, heroMakingSchema, makeHero } from "@d20/gm-core/character/hero-make"
 import { createServerLlm } from "@/lib/gm-server/llm"
 import { heroCreation } from "@/lib/heroes/creation"
 import type { PCTemplate } from "@/types/character"
 
 const clip = (value: string | undefined, max: number) => (value ?? "").trim().slice(0, max)
+
+// Generates a starting name, gender, and background via the site's budgeted LLM (used outside hosted games).
+export async function generateHeroIdea(input: { planId?: string; race: string; archetype: string; hook?: string }): Promise<{ concept?: HeroConcept; error?: string }> {
+  const { userId } = await auth()
+  if (!userId) return { error: "Sign in to generate a hero." }
+  const race = clip(input.race, 60)
+  const archetype = clip(input.archetype, 60)
+  if (!race || !archetype) return { error: "Choose a species and class first." }
+  const { adventure } = await heroCreation(input.planId)
+  try {
+    const concept = await draftHeroConcept(createServerLlm(), {
+      race,
+      archetype,
+      adventure: adventure && { title: adventure.title, teaser: adventure.teaser, hooks: adventure.hooks },
+      hook: clip(input.hook, 300) || undefined,
+    })
+    return { concept }
+  } catch (error) {
+    console.error("[generateHeroIdea] Could not generate hero concept:", error)
+    return { error: "Could not generate a hero idea right now. Retry." }
+  }
+}
 
 // Makes a hero from the player's rules choices, for the adventure they are made for: the engine builds the sheet, and
 // one call writes the story to fit it. Nothing is saved. Their arrival is not written here: in a hosted game the
@@ -25,7 +48,7 @@ export async function draftHero(input: { planId?: string; name: string; gender?:
   try {
     const { hero } = await makeHero(
       createServerLlm(),
-      { name, gender: clip(input.gender, 40), idea: clip(input.idea, 600) },
+      { name, gender: clip(input.gender, 40), idea: clip(input.idea, 1200) },
       making.data,
       adventure && { title: adventure.title, teaser: adventure.teaser },
       clip(input.hook, 300)

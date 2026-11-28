@@ -477,3 +477,54 @@ test("hostLoop transitions through explicit HostWorkerPhase states (offline -> w
     cleanup()
   }
 })
+
+test("hostLoop runs a heroIdea job through the host's LLM and finishes with heroConcept", async () => {
+  const { store, adventureId, cleanup } = await hosted()
+  try {
+    // Waiting lobby: no currentTurnId yet.
+    const lobbyStore = Object.assign(Object.create(store), {
+      getAdventure: async () => ({ ...(await store.getAdventure({ adventureId })), currentTurnId: undefined }),
+    })
+    let claimed = false
+    let finishedReport: Record<string, unknown> | undefined
+    const ideaJob = job({ adventureId, kind: "heroIdea", userId: "guest", text: JSON.stringify({ race: "Elf", archetype: "Ranger" }) }, "idea-1")
+    const post: HostPost = async (_path, body) => {
+      const b = body as Record<string, unknown>
+      if (b.op === "claim") {
+        if (!claimed) {
+          claimed = true
+          return { job: ideaJob }
+        }
+        return { job: null }
+      }
+      if (b.op === "finish") {
+        finishedReport = b
+        return { ok: true }
+      }
+      return { ok: true }
+    }
+    const conceptLlm = {
+      ...failLlm,
+      generateObject: async () => ({
+        object: { name: "Elowen Moss", gender: "Female", background: "A frontier scout tracking stolen Valkaran relics toward Kordavos." },
+      }),
+    } as typeof failLlm
+    await hostLoop({
+      adventureId,
+      post,
+      store: lobbyStore,
+      packs,
+      llm: conceptLlm,
+      emit: () => {},
+      stopped: () => Boolean(finishedReport),
+      wait: async () => {},
+    })
+    assert.deepEqual(finishedReport?.heroConcept, {
+      name: "Elowen Moss",
+      gender: "Female",
+      background: "A frontier scout tracking stolen Valkaran relics toward Kordavos.",
+    })
+  } finally {
+    cleanup()
+  }
+})

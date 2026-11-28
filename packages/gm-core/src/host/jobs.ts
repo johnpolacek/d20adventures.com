@@ -28,7 +28,7 @@ export function hasAllArtKinds(uploaded: readonly string[] | null | undefined): 
   return missingArtKinds(uploaded).length === 0
 }
 
-export type GmJobKind = "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint" | "react"
+export type GmJobKind = "reply" | "roll" | "continue" | "suggest" | "skip" | "arrival" | "paint" | "react" | "heroIdea"
 
 export type SchedulableJob = {
   _id: string
