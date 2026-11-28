@@ -25,9 +25,9 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   const [error, setError] = useState<string | null>(null)
   const shownFailure = useRef<string | null>(null)
   const mutationSeqRef = useRef(0)
-  // Polls every 1.5s while the game moves or the GM works, slowing to 8s while it waits, and not at all while hidden.
+  // Polls every 1.5s while the game moves or the GM works, slowing to 15s while it waits, and not at all while hidden.
   const paceRef = useRef<PollPace | null>(null)
-  if (!paceRef.current) paceRef.current = new PollPace(1500, 8000)
+  if (!paceRef.current) paceRef.current = new PollPace(1500, 15000)
   const portrait = usePhonePortrait()
   // The scenes come from the repo's stage, loaded before the stage shows.
   const scenes = useScenes("repo")

@@ -287,7 +287,7 @@ export function DesktopGame() {
     }
     poller.start(hosting, {
       intervalMs: 1500,
-      maxIntervalMs: 8000,
+      maxIntervalMs: 15000,
       busy: hostedPending,
       poll: async (adventureId) => {
         const [res, w] = await Promise.all([host({ kind: "hostState", adventureId }), hostRunning().catch(() => null)])
