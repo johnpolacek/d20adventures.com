@@ -1361,7 +1361,9 @@ function crown(doc: Document) {
 // and all at the wrist. As with the shoulder's, every clip is given its keys and no player has to know of it.
 const ROLL = 0.75
 const REACH = (110 * Math.PI) / 180
+const TURN_BACK = (160 * Math.PI) / 180
 function rolls(doc: Document, big = 1) {
+  let capped = 0
   const skin = doc.getRoot().listSkins()[0]
   const bind = skin?.getInverseBindMatrices()
   if (!skin || !bind) return null
@@ -1406,17 +1408,27 @@ function rolls(doc: Document, big = 1) {
         // The forearm's roll since its rest, about its own length: out of the forearm, and onto the hand.
         const own = about(qmul(qinv(foreRest), f), axis)
         foreOut.setElement(i, qmul(f, qinv(own)))
-        const held = qmul(own, h)
-        handOut.setElement(i, held)
+        let held = qmul(own, h)
         // The hand's roll on the forearm since its rest, about the same line, and a share of it for the new bone.
         const turned = qinv(about(qinv(qmul(held, qinv(handRest))), axis))
         const angle = 2 * Math.atan2(turned[0] * axis[0] + turned[1] * axis[1] + turned[2] * axis[2], turned[3])
         // The same way round as the frame before: a roll that passes half a turn does not come back the other way.
-        const wrapped = angle - 2 * Math.PI * Math.round((angle - before) / (2 * Math.PI))
+        let wrapped = angle - 2 * Math.PI * Math.round((angle - before) / (2 * Math.PI))
         before = wrapped
         if (Math.abs(wrapped) > most) [most, where] = [Math.abs(wrapped), `${side.toLowerCase()} hand in ${anim.getName()}`]
-        // No forearm rolls much past a quarter turn. A clip that asks for more, the bow's drawing hand at 212 degrees
-        // with its elbow folded, keeps the rest at the wrist, where it was.
+        // A hand rolled past TURN_BACK on its forearm is turned back to it. What the roll bone cannot take the wrist must,
+        // and the skin there is wrung to a neck: the bow's drawing hand at 212 degrees left the wrist 0.37 of its
+        // thickness (pinch.ts), and turned back to 160 it keeps 0.58, the hand's back to the cheek as it draws.
+        if (Math.abs(wrapped) > TURN_BACK) {
+          const back = -(wrapped - Math.sign(wrapped) * TURN_BACK) / 2
+          held = qmul([axis[0] * Math.sin(back), axis[1] * Math.sin(back), axis[2] * Math.sin(back), Math.cos(back)], held)
+          capped = Math.max(capped, Math.abs(wrapped) - TURN_BACK)
+          wrapped = Math.sign(wrapped) * TURN_BACK
+        }
+        handOut.setElement(i, held)
+        // No forearm rolls much past a quarter turn, and a hand rolled further keeps the rest at the wrist. Rolled
+        // further, the forearm's own skin is wrung instead: shared between two bones a half turn apart, it is drawn in
+        // to the line between them (at 180 degrees the bow's drawing wrist fell to 0.18, and its elbow with it).
         const half = (Math.max(-REACH, Math.min(REACH, wrapped)) * ROLL) / 2
         values.set([axis[0] * Math.sin(half), axis[1] * Math.sin(half), axis[2] * Math.sin(half), Math.cos(half)], i * 4)
       }
@@ -1465,7 +1477,7 @@ function rolls(doc: Document, big = 1) {
         moved++
       }
     }
-  return { moved, most: (most * 180) / Math.PI, where }
+  return { moved, most: (most * 180) / Math.PI, where, capped: (capped * 180) / Math.PI }
 }
 
 // The sheet of a figure that holds something may paint that hand closed round a short rod in flat blue (build.ts), so
@@ -2601,7 +2613,7 @@ async function rodinHyper(brief: Brief) {
   if (!four && !args.includes("--helpers=off") && brief.helpers !== false) say("helpers", `${helpers(doc)} points hung on a bone between arm and trunk`)
   // `--rolls=off` leaves a forearm's roll at the elbow, to measure against.
   const rolled = four || args.includes("--rolls=off") ? null : rolls(doc, big)
-  if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})`)
+  if (rolled) say("rolls", `${rolled.moved} points hung on a bone that rolls with the hand, which rolls ${rolled.most.toFixed(0)}° at the most (the ${rolled.where})${rolled.capped ? `, turned back by up to ${rolled.capped.toFixed(0)}° to 160°` : ""}`)
   // A cloak's back on chains of its own, swung clear of the legs (cloak.ts). `--cloak=off` leaves it on the legs.
   if (brief.cloak && !four && !args.includes("--cloak=off")) {
     const hung = cloak(doc, big)
