@@ -3,7 +3,8 @@
 import { Heading } from "@d20/ui/typography/heading"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { queueHostedAction, sendHostedChat } from "@/app/_actions/hosted"
-import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
+import { hostedArt, hostedPending, hostedSave, hostedWork, useHostedSuggest } from "@/apps/desktop/src/hosted"
+import { PollPace } from "@/apps/desktop/src/poll-pace"
 import { useScenes } from "@/apps/desktop/src/stage-data"
 import { StagePlay } from "@/apps/desktop/src/stage-play"
 import { Presence } from "@d20/ui/presence"
@@ -24,6 +25,9 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   const [error, setError] = useState<string | null>(null)
   const shownFailure = useRef<string | null>(null)
   const mutationSeqRef = useRef(0)
+  // Polls every 1.5s while the game moves or the GM works, slowing to 8s while it waits, and not at all while hidden.
+  const paceRef = useRef<PollPace | null>(null)
+  if (!paceRef.current) paceRef.current = new PollPace(1500, 8000)
   const portrait = usePhonePortrait()
   // The scenes come from the repo's stage, loaded before the stage shows.
   const scenes = useScenes("repo")
@@ -35,29 +39,34 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   }, [])
   useEffect(() => {
     const controller = new AbortController()
-    let timer: ReturnType<typeof setTimeout> | null = null
-    const tick = async () => {
-      const seqAtStart = mutationSeqRef.current
-      try {
+    const pace = paceRef.current!
+    void (async () => {
+      let last = ""
+      while (!controller.signal.aborted) {
+        const seqAtStart = mutationSeqRef.current
+        let busy = true
         const res = await fetch(`/api/hosted/${adventureId}`, { cache: "no-store", signal: controller.signal }).catch(() => null)
-        if (controller.signal.aborted || !res) return
-        const body = await res.json().catch(() => null)
         if (controller.signal.aborted) return
-        if (!res.ok) {
-          setError(body?.error ?? "Could not load the game.")
-          return
+        const text = res ? await res.text().catch(() => "") : ""
+        if (controller.signal.aborted) return
+        const body = (() => {
+          try {
+            return text ? JSON.parse(text) : null
+          } catch {
+            return null
+          }
+        })()
+        if (res && !res.ok) setError(body?.error ?? "Could not load the game.")
+        else if (res && body) {
+          busy = text !== last || hostedPending(body)
+          last = text
+          // Drop poll responses that started before an optimistic local mutation (e.g. sent chat).
+          if (seqAtStart === mutationSeqRef.current) setState(body)
         }
-        // Drop poll responses that started before an optimistic local mutation (e.g. sent chat).
-        if (seqAtStart === mutationSeqRef.current) setState(body)
-      } finally {
-        if (!controller.signal.aborted) timer = setTimeout(tick, 1500)
+        if (!(await pace.after(busy, controller.signal))) return
       }
-    }
-    void tick()
-    return () => {
-      controller.abort()
-      if (timer !== null) clearTimeout(timer)
-    }
+    })()
+    return () => controller.abort()
   }, [adventureId])
   const work = state ? hostedWork(state) : null
   useEffect(() => {
@@ -68,6 +77,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   }, [work?.failed])
   const act = async (action: Parameters<typeof queueHostedAction>[0]) => {
     mutationSeqRef.current++
+    paceRef.current?.wake()
     setMutation({ kind: "acting" })
     setError(null)
     try {

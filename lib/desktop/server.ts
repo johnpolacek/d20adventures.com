@@ -47,7 +47,10 @@ export const revokeDevice = (userId: string, deviceId: string) => convex.mutatio
 /** The linked device behind a request's bearer token, or a 401 response. */
 export async function deviceFromRequest(request: Request) {
   const token = bearerToken(request.headers.get("authorization"))
-  const device = token ? await convex.mutation(api.devices.deviceByToken, { secret: serverSecret(), tokenHash: sha256(token) }) : null
+  const args = token ? { secret: serverSecret(), tokenHash: sha256(token) } : null
+  // Most requests only read the device. One every SEEN_EVERY_MS marks it seen.
+  const found = args ? await convex.query(api.devices.findDeviceByToken, args) : null
+  const device = found?.stale && args ? await convex.mutation(api.devices.deviceByToken, args) : found && { deviceId: found.deviceId, userId: found.userId, name: found.name }
   if (!device) return { error: NextResponse.json({ error: "This computer is not linked." }, { status: 401 }) }
   return { device }
 }

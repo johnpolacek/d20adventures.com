@@ -1,10 +1,10 @@
 import { auth } from "@clerk/nextjs/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-adventure"
+import { loadAdventureLobby } from "@/app/_actions/load-adventure"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
 import { AdventureAccessError, assertAdventureAccess } from "@/lib/adventure-access"
 import { guestSeat } from "@/lib/host/seats"
-import { readJsonFromS3 } from "@/lib/s3-utils"
+import { readJsonFromS3Cached } from "@/lib/s3-utils"
 import type { Adventure } from "@/types/adventure"
 import type { PC, PCTemplate } from "@/types/character"
 
@@ -51,16 +51,14 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const { adventureId } = await params
     const { userId } = await auth()
     // An invited guest polls the lobby before joining. A game still waiting for players answers them too.
-    const lobby = await assertAdventureAccess(userId, adventureId as Id<"adventures">).then(
-      () => null,
+    const adventureData = await assertAdventureAccess(userId, adventureId as Id<"adventures">).then(
+      (adventure) => ({ adventure }),
       async (error) => {
         const waiting = userId ? await loadAdventureLobby(adventureId as Id<"adventures">) : null
         if (!waiting) throw error
         return waiting
       }
     )
-
-    const adventureData = lobby ?? (await loadAdventureWithNpc(adventureId as Id<"adventures">))
 
     if (!adventureData?.adventure) {
       return NextResponse.json({ error: "Adventure not found" }, { status: 404 })
@@ -79,7 +77,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         adventure.players.map(async (player: { userId: string; characterId: string; controlledBy?: "ai" }) => {
           if (typeof player.characterId === "string" && player.characterId.startsWith("characters/")) {
             try {
-              const pcTemplate = (await readJsonFromS3(player.characterId)) as PCTemplate
+              const pcTemplate = (await readJsonFromS3Cached(player.characterId)) as PCTemplate
               // Convert PCTemplate to PC by adding userId + AI marker
               return { ...pcTemplate, userId: player.userId, controlledBy: player.controlledBy } as PC
             } catch (err) {

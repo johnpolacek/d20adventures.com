@@ -127,7 +127,25 @@ export async function readJsonFromS3(key: string): Promise<unknown> {
   }
 }
 
+// Hero sheets that polls read again and again, kept briefly on this server. A save through updateJsonOnS3 here drops
+// its copy, and another server's copy is at most CACHE_MS old.
+const CACHE_MS = 30_000
+const cached = new Map<string, { at: number; data: Promise<unknown> }>()
+
+/** readJsonFromS3, from a copy read within the last 30 seconds when this server has one. */
+export function readJsonFromS3Cached(key: string): Promise<unknown> {
+  const now = Date.now()
+  const hit = cached.get(key)
+  if (hit && now - hit.at < CACHE_MS) return hit.data
+  if (cached.size > 500) for (const [k, v] of cached) if (now - v.at >= CACHE_MS) cached.delete(k)
+  const data = readJsonFromS3(key)
+  cached.set(key, { at: now, data })
+  data.catch(() => cached.get(key)?.data === data && cached.delete(key))
+  return data
+}
+
 export async function updateJsonOnS3(key: string, data: unknown): Promise<void> {
+  cached.delete(key)
   console.log("[updateJsonOnS3] Starting with key:", key)
   console.log("[updateJsonOnS3] Data to save:", JSON.stringify(data, null, 2))
 
@@ -258,6 +276,7 @@ export async function listAndReadJsonFilesInS3Directory(directoryPrefix: string,
 }
 
 export async function deleteS3Object(key: string): Promise<void> {
+  cached.delete(key)
   const bucket = process.env.bucketData || process.env.AWS_BUCKET_DATA
   if (!bucket) throw new Error("AWS_BUCKET_DATA is not set")
   if (!isAwsConfigured() || !s3Client) throw new Error("AWS S3 is not configured")

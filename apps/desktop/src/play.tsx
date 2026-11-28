@@ -18,7 +18,7 @@ import type { FigureArt } from "./figures"
 import { FullscreenButton } from "./fullscreen"
 import { HeroCreator, type HeroIdea, type HeroMaking } from "./hero-creator"
 import { Home } from "./home"
-import { hostedArt, hostedSave, hostedWork, useHostedSuggest } from "./hosted"
+import { hostedArt, hostedPending, hostedSave, hostedWork, useHostedSuggest } from "./hosted"
 import { HostedLobby } from "./hosted-lobby"
 import { type Locked, NewGame } from "./new-game"
 import { AdventuresPage, CharactersPage, type Page, SettingsPage } from "./pages"
@@ -287,6 +287,8 @@ export function DesktopGame() {
     }
     poller.start(hosting, {
       intervalMs: 1500,
+      maxIntervalMs: 8000,
+      busy: hostedPending,
       poll: async (adventureId) => {
         const [res, w] = await Promise.all([host({ kind: "hostState", adventureId }), hostRunning().catch(() => null)])
         return { state: res.state, error: res.error, worker: w }

@@ -9,7 +9,7 @@ import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
 import { hostWaits, hostWatches, openLeft, openSeats, seatingOf, sheetId } from "@/lib/host/seats"
-import { readJsonFromS3, updateJsonOnS3, uploadFileToS3 } from "@/lib/s3-utils"
+import { readJsonFromS3, readJsonFromS3Cached, updateJsonOnS3, uploadFileToS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
 
@@ -269,11 +269,12 @@ export async function runHostStoreOp(op: HostStoreOp, args: Record<string, unkno
 }
 
 /** A hosted game as the host's home screen lists it. */
-export async function hostedSummary(adventure: Doc<"adventures">, origin: string) {
-  const turn = adventure.currentTurnId ? await convex.query(api.adventure.getTurnById, { turnId: adventure.currentTurnId }).catch(() => null) : null
+/** `turn` is the adventure's current turn when the caller has read it already. */
+export async function hostedSummary(adventure: Doc<"adventures">, origin: string, turn?: { order?: number; title?: string; encounterId?: string } | null) {
+  if (turn === undefined) turn = adventure.currentTurnId ? await convex.query(api.adventure.getTurnById, { turnId: adventure.currentTurnId }).catch(() => null) : null
   const names = await Promise.all(
     (adventure.players ?? []).map(async (p) => {
-      const sheet = p.characterId.startsWith("characters/") ? ((await readJsonFromS3(p.characterId).catch(() => null)) as { name?: string } | null) : null
+      const sheet = p.characterId.startsWith("characters/") ? ((await readJsonFromS3Cached(p.characterId).catch(() => null)) as { name?: string } | null) : null
       return sheet?.name ?? p.characterId.split("/").pop()?.replace(".json", "") ?? ""
     })
   )

@@ -121,6 +121,21 @@ export const redeemLink = mutation({
   },
 })
 
+/** The account behind a device token, or null when unknown or revoked, read without marking it seen. Each request
+ * from the app asks this, and calls deviceByToken only once lastSeenAt is stale. */
+export const findDeviceByToken = query({
+  args: { secret: v.string(), tokenHash: v.string() },
+  handler: async (ctx, args) => {
+    requireServer(args.secret)
+    const device = await ctx.db
+      .query("devices")
+      .withIndex("by_token_hash", (q) => q.eq("tokenHash", args.tokenHash))
+      .first()
+    if (!device || device.revokedAt !== undefined) return null
+    return { deviceId: device._id, userId: device.userId, name: device.name, stale: !device.lastSeenAt || Date.now() - device.lastSeenAt > SEEN_EVERY_MS }
+  },
+})
+
 /** The account behind a device token, or null when unknown or revoked. */
 export const deviceByToken = mutation({
   args: { secret: v.string(), tokenHash: v.string() },

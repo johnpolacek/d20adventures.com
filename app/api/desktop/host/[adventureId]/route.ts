@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
       convex.query(api.hosting.recentJobs, { secret: serverSecret(), adventureId: adventure._id }),
       tableChat(adventure._id),
     ])
-    return NextResponse.json({ adventure, turn, jobs, chat, summary: await hostedSummary(adventure, siteOrigin(request)), userId: device.userId })
+    return NextResponse.json({ adventure, turn, jobs, chat, summary: await hostedSummary(adventure, siteOrigin(request), turn), userId: device.userId })
   } catch (e) {
     return hostErrorResponse(e)
   }

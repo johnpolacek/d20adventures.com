@@ -23,6 +23,7 @@ import type { PC, PCTemplate } from "@/types/character"
 import { CharacterSheetModal } from "./character-sheet-modal"
 import GameChat from "./game-chat"
 import { CreateHeroCard, HeroCard, HeroRow, HeroRows, HeroTag } from "./hero-row"
+import { PollPace } from "@/apps/desktop/src/poll-pace"
 import { InviteLink } from "./invite-link"
 import { LobbyIntro } from "./invite-sign-in"
 import { StartAdventureButton } from "./start-adventure-button"
@@ -200,44 +201,44 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   })
   const [changingHero, setChangingHero] = useState(false)
 
-  // Sequential AbortController poller for adventure updates (only when signed in).
+  // Sequential AbortController poller for adventure updates (only when signed in). Every 3s while the lobby changes,
+  // slowing to 12s while it waits, and not at all while hidden.
   useEffect(() => {
     if (!isSignedIn) return
 
     const controller = new AbortController()
-    let timer: ReturnType<typeof setTimeout> | null = null
+    const pace = new PollPace(3000, 12000)
 
-    const poll = async () => {
-      const seq = mutationSeqRef.current
-      try {
-        const response = await fetch(`/api/adventure/${params.adventureId}`, {
-          cache: "no-store",
-          signal: controller.signal,
-        })
-        if (response.ok && !controller.signal.aborted && seq === mutationSeqRef.current) {
-          const updatedAdventure = await response.json()
-          if (!controller.signal.aborted && seq === mutationSeqRef.current) {
-            setAdventure(updatedAdventure)
-            if (updatedAdventure.seat) setSeat(updatedAdventure.seat)
+    void (async () => {
+      let last = ""
+      if (!(await pace.wait(pace.baseMs, controller.signal))) return
+      for (;;) {
+        const seq = mutationSeqRef.current
+        let changed = true
+        try {
+          const response = await fetch(`/api/adventure/${params.adventureId}`, {
+            cache: "no-store",
+            signal: controller.signal,
+          })
+          if (response.ok && !controller.signal.aborted) {
+            const text = await response.text()
+            changed = text !== last
+            last = text
+            if (changed && !controller.signal.aborted && seq === mutationSeqRef.current) {
+              const updatedAdventure = JSON.parse(text)
+              setAdventure(updatedAdventure)
+              if (updatedAdventure.seat) setSeat(updatedAdventure.seat)
+            }
           }
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
+        } catch (error) {
+          if (controller.signal.aborted) return
           console.error("Failed to poll adventure updates:", error)
         }
-      } finally {
-        if (!controller.signal.aborted) {
-          timer = setTimeout(poll, 3000)
-        }
+        if (!(await pace.after(changed, controller.signal))) return
       }
-    }
+    })()
 
-    timer = setTimeout(poll, 3000)
-
-    return () => {
-      controller.abort()
-      if (timer !== null) clearTimeout(timer)
-    }
+    return () => controller.abort()
   }, [params.adventureId, isSignedIn])
 
   useEffect(() => {
@@ -261,24 +262,19 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
     }
   }, [isSignedIn, user?.id])
 
-  // Fetch player names for characters in the party
+  // Fetch player names for characters in the party, once per change in who is at the table.
+  const partyUserIds = [...new Set((adventure.party || []).map((pc) => pc.userId).filter(Boolean))].sort().join(",")
   useEffect(() => {
-    if (!isSignedIn) return
-
-    const party = adventure.party || []
-    const userIds = party.map((pc) => pc.userId).filter(Boolean)
-
-    if (userIds.length > 0) {
-      fetch("/api/users/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: userIds }),
-      })
-        .then((res) => res.json())
-        .then((data) => setPlayerNames(data.users || {}))
-        .catch((err) => console.error("Failed to fetch player names:", err))
-    }
-  }, [adventure.party, isSignedIn])
+    if (!isSignedIn || !partyUserIds) return
+    fetch("/api/users/lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: partyUserIds.split(",") }),
+    })
+      .then((res) => res.json())
+      .then((data) => setPlayerNames(data.users || {}))
+      .catch((err) => console.error("Failed to fetch player names:", err))
+  }, [partyUserIds, isSignedIn])
 
   const handleJoinAdventure = async (characterId: string) => {
     if (mutation.kind !== "idle") return

@@ -48,6 +48,11 @@ export function hostedWork(state: Hosted) {
   return { busy, failed: latest?.status === "failed" ? { id: latest._id, error: latest.error ?? "The GM could not finish that action." } : null }
 }
 
+/** Any GM job queued or under way, suggested replies included, which a poll of the game keeps pace with. */
+export function hostedPending(state: Hosted) {
+  return state.jobs.some((j) => j.status === "queued" || j.status === "running")
+}
+
 type Suggestions = NonNullable<HostedJob["suggestions"]>
 /**
  * Suggested replies in a hosted game: the host's GM writes them as a job. `queue` asks for the job and answers with

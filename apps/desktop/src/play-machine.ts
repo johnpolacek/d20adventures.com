@@ -1,4 +1,5 @@
 import type { Page } from "./pages"
+import { PollPace } from "./poll-pace"
 
 // Explicit state machines for DesktopGame (apps/desktop/src/play.tsx):
 // 1. AppRoute: single discriminated union (booting | gate | menu | setup | local_play | hosted)
@@ -109,21 +110,6 @@ export class CommandQueue {
   }
 }
 
-function waitAbortable(ms: number, signal: AbortSignal): Promise<boolean> {
-  if (signal.aborted) return Promise.resolve(false)
-  return new Promise((resolve) => {
-    const onAbort = () => {
-      clearTimeout(timer)
-      resolve(false)
-    }
-    const timer = setTimeout(() => {
-      signal.removeEventListener("abort", onAbort)
-      resolve(true)
-    }, Math.max(0, ms))
-    signal.addEventListener("abort", onAbort, { once: true })
-  })
-}
-
 export type HostedPollResult<S, W> = {
   state?: S | null
   error?: string
@@ -133,6 +119,8 @@ export type HostedPollResult<S, W> = {
 /**
  * Sequential AbortController-backed poll loop for hosted games.
  * - Never overlaps two poll requests: waits `intervalMs` AFTER each poll resolves.
+ * - Slows toward `maxIntervalMs` while the state stays the same and `busy` is false, pauses while the page is
+ *   hidden, and polls at once after a mutation.
  * - Tracks a monotonic mutation epoch so any poll started before an `act()`/`say()` mutation
  *   discards its stale state rather than clobbering the mutation's fresher response.
  */
@@ -140,6 +128,7 @@ export class HostedPollController<S, W> {
   private abort: AbortController | null = null
   private epoch = 0
   private activeAdventureId: string | null = null
+  private pace: PollPace | null = null
 
   get active(): string | null {
     return this.activeAdventureId
@@ -147,6 +136,7 @@ export class HostedPollController<S, W> {
 
   /** Marks a local mutation (`act` / `say`) so any already-in-flight poll won't overwrite its state. */
   beginMutation(): number {
+    this.pace?.wake()
     return ++this.epoch
   }
 
@@ -155,6 +145,9 @@ export class HostedPollController<S, W> {
     adventureId: string,
     opts: {
       intervalMs?: number
+      maxIntervalMs?: number
+      /** Work under way that keeps the base pace, as a GM job the poll waits on. */
+      busy?: (state: S) => boolean
       poll: (adventureId: string, signal: AbortSignal) => Promise<HostedPollResult<S, W>>
       onState: (state: S) => void
       onWorker: (worker: W | null) => void
@@ -166,15 +159,24 @@ export class HostedPollController<S, W> {
     this.abort = controller
     this.activeAdventureId = adventureId
     const intervalMs = opts.intervalMs ?? 1500
+    const pace = new PollPace(intervalMs, opts.maxIntervalMs ?? intervalMs)
+    this.pace = pace
     const signal = controller.signal
 
     void (async () => {
+      let last = ""
       while (!signal.aborted) {
         const startedEpoch = this.epoch
+        let busy = true
         try {
           const result = await opts.poll(adventureId, signal)
           if (signal.aborted) return
           // Only apply polled state when no mutation superseded this poll while it was in flight.
+          if (result.state) {
+            const seen = JSON.stringify(result.state)
+            busy = seen !== last || Boolean(opts.busy?.(result.state))
+            last = seen
+          }
           if (startedEpoch === this.epoch) {
             if (result.state) opts.onState(result.state)
             if (result.error) opts.onError(result.error)
@@ -184,7 +186,7 @@ export class HostedPollController<S, W> {
           if (signal.aborted) return
           if (startedEpoch === this.epoch) opts.onError(String(error))
         }
-        const ok = await waitAbortable(intervalMs, signal)
+        const ok = await pace.after(busy, signal)
         if (!ok) return
       }
     })()
@@ -193,6 +195,7 @@ export class HostedPollController<S, W> {
   stop() {
     this.abort?.abort()
     this.abort = null
+    this.pace = null
     this.activeAdventureId = null
   }
 }
