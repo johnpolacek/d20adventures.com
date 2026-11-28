@@ -3,6 +3,7 @@ import { type Arrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { characterScript } from "@d20/gm-core/story/turn"
+import { canAnswerReaction, isReactionWaiting, reactionGuardMessage, reactionPhaseOf } from "@d20/gm-core/sheet/reaction-state"
 import { applySlotEvent, slotOf } from "@d20/gm-core/sheet/turn-slot"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import type { PCTemplate } from "@d20/gm-core/types/character"
@@ -94,8 +95,8 @@ export function selfRunning(characters: Actor[]): string | null {
 }
 
 /** Whether a turn's reaction offer still holds the round: unanswered and not run out by `now`. */
-export const offerWaits = (turn: { reaction?: { answer?: boolean; expiresAt: number } | null } | null | undefined, now: number) =>
-  Boolean(turn?.reaction && turn.reaction.answer === undefined && now < turn.reaction.expiresAt)
+export const offerWaits = (turn: { reaction?: { answer?: boolean; expiresAt: number; status?: "offered" | "answered" } | null } | null | undefined, now: number) =>
+  isReactionWaiting(turn?.reaction, now)
 
 /** Runs one job against the hosted game. Throws with a message players can read when it cannot. A suggest job returns its replies. */
 export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: Llm): Promise<ActionSuggestion[] | undefined> {
@@ -136,7 +137,8 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
   // A player's answer to a reaction: kept, and the NPC's turn that waited on it is played on.
   if (job.kind === "react") {
     if (typeof job.take !== "boolean" || !job.characterId) throw new Error("An answer is to take the reaction or not.")
-    if (turn.reaction?.offer.to !== job.characterId || turn.reaction.answer !== undefined) throw new Error("No reaction is offered to this character.")
+    const check = canAnswerReaction(turn.reaction, job.characterId)
+    if (!check.ok) throw new Error(reactionGuardMessage(check.reason))
     await core.answerReaction({ turnId: turn._id, characterId: job.characterId, take: job.take })
   }
   if (job.kind === "continue" || job.kind === "react") {
@@ -261,10 +263,11 @@ export async function hostLoop(opts: {
         return false
       }
       const turn = await opts.store.getTurn({ turnId: adventure.currentTurnId })
-      const waitingUntil = turn?.reaction && offerWaits(turn, Date.now()) ? turn.reaction.expiresAt : null
+      const phase = reactionPhaseOf(turn?.reaction, Date.now())
+      const waitingUntil = phase === "offered" ? turn!.reaction!.expiresAt : null
       offerUntil = waitingUntil
       // An answered offer is played on by its own job.
-      if (turn?.reaction && (waitingUntil !== null || turn.reaction.answer !== undefined)) return false
+      if (phase === "offered" || phase === "answered") return false
       const who = turn && selfRunning(turn.characters)
       const key = turn && who && `${turn._id}:${who}${turn.reaction ? `:${turn.reaction.expiresAt}` : ""}`
       if (!turn || !key || followed === key) return false

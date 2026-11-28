@@ -1,4 +1,5 @@
 import type { Store } from "@d20/gm-core"
+import { canAnswerReaction, reactionGuardMessage } from "@d20/gm-core/sheet/reaction-state"
 import { NextResponse } from "next/server"
 import { api } from "@/convex/_generated/api"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
@@ -356,7 +357,8 @@ export async function queueAction(adventure: Doc<"adventures">, userId: string, 
   if (action.kind === "skip") return convex.mutation(api.hosting.queueJob, { ...base, kind: "skip", characterId: action.characterId })
   if (action.kind === "react") {
     if (typeof action.take !== "boolean") throw new HostError(400, "An answer is to take the reaction or not.")
-    if ((turn.reaction as { offer?: { to?: string } } | undefined)?.offer?.to !== action.characterId) throw new HostError(409, "No reaction is offered to this character.")
+    const check = canAnswerReaction(turn.reaction as Parameters<typeof canAnswerReaction>[0], action.characterId)
+    if (!check.ok) throw new HostError(409, reactionGuardMessage(check.reason))
     return convex.mutation(api.hosting.queueJob, { ...base, kind: "react", characterId: action.characterId, take: action.take })
   }
   if (action.kind === "reply") {

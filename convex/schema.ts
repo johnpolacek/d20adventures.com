@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server"
 import { v } from "convex/values"
-import { knowledgeValidator, storyValidator } from "./story"
+import { knowledgeValidator, pendingReactionValidator, storyValidator } from "./story"
 
 // Define your schema
 export default defineSchema({
@@ -198,7 +198,7 @@ export default defineSchema({
     story: storyValidator,
     // A reaction offered to a player's hero in the middle of an NPC's turn, while the round waits for the answer. The
     // engine writes and reads it (packages/gm-core/src/sheet/reactions.ts).
-    reaction: v.optional(v.any()),
+    reaction: v.optional(pendingReactionValidator),
     characters: v.array(
       v.object({
         id: v.string(),

@@ -1,7 +1,7 @@
 import { v } from "convex/values"
 import { adventurePatchValidator, applyAdventurePatch, createTurnArgs, insertTurn } from "./lib/adventure-transitions"
 import { serverMutation } from "./serverSecret"
-import { storyValidator } from "./story"
+import { pendingReactionValidator, storyValidator } from "./story"
 
 // Minimal mutation: create a new turn (caller patches the adventure separately)
 export const createTurn = serverMutation({
@@ -18,7 +18,7 @@ export const updateTurn = serverMutation({
       characters: v.optional(v.array(v.any())),
       updatedAt: v.optional(v.number()),
       // The reaction the round waits on, as the engine keeps it. Null clears it.
-      reaction: v.optional(v.union(v.any(), v.null())),
+      reaction: v.optional(v.union(pendingReactionValidator, v.null())),
     }),
   },
   handler: async (ctx, args) => {

@@ -81,3 +81,28 @@ export const storyValidator = v.array(
 
 // What each character knows: facts, each with every character who knows it (packages/gm-core/src/story/knowledge.ts).
 export const knowledgeValidator = v.array(v.object({ id: v.string(), text: v.string(), knownBy: v.array(v.string()) }))
+
+// A reaction offered to a player's hero mid-NPC turn (packages/gm-core/src/sheet/reactions.ts).
+// `status` is optional to remain readable for legacy untagged reaction docs already in flight.
+export const pendingReactionValidator = v.object({
+  status: v.optional(v.union(v.literal("offered"), v.literal("answered"))),
+  offer: v.object({
+    id: v.string(),
+    to: v.string(),
+    from: v.string(),
+    weapon: v.optional(v.string()),
+    roll: v.optional(v.any()),
+    inspired: v.optional(v.number()),
+    matters: v.boolean(),
+  }),
+  text: v.string(),
+  expiresAt: v.number(),
+  npc: v.string(),
+  answer: v.optional(v.boolean()),
+  resume: v.object({
+    action: v.any(),
+    reading: v.any(),
+    dice: v.array(v.number()),
+    answers: v.array(v.boolean()),
+  }),
+})

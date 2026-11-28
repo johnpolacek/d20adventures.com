@@ -9,6 +9,7 @@ import { createNpcTurnService } from "../services/npc-turn-service"
 import type { LevelUpChoices } from "../sheet/level-up"
 import { inFight } from "../sheet/level-owed"
 import { levelOwed, takeLevel } from "../sheet/milestone"
+import { answerPendingReaction } from "../sheet/reaction-state"
 import { standingOrdersSchema } from "../sheet/reactions"
 import type { StandingOrders } from "../sheet/turn-effect"
 import { slotOf } from "../sheet/turn-slot"
@@ -247,9 +248,8 @@ export function createAdventure(ports: GmPorts) {
     if (!userId) throw new Error("Unauthorized")
     const { turn } = await assertAdventureAccessByTurn(userId, turnId)
     assertPlayerCharacterControl(userId, turn, characterId)
-    const waiting = turn.reaction
-    if (!waiting || waiting.offer.to !== characterId) throw new Error("No reaction is offered to this character.")
-    await ports.store.updateTurn({ turnId, patch: { reaction: { ...waiting, answer: take }, updatedAt: Date.now() } })
+    const answered = answerPendingReaction(turn.reaction, characterId, take)
+    await ports.store.updateTurn({ turnId, patch: { reaction: answered, updatedAt: Date.now() } })
     if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
     return { answered: true }
   }

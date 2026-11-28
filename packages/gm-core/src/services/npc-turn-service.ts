@@ -5,6 +5,7 @@ import { hiddenFrom, searchRoll } from "../sheet/hiding"
 import { legendaryActionsOf, withLegendaryActionsRegained } from "../sheet/legendary-actions"
 import { moveBudget, takeMove } from "../sheet/moves"
 import { standingWords } from "../sheet/placement"
+import { reactionPhaseOf } from "../sheet/reaction-state"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { ruledReading } from "../sheet/ruled-turns"
 import { applySlotEvent, slotOf } from "../sheet/turn-slot"
@@ -15,7 +16,7 @@ import { type StoryNames, storyNames, storyText } from "../story/render"
 import { sceneFor } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
-import { hasFled, isAiControlledPc, isDead, isDown, isDying, playsForMaster } from "../utils/turn-actors"
+import { hasFled, isAiControlledPc, isDead, isDown, isDying, playsForMaster, takesTurn } from "../utils/turn-actors"
 import { gmNotesWithRules, type SafetyRules } from "../wiki-adventures/player-safety"
 import { createAiPcTurnService } from "./ai-pc-turn-service"
 import { createExitCheck } from "./exit-check-service"
@@ -428,7 +429,11 @@ export function createNpcTurnService(ports: GmPorts) {
           console.log("[LLM DM] A way out is met: the round ends before", char.name)
           await ports.store.updateTurn({
             turnId: now._id,
-            patch: { characters: (now.characters as TurnCharacter[]).map((c) => (slotOf(c).phase === "complete" ? c : applySlotEvent(c, { type: "complete" }))), updatedAt: Date.now() },
+            patch: {
+              characters: (now.characters as TurnCharacter[]).map((c) => (slotOf(c).phase === "complete" ? c : applySlotEvent(c, { type: "complete" }))),
+              ...(now.reaction ? { reaction: null } : {}),
+              updatedAt: Date.now(),
+            },
           })
           break
         }
@@ -498,6 +503,9 @@ export function createNpcTurnService(ports: GmPorts) {
 
       const npc = characters.find((c) => c.id === char.id && c.type === "npc" && slotOf(c).phase === "pending" && !c.hasReplied)
       if (!npc) {
+        if (turn.reaction?.npc === char.id) {
+          await ports.store.updateTurn({ turnId: turn._id, patch: { reaction: null, updatedAt: Date.now() } })
+        }
         console.log(
           "[LLM DM] NPC already processed or no longer eligible",
           JSON.stringify(
@@ -518,12 +526,18 @@ export function createNpcTurnService(ports: GmPorts) {
       // the offer runs out, and then the hero's standing order answers. With the answer in, the NPC's turn is played
       // again from its start with the same reading and dice, and goes on past the offer.
       const waiting = turn.reaction?.npc === npc.id ? turn.reaction : undefined
-      if (waiting && waiting.answer === undefined && Date.now() < waiting.expiresAt) {
-        console.log("[LLM DM] Waiting on a reaction:", waiting.text)
+      const waitingPhase = reactionPhaseOf(waiting, Date.now())
+      if (waitingPhase === "offered") {
+        console.log("[LLM DM] Waiting on a reaction:", waiting?.text)
         break
       }
       const reactor = waiting && characters.find((c) => c.id === waiting.offer.to)
-      const resume = waiting && { ...waiting.resume, answers: [...waiting.resume.answers, waiting.answer ?? ordered(reactor?.standingOrders, waiting.offer.id, waiting.offer.matters)] }
+      const resume =
+        waiting &&
+        ({
+          ...waiting.resume,
+          answers: [...waiting.resume.answers, waitingPhase === "answered" ? (waiting.answer as boolean) : ordered(reactor?.standingOrders, waiting.offer.id, waiting.offer.matters)],
+        })
 
       // Since the NPC's last turn: the rest of the scene's last round, then this one.
       const prev = allTurns.find((t) => t.order === (turn!.order ?? 0) - 1 && t.encounterId === turn!.encounterId)
@@ -580,6 +594,7 @@ export function createNpcTurnService(ports: GmPorts) {
             turnId: turn._id,
             patch: {
               reaction: {
+                status: "offered" as const,
                 offer: error.offer,
                 text: error.text,
                 expiresAt: Date.now() + REACTION_WAIT,
@@ -665,16 +680,26 @@ export function createNpcTurnService(ports: GmPorts) {
         characters: finalTurnState.characters as TurnCharacter[],
       })
 
-      if (deadCharacterCompletion.hasChanges) {
-        console.log(
-          `[NPC:${npcRequestId}] Marking ${deadCharacterCompletion.deadCharacters.length} dead character(s) as complete:`,
-          deadCharacterCompletion.deadCharacters.map((character) => character.name)
-        )
+      const orphanReaction =
+        finalTurnState.reaction &&
+        (() => {
+          const holder = (finalTurnState.characters as TurnCharacter[]).find((c) => c.id === finalTurnState.reaction?.npc)
+          return !holder || slotOf(holder).phase === "complete" || !takesTurn(holder)
+        })()
+
+      if (deadCharacterCompletion.hasChanges || orphanReaction) {
+        if (deadCharacterCompletion.hasChanges) {
+          console.log(
+            `[NPC:${npcRequestId}] Marking ${deadCharacterCompletion.deadCharacters.length} dead character(s) as complete:`,
+            deadCharacterCompletion.deadCharacters.map((character) => character.name)
+          )
+        }
 
         await ports.store.updateTurn({
           turnId: finalTurnState._id,
           patch: {
-            characters: deadCharacterCompletion.updatedCharacters,
+            ...(deadCharacterCompletion.hasChanges ? { characters: deadCharacterCompletion.updatedCharacters } : {}),
+            ...(orphanReaction ? { reaction: null } : {}),
             updatedAt: Date.now(),
           },
         })

@@ -648,14 +648,29 @@ export function moveWithReactions<T extends InPlay>(args: {
  * meant to do, how it was read, the dice it rolled, and the answers given so far. `answer` is the player's, when it
  * has come. After `expiresAt` the hero's standing order answers.
  */
-export type PendingReaction = {
+export type PendingReactionResume = { action: unknown; reading: unknown; dice: number[]; answers: boolean[] }
+
+export type PendingReactionOffered = {
+  status?: "offered"
   offer: ReactionOffer
   text: string
   expiresAt: number
   npc: string
-  answer?: boolean
-  resume: { action: unknown; reading: unknown; dice: number[]; answers: boolean[] }
+  answer?: undefined
+  resume: PendingReactionResume
 }
+
+export type PendingReactionAnswered = {
+  status?: "answered"
+  offer: ReactionOffer
+  text: string
+  expiresAt: number
+  npc: string
+  answer: boolean
+  resume: PendingReactionResume
+}
+
+export type PendingReaction = PendingReactionOffered | PendingReactionAnswered
 
 /** How long the round waits on a player's answer, in milliseconds. */
 export const REACTION_WAIT = 20_000
