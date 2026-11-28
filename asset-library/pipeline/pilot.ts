@@ -338,7 +338,11 @@ const SPREAD = { reach: 0.16, passes: 8 }
 // What is set beside the face is the knuckle the string and the arrow's nock are drawn from (hold.ts), not the wrist:
 // the knuckle lies some 7 cm inside the wrist of a hand drawn up like this, and an arrow set by the wrist ran
 // through the cheek.
-const DRAW = { bowUnder: 3, side: 9.5, under: 0, elbowUnder: 12, elbowOut: 2, elbowMost: 150 }
+//
+// The drawing elbow bends 130 degrees at the most (`elbowMost`). At 150 the forearm lay flat on the upper arm and the
+// sleeve between was crushed to a lump (the owner, 2026-11-27: "the elbow bend still looks bad"). At 130 the elbow
+// shows its angle and the hand is drawn to the cheek by the ear, not the jaw.
+const DRAW = { bowUnder: 3, side: 9.5, under: 0, elbowUnder: 12, elbowOut: 2, elbowMost: 130 }
 function draw(doc: Document, name: string, until: number, tall: number, bow: "Left" | "Right" = "Left") {
   const clip = doc
     .getRoot()
