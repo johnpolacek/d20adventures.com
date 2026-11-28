@@ -169,12 +169,12 @@ const scenePlace = (round: Round) => (round.sceneRound ? `This is round ${round.
 export const judgePrompt = (scene: string, round: Round) => `${scene}\n\n# The round as played\n\n${scenePlace(round)}${roundScript(round)}\n\n${task}`
 
 // One round judged in a fresh CLI session, so no round colours another.
-export async function judgeRound(scene: string, round: Round, cwd: string): Promise<Verdict> {
-  const session = createSession("claude", cwd, SYSTEM)
+export async function judgeRound(scene: string, round: Round, cwd: string, provider = "claude", model?: string): Promise<Verdict> {
+  const session = createSession(provider, cwd, SYSTEM, model)
   try {
     const ask = async (prompt: string) => {
       const result = await session.ask(prompt)
-      if (result.failed || !result.text.trim()) throw new Error("Claude could not finish the judgement.")
+      if (result.failed || !result.text.trim()) throw new Error(`${provider} could not finish the judgement.`)
       return result.text.trim()
     }
     return (await schemaLlm(ask).generateObject({ schema: verdictSchema, prompt: judgePrompt(scene, round) })).object as Verdict
@@ -199,14 +199,14 @@ export async function pool<T, R>(items: T[], jobs: number, work: (item: T) => Pr
 
 export type Judged = { order: number; encounterId: string } & ({ verdict: Verdict } | { error: string })
 
-export async function judgeRounds(artifacts: RuntimeArtifacts, rounds: Round[], jobs: number, onEach?: (j: Judged) => void): Promise<Judged[]> {
+export async function judgeRounds(artifacts: RuntimeArtifacts, rounds: Round[], jobs: number, onEach?: (j: Judged) => void, provider = "claude", model?: string): Promise<Judged[]> {
   const cwd = mkdtempSync(join(tmpdir(), "scene-judge-"))
   try {
     return await pool(rounds, jobs, async (round) => {
       const base = { order: round.order, encounterId: round.encounterId }
       let judged: Judged
       try {
-        judged = { ...base, verdict: await judgeRound(authoredScene(artifacts, round.encounterId), round, cwd) }
+        judged = { ...base, verdict: await judgeRound(authoredScene(artifacts, round.encounterId), round, cwd, provider, model) }
       } catch (error) {
         judged = { ...base, error: error instanceof Error ? error.message : String(error) }
       }

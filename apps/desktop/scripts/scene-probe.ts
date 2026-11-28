@@ -33,6 +33,8 @@ const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
 const through = argv.includes("--through")
 const pickRandom = opt("--pick") === "random"
+const provider = (opt("--provider") ?? "claude") as "claude" | "codex" | "grok" | "antigravity"
+const modelName = opt("--model")
 // The hero's d20s, where a run must land on one total: "10,10" is a 10 on both dice of a roll with Advantage.
 const fixedDice = opt("--dice")?.split(",").map(Number)
 const probes: Record<string, Probe> = JSON.parse(readFileSync(opt("--probes") ? resolve(opt("--probes")!) : join(here, "scene-probes.json"), "utf8"))
@@ -65,30 +67,22 @@ async function play(probe: Probe, packs: Packs, dir: string, rounds: number, log
   const store = new LocalStore(join(dir, "adventure.sqlite"), transitionsOf(packs))
   store.acquire()
   const scratch = mkdtempSync(join(dir, "session-"))
-  const model = () => localLlm("claude", scratch, (patch) => applyCharacterUpdates(store.current().characters, patch.characterUpdates))
+  const m = localLlm(provider, scratch, (patch) => applyCharacterUpdates(store.current().characters, patch.characterUpdates), true, modelName)
   const step = async (command: GameCommand) => {
-    const m = model()
-    try {
-      await game(store, packs, m.llm)(command)
-    } finally {
-      m.close()
-    }
+    await game(store, packs, m.llm)(command)
   }
   // Past the scripted replies, the hero takes the first reply the game offers, as the playtests did.
   const offered = async (turnId: string, characterId: string, name: string) => {
-    const m = model()
     try {
       const offers = await suggest(store.state, packs, m.llm, { kind: "suggest", turnId, characterId })
       return offers[pickRandom ? Math.floor(Math.random() * offers.length) : 0].text
     } catch {
       return `${name} stays close to the others and watches.`
-    } finally {
-      m.close()
     }
   }
   try {
     const { party } = adventureList(packs).find((a) => a.id === probe.adventure)!
-    await step({ kind: "start", provider: "claude", adventure: probe.adventure, party: party.map((id, i) => ({ id, ai: i > 0 })) })
+    await step({ kind: "start", provider, ...(modelName ? { model: modelName } : {}), adventure: probe.adventure, party: party.map((id, i) => ({ id, ai: i > 0 })) })
     seed(store, probe)
     const start = store.current().order
     let replies = 0
@@ -122,6 +116,7 @@ async function play(probe: Probe, packs: Packs, dir: string, rounds: number, log
     }
     return "step limit"
   } finally {
+    m.close()
     store.close()
   }
 }
@@ -148,7 +143,7 @@ async function main() {
         (r) => (through || r.encounterId === probe.encounter) && r.story.length && !(probe.story && r.order <= probe.story.turns[1] - probe.story.turns[0] + 1)
       )
       writeFileSync(join(dir, "transcript.txt"), played.map((r) => `## Round ${r.order}\n\n${roundScript(r)}`).join("\n\n"))
-      const judged: Judged[] = await judgeRounds(pack.artifacts, played, Number(opt("--jobs") ?? 4))
+      const judged: Judged[] = await judgeRounds(pack.artifacts, played, Number(opt("--jobs") ?? 4), undefined, opt("--judge-provider") ?? "claude", opt("--judge-model"))
       return { run: i + 1, ended, judged }
     })
   )

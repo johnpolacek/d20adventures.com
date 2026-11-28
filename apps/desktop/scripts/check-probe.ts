@@ -139,7 +139,7 @@ async function run(probe: Probe): Promise<Graded> {
   const hero: Character = bears({ ...premade, ...(probe.sheet ? { sheet: { ...premade.sheet, ...probe.sheet } } : {}), ...holds, ...(probe.shape ? { shape: probe.shape } : {}), type: "pc" })
   const encounter = pack.artifacts.encounters[probe.encounter]
   if (!encounter) throw new Error(`${probe.id}: no encounter ${probe.encounter}`)
-  const model = localLlm(provider, mkdtempSync(join(tmpdir(), "check-probe-")), undefined, true, modelName)
+  const model = localLlm(provider, mkdtempSync(join(tmpdir(), "check-probe-")), undefined, true, modelName, false)
   try {
     const { readAction } = createRollRequirementService({ llm: model.llm } as GmPorts)
     // On a floor everyone stands where the encounter stages them, unless the scene says where.

@@ -58,7 +58,7 @@ export function NewGame(props: {
   // What each CLI runs as the GM, by CLI. Empty until they answer.
   models: Record<string, GmModel>
   provider: string
-  claudeModel?: string
+  pickedModel?: string
   onProvider: (p: string, model?: string) => void
   busy: boolean
   // The opening scene is still loading, and how much of its files have come down, null while unknown or being built.
@@ -441,7 +441,7 @@ export function NewGame(props: {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-4 border-t border-white/10 px-7 py-5">
-        <GameMaster providers={props.providers} models={props.models} provider={props.provider} claudeModel={props.claudeModel} onProvider={props.onProvider} />
+        <GameMaster providers={props.providers} models={props.models} provider={props.provider} pickedModel={props.pickedModel} onProvider={props.onProvider} />
         <div className="flex-1" />
         <Presence show={props.waiting && !hosting} motion="fade" asChild>
           <StageLoading progress={props.stageProgress ?? null} />
@@ -549,20 +549,20 @@ function StageLoading(props: { progress: number | null; className?: string; onAn
   )
 }
 
-// Which CLI runs the GM, each named by the model it runs and its effort. Claude lists each model its CLI offers. One
-// choice is stated, not chosen.
-function GameMaster(props: { providers: string[]; models: Record<string, GmModel>; provider: string; claudeModel?: string; onProvider: (p: string, model?: string) => void }) {
+// Which CLI runs the GM, each named by the model it runs and its effort. CLIs that expose model options (Claude,
+// Antigravity) list each model they offer. One choice is stated, not chosen.
+function GameMaster(props: { providers: string[]; models: Record<string, GmModel>; provider: string; pickedModel?: string; onProvider: (p: string, model?: string) => void }) {
   if (!props.providers.length) return null
   type Choice = { key: string; provider: string; model?: string; name: string; effort?: string }
   const choices = props.providers.flatMap((p): Choice[] => {
     const effort = props.models[p]?.effort
-    const options = p === "claude" ? props.models[p]?.options : undefined
+    const options = props.models[p]?.options
     if (options?.length) return options.map((o) => ({ key: `${p}:${o.value}`, provider: p, model: o.value, name: o.name, effort }))
     return [{ key: p, provider: p, model: undefined, name: props.models[p]?.name ?? CLI[p] ?? p, effort }]
   })
-  // Before a pick, Claude's choice is the model its CLI runs by default.
-  const claudeDefault = props.models.claude?.options?.find((o) => o.name === props.models.claude?.name)?.value
-  const current = choices.find((c) => c.provider === props.provider && (!c.model || c.model === (props.claudeModel ?? claudeDefault))) ?? choices.find((c) => c.provider === props.provider)
+  // Before a pick, a provider with options defaults to the model its CLI reports as active/default.
+  const providerDefault = props.models[props.provider]?.options?.find((o) => o.name === props.models[props.provider]?.name)?.value
+  const current = choices.find((c) => c.provider === props.provider && (!c.model || c.model === (props.pickedModel ?? providerDefault))) ?? choices.find((c) => c.provider === props.provider)
   const line = (c: Choice) => (
     <>
       {c.name}

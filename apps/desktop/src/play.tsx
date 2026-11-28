@@ -30,23 +30,27 @@ export function DesktopGame() {
   const [loaded, setLoaded] = useState(false)
   const [providers, setProviders] = useState<string[]>([])
   const [provider, setProvider] = useState("claude")
-  // The Claude model picked for the GM, by the CLI's alias. Kept between launches. Unset runs the CLI's default.
-  const [claudeModel, setClaudeModel] = useState<string | undefined>(() => {
+  // Per-provider model picked for the GM (Claude alias or Antigravity slug). Kept between launches.
+  const [pickedModels, setPickedModels] = useState<Record<string, string>>(() => {
     try {
-      return localStorage.getItem("gm-claude-model") ?? undefined
+      const saved = JSON.parse(localStorage.getItem("gm-picked-models") ?? "{}") as Record<string, string>
+      const legacy = localStorage.getItem("gm-claude-model")
+      if (legacy && !saved.claude) saved.claude = legacy
+      return saved
     } catch {
-      return undefined
+      return {}
     }
   })
   useEffect(() => {
     try {
-      if (claudeModel) localStorage.setItem("gm-claude-model", claudeModel)
+      localStorage.setItem("gm-picked-models", JSON.stringify(pickedModels))
+      if (pickedModels.claude) localStorage.setItem("gm-claude-model", pickedModels.claude)
     } catch {}
-  }, [claudeModel])
-  const pickedModel = provider === "claude" ? claudeModel : undefined
+  }, [pickedModels])
+  const pickedModel = pickedModels[provider]
   const pickGm = (p: string, model?: string) => {
     setProvider(p)
-    if (p === "claude" && model) setClaudeModel(model)
+    if (model) setPickedModels((cur) => ({ ...cur, [p]: model }))
   }
   // What each installed CLI runs as the GM. Each is asked once and answers in its own time, so a slow one holds up
   // no other. The last answers are kept, so the picker has them at once the next time the app opens.
@@ -527,7 +531,7 @@ export function DesktopGame() {
                             providers={providers}
                             models={models}
                             provider={provider}
-                            claudeModel={claudeModel}
+                            pickedModel={pickedModel}
                             onProvider={pickGm}
                             busy={working || sending}
                             waiting={stageState.waiting}

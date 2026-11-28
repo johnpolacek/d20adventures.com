@@ -69,7 +69,6 @@ function tellRound(beats: StoryBeat[], playerNames: string[]): StoryBeat[] {
 }
 
 export function createAdvanceTurn(ports: GmPorts) {
-  const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
   const { assertAdventureAccessByTurn } = createAdventureAccess(ports)
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   const { markAdventureCompleteWithoutNextEncounter, persistTurnAndFinalizeAdventure } = createAdvanceTurnFinalizationService(ports)
@@ -143,7 +142,6 @@ export function createAdvanceTurn(ports: GmPorts) {
         },
       })
       const scene = await sceneFor(ports, turn)
-      await wait(1000)
       // A round left on an NPC's question goes straight to the player's answer, and what the GM would tell after it is
       // never shown (`roundEnd` below). So the GM is asked only the way on and what was learned, a third of the wait. The
       // facts must still be recorded: without them Wollandora gave her whole briefing again in The Midnight Summons. Should
@@ -413,7 +411,6 @@ export function createAdvanceTurn(ports: GmPorts) {
     })
 
     console.log(`[advanceTurn:${requestId}] Making LLM call for encounter progression`)
-    await wait(1000)
     const llmResult = (await generateObject({ prompt, schema: encounterProgressionSchema })).object
 
     // Log the LLM's raw response with request ID

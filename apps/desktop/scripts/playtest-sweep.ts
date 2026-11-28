@@ -19,8 +19,10 @@ import { planCosts, usageGate } from "./usage-gate"
 const here = fileURLToPath(new URL(".", import.meta.url))
 const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
-const valued = new Set(["--jobs", "--runs", "--label", "--compare"])
+const valued = new Set(["--jobs", "--runs", "--label", "--compare", "--provider", "--model"])
 const names = argv.filter((a, i) => !a.startsWith("--") && !valued.has(argv[i - 1] ?? ""))
+const provider = opt("--provider")
+const modelName = opt("--model")
 
 type Kind = { n: number; avgMs: number; maxMs: number }
 type Summary = {
@@ -224,7 +226,8 @@ async function main() {
           const into = join(out, `run${job.run}`)
           mkdirSync(join(into, job.plan), { recursive: true })
           const engine = createWriteStream(join(into, job.plan, "engine.log"))
-          const child = spawn(process.execPath, [...process.execArgv, bundle, job.plan, "--single", "--out", into], { stdio: ["ignore", "pipe", "pipe"] })
+          const extra = [...(provider ? ["--provider", provider] : []), ...(modelName ? ["--model", modelName] : [])]
+          const child = spawn(process.execPath, [...process.execArgv, bundle, job.plan, "--single", "--out", into, ...extra], { stdio: ["ignore", "pipe", "pipe"] })
           child.stdout.pipe(engine)
           child.stderr.pipe(engine)
           await new Promise((done) => child.on("exit", done))

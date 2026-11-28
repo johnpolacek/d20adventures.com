@@ -156,26 +156,54 @@ class AcpSession {
   }
 }
 
-// The Gemini model Antigravity runs the GM on, read from the CLI's own list so that no version is written here:
-// Flash at the app's effort when listed, else the first Gemini. Undefined leaves the CLI on its default.
-async function antigravityModel(cwd) {
-  const listed = await runBounded(locate("antigravity"), ["models"], { cwd, timeout: 8000 })
-  const models = listed.stdout
-    .split("\n")
-    .map((line) => line.split("\t"))
-    .filter(([slug, label]) => label && slug.startsWith("gemini-"))
-  const [slug, label] = models.find(([slug]) => slug.includes("flash") && slug.endsWith(`-${efforts.antigravity}`)) ?? models[0] ?? []
-  if (!slug) return undefined
-  const [, name, effort] = label.trim().match(/^(.*?)(?: \((\w+)\))?$/)
-  return { slug, name, effort: effort?.toLowerCase() }
+// Parse `agy models` output (tab- or multi-space-separated, stripping any TTY spinner prefix).
+export function parseAntigravityModels(stdout) {
+  const rows = []
+  for (const raw of stdout.split("\n")) {
+    const line = raw.split("\r").pop()?.trim() ?? ""
+    if (!line) continue
+    const match = line.match(/^(gemini-[a-z0-9.-]+)(?:\t|\s{2,})(.+)$/)
+    if (!match) continue
+    const [, slug, rawLabel] = match
+    const labelMatch = rawLabel.trim().match(/^(.*?)(?: \((\w+)\))?$/)
+    const name = labelMatch ? labelMatch[1].trim() : rawLabel.trim()
+    const effort = labelMatch?.[2]?.toLowerCase()
+    rows.push({ slug, name, effort })
+  }
+  const atEffort = rows.filter((m) => m.slug.endsWith(`-${efforts.antigravity}`))
+  const picked =
+    atEffort.find((m) => m.slug.includes("neon")) ??
+    atEffort.find((m) => m.slug.includes("flash")) ??
+    atEffort[0] ??
+    rows[0]
+  const options = atEffort.map((m) => ({ value: m.slug, name: m.name }))
+  return { picked, options }
 }
 
-// Antigravity has no ACP mode. It runs in print mode over streamed JSON, as the GM agent written into the session's
+// Cached for the process lifetime so Antigravity does not spawn `agy models` before every GM call.
+let cachedAntigravity = null
+async function antigravityCatalog(cwd) {
+  if (!cachedAntigravity) {
+    cachedAntigravity = runBounded(locate("antigravity"), ["models"], { cwd, timeout: 8000 })
+      .then((listed) => {
+        const parsed = parseAntigravityModels(listed.stdout)
+        if (!parsed.picked) cachedAntigravity = null
+        return parsed
+      })
+      .catch(() => {
+        cachedAntigravity = null
+        return { picked: undefined, options: [] }
+      })
+  }
+  return cachedAntigravity
+}
+
+// Antigravity runs in print mode over streamed JSON, as the GM agent written into the session's
 // folder: a custom agent with no tools, whose body is the system prompt. Its init event lists the CLI's tools
 // whatever the agent may use, so the lockdown is that agent being the one that runs, and any tool step failing the
 // session.
 class AntigravitySession {
-  // `model` is a slug from `agy models`, for probes that try a model other than the app's pick.
+  // `model` is a slug from `agy models` (picked in the UI or passed to probes).
   constructor(cwd, system, model) {
     this.cwd = cwd
     this.system = system
@@ -183,11 +211,19 @@ class AntigravitySession {
     this.requests = 0
     this.toolEvents = 0
     this.closed = false
+    this.initPromise = null
     this.start = performance.now()
+  }
+  // Pre-warm the CLI process in the background while the previous call runs (matching ClaudeSession).
+  warm() {
+    if (this.closed || this.failure || this.initPromise) return
+    this.initPromise = this.initialize().catch((error) => {
+      if (!this.closed) this.fail(error instanceof Error ? error.message : "launch_failed")
+    })
   }
   async initialize() {
     if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
-    const picked = this.slug ? { slug: this.slug } : await antigravityModel(this.cwd)
+    const picked = this.slug ? { slug: this.slug } : (await antigravityCatalog(this.cwd)).picked
     if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     const agents = join(this.cwd, ".agents", "agents")
     mkdirSync(agents, { recursive: true })
@@ -251,7 +287,7 @@ class AntigravitySession {
   }
   async ask(text) {
     if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
-    if (!this.child) await this.initialize()
+    if (!this.child) await (this.initPromise ??= this.initialize())
     if (this.failure || this.closed) throw new Error(this.failure ?? "closed")
     this.requests++
     return new Promise((resolve, reject) => {
@@ -259,10 +295,10 @@ class AntigravitySession {
       this.child.stdin.write(`${JSON.stringify({ event: "user", message: { content: text } })}\n`)
     })
   }
-  // The model the GM would run on, from the CLI's list. Starts no session.
+  // The models Antigravity offers for the GM, from the CLI's list. Starts no session.
   async describe() {
-    const picked = await antigravityModel(this.cwd)
-    return { name: picked?.name, effort: picked?.effort }
+    const { picked, options } = await antigravityCatalog(this.cwd)
+    return { name: picked?.name, effort: picked?.effort, options }
   }
   close() {
     if (this.closed) return

@@ -25,7 +25,7 @@ export type SavedAdventure = AdventureRecord & {
 export type Save = {
   version: 1
   provider: string
-  // The Claude model picked for the GM, by the CLI's alias. Absent runs the CLI's default.
+  // The model picked for the GM (Claude alias or Antigravity slug). Absent runs the CLI's default.
   model?: string
   adventure: SavedAdventure
   turns: Array<TurnRecord & { adventurePatch?: AdventurePatch }>

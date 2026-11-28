@@ -152,7 +152,6 @@ function sanitizeRollOutcome(text: string): string {
 }
 
 export function createAdventureRollResultService(ports: GmPorts) {
-  const wait = ports.sleep?.bind(ports) ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
   const generateObject = ports.llm.generateObject.bind(ports.llm)
   async function resolvePlayerRollNarrativeAndCharacters(args: {
     turn: {
@@ -502,7 +501,6 @@ export function createAdventureRollResultService(ports: GmPorts) {
     }
 
     const { story: newStory } = withStory(args.turn, added)
-    await wait(500)
 
     // What the turn still holds after this roll: the rest of an Attack action, Horde Breaker, a Hide. The hero throws
     // the next d20 as they threw this one, and their turn is not over until it is.

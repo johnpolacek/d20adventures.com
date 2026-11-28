@@ -45,8 +45,10 @@ type Plan = {
 const here = fileURLToPath(new URL(".", import.meta.url))
 const argv = process.argv.slice(2)
 const opt = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undefined)
-const valued = new Set(["--jobs", "--out", "--plans"])
+const valued = new Set(["--jobs", "--out", "--plans", "--provider", "--model"])
 const names = argv.filter((a, i) => !a.startsWith("--") && !valued.has(argv[i - 1] ?? ""))
+const provider = (opt("--provider") ?? "claude") as "claude" | "codex" | "grok" | "antigravity"
+const modelName = opt("--model")
 const plans: Record<string, Plan> = JSON.parse(readFileSync(opt("--plans") ? resolve(opt("--plans")!) : join(here, "playtest-plans.json"), "utf8"))
 
 // `offer`: the call stopped to offer a hero a reaction, which the player answers, so it is not a dead wait.
@@ -113,8 +115,8 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
   const said: Record<string, number> = {}
   let rolled = 0
   const storyLength = () => store.state!.turns.reduce((n, t) => n + t.story.length, 0)
+  const m = localLlm(provider, scratch, (patch) => applyCharacterUpdates(store.current().characters, patch.characterUpdates), true, modelName)
   const step = async (command: GameCommand) => {
-    const m = localLlm("claude", scratch, (patch) => applyCharacterUpdates(store.current().characters, patch.characterUpdates))
     const t0 = Date.now()
     const before = store.state ? storyLength() : 0
     try {
@@ -128,8 +130,6 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
       errors.push(`${command.kind}: ${message}`)
       log(`>> ${command.kind} FAILED [${((Date.now() - t0) / 1000).toFixed(1)}s] ${message}`)
       store.reload()
-    } finally {
-      m.close()
     }
   }
   const print = () => {
@@ -150,7 +150,7 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
     const party = plan.party ?? [plan.hero]
     const ai = new Set(plan.ai ?? [])
     const scripted = (id?: string) => !!id && party.includes(id) && !ai.has(id)
-    await step({ kind: "start", provider: "claude", adventure: plan.adventure, party: party.map((id) => ({ id, ai: ai.has(id) })) })
+    await step({ kind: "start", provider, ...(modelName ? { model: modelName } : {}), adventure: plan.adventure, party: party.map((id) => ({ id, ai: ai.has(id) })) })
     // Each hero takes a step of their own each round, so a party has more steps to the end.
     for (let n = 0; n < (plan.max ?? 45 * party.length); n++) {
       print()
@@ -190,6 +190,7 @@ async function run(name: string, plan: Plan, packs: Packs, dir: string): Promise
     }
     print()
   } finally {
+    m.close()
     store.close()
   }
 
@@ -264,7 +265,11 @@ async function main() {
   await usageGate(`playtest: ${names.length} playthroughs`, known.length ? { calls: sum("calls"), fresh: sum("fresh"), cached: sum("cached") } : undefined, names.filter((name) => !costs.get(name)))
   console.log(`playtest: ${names.join(", ")} into ${out}`)
   const queue = [...names]
-  const extra = opt("--plans") ? ["--plans", resolve(opt("--plans")!)] : []
+  const extra = [
+    ...(opt("--plans") ? ["--plans", resolve(opt("--plans")!)] : []),
+    ...(opt("--provider") ? ["--provider", provider] : []),
+    ...(modelName ? ["--model", modelName] : []),
+  ]
   await Promise.all(
     Array.from({ length: jobs }, async () => {
       for (let name = queue.shift(); name; name = queue.shift()) {

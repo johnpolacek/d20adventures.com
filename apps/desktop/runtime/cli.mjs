@@ -113,7 +113,7 @@ export function runBounded(binary, args, { cwd, input, env = minimalEnv(), timeo
   })
 }
 // The effort the app asks of a CLI that takes one. The Game Master picker shows these, so set them only here.
-export const efforts = { claude: "medium", codex: "low", antigravity: "medium" }
+export const efforts = { claude: "medium", codex: "medium", antigravity: "medium" }
 export const claudeArgs = [
   "--print",
   "--input-format",

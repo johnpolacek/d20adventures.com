@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { delimiter, dirname } from "node:path"
 import test from "node:test"
-import { ClaudeSession, minimalEnv } from "./cli.mjs"
-import { createSession } from "./sessions.mjs"
+import { ClaudeSession, efforts, minimalEnv } from "./cli.mjs"
+import { createSession, parseAntigravityModels } from "./sessions.mjs"
 
 test("CLI environment excludes credential variables and parent agent context", () => {
   assert.deepEqual(
@@ -50,4 +50,26 @@ test("AntigravitySession rejects ask after close without spawning", async () => 
   session.close()
   await assert.rejects(() => session.ask("hello"), /closed/)
   assert.equal(session.child, undefined)
+})
+
+test("parseAntigravityModels picks Neon over Flash at medium effort and lists all medium Gemini options", () => {
+  const stdout = [
+    "\r⠋ Fetching available models...\rgemini-4-neon-high             Gemini 4 Neon (High)",
+    "gemini-4-neon-medium           Gemini 4 Neon (Medium)",
+    "gemini-4-hydrogen-medium\tGemini 4 Hydrogen (Medium)",
+    "gemini-3.8-flash-medium        Gemini 3.8 Flash (Medium)",
+    "gemini-pro-orchestrator-neon   Orchestrator (Neon)",
+    "claude-opus-5-5-medium         Claude Opus 5.5 (Medium)",
+  ].join("\n")
+  const { picked, options } = parseAntigravityModels(stdout)
+  assert.deepEqual(picked, { slug: "gemini-4-neon-medium", name: "Gemini 4 Neon", effort: "medium" })
+  assert.deepEqual(options, [
+    { value: "gemini-4-neon-medium", name: "Gemini 4 Neon" },
+    { value: "gemini-4-hydrogen-medium", name: "Gemini 4 Hydrogen" },
+    { value: "gemini-3.8-flash-medium", name: "Gemini 3.8 Flash" },
+  ])
+})
+
+test("all desktop CLI providers default to medium effort", () => {
+  assert.deepEqual(efforts, { claude: "medium", codex: "medium", antigravity: "medium" })
 })

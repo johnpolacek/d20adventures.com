@@ -258,7 +258,7 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
       store.replace({
         version: 1,
         provider: command.provider,
-        ...(command.provider === "claude" && command.model ? { model: command.model } : {}),
+        ...((command.provider === "claude" || command.provider === "antigravity") && command.model ? { model: command.model } : {}),
         rolls: {},
         figures: party.figures,
         painted: party.painted,

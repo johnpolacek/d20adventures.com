@@ -14,5 +14,6 @@ export function createServerCore() {
     content: serverContent,
     identity: async () => (await auth()).userId,
     narration: { afterTurn: (turnId) => after(() => maybeTriggerStoryviewAutoGeneration(turnId as Id<"turns">)) },
+    sleep: async () => {},
   })
 }

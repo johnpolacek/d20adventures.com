@@ -13,8 +13,9 @@ const perProcess = ["claude", "antigravity", "gemini"]
 // written for another. A CLI that holds one conversation per process is started anew for each call, the next one
 // launched while this one works, so no call waits for a CLI to start but the first.
 // `strict` holds advancement to the local game's world-state contract. Hosted games keep the website's contract.
-// `model` is a Claude alias from the Game Master picker. Without one the CLI runs its own default.
-export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true, model?: string) {
+// `model` is a Claude alias or Antigravity slug from the Game Master picker. Without one the CLI runs its own default.
+// `prewarm` starts the next per-process CLI in the background while the current call runs; pass false for 1-shot runs.
+export function localLlm(provider: string, cwd: string, validatePatch?: (patch: { characterUpdates?: unknown }) => void, strict = true, model?: string, prewarm = true) {
   type Session = ReturnType<typeof createSession>
   const open = new Set<Session>()
   let kept: Session | undefined
@@ -28,8 +29,13 @@ export function localLlm(provider: string, cwd: string, validatePatch?: (patch: 
     if (closed) throw new Error("closed")
     if (!perProcess.includes(provider)) return (kept ??= start())
     const session = kept ?? start()
-    // Claude starts its process at once, so the spare is ready by the next call. The others start on their first ask.
-    kept = provider === "claude" ? start() : undefined
+    if (prewarm) {
+      // Pre-warm the spare process in the background for both Claude and Antigravity so the next call has no cold start.
+      kept = start()
+      if ("warm" in kept && typeof kept.warm === "function") kept.warm()
+    } else {
+      kept = undefined
+    }
     return session
   }
   const done = (session: Session) => {
