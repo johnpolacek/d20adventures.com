@@ -17,6 +17,7 @@ type Character = {
   name: string
   type: string
   race?: string
+  species?: string
   sheet?: Sheet
   statBlock?: string
   hitPoints?: number
