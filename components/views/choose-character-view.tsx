@@ -12,6 +12,11 @@ import type { PCTemplate } from "@/types/character"
 import { textShadow, textShadowSpread } from "@d20/ui/typography/styles"
 import { scrollToTop } from "@d20/ui/scroll"
 
+type ChooseStep =
+  | { kind: "picking"; selectedFile: string | null }
+  | { kind: "submitting"; selectedFile: string }
+  | { kind: "party_setup"; selectedFile: string }
+
 export default function ChooseCharacterView({
   username,
   characters,
@@ -35,40 +40,46 @@ export default function ChooseCharacterView({
   premadeCompanions?: PCTemplate[]
   party?: [number, number]
 }) {
-  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [step, setStep] = useState<ChooseStep>({ kind: "picking", selectedFile: null })
   // When the adventure has premade companions, picking a character advances to
   // a party-setup step instead of creating the adventure immediately.
   const hasPartyStep = premadeCompanions.length > 0
-  const [partyStep, setPartyStep] = useState(false)
 
   // The party step is much shorter than the character grid, so an inherited
   // scroll position would leave its heading tucked under the fixed header.
   useEffect(() => {
     scrollToTop()
-  }, [partyStep])
+  }, [step.kind])
 
   async function handleChoose(characterFile: string) {
+    if (step.kind === "submitting") return
     if (hasPartyStep) {
-      setSelectedCharacter(characterFile)
-      setPartyStep(true)
+      setStep({ kind: "party_setup", selectedFile: characterFile })
       return
     }
-    setSubmitting(true)
-    const { createAdventure } = await import("@/app/_actions/create-adventure")
-    await createAdventure({
-      settingId,
-      adventurePlanId,
-      characterChoices: [{ characterId: `characters/${userId}/${characterFile}.json`, mode: "player" }],
-    })
-    // The redirect happens in the server action
-    setSubmitting(false)
+    setStep({ kind: "submitting", selectedFile: characterFile })
+    try {
+      const { createAdventure } = await import("@/app/_actions/create-adventure")
+      await createAdventure({
+        settingId,
+        adventurePlanId,
+        characterChoices: [{ characterId: `characters/${userId}/${characterFile}.json`, mode: "player" }],
+      })
+      // The redirect happens in the server action
+    } catch (error) {
+      const isRedirectError = error && typeof error === "object" && "digest" in error && String((error as { digest?: string }).digest).includes("NEXT_REDIRECT")
+      if (isRedirectError) return
+      setStep({ kind: "picking", selectedFile: null })
+      throw error
+    }
   }
 
+  const selectedCharacter = step.selectedFile
   const selectedIndex = selectedCharacter ? characterFiles.indexOf(selectedCharacter) : -1
   const selectedCharacterSheet = selectedIndex >= 0 ? characters[selectedIndex] : null
 
-  const inPartyStep = partyStep && selectedCharacter && selectedCharacterSheet
+  const inPartyStep = step.kind === "party_setup" && selectedCharacter && selectedCharacterSheet
+  const submitting = step.kind === "submitting"
 
   return (
     <Swap id={inPartyStep ? "party" : "choose"} asChild>
@@ -83,10 +94,7 @@ export default function ChooseCharacterView({
             selectedCharacterImage={selectedCharacterSheet.image}
             companions={premadeCompanions}
             party={party}
-            onBack={() => {
-              setPartyStep(false)
-              setSelectedCharacter(null)
-            }}
+            onBack={() => setStep({ kind: "picking", selectedFile: null })}
           />
         </div>
       ) : (
@@ -112,8 +120,7 @@ export default function ChooseCharacterView({
                 className={`enter-rise w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer transition-[scale] ease-snap duration-150${selectedCharacter === characterFiles[i] ? " ring-accent-400 border-accent-400 scale-105" : ""}`}
                 style={{ "--i": Math.min(i, 8) } as CSSProperties}
                 onClick={() => {
-                  setSelectedCharacter(characterFiles[i])
-                  handleChoose(characterFiles[i])
+                  void handleChoose(characterFiles[i])
                 }}
               >
                 <CharacterSelectCard
