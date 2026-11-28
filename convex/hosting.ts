@@ -1,4 +1,5 @@
 import { v } from "convex/values"
+import { recordUploadedArt, selectNextJob } from "../packages/gm-core/src/host/jobs"
 import {
   answerSeatRequest,
   removeGuestFromTable,
@@ -13,8 +14,6 @@ import { requireServer } from "./serverSecret"
 // Hosted games: the host's desktop app runs the GM, so guests' actions wait here as jobs until it claims them.
 // Every function answers only the Next server, which checks who is asking.
 
-// A job the host's app claimed but never finished, because it quit or crashed, is given up after this long.
-const ABANDONED_MS = 10 * 60 * 1000
 // The host's app is seen at most this often, so polling for work is not a write each time.
 const SEEN_EVERY_MS = 30 * 1000
 // A created hero's arrival in the opening scene. See packages/gm-core/src/character/hero-draft.ts.
@@ -204,14 +203,27 @@ export const queueJob = mutation({
     if (adventure.currentTurnId !== job.turnId) throw new Error("This turn has already advanced")
     // One waiting job per character and turn, so a double click is not two actions. Suggested replies are written
     // once per character and turn, so asking again answers with the finished job.
-    const pending = await ctx.db
-      .query("gmJobs")
-      .withIndex("by_adventure", (q) => q.eq("adventureId", job.adventureId))
-      .order("desc")
-      .take(20)
-    const live = (j: Doc<"gmJobs">) => j.status === "queued" || j.status === "running" || (j.kind === "suggest" && j.status === "done")
-    const same = pending.find((j) => live(j) && j.turnId === job.turnId && j.kind === job.kind && j.characterId === job.characterId)
-    if (same) return same._id
+    const [queued, running] = await Promise.all([
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", job.adventureId).eq("status", "queued"))
+        .collect(),
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", job.adventureId).eq("status", "running"))
+        .collect(),
+    ])
+    const active = [...queued, ...running].find((j) => j.turnId === job.turnId && j.kind === job.kind && j.characterId === job.characterId)
+    if (active) return active._id
+    if (job.kind === "suggest") {
+      const done = await ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", job.adventureId).eq("status", "done"))
+        .order("desc")
+        .take(50)
+      const cached = done.find((j) => j.turnId === job.turnId && j.kind === "suggest" && j.characterId === job.characterId)
+      if (cached) return cached._id
+    }
     return await ctx.db.insert("gmJobs", { ...job, status: "queued", createdAt: Date.now() })
   },
 })
@@ -222,18 +234,24 @@ export const queueArrival = mutation({
   handler: async (ctx, { secret, adventureId, userId, characterId, hook }) => {
     requireServer(secret)
     const { host } = waiting(await ctx.db.get(adventureId))
-    if (host.arrivals?.[sheetId(characterId) ?? ""]) return
-    const jobs = await ctx.db
-      .query("gmJobs")
-      .withIndex("by_adventure", (q) => q.eq("adventureId", adventureId))
-      .order("desc")
-      .take(50)
-    if (jobs.some((j) => j.kind === "arrival" && j.characterId === characterId && (j.status === "queued" || j.status === "running"))) return
+    if (host.arrivals?.[sheetId(characterId)]) return
+    const [queued, running] = await Promise.all([
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "queued"))
+        .collect(),
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "running"))
+        .collect(),
+    ])
+    if ([...queued, ...running].some((j) => j.kind === "arrival" && j.characterId === characterId)) return
     await ctx.db.insert("gmJobs", { adventureId, kind: "arrival", userId, characterId, ...(hook ? { text: hook } : {}), status: "queued", createdAt: Date.now() })
   },
 })
 
 const artValidator = v.object({ front: v.string(), back: v.string(), portrait: v.string() })
+const artKindValidator = v.union(v.literal("front"), v.literal("back"), v.literal("portrait"))
 
 /**
  * Asks the host's image CLI to paint a guest's hero, unless it is painted or on its way. Art the hero already has from
@@ -251,13 +269,33 @@ export const queuePaint = mutation({
       await ctx.db.patch(adventureId, { host: { ...host, art: { ...host.art, [heroId]: art } } })
       return
     }
-    const jobs = await ctx.db
-      .query("gmJobs")
-      .withIndex("by_adventure", (q) => q.eq("adventureId", adventureId))
-      .order("desc")
-      .take(50)
-    if (jobs.some((j) => j.kind === "paint" && j.characterId === characterId && (j.status === "queued" || j.status === "running"))) return
+    const [queued, running] = await Promise.all([
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "queued"))
+        .collect(),
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "running"))
+        .collect(),
+    ])
+    if ([...queued, ...running].some((j) => j.kind === "paint" && j.characterId === characterId)) return
     await ctx.db.insert("gmJobs", { adventureId, kind: "paint", userId, characterId, status: "queued", createdAt: Date.now() })
+  },
+})
+
+/** Records that one picture of a running paint job has been uploaded to S3. */
+export const recordPaintArt = mutation({
+  args: { secret: v.string(), adventureId: v.id("adventures"), jobId: v.id("gmJobs"), kind: artKindValidator },
+  handler: async (ctx, { secret, adventureId, jobId, kind }) => {
+    requireServer(secret)
+    const job = await ctx.db.get(jobId)
+    if (!job || job.adventureId !== adventureId || job.kind !== "paint" || job.status !== "running") {
+      throw new Error("That paint job is not running.")
+    }
+    const uploadedKinds = recordUploadedArt(job.uploadedKinds, kind)
+    await ctx.db.patch(jobId, { uploadedKinds })
+    return { uploadedKinds }
   },
 })
 
@@ -282,23 +320,21 @@ export const claimJob = mutation({
     if (!adventure?.host || adventure.host.userId !== userId) throw new Error("You are not hosting this adventure")
     const now = Date.now()
     if (!adventure.host.seenAt || now - adventure.host.seenAt > SEEN_EVERY_MS) await ctx.db.patch(adventureId, { host: { ...adventure.host, seenAt: now } })
-    const running = await ctx.db
-      .query("gmJobs")
-      .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "running"))
-      .take(20)
-    let painting = false
-    for (const job of running) {
-      if (now - (job.startedAt ?? job.createdAt) >= ABANDONED_MS) await ctx.db.patch(job._id, { status: "failed", error: "The host's game stopped before finishing this action.", finishedAt: now })
-      else if (job.kind === "paint") painting = true
-      else return null
+    const [running, queued] = await Promise.all([
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "running"))
+        .take(20),
+      ctx.db
+        .query("gmJobs")
+        .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "queued"))
+        .order("asc")
+        .take(20),
+    ])
+    const { abandoned, next } = selectNextJob(running, queued, now)
+    for (const job of abandoned) {
+      await ctx.db.patch(job._id, { status: "failed", error: "The host's game stopped before finishing this action.", finishedAt: now })
     }
-    const queued = await ctx.db
-      .query("gmJobs")
-      .withIndex("by_adventure_status", (q) => q.eq("adventureId", adventureId).eq("status", "queued"))
-      .order("asc")
-      .take(20)
-    // Players' actions go first, so suggested replies never hold one up in the queue.
-    const next = queued.find((j) => j.kind !== "suggest" && j.kind !== "paint") ?? queued.find((j) => j.kind === "suggest") ?? (painting ? undefined : queued[0])
     if (!next) return null
     await ctx.db.patch(next._id, { status: "running", startedAt: now })
     return { ...next, status: "running" as const, startedAt: now }
@@ -323,13 +359,15 @@ export const finishJob = mutation({
     if (!job) throw new Error("Job not found")
     const adventure = await ctx.db.get(job.adventureId)
     if (adventure?.host?.userId !== userId) throw new Error("You are not hosting this adventure")
-    if (job.status !== "running") return
+    if (job.status !== "running") return { finished: false as const, status: job.status }
     if (job.kind === "arrival" && !error && arrival && adventure.host && !adventure.currentTurnId) {
-      const hero = sheetId(job.characterId ?? "") ?? ""
+      const hero = sheetId(job.characterId ?? "")
       await ctx.db.patch(adventure._id, { host: { ...adventure.host, arrivals: { ...adventure.host.arrivals, [hero]: arrival } } })
     }
     if (job.kind === "paint" && !error && art && adventure.host) await ctx.db.patch(adventure._id, { host: { ...adventure.host, art: { ...adventure.host.art, [art.heroId]: art.paths } } })
-    await ctx.db.patch(jobId, { status: error ? "failed" : "done", error, finishedAt: Date.now(), ...(job.kind === "suggest" && !error && suggestions ? { suggestions } : {}) })
+    const status = error ? ("failed" as const) : ("done" as const)
+    await ctx.db.patch(jobId, { status, error, finishedAt: Date.now(), ...(job.kind === "suggest" && !error && suggestions ? { suggestions } : {}) })
+    return { finished: true as const, status }
   },
 })
 

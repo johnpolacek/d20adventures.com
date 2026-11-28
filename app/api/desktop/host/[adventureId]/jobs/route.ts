@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
       const arrival = reportedArrival(body.arrival)
       await hostedAdventure(adventureId, device.userId)
       const art = body.painted === true && !body.error ? await paintedArt(adventureId, body.jobId) : undefined
-      await convex.mutation(api.hosting.finishJob, {
+      const outcome = await convex.mutation(api.hosting.finishJob, {
         secret: serverSecret(),
         jobId: body.jobId as Id<"gmJobs">,
         userId: device.userId,
@@ -58,7 +58,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
         ...(arrival ? { arrival } : {}),
         ...(art ? { art } : {}),
       })
-      return NextResponse.json({ ok: true })
+      return NextResponse.json({ ok: true, finished: outcome.finished, status: outcome.status })
     }
     return NextResponse.json({ error: "Unknown job request." }, { status: 400 })
   } catch (e) {
