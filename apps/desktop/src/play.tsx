@@ -444,7 +444,6 @@ export function DesktopGame() {
             summary={hosted.summary}
             chat={hosted.chat}
             onChat={say}
-            gm={gmLabel}
             busy={sending}
             onAnswer={(userId, approve, note, characterId) => void act(() => host({ kind: "hostAnswer", adventureId: hosting, userId, characterId, approve, note }))}
             onSheet={(userId, characterId) => host({ kind: "hostSheet", adventureId: hosting, userId, characterId }).then((r) => r.sheet ?? null)}

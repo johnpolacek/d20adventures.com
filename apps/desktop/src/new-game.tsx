@@ -45,11 +45,13 @@ export function LockIcon() {
 const TUTORIAL = "the-midnight-summons"
 
 // Party setup for the adventure chosen on the Adventures page: who goes, who plays each hero, and which CLI runs the
-// GM. The suggested party starts on You; each hero can also be handed to AI or invited. A hero set to Invite makes
-// it a game hosted on the website, with that hero held for a friend. With every hero on Invite, guests choose first
-// and the player gets a hero they leave. A party of one invited hero leaves the player none, so they watch. Roster
-// heroes appear only where the adventure accepts their race and class. Keyed by adventure, so each starts from its
-// own suggested party, or from the heroes of the adventure just finished when the player continues the story.
+// GM. Where hosting and custom heroes are available (and not continuing a finished solo party), setup opens on Open
+// Invite with the adventure's premades offered and every seat open for guests; otherwise the suggested party starts on
+// You. Each hero can also be handed to AI or invited. A hero set to Invite makes it a game hosted on the website, with
+// that hero held for a friend. With every hero on Invite, guests choose first and the player gets a hero they leave. A
+// party of one invited hero leaves the player none, so they watch. Roster heroes appear only where the adventure
+// accepts their race and class. Keyed by adventure, so each starts from its own suggested party, or from the heroes of
+// the adventure just finished when the player continues the story.
 export function NewGame(props: {
   adventures: AdventureInfo[]
   adventure: string
@@ -91,7 +93,16 @@ export function NewGame(props: {
 }) {
   const info = props.adventures.find((a) => a.id === props.adventure)
   const lockedInfo = info ? undefined : props.locked.find((a) => a.id === props.adventure)
-  const [party, setParty] = useState<Seat[]>(() => openingParty(info, props.heroes, props.carried).map((c) => ({ id: c.id, who: c.ai ? "ai" : "you" })))
+  const [min, max] = info?.players ?? [1, 1]
+  const canInvite = Boolean(props.onHost)
+  const defaultOpen = Boolean(canInvite && info?.options && !props.carried?.length)
+  const seatsFor = (n: number) => Array.from({ length: Math.max(0, n) }, (_, i): Seat => ({ id: `open-${Date.now()}-${i}`, who: "invite", open: true }))
+  const [party, setParty] = useState<Seat[]>(() => {
+    const start = openingParty(info, props.heroes, props.carried)
+    if (!defaultOpen || !info) return start.map((c) => ({ id: c.id, who: c.ai ? "ai" : "you" }))
+    const extra = (info.premades ?? []).map((p) => p.id).filter((id) => !start.some((c) => c.id === id))
+    return [...[...start.map((c) => c.id), ...extra].map((id): Seat => ({ id, who: "invite" })), ...seatsFor(max)]
+  })
   const [deleting, setDeleting] = useState<string | null>(null)
   // Whether the host approves each hero a guest brings to an open seat. Off, the guest is seated at once.
   const [askFirst, setAskFirst] = useState(false)
@@ -100,7 +111,7 @@ export function NewGame(props: {
   // How many open seats one guest may fill with heroes of their own.
   const [bring, setBring] = useState(1)
   // An open invite: each open seat takes an invited hero or a guest's own, so invited heroes take no seat themselves.
-  const [flex, setFlex] = useState(false)
+  const [flex, setFlex] = useState(defaultOpen)
   // The hero the player last held, so leaving a guest's choice of hero gives it back.
   const [lastYou, setLastYou] = useState<string | null>(null)
   const fits = (h: Hero) => Boolean(info?.options?.races.includes(h.race) && info.options.archetypes.includes(h.archetype))
@@ -110,7 +121,6 @@ export function NewGame(props: {
       .filter(fits)
       .map((h) => ({ id: h.id, name: h.name, race: h.race, archetype: h.archetype, portrait: (h.painted && props.art[h.id]?.portrait) || STOCK_FIGURES[h.figure]?.art.portrait, hero: h })),
   ]
-  const [min, max] = info?.players ?? [1, 1]
   // A hero just made from this screen joins the party as the player's, if they fit.
   const joining = props.created && picks.some((p) => p.id === props.created) ? props.created : null
   useEffect(() => {
@@ -153,7 +163,6 @@ export function NewGame(props: {
   const watching = hosting && yours.length === 0 && !guestsChoose
   const hostable = flex ? open > 0 : yours.length > 0 || guestsChoose || watching
   const ready = sized && (hosting ? hostable : yours.length > 0)
-  const canInvite = Boolean(props.onHost)
   const seat = (id: string, who: Seat["who"]) => {
     if (who !== "you" && yours[0]?.id === id) setLastYou(id)
     // In an open invite, an offered hero the player or the AI takes fills a guest seat, so a full party gives one up.
@@ -188,7 +197,6 @@ export function NewGame(props: {
       if (flex && who === "invite") return [...p, { id, who }]
       return size < max ? [...p, { id, who }] : open > 0 ? [...dropSeat(p), { id, who }] : p
     })
-  const seatsFor = (n: number) => Array.from({ length: Math.max(0, n) }, (_, i): Seat => ({ id: `open-${Date.now()}-${i}`, who: "invite", open: true }))
   // The shortcuts over the party. Each sets the cards, which stay editable after.
   const premadeIds = new Set((info.premades ?? []).map((p) => p.id))
   const others = (info.premades ?? []).map((p) => p.id).filter((id) => !held.some((c) => c.id === id))
