@@ -1,4 +1,11 @@
 import { v } from "convex/values"
+import {
+  answerSeatRequest,
+  removeGuestFromTable,
+  requestOpenSeat,
+  seatHostAtStart,
+  sheetId,
+} from "../packages/gm-core/src/host/seating"
 import type { Doc } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
 import { requireServer } from "./serverSecret"
@@ -52,23 +59,6 @@ export const setHost = mutation({
   },
 })
 
-const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
-// Open seats not yet filled: every guest whose hero is not one the host held sits in an open seat. Where open seats
-// also take held heroes, every guest sits in one.
-const openLeft = (adventure: Doc<"adventures">) => {
-  const host = adventure.host
-  if (!host?.open) return 0
-  const held = new Set((host.seats ?? []).map((s) => s.id))
-  return host.open - (adventure.players ?? []).filter((p) => p.userId !== host.userId && (host.flex || !held.has(sheetId(p.characterId) ?? ""))).length
-}
-// The heroes a guest brought to open seats, seated or waiting for the host.
-const brought = (adventure: Doc<"adventures">, userId: string) => {
-  const held = new Set((adventure.host?.seats ?? []).map((s) => s.id))
-  // In an open invite, the held heroes they took count too.
-  const seated = (adventure.players ?? []).filter((p) => p.userId === userId && (adventure.host?.flex || !held.has(sheetId(p.characterId) ?? "")))
-  const pending = (adventure.host?.requests ?? []).filter((r) => r.userId === userId && r.status === "pending")
-  return { seated, pending }
-}
 const waiting = (adventure: Doc<"adventures"> | null) => {
   if (!adventure?.host) throw new Error("This adventure is not hosted")
   if (adventure.status !== "waitingForPlayers" || adventure.currentTurnId) throw new Error("This game has already started")
@@ -95,25 +85,18 @@ export const requestSeat = mutation({
   handler: async (ctx, { secret, adventureId, ...request }) => {
     requireServer(secret)
     const { adventure, host } = waiting(await ctx.db.get(adventureId))
-    if (openLeft(adventure) < 1) throw new Error("This game has no open seat")
-    const hero = sheetId(request.characterId)
-    if (host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is already at this table")
-    const limit = host.bring ?? 1
-    const { seated, pending } = brought(adventure, request.userId)
-    if (seated.length >= limit) throw new Error(limit === 1 ? "You are already in this game" : `You have brought ${limit} heroes, as many as this table allows`)
-    // Their records from before, except heroes still waiting. Past the limit, the latest of those is replaced.
-    const replaced = seated.length + pending.length >= limit ? pending[pending.length - 1] : undefined
-    const kept = (host.requests ?? []).filter((r) => r.userId !== request.userId || (r.status === "pending" && r !== replaced && sheetId(r.characterId) !== hero))
-    // A guest the host removed comes back only with the host's approval.
-    if (host.approve || host.removed?.includes(request.userId)) {
-      await ctx.db.patch(adventureId, { host: { ...host, requests: [...kept, { ...request, status: "pending" as const, at: Date.now() }] }, updatedAt: Date.now() })
+    const now = Date.now()
+    const result = requestOpenSeat(adventure, request, now)
+    if (!result.ok) throw new Error(result.error)
+    if (!result.seated) {
+      await ctx.db.patch(adventureId, { host: { ...host, requests: result.requests }, updatedAt: now })
       return { seated: false }
     }
     await ctx.db.patch(adventureId, {
-      host: { ...host, requests: kept },
-      players: [...(adventure.players ?? []), { userId: request.userId, characterId: request.characterId }],
+      host: { ...host, requests: result.requests },
+      players: [...(adventure.players ?? []), result.addedPlayer],
       playerIds: [...new Set([...adventure.playerIds, request.userId])],
-      updatedAt: Date.now(),
+      updatedAt: now,
     })
     return { seated: true }
   },
@@ -136,29 +119,23 @@ export const answerSeat = mutation({
   handler: async (ctx, { secret, adventureId, hostUserId, userId, characterId, approve, note }) => {
     requireServer(secret)
     const { adventure, host } = waiting(await ctx.db.get(adventureId))
-    if (host.userId !== hostUserId) throw new Error("You are not hosting this adventure")
-    const request = host.requests?.find((r) => r.userId === userId && r.status === "pending" && (!characterId || sheetId(r.characterId) === sheetId(characterId)))
-    if (!request) throw new Error("That request is no longer waiting")
-    const others = (host.requests ?? []).filter((r) => r !== request)
-    if (!approve) {
-      const rejected = { ...request, status: "rejected" as const, note: note?.trim().slice(0, 300) || undefined }
-      await ctx.db.patch(adventureId, { host: { ...host, requests: [...others, rejected] }, updatedAt: Date.now() })
+    const result = answerSeatRequest(adventure, { hostUserId, userId, characterId, approve, note })
+    if (!result.ok) throw new Error(result.error)
+    if (result.outcome === "rejected") {
+      await ctx.db.patch(adventureId, { host: { ...host, requests: result.requests }, updatedAt: Date.now() })
       return null
     }
-    // The hero took a seat another way while this request waited.
-    if (adventure.players?.some((p) => sheetId(p.characterId) === sheetId(request.characterId))) {
-      await ctx.db.patch(adventureId, { host: { ...host, requests: others } })
+    if (result.outcome === "already_seated") {
+      await ctx.db.patch(adventureId, { host: { ...host, requests: result.requests } })
       return null
     }
-    if (openLeft(adventure) < 1) throw new Error("This game has no open seat")
-    if (brought(adventure, userId).seated.length >= (host.bring ?? 1)) throw new Error("This guest has brought as many heroes as the table allows")
     await ctx.db.patch(adventureId, {
-      host: { ...host, requests: others },
-      players: [...(adventure.players ?? []), { userId, characterId: request.characterId }],
+      host: { ...host, requests: result.requests },
+      players: [...(adventure.players ?? []), result.addedPlayer],
       playerIds: [...new Set([...adventure.playerIds, userId])],
       updatedAt: Date.now(),
     })
-    return { characterId: request.characterId, hook: request.hook }
+    return result.seated
   },
 })
 
@@ -168,15 +145,14 @@ export const removeGuest = mutation({
   handler: async (ctx, { secret, adventureId, hostUserId, userId, name, note }) => {
     requireServer(secret)
     const { adventure, host } = waiting(await ctx.db.get(adventureId))
-    if (host.userId !== hostUserId) throw new Error("You are not hosting this adventure")
-    const seated = adventure.players?.find((p) => p.userId === userId)
-    if (!seated || userId === host.userId) throw new Error("That guest is not at this table")
-    const record = { userId, player: "", characterId: seated.characterId, name, status: "removed" as const, note: note?.trim().slice(0, 300) || undefined, at: Date.now() }
+    const now = Date.now()
+    const result = removeGuestFromTable(adventure, { hostUserId, userId, name, note }, now)
+    if (!result.ok) throw new Error(result.error)
     await ctx.db.patch(adventureId, {
-      host: { ...host, removed: [...new Set([...(host.removed ?? []), userId])], requests: [...(host.requests ?? []).filter((r) => r.userId !== userId), record] },
-      players: (adventure.players ?? []).filter((p) => p.userId !== userId),
-      playerIds: adventure.playerIds.filter((id) => id !== userId),
-      updatedAt: Date.now(),
+      host: { ...host, removed: result.removed, requests: result.requests },
+      players: (adventure.players ?? []).filter((p) => p.userId !== result.removedUserId),
+      playerIds: adventure.playerIds.filter((id) => id !== result.removedUserId),
+      updatedAt: now,
     })
   },
 })
@@ -186,14 +162,11 @@ export const seatHost = mutation({
   args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), characterId: v.string(), ai: v.optional(v.boolean()) },
   handler: async (ctx, { secret, adventureId, userId, characterId, ai }) => {
     requireServer(secret)
-    const { adventure, host } = waiting(await ctx.db.get(adventureId))
-    if (host.userId !== userId) throw new Error("You are not hosting this adventure")
-    const hero = sheetId(characterId)
-    if (adventure.players?.some((p) => p.userId === userId && sheetId(p.characterId) === hero)) return
-    if (!host.seats?.some((s) => s.id === hero) || adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("That hero is not open")
-    // The host's own hero leads the party, as at hosting. AI heroes follow.
-    const players = adventure.players ?? []
-    await ctx.db.patch(adventureId, { players: ai ? [...players, { userId, characterId, controlledBy: "ai" }] : [{ userId, characterId }, ...players], updatedAt: Date.now() })
+    const { adventure } = waiting(await ctx.db.get(adventureId))
+    const result = seatHostAtStart(adventure, { userId, characterId, ai })
+    if (!result.ok) throw new Error(result.error)
+    if (!result.changed) return
+    await ctx.db.patch(adventureId, { players: result.players, updatedAt: Date.now() })
   },
 })
 

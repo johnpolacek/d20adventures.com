@@ -1,4 +1,5 @@
 import { v } from "convex/values"
+import { joinHeldSeat } from "../packages/gm-core/src/host/seating"
 import { slotOf, transitionTurnSlot, withSlot } from "../packages/gm-core/src/sheet/turn-slot"
 import { mergeKnowledge } from "../packages/gm-core/src/story/knowledge"
 import type { Doc, Id } from "./_generated/dataModel"
@@ -102,33 +103,8 @@ export const joinAdventure = serverMutation({
 
     // A hosted game with held seats takes only those heroes, each once. Each player's copy of a hero has its own
     // key, so heroes are matched by sheet id. Its open seats fill only through the host's approval, in hosting.ts.
-    const seats = adventure.host?.seats ?? []
-    if (seats.length || adventure.host?.open) {
-      if (adventure.host?.removed?.includes(args.userId)) throw new Error("The host removed you from this table")
-      const sheetId = (characterId: string) => characterId.split("/").pop()?.replace(".json", "")
-      const hero = sheetId(args.characterId)
-      if (!seats.some((s) => s.id === hero)) throw new Error("This game's seats are held for other heroes")
-      if (adventure.players?.some((p) => sheetId(p.characterId) === hero)) throw new Error("Character is already taken")
-      // Where open seats also take held heroes, a held hero needs one of those seats free.
-      const guests = adventure.players?.filter((p) => p.userId !== adventure.host?.userId).length ?? 0
-      if (adventure.host?.flex && guests >= (adventure.host.open ?? 0)) throw new Error("Every seat at this table is taken")
-      // There, every hero a guest plays or waits on counts against how many the host lets each guest have.
-      if (adventure.host?.flex) {
-        const limit = adventure.host.bring ?? 1
-        const theirs =
-          (adventure.players?.filter((p) => p.userId === args.userId).length ?? 0) +
-          (adventure.host.requests?.filter((r) => r.userId === args.userId && r.status === "pending").length ?? 0)
-        if (theirs >= limit) throw new Error(limit === 1 ? "You are already in this game" : `You have ${limit} heroes, as many as this table allows`)
-      }
-      // Where guests choose first, the last held hero is the host's.
-      const host = adventure.host
-      if (host?.pick && !adventure.players?.some((p) => p.userId === host.userId && p.controlledBy !== "ai")) {
-        const left = seats.filter((s) => !adventure.players?.some((p) => sheetId(p.characterId) === s.id)).length
-        if (left < 2) throw new Error("Every seat at this table is taken")
-        const taken = adventure.players?.filter((p) => p.userId === args.userId && seats.some((s) => s.id === sheetId(p.characterId))).length ?? 0
-        if (host.each && taken >= host.each) throw new Error(`Each guest plays ${host.each} ${host.each === 1 ? "hero" : "heroes"} at this table`)
-      }
-    }
+    const heldCheck = joinHeldSeat(adventure, { userId: args.userId, characterId: args.characterId })
+    if (!heldCheck.ok) throw new Error(heldCheck.error)
 
     // Add the player to the adventure
     const updatedPlayers = [

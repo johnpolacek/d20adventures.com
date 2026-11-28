@@ -7,7 +7,7 @@ import { assertPlayerCharacterControl } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { serverStore } from "@/lib/gm-server/store"
-import { hostWaits, hostWatches, openLeft, openSeats, sheetId } from "@/lib/host/seats"
+import { hostWaits, hostWatches, openLeft, openSeats, seatingOf, sheetId } from "@/lib/host/seats"
 import { readJsonFromS3, updateJsonOnS3, uploadFileToS3 } from "@/lib/s3-utils"
 import { toPCTemplate } from "@/lib/utils/character-mapping"
 import { isLocalWikiAdventure, loadWikiAdventureRuntime } from "@/lib/wiki-adventures/local-runtime"
@@ -269,6 +269,7 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
       return sheet?.name ?? p.characterId.split("/").pop()?.replace(".json", "") ?? ""
     })
   )
+  const seating = seatingOf(adventure.host)
   return {
     adventureId: adventure._id,
     planId: adventure.planId,
@@ -284,19 +285,19 @@ export async function hostedSummary(adventure: Doc<"adventures">, origin: string
     invite: inviteUrl(origin, adventure),
     // How many seats the host set aside for guests, held heroes and open ones together, then the held seats nobody
     // has taken, each with the link that joins as that hero.
-    held: (adventure.host?.flex ? 0 : (adventure.host?.seats?.length ?? 0)) + (adventure.host?.open ?? 0),
+    held: (seating?.mode === "flex" ? 0 : (seating?.seats.length ?? 0)) + (seating?.open ?? 0),
     // Seats still open to a guest's own hero, their link, and the guests waiting on the host's answer.
     open: openLeft(adventure),
-    approval: Boolean(adventure.host?.approve),
+    approval: Boolean(seating?.approve),
     // In an open invite, one link offers the held heroes and the guest's own together.
-    openInvite: adventure.host?.flex ? inviteUrl(origin, adventure) : `${inviteUrl(origin, adventure)}?as=any`,
-    flex: Boolean(adventure.host?.flex),
-    requests: (adventure.host?.requests ?? [])
+    openInvite: seating?.mode === "flex" ? inviteUrl(origin, adventure) : `${inviteUrl(origin, adventure)}?as=any`,
+    flex: seating?.mode === "flex",
+    requests: (seating?.requests ?? [])
       .filter((r) => r.status === "pending" && !adventure.players?.some((p) => p.characterId === r.characterId))
       .map((r) => ({ userId: r.userId, characterId: r.characterId, player: r.player, name: r.name, race: r.race, archetype: r.archetype })),
     // How many open seats one guest may fill.
-    bring: adventure.host?.bring ?? 1,
-    seats: hostWaits(adventure) || adventure.host?.flex ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
+    bring: seating?.bring ?? 1,
+    seats: hostWaits(adventure) || seating?.mode === "flex" ? [] : openSeats(adventure).map((s) => ({ id: s.id, name: s.name, invite: `${inviteUrl(origin, adventure)}?as=${s.id}` })),
     // Where guests choose first and the host plays a hero they leave: the heroes nobody has chosen yet.
     left: hostWaits(adventure) ? openSeats(adventure).map((s) => s.name) : [],
     // The same heroes by id, which the host seats as their own or as AI heroes at Start.
