@@ -270,18 +270,26 @@ export interface GrassOptions {
   base?: string
   tip?: string
   roughness?: number
+  backlight?: number
 }
 
 // Grass blades and heather: each blade shades from a dark root to its tip colour along uv.y (0 at the root, 1 at the
 // tip), and its tip sways in the wind. Blade normals point up, so a meadow lights like the ground it grows from.
 // Past about 5 m blades flatten toward one shade and sway less, so thin far blades don't flicker.
 // uv.x carries a per-tuft random value for colour variety. Casts no shadow: thousands of blades would only add noise.
+// Opt-in sun-through-blade backlight translucency adapted from patch/forests (Victor Zakharov / Patch, MIT).
 export function grass(ctx: MaterialContext, name: string, o: GrassOptions = {}) {
-  const u = { gBase: { value: new THREE.Color(o.base || "#1b2d18") }, gTip: { value: new THREE.Color(o.tip || "#5c8040") } }
+  const backlight = o.backlight ?? 0
+  const hasBacklight = backlight > 0
+  const u: Record<string, { value: unknown }> = {
+    gBase: { value: new THREE.Color(o.base || "#1b2d18") },
+    gTip: { value: new THREE.Color(o.tip || "#5c8040") },
+    ...(hasBacklight ? { uGrassBacklight: { value: backlight } } : {}),
+  }
   const m = new THREE.MeshStandardMaterial({ name, color: "#ffffff", roughness: o.roughness ?? 0.95, metalness: 0, side: THREE.DoubleSide })
   m.userData.noShadow = true
   m.userData.uniforms = u
-  return stageMaterial(m, ctx.shared, "grass", (s) => {
+  return stageMaterial(m, ctx.shared, hasBacklight ? "grass-lit" : "grass", (s) => {
     Object.assign(s.uniforms, u)
     s.uniforms.uTime = ctx.shared.time
     s.uniforms.uWind = ctx.shared.wind
@@ -303,14 +311,35 @@ float gPh = position.x * .35 + position.z * .27;
 transformed.x += (sin(uTime * 1.3 + gPh) * .6 + sin(uTime * 2.9 + gPh * 2.3) * .25) * gSw * uWind * .08;
 transformed.z += sin(uTime * 1.1 + gPh * 1.7) * gSw * uWind * .05;`
     )
-    s.fragmentShader = s.fragmentShader.replace("#include <common>", "#include <common>\nuniform vec3 gBase, gTip; varying vec2 vGUv; varying float vGDist;").replace(
-      "#include <color_fragment>",
-      `#include <color_fragment>
+    if (hasBacklight) s.uniforms.uSun = ctx.shared.sun
+    s.fragmentShader = s.fragmentShader
+      .replace(
+        "#include <common>",
+        hasBacklight
+          ? "#include <common>\nuniform vec3 gBase, gTip, uSun; uniform float uGrassBacklight; varying vec2 vGUv; varying float vGDist;"
+          : "#include <common>\nuniform vec3 gBase, gTip; varying vec2 vGUv; varying float vGDist;"
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
 vec3 gC = mix(gBase, gTip * (.78 + .44 * vGUv.x), smoothstep(0.0, .55, vGUv.y));
 // With distance the pale tips settle toward one even shade, so subpixel blades stop sparkling against the ground.
 gC = mix(gC, mix(gBase, gTip, .3), smoothstep(5.0, 18.0, vGDist) * .8);
 diffuseColor.rgb *= gC;`
-    )
+      )
+    if (hasBacklight) {
+      s.fragmentShader = s.fragmentShader.replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+#if NUM_DIR_LIGHTS > 0
+ { vec3 sunV = normalize((viewMatrix * vec4(uSun, 0.0)).xyz);
+   float back = pow(max(dot(normalize(vViewPosition), -sunV), 0.0), 3.0);
+   float tip = smoothstep(0.2, 1.0, vGUv.y);
+   float fade = 1.0 - smoothstep(10.0, 28.0, vGDist);
+   totalEmissiveRadiance += diffuseColor.rgb * vec3(1.05, 1.15, 0.6) * directionalLights[0].color * back * tip * fade * uGrassBacklight; }
+#endif`
+      )
+    }
   })
 }
 

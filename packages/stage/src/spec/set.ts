@@ -123,7 +123,8 @@ const orb = z.object({ type: z.literal("orb"), color: color.optional(), glow: co
 // Leaves: painted leaf clusters with gaps, for tree crowns, bushes and ferns.
 // With `map` (painted leaf clumps from scripts/stage-textures.ts) crowns and bushes are built from crossed leaf cards.
 // `shadow: false` keeps low growth (bushes, ferns) out of the shadow map, where dense foliage costs the most.
-const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional(), shadow: z.boolean().optional() }).strict()
+// `sway` (0..2, default 0) opts the foliage into a 2-layer woodland wind sway and near-camera leaf flutter.
+const foliage = z.object({ type: z.literal("foliage"), color, roughness: unit.optional(), map: texture.optional(), shadow: z.boolean().optional(), sway: num(0, 2).optional() }).strict()
 const metal = z.object({ type: z.literal("metal"), color, roughness: unit.optional(), metalness: unit.optional() }).strict()
 const plain = z.object({ type: z.literal("plain"), color, roughness: unit.optional(), emissive: color.optional(), emissiveIntensity: num(0, 20).optional() }).strict()
 // Window glass: see-through, seen from the front of each pane only, so a lit window glows from outside while the room
@@ -167,7 +168,8 @@ const meadow = z
   })
   .strict()
 // Grass blades and heather, dark at the root and `tip` coloured at the top.
-const grass = z.object({ type: z.literal("grass"), base: color.optional(), tip: color.optional(), roughness: unit.optional() }).strict()
+// `backlight` (0..1, default 0) adds subtle warm sun-through-blade translucency when looking toward the sun.
+const grass = z.object({ type: z.literal("grass"), base: color.optional(), tip: color.optional(), roughness: unit.optional(), backlight: num(0, 1).optional() }).strict()
 // Running water that mirrors the sky. `flow` is the downstream direction [x, z].
 // `mirror` 0..1 blends in a true planar reflection of the set (lit windows, hulls, trees) where the tier draws one.
 const water = z

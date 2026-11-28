@@ -114,17 +114,20 @@
     "leaves": {
       "type": "foliage",
       "color": "#e0e4b8",
-      "map": "/stage/textures/leaves-oak.webp"
+      "map": "/stage/textures/leaves-oak.webp",
+      "sway": 0.9
     },
     "leavesDark": {
       "type": "foliage",
       "color": "#a0a880",
-      "map": "/stage/textures/leaves-oak.webp"
+      "map": "/stage/textures/leaves-oak.webp",
+      "sway": 0.85
     },
     "leavesLight": {
       "type": "foliage",
       "color": "#f4f0c0",
-      "map": "/stage/textures/leaves-oak.webp"
+      "map": "/stage/textures/leaves-oak.webp",
+      "sway": 1
     },
     "fern": {
       "type": "foliage",
@@ -133,7 +136,8 @@
     "grass": {
       "type": "grass",
       "base": "#2a3c1c",
-      "tip": "#7a9a40"
+      "tip": "#7a9a40",
+      "backlight": 0.35
     },
     "stone": {
       "type": "rock",

@@ -95,7 +95,7 @@ export function createMaterialLibrary(specs: Record<string, MaterialSpec>, share
         m = burlap(ctx, bank, name, s.color, s.roughness)
         break
       case "foliage":
-        m = foliage(ctx, bank, name, s.color, s.roughness, s.map ? painted.get(s.map) : undefined)
+        m = foliage(ctx, bank, name, s.color, s.roughness, s.map ? painted.get(s.map) : undefined, s.sway)
         if (s.shadow === false) m.userData.noShadow = true
         break
       case "glow":

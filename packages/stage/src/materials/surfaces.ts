@@ -590,20 +590,52 @@ vec3 clothWind(vec3 p, vec3 n, float t){
 
 // Leaves. With a painted map (a clump of leaves cut out from the art) the builders lay crowns and bushes as clusters of
 // leaf cards instead of leafy spheres.
-export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9, map?: THREE.Texture) {
+// Opt-in 2-layer wind sway (height-squared rolling gust + distance-attenuated leaf flutter) adapted from
+// patch/forests (Victor Zakharov / Patch, MIT) and blendi/terrarium (Patch, MIT).
+export function foliage(ctx: MaterialContext, bank: TextureBank, name: string, color: string, roughness = 0.9, map?: THREE.Texture, sway = 0) {
   const m = new THREE.MeshStandardMaterial({ name, color, roughness, metalness: 0, map: map ?? bank.leaves(), alphaTest: map ? 0.4 : 0.5, side: THREE.DoubleSide })
-  if (!map) return stageMaterial(m, ctx.shared, "foliage")
-  m.userData.cards = true
-  // Alpha-tested cards thin out and vanish in small mips, so distant crowns disappear. Boost alpha by the mip level
-  // being sampled, keeping the leaves' coverage at any distance.
-  return stageMaterial(m, ctx.shared, "foliagecards", (s) => {
-    s.fragmentShader = s.fragmentShader.replace(
-      "#include <alphatest_fragment>",
-      `{ vec2 ts = vec2(textureSize(map, 0)); vec2 dx = dFdx(vMapUv * ts), dy = dFdy(vMapUv * ts);
+  if (map) m.userData.cards = true
+  const hasSway = sway > 0
+  if (!map && !hasSway) return stageMaterial(m, ctx.shared, "foliage")
+  const key = map ? (hasSway ? "foliagecards-sway" : "foliagecards") : "foliage-sway"
+  return stageMaterial(m, ctx.shared, key, (s) => {
+    if (hasSway) {
+      s.uniforms.uTime = ctx.shared.time
+      s.uniforms.uWind = ctx.shared.wind
+      s.uniforms.uFoliageSway = { value: sway }
+      s.vertexShader = s.vertexShader
+        .replace("#include <common>", "#include <common>\nuniform float uTime, uWind, uFoliageSway;")
+        .replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
+{ vec4 fGp = vec4(position, 1.0);
+#ifdef USE_BATCHING
+ fGp = batchingMatrix * fGp;
+#endif
+#ifdef USE_INSTANCING
+ fGp = instanceMatrix * fGp;
+#endif
+ vec3 fWPos = (modelMatrix * fGp).xyz;
+ float fDist = length((modelViewMatrix * fGp).xyz);
+ float fH = clamp(fWPos.y / 6.0, 0.0, 1.0);
+ float fGust = sin(uTime * 1.1 + fWPos.x * 0.09 + fWPos.z * 0.07) * 0.6 + sin(uTime * 2.3 + fWPos.z * 0.17) * 0.25;
+ float fBend = fH * fH * fGust * uWind * uFoliageSway * 0.16;
+ float fNear = (1.0 - smoothstep(14.0, 45.0, fDist)) * smoothstep(0.05, 0.4, fWPos.y);
+ float fFl = sin(uTime * 5.2 + dot(fWPos, vec3(1.7, 2.3, 1.1))) * 0.035 * uWind * uFoliageSway * fNear;
+ transformed += vec3(fBend * 0.8 + fFl, fBend * -0.15 + fFl * 0.5, fBend * 0.6 - fFl * 0.7); }`
+        )
+    }
+    if (map) {
+      // Alpha-tested cards thin out and vanish in small mips, so distant crowns disappear. Boost alpha by the mip level
+      // being sampled, keeping the leaves' coverage at any distance.
+      s.fragmentShader = s.fragmentShader.replace(
+        "#include <alphatest_fragment>",
+        `{ vec2 ts = vec2(textureSize(map, 0)); vec2 dx = dFdx(vMapUv * ts), dy = dFdy(vMapUv * ts);
  float mip = max(0.0, 0.5 * log2(max(dot(dx, dx), dot(dy, dy))));
  diffuseColor.a *= 1.0 + mip * 0.3; }
 #include <alphatest_fragment>`
-    )
+      )
+    }
   })
 }
 // Mist banks: soft unlit cloud cards in the fog's colour, blended over the scene and fogged with it.
