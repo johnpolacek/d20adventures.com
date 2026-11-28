@@ -383,7 +383,7 @@ export function NewGame(props: {
                             </Button>
                           )}
                           {props.onPaint && (
-                            <Button variant="outline" size="xs" className="font-mono text-3xs" disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
+                            <Button variant="ai" size="xs" className="text-3xs" loading={props.painting === p.id} disabled={props.busy} onClick={() => props.onPaint!(p.hero!)} aria-label={`Paint ${p.name}`}>
                               <span key={props.painting === p.id ? "busy" : "idle"} className="enter-fade">
                                 {props.painting === p.id ? "Painting…" : "Paint"}
                               </span>

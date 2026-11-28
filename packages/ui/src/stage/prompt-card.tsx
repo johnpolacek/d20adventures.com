@@ -698,7 +698,7 @@ export function PromptCard({
           {(mode.suggestion || onSkip) && (
             <div className={cn("flex items-center gap-2", compact ? "mt-1" : "mt-2")}>
               {mode.suggestion && (
-                <Pill className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
+                <Pill variant="ai" className="flex-1" onClick={() => mode.suggestion && setDraft(mode.suggestion)}>
                   Suggest
                 </Pill>
               )}

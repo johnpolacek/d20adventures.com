@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@d20/ui/avatar"
 import { Badge } from "@d20/ui/badge"
 import { Button, buttonClassName, type ButtonSize, type ButtonVariant, Option } from "@d20/ui/button"
 import { Pill } from "@d20/ui/stage/hud"
-import { Gamepad2Icon, HomeIcon, SparklesIcon, UsersIcon, XIcon } from "lucide-react"
+import { Gamepad2Icon, HomeIcon, UsersIcon, XIcon } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cardVariants } from "@d20/ui/card"
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@d20/ui/collapsible"
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, AccordionTrigger } from "@d20/ui/accordion"
@@ -320,7 +320,7 @@ type Tile = { name: string; wide?: boolean; full?: boolean; demo: ReactNode }
 const ranks: { variant: ButtonVariant; use: string }[] = [
   { variant: "epic", use: "the one call of a screen" },
   { variant: "primary", use: "a panel's main action, the default" },
-  { variant: "ai", use: "an AI-assisted action: generate, suggest, write" },
+  { variant: "ai", use: "anything AI makes: generate, suggest, paint" },
   { variant: "outline", use: "a secondary action" },
   { variant: "ghost", use: "back, cancel, later" },
   { variant: "destructive", use: "delete, leave, ban" },
@@ -338,14 +338,17 @@ function ButtonDemo() {
           <div className="flex flex-wrap items-center gap-4">
             {sizes.map((size) => (
               <Button key={size} variant={r.variant} size={size}>
-                {r.variant === "ai" && <SparklesIcon aria-hidden="true" className="size-3.5" />}
                 {size === "default" ? "Default" : size.toUpperCase()}
               </Button>
             ))}
             <Button variant={r.variant} disabled>
-              {r.variant === "ai" && <SparklesIcon aria-hidden="true" className="size-3.5" />}
               Disabled
             </Button>
+            {r.variant === "ai" && (
+              <Button variant="ai" loading>
+                Generating…
+              </Button>
+            )}
           </div>
         </div>
       ))}

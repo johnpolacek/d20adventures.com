@@ -1,4 +1,5 @@
 import { Button as BaseButton } from "@ui-sdk/react/button"
+import { Loader2, Sparkles } from "lucide-react"
 import type { ComponentProps, CSSProperties, ReactNode } from "react"
 import { emboss } from "./graphics/styles"
 import { textShadow } from "./typography/styles"
@@ -7,7 +8,8 @@ import { cn } from "./utils"
 // One button, in a rank of looks. Pick the lowest rank that reads.
 //   epic         the one call of a screen: start, continue, sign in
 //   primary      the main action of a panel or form, and the default
-//   ai           an AI-assisted action: generate, suggest, write
+//   ai           anything the player clicks to have AI make something: generate, suggest, paint. It brings its own
+//                sparkles, which spin into a loader while `loading`.
 //   outline      a secondary action, or one choice among several (with `active`)
 //   ghost        a quiet action: back, cancel, later
 //   destructive  delete, leave, ban
@@ -21,6 +23,8 @@ export type ButtonProps = Omit<ComponentProps<typeof BaseButton>, "className" | 
   size?: ButtonSize
   /** Chosen, for a button that is one choice among several. */
   active?: boolean
+  /** Working, for an `ai` button: its sparkles turn to a spinner and its face shimmers. */
+  loading?: boolean
   className?: string
   style?: CSSProperties
   children?: ReactNode
@@ -99,9 +103,22 @@ export function buttonStyle(variant: ButtonVariant = "primary", size?: ButtonSiz
   return undefined
 }
 
-export function Button({ variant = "primary", size, active, className, style, children, ...props }: ButtonProps) {
+// The `ai` button's mark, sized to its text.
+function AiMark({ loading, size }: { loading?: boolean; size?: ButtonSize }) {
+  const cls = cn("shrink-0", size === "xs" || size === "sm" ? "size-3.5" : "size-4", loading && "animate-spin")
+  return loading ? <Loader2 aria-hidden="true" className={cls} /> : <Sparkles aria-hidden="true" className={cls} />
+}
+
+export function Button({ variant = "primary", size, active, loading, className, style, children, ...props }: ButtonProps) {
+  const ai = variant === "ai"
   return (
-    <BaseButton {...props} className={buttonClassName(variant, size, className, active)} style={style ?? buttonStyle(variant, size)}>
+    <BaseButton
+      {...props}
+      data-loading={ai && loading ? "true" : undefined}
+      className={buttonClassName(variant, size, className, active)}
+      style={style ?? buttonStyle(variant, size)}
+    >
+      {ai && <AiMark loading={loading} size={size} />}
       {children}
     </BaseButton>
   )

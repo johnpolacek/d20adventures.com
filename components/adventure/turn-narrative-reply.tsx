@@ -1,7 +1,6 @@
 "use client"
 import { SignUpButton, useUser } from "@clerk/nextjs"
 import { storyNames, storyText } from "@d20/gm-core/story/render"
-import { SparklesIcon } from "@heroicons/react/24/solid"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
@@ -321,16 +320,9 @@ ${priorInput ? `\nPlayer Input: ${priorInput}` : ""}`
               onKeyDown={handleInputKeyDown}
             />
             <div className="flex justify-start -mt-1">
-              {isGenerating ? (
-                <div className="enter-fade flex items-center justify-center w-[80px] h-8">
-                  <Loader2 className="animate-spin w-4 h-4 text-primary-400" />
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" className="enter-fade text-xs" type="button" onClick={handleGenerate} disabled={isGenerating || isBusy}>
-                  <SparklesIcon className="w-4 h-4 text-accent-400 mr-0.5" />
-                  Generate
-                </Button>
-              )}
+              <Button variant="ai" size="sm" className="enter-fade text-xs" type="button" loading={isGenerating} onClick={handleGenerate} disabled={isGenerating || isBusy}>
+                {isGenerating ? "Generating…" : "Generate"}
+              </Button>
             </div>
             <Presence show={Boolean(error)} motion="drop" asChild>
               <p className="text-sm text-red-500 mt-2">{error}</p>

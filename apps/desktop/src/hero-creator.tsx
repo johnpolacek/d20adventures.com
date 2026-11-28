@@ -1,7 +1,7 @@
 import { Heading } from "@d20/ui/typography/heading"
 import type { HeroConcept } from "@d20/gm-core/character/hero-draft"
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
-import { ArrowLeft, Check, Dices, Loader2, Sparkles } from "lucide-react"
+import { ArrowLeft, Check, Dices } from "lucide-react"
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 import { HeroRules } from "@d20/ui/heroes/hero-rules"
@@ -222,12 +222,11 @@ export function HeroCreator(props: {
       variant="ai"
       size="xs"
       type="button"
-      data-loading={generating ? "true" : undefined}
+      loading={generating}
       disabled={!menu || !pick || generating || props.busy}
       onClick={() => void autoGenerate()}
       className="shrink-0 gap-1.5 px-3"
     >
-      {generating ? <Loader2 aria-hidden="true" className="size-3.5 animate-spin" /> : <Sparkles aria-hidden="true" className="size-3.5" />}
       <span>{generating ? "Generating…" : "Auto Generate"}</span>
     </Button>
   )

@@ -608,12 +608,14 @@ export function CharactersPage(props: {
                 </Button>
                 {props.onPaint && (
                   <Button
-                    variant="plain"
+                    variant="ai"
+                    size="xs"
                     type="button"
+                    loading={props.painting === h.id}
                     disabled={props.busy}
                     onClick={() => props.onPaint!(h)}
                     aria-label={`Paint ${h.name}`}
-                    className={buttonClassName("outline", "xs", "absolute top-2 right-2 px-2 py-0.5 font-mono text-3xs opacity-0 transition-[opacity,color,background-color,scale] duration-150 ease-snap group-focus-within:opacity-100 group-hover:opacity-100")}
+                    className={cn("absolute top-2 right-2 px-2 py-0.5 text-3xs", props.painting !== h.id && "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100")}
                   >
                     <span key={props.painting === h.id ? "busy" : "idle"} className="enter-fade">
                       {props.painting === h.id ? "Painting…" : "Paint"}
