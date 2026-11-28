@@ -3,6 +3,7 @@ import { type Arrival, writeArrival } from "@d20/gm-core/character/hero-draft"
 import { withCityContext } from "@d20/gm-core/citymap"
 import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-pc-turn-service"
 import { characterScript } from "@d20/gm-core/story/turn"
+import { applySlotEvent, slotOf } from "@d20/gm-core/sheet/turn-slot"
 import type { TurnCharacter } from "@d20/gm-core/types/adventure"
 import type { PCTemplate } from "@d20/gm-core/types/character"
 import { findCurrentActor, isDown, isDying } from "@d20/gm-core/utils/turn-actors"
@@ -156,14 +157,15 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
     return
   }
   if (!actor || actor.id !== job.characterId || actor.type !== "pc" || actor.controlledBy === "ai" || actor.userId !== job.userId) throw new Error("It is another character's turn.")
-  if (job.kind !== "roll" && actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
+  const slot = slotOf(actor)
+  if (job.kind !== "roll" && (slot.phase !== "pending" || actor.hasReplied)) throw new Error("This reply is already saved. Resolve the pending roll.")
   if (job.kind === "suggest") {
     const manifest = packs[adventure.planId]?.artifacts.manifest
     return suggestActions(llm, actor, characterScript(turn, actor.id), turn.characters, "", manifest?.premise, adventure.knowledge, manifest?.strangers ? { story: turn.story } : undefined)
   }
   // A skip ends the hero's turn with nothing written and no AI.
   if (job.kind === "skip") {
-    await store.updateTurn({ turnId: turn._id, patch: { characters: turn.characters.map((c) => (c.id === actor.id ? { ...c, hasReplied: true, isComplete: true } : c)), updatedAt: Date.now() } })
+    await store.updateTurn({ turnId: turn._id, patch: { characters: turn.characters.map((c) => (c.id === actor.id ? applySlotEvent(c, { type: "complete" }) : c)), updatedAt: Date.now() } })
     return
   }
   if (job.kind === "reply") {
@@ -173,7 +175,7 @@ export async function runHostJob(job: HostJob, store: Store, packs: Packs, llm: 
     await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: text, story: beats })
     return
   }
-  if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
+  if (slot.phase !== "awaiting_roll") throw new Error("There is no pending roll.")
   const d20 = (n: number | undefined) => Number.isInteger(n) && n! >= 1 && n! <= 20
   if (!d20(job.result) || (job.second !== undefined && !d20(job.second))) throw new Error("A roll is a whole number from 1 to 20.")
   await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result: job.result!, second: job.second })

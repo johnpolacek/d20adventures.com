@@ -1,4 +1,5 @@
 import { v } from "convex/values"
+import { slotOf, transitionTurnSlot, withSlot } from "../packages/gm-core/src/sheet/turn-slot"
 import { mergeKnowledge } from "../packages/gm-core/src/story/knowledge"
 import type { Doc, Id } from "./_generated/dataModel"
 import { serverAction, serverMutation, serverQuery } from "./serverSecret"
@@ -362,17 +363,7 @@ export const createAdventureWithFirstTurn = serverMutation({
     const turn = { ...args.turn }
     if (args.rollRequirement && turn.characters.length > 0) {
       const actor = turn.characters[0]
-      turn.characters = turn.characters.map((c) =>
-        c.id === actor.id
-          ? {
-              ...c,
-              hasReplied: true,
-              isComplete: !args.rollRequirement,
-              rollRequired: args.rollRequirement || undefined,
-              rollResult: undefined,
-            }
-          : c
-      )
+      turn.characters = turn.characters.map((c) => (c.id === actor.id ? withSlot(c, { phase: "awaiting_roll", required: args.rollRequirement }) : c))
     }
     // Log just before insert
 
@@ -415,20 +406,12 @@ export const submitReply = serverMutation({
     if (!turn) throw new Error("Turn not found")
     const character = turn.characters.find((c) => c.id === args.characterId)
     if (!character) throw new Error("Character not found")
+    if (character.hasReplied) throw new Error("This character already acted or is unavailable.")
+    const nextSlot = transitionTurnSlot(slotOf(character), { type: "reply", required: args.rollRequirement || undefined })
     const story = [...turn.story, ...args.story]
 
     // Use rollRequirement from args, do not call AI here!
-    const updatedCharacters = turn.characters.map((c) =>
-      c.id === args.characterId
-        ? {
-            ...c,
-            hasReplied: true,
-            isComplete: !args.rollRequirement,
-            rollRequired: args.rollRequirement || undefined,
-            rollResult: undefined,
-          }
-        : c
-    )
+    const updatedCharacters = turn.characters.map((c) => (c.id === args.characterId ? withSlot(c, nextSlot) : c))
 
     await ctx.db.patch(args.turnId, {
       story,

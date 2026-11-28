@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { DatabaseSync } from "node:sqlite"
 import type { AdventureRecord, Store, TurnRecord, WikiTurnCommit } from "@d20/gm-core"
 import type { Sheet } from "@d20/gm-core/sheet/sheet"
+import { slotFlags, slotOf, transitionTurnSlot } from "@d20/gm-core/sheet/turn-slot"
 import { mergeKnowledge } from "@d20/gm-core/story/knowledge"
 import { withStory } from "@d20/gm-core/story/turn"
 import { type AdventurePatch, validateAdventurePatch } from "@d20/gm-core/wiki-adventures/adventure-patch"
@@ -291,9 +292,12 @@ export class LocalStore implements Store, Roster {
   async submitReply(args: Parameters<Store["submitReply"]>[0]) {
     const turn = this.turn(args.turnId)
     const c = turn.characters.find((c) => c.id === args.characterId)
-    if (!c || c.hasReplied || c.isComplete) throw new Error("This character already acted or is unavailable.")
+    if (!c || c.hasReplied) throw new Error("This character already acted or is unavailable.")
+    const next = transitionTurnSlot(slotOf(c), { type: "reply", required: args.rollRequirement })
     Object.assign(turn, withStory(turn, args.story))
-    Object.assign(c, { hasReplied: true, isComplete: !args.rollRequirement, rollRequired: args.rollRequirement, rollResult: undefined })
+    delete c.rollRequired
+    delete c.rollResult
+    Object.assign(c, slotFlags(next))
     this.save()
   }
   async updateTurn({ turnId, patch }: Parameters<Store["updateTurn"]>[0]) {

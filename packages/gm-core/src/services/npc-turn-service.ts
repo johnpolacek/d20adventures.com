@@ -7,6 +7,7 @@ import { moveBudget, takeMove } from "../sheet/moves"
 import { standingWords } from "../sheet/placement"
 import { ordered, type PendingReaction, REACTION_WAIT } from "../sheet/reactions"
 import { ruledReading } from "../sheet/ruled-turns"
+import { applySlotEvent, slotOf } from "../sheet/turn-slot"
 import { authoredText } from "../story/authored"
 import type { StoryBeat } from "../story/beats"
 import type { KnownFact } from "../story/knowledge"
@@ -427,7 +428,7 @@ export function createNpcTurnService(ports: GmPorts) {
           console.log("[LLM DM] A way out is met: the round ends before", char.name)
           await ports.store.updateTurn({
             turnId: now._id,
-            patch: { characters: (now.characters as TurnCharacter[]).map((c) => (c.isComplete ? c : { ...c, hasReplied: true, isComplete: true })), updatedAt: Date.now() },
+            patch: { characters: (now.characters as TurnCharacter[]).map((c) => (slotOf(c).phase === "complete" ? c : applySlotEvent(c, { type: "complete" }))), updatedAt: Date.now() },
           })
           break
         }
@@ -495,7 +496,7 @@ export function createNpcTurnService(ports: GmPorts) {
         )
       )
 
-      const npc = characters.find((c) => c.id === char.id && c.type === "npc" && !c.hasReplied && !c.isComplete)
+      const npc = characters.find((c) => c.id === char.id && c.type === "npc" && slotOf(c).phase === "pending" && !c.hasReplied)
       if (!npc) {
         console.log(
           "[LLM DM] NPC already processed or no longer eligible",
@@ -531,7 +532,7 @@ export function createNpcTurnService(ports: GmPorts) {
         console.log("[LLM DM] NPC waits to be addressed, skipping:", npc.name)
         await ports.store.updateTurn({
           turnId: turn._id,
-          patch: { characters: characters.map((c) => (c.id === npc.id ? { ...c, hasReplied: true, isComplete: true } : c)), updatedAt: Date.now() },
+          patch: { characters: characters.map((c) => (c.id === npc.id ? applySlotEvent(c, { type: "complete" }) : c)), updatedAt: Date.now() },
         })
         continue
       }

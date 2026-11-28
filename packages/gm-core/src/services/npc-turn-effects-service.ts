@@ -1,3 +1,4 @@
+import { applySlotEvent, slotOf } from "../sheet/turn-slot"
 import type { StoryBeat } from "../story/beats"
 import { withStory } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
@@ -22,7 +23,7 @@ export function buildDeadCharacterCompletion(args: { characters: TurnCharacter[]
 } {
   // Everyone down who takes no turn this round: the dead, the Stable, and a hero who dropped mid-round, who makes their
   // Death Saving Throw next round.
-  const fallen = (character: TurnCharacter) => !character.isComplete && !takesTurn(character)
+  const fallen = (character: TurnCharacter) => slotOf(character).phase !== "complete" && !takesTurn(character)
   const deadCharacters = args.characters.filter(fallen)
   if (deadCharacters.length === 0) {
     return {
@@ -36,11 +37,7 @@ export function buildDeadCharacterCompletion(args: { characters: TurnCharacter[]
     deadCharacters,
     updatedCharacters: args.characters.map((character) => {
       if (fallen(character)) {
-        return {
-          ...character,
-          hasReplied: true,
-          isComplete: true,
-        }
+        return applySlotEvent(character, { type: "complete" })
       }
       return character
     }),

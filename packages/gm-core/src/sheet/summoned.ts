@@ -6,6 +6,7 @@ import { rollInitiative } from "./initiative"
 import { masterOf } from "./masters"
 import { type Point, standingRoom } from "./space"
 import type { Summon } from "./spell-rules"
+import { slotFlags } from "./turn-slot"
 
 type Joined = { id: string; name: string; type: string; initiative?: number; position?: Point; isComplete?: boolean; master?: Master }
 
@@ -53,7 +54,7 @@ export function withSummoned<T extends Joined>(args: {
     const initiative = summon.initiative === "after" ? (caster.initiative ?? 0) : rollInitiative({ type: "npc", statBlock: summon.statBlock }, args.d20())
     // One on its own Initiative above its caster's has had its place this round, and acts from the next.
     const waits = !!summon.waits || (summon.initiative === "own" && initiative > (caster.initiative ?? 0))
-    const joined = withStartingHitPoints({ ...base, initiative, hasReplied: waits, isComplete: waits }) as unknown as T
+    const joined = withStartingHitPoints({ ...base, initiative, ...slotFlags({ phase: waits ? "complete" : "pending" }) }) as unknown as T
     // Right after the caster and any it called before, or at the end, where Initiative alone puts it.
     const at =
       summon.initiative === "after"

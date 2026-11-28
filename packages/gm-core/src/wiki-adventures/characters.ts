@@ -5,6 +5,7 @@ import { withHitPoints, withStartingHitPoints } from "../sheet/hit-points"
 import { rollInitiative } from "../sheet/initiative"
 import { raisedTo } from "../sheet/milestone"
 import { spellEffectsAtEncounterEnd } from "../sheet/spell-effects"
+import { slotFlags, withSlot } from "../sheet/turn-slot"
 import type { TurnCharacter } from "../types/adventure"
 import type { PCTemplate } from "../types/character"
 import { rollD20, rollDie } from "../utils/game-utils"
@@ -50,8 +51,7 @@ export function buildLocalWikiTurnCharacters(args: {
       userId: player.userId,
       controlledBy: player.controlledBy,
       initiative: 0,
-      hasReplied: false,
-      isComplete: false,
+      ...slotFlags({ phase: "pending" }),
     }
     // A hero enters play at its maximum. One carried from the encounter before keeps the hit points it has, and one
     // carried at 0 stays down as they were: dead, Stable, or dying with their Death Saving Throws so far.
@@ -110,8 +110,7 @@ export function buildLocalWikiTurnCharacters(args: {
       ...(npcRef.limits?.length ? { limits: npcRef.limits } : {}),
       // An encounter may fix an NPC's place in the order. Otherwise it rolls with its stat block's bonus.
       initiative: typeof npcRef.initialInitiative === "number" ? npcRef.initialInitiative : rollInitiative({ type: "npc", statBlock: sheet.statBlock, sheet: sheet.sheet }, rollD20()),
-      hasReplied: false,
-      isComplete: false,
+      ...slotFlags({ phase: "pending" }),
       behavior: npcRef.behavior ?? sheet.behavior,
     }
     if (was?.hitPoints === undefined) {
@@ -144,16 +143,19 @@ export function buildLocalWikiTurnCharacters(args: {
     const before = [...(args.existingNpcs ?? []), ...((args.existingPlayerCharacters ?? []) as Partial<TurnCharacter>[])].find((character) => character.id === summoned.master?.id)
     const after = before?.initiative !== undefined && summoned.initiative === before.initiative
     const lasting = spellEffectsAtEncounterEnd({ spellEffects: summoned.spellEffects, concentration: summoned.concentration })
-    characters.push({
-      ...summoned,
-      initiative: after ? (caster?.initiative ?? 0) : rollInitiative({ type: "npc", statBlock: (summoned as { statBlock?: string }).statBlock }, rollD20()),
-      hasReplied: false,
-      isComplete: false,
-      conditions: conditionsAtEncounterEnd({ conditions: summoned.conditions }, { sameSet: args.sameSet }).conditions,
-      spellEffects: lasting.spellEffects,
-      concentration: lasting.concentration,
-      turnEffects: undefined,
-    })
+    characters.push(
+      withSlot(
+        {
+          ...summoned,
+          initiative: after ? (caster?.initiative ?? 0) : rollInitiative({ type: "npc", statBlock: (summoned as { statBlock?: string }).statBlock }, rollD20()),
+          conditions: conditionsAtEncounterEnd({ conditions: summoned.conditions }, { sameSet: args.sameSet }).conditions,
+          spellEffects: lasting.spellEffects,
+          concentration: lasting.concentration,
+          turnEffects: undefined,
+        },
+        { phase: "pending" }
+      )
+    )
   }
   const freed = characters.flatMap((character): TurnCharacter[] => {
     if (!character.master || holds(character.master)) return [character]

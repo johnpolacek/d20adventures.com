@@ -15,6 +15,7 @@ import { enduringTraitLeft, enduringTraitOf } from "./species-traits"
 import { saveModesFromSpells, spellEffectsAtRoundStart, withDeathWardSpent } from "./spell-effects"
 import { heldRule } from "./spell-rules"
 import type { SpellEffect, TurnEffect } from "./turn-effect"
+import { applySlotEvent, slotOf, type TurnSlotFlags, withSlot } from "./turn-slot"
 
 /** A hero's Death Saving Throws while at 0 hit points: three successes make them Stable, three failures kill. */
 export type DeathSaves = { successes: number; failures: number; stable?: true }
@@ -53,7 +54,7 @@ export const stable = <T extends Mortal>(character: T): T => ({ ...at(character,
  */
 export function revived<T extends Mortal>(character: T, current: number): T {
   const { deathSaves: _, ...rest } = at(character, current)
-  return (isDown(character) && current > 0 ? withCondition(rest as T, { id: "prone" }, { acted: !!(character as TurnFlags).isComplete }).character : rest) as T
+  return (isDown(character) && current > 0 ? withCondition(rest as T, { id: "prone" }, { acted: !!(character as TurnSlotFlags).isComplete }).character : rest) as T
 }
 
 /** Dead at 0 hit points. Where player death is off, a hero who would die is left Stable at 0 instead, out of the fight. */
@@ -246,8 +247,6 @@ export function regenerate<T extends Mortal>(character: T): { character: T; fact
   return { character: healed, trait: trait.name, fact: `${name} regains ${gained} hit points by ${trait.name}.${rose} ${name} has ${after?.current} of ${after?.maximum} hit points.` }
 }
 
-type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: RollRequirement; rollResult?: number }
-
 /**
  * A character as a round begins. Their conditions lose a turn each, and those that run out end, as does what last
  * round's actions left on them. A dying hero's turn is
@@ -255,7 +254,7 @@ type TurnFlags = { hasReplied?: boolean; isComplete?: boolean; rollRequired?: Ro
  * Incapacitated, takes no turn. Everyone else has yet to act. Beacon of Hope gives a Death Saving Throw Advantage, as
  * Defy Death does (./classes).
  */
-export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
+export function atRoundStart<T extends Mortal & TurnSlotFlags<RollRequirement>>(before: T): T {
   // One who was Prone and is not now has stood, which costs half their Speed this turn (./space).
   const prone = (one: T) => !!one.conditions?.some((entry) => entry.id === "prone")
   const risen = conditionsAtRoundStart(before)
@@ -265,26 +264,24 @@ export function atRoundStart<T extends Mortal & TurnFlags>(before: T): T {
   // Beacon of Hope gives the Death Saving Throw Advantage, and so may a class feature (Defy Death).
   const helped = [...saveModesFromSpells(character, "death"), ...classDeathSave(character).modes]
   if (isDying(character))
-    return {
-      ...character,
-      rollRequired: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character), ...(helped.length ? { mode: "advantage" as const, reasons: helped.map((source) => source.from) } : {}) },
-      rollResult: undefined,
-      hasReplied: true,
-      isComplete: false,
-    }
+    return withSlot(character, {
+      phase: "awaiting_roll",
+      required: { ...DEATH_SAVE, modifier: 0 - d20Penalty(character), ...(helped.length ? { mode: "advantage" as const, reasons: helped.map((source) => source.from) } : {}) },
+    })
   // A creature down at 0 by its Regeneration (a Troll) has had its turn's start settled as the round turned (./spell-rounds
   // `roundTurns`): one still here at 0 takes no turn.
-  if (isDown(character) || isIncapacitated(character)) return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
-  return { ...character, hasReplied: false, isComplete: false }
+  if (isDown(character) || isIncapacitated(character)) return withSlot(character, { phase: "complete" })
+  return withSlot(character, { phase: "pending" })
 }
 
 /**
  * A character after harm or a condition mid-round: one now down or Incapacitated who has no Death Saving Throw to make
  * this round is done with it, and any roll they still owed is dropped.
  */
-export function afterHarm<T extends Mortal & TurnFlags>(character: T): T {
+export function afterHarm<T extends Mortal & TurnSlotFlags<RollRequirement>>(character: T): T {
   if (!isDown(character) && !isIncapacitated(character)) return character
-  if (isDying(character) && character.rollRequired && "deathSave" in character.rollRequired) return character
-  if (character.isComplete && !character.rollRequired) return character
-  return { ...character, rollRequired: undefined, hasReplied: true, isComplete: true }
+  const slot = slotOf(character)
+  if (isDying(character) && slot.phase === "awaiting_roll" && "deathSave" in slot.required) return character
+  if (slot.phase === "complete" && !character.rollRequired) return character
+  return applySlotEvent(character, { type: "complete" })
 }

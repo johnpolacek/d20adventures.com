@@ -900,6 +900,24 @@ async function phase0Guards() {
   assert.equal(await call(failTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", attempt: 1, error: "late error" }), false)
   assert.equal(await call(failTurnAudio, { db: audioDb }, { turnId: "t1", storyHash: "h1", error: "late error" }), false)
   assert.equal(audioRow.status, "ready")
+
+  // Phase 1A: Convex submitReply rejects overwriting an awaiting_roll or complete character slot.
+  const slotTurn = {
+    _id: "slot-turn",
+    story: [],
+    characters: [
+      { id: "c-done", hasReplied: true, isComplete: true },
+      { id: "c-roll", hasReplied: true, isComplete: false, rollRequired: { check: { kind: "skill", skill: "persuasion" }, rollType: "Persuasion", difficulty: 12, modifier: 2, mode: "normal" } },
+    ],
+  }
+  const slotDb = {
+    get: async (id: string) => (id === "slot-turn" ? clone(slotTurn) : null),
+    patch: async () => {
+      throw new Error("submitReply must not patch when slot is not pending")
+    },
+  }
+  await assert.rejects(() => call(submitReply, { db: slotDb }, { turnId: "slot-turn", characterId: "c-done", story: [] }), /already acted/)
+  await assert.rejects(() => call(submitReply, { db: slotDb }, { turnId: "slot-turn", characterId: "c-roll", story: [] }), /already acted/)
 }
 
 async function main() {

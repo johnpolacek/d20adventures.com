@@ -30,6 +30,7 @@ import { answeredSave, auraOnSave, saveStakesOf, withSaveAnswered } from "../she
 import { checkAdds, saveBonusFor, settleConcentration } from "../sheet/spell-effects"
 import { areasForced } from "../sheet/spell-rounds"
 import { type CastCost, castAgain, castCost, castSpell, isEngineSpell, spellById, withCastPaid } from "../sheet/spells"
+import { withSlot } from "../sheet/turn-slot"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, ledgerNote } from "../story/knowledge"
@@ -203,7 +204,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
         deathSave: { ...saved.saves, ...(fate ? { fate } : {}) },
       }
       const settled = args.turn.characters.map((character) =>
-        character.id === args.characterId ? { ...saved.character, rollRequired: undefined, rollResult: result.natural, isComplete: true, hasReplied: true } : character
+        character.id === args.characterId ? withSlot(saved.character, { phase: "complete", rollResult: result.natural }) : character
       )
       const answered = withSaveAnswered(settled, args.characterId, thrown.answer, result, args.character.name)
       const rescue = thrown.answer.rescued
@@ -510,15 +511,7 @@ export function createAdventureRollResultService(ports: GmPorts) {
     // Anyone the outcome left down with no Death Saving Throw to make this round is done with it.
     const updatedCharacters = turnCharacters.map((character) =>
       character.id === args.characterId
-        ? next
-          ? { ...character, rollRequired: next, rollResult: undefined, isComplete: false, hasReplied: true }
-          : {
-              ...character,
-              rollRequired: undefined,
-              rollResult: totalResult,
-              isComplete: true,
-              hasReplied: true,
-            }
+        ? withSlot(character, next ? { phase: "awaiting_roll", required: next } : { phase: "complete", rollResult: totalResult })
         : afterHarm(character)
     )
 

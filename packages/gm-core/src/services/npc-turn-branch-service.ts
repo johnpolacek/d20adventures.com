@@ -17,6 +17,7 @@ import { answeredSave, saveStakesOf, withSaveAnswered } from "../sheet/save-rule
 import { checkAdds, settleConcentration } from "../sheet/spell-effects"
 import { areasForced } from "../sheet/spell-rounds"
 import { castAgain, castCost, castSpell, isEngineSpell, spellById, withCastSpent } from "../sheet/spells"
+import { applySlotEvent } from "../sheet/turn-slot"
 import { moveBeats, type StoryBeat, type StoryBy, type StoryOutput } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { storyNames } from "../story/render"
@@ -68,7 +69,7 @@ export function handleSkipPassNpcTurn(args: { turn: Turn; npc: TurnCharacter; ac
       // Skipping or passing changes nothing about the NPC. One who flees or goes on its way is out of the
       // encounter: the next round is built without them. One who dies is dead for good. Thaddeus died of poison on his
       // own turn at 65% health, then sagged to one knee, gasping, in the next roll's outcome.
-      const done = { ...character, hasReplied: true, isComplete: true }
+      const done = applySlotEvent(character, { type: "complete" })
       if (args.actionResult.actionType === "die") return killed(done)
       return leavesForGood(args.actionResult.actionType) ? { ...done, fled: true as const } : done
     }

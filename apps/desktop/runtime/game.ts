@@ -5,6 +5,7 @@ import { type ActionSuggestion, suggestActions } from "@d20/gm-core/services/ai-
 import { levelUpChoicesSchema } from "@d20/gm-core/sheet/milestone"
 import { placeCharacters } from "@d20/gm-core/sheet/placement"
 import { standingOrdersSchema } from "@d20/gm-core/sheet/turn-effect"
+import { slotFlags, slotOf } from "@d20/gm-core/sheet/turn-slot"
 import { withArrivals } from "@d20/gm-core/story/authored"
 import { namesMetBefore } from "@d20/gm-core/story/names"
 import { characterScript, introTurn } from "@d20/gm-core/story/turn"
@@ -337,19 +338,22 @@ export function game(store: LocalStore, packs: Packs, llm: Llm) {
     } else {
       const actor = findCurrentActor(turn.characters)
       if (actor?.id !== command.characterId || actor.type !== "pc" || actor.controlledBy === "ai") throw new Error("It is another character's turn.")
+      const slot = slotOf(actor)
       if (command.kind === "reply") {
-        if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
+        if (slot.phase !== "pending" || actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
         const beats = core.writeReply({ character: actor, playerInput: command.text, turn })
         await core.processTurnReply({ turnId: turn._id, characterId: actor.id, originalPlayerInput: command.text, story: beats })
       } else if (command.kind === "skip") {
-        if (actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
-        Object.assign(actor, { hasReplied: true, isComplete: true })
+        if (slot.phase !== "pending" || actor.hasReplied) throw new Error("This reply is already saved. Resolve the pending roll.")
+        delete actor.rollRequired
+        delete actor.rollResult
+        Object.assign(actor, slotFlags({ phase: "complete" }))
         store.save()
       } else {
-        if (!actor.rollRequired || actor.rollResult !== undefined) throw new Error("There is no pending roll.")
+        if (slot.phase !== "awaiting_roll") throw new Error("There is no pending roll.")
         const key = `${turn._id}:${actor.id}`
         // The dice are kept before the GM is asked, so a retry resolves the same roll.
-        store.state!.rolls[key] ??= d20sFor(actor.rollRequired.mode, command.second === undefined ? [command.result] : [command.result, command.second])
+        store.state!.rolls[key] ??= d20sFor(slot.required.mode, command.second === undefined ? [command.result] : [command.result, command.second])
         store.save()
         const [result, second] = store.state!.rolls[key]
         await core.resolvePlayerRollResult({ turnId: turn._id, characterId: actor.id, result, second })

@@ -3,6 +3,7 @@
 // sides derive the current actor identically.
 
 // Types only: these run in the browser, and the roll schema pulls in the rules data.
+import { slotOf } from "../sheet/turn-slot"
 import type { RollRequirement } from "../validations/roll-requirement-schema"
 
 export type ActorLike = {
@@ -101,7 +102,7 @@ export function findCurrentActor<T extends ActorLike>(characters: T[]): T | unde
   return characters
     .slice()
     .sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0))
-    .find((c) => !c.isComplete && takesTurn(c))
+    .find((c) => slotOf(c).phase !== "complete" && takesTurn(c))
 }
 
 // True when the server should act for this character without human input.
@@ -109,7 +110,8 @@ export function findCurrentActor<T extends ActorLike>(characters: T[]): T | unde
 // complete — an AI PC that crashed mid-roll has hasReplied=true but still
 // needs its roll resolved, so it must remain resumable.
 export function hasPendingAutonomousAction(character: ActorLike): boolean {
-  if (character.isComplete) return false
-  if (character.type === "npc") return !character.hasReplied
+  const slot = slotOf(character)
+  if (slot.phase === "complete") return false
+  if (character.type === "npc") return slot.phase === "pending" && !character.hasReplied
   return isAiControlledPc(character) || playsForMaster(character)
 }

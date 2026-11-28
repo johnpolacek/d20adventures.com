@@ -20,6 +20,7 @@ import { feetBetween, speedOf } from "../space"
 import { endConcentration } from "../spell-effects"
 import { type Castee, rollSave } from "../spells"
 import type { TurnEffect } from "../turn-effect"
+import { slotOf, type TurnSlotFlags, withSlot } from "../turn-slot"
 
 /**
  * The Barbarian's features in play, levels 1 to 20, with the Path of the Berserker.
@@ -248,15 +249,14 @@ function relentless<T extends Felling>(was: T, now: T, everyone: readonly T[], d
   if (!save.success) return { character: { ...lying, featureUses }, name: "Relentless Rage", text: `${rolled}, a failure, and stays down.` }
   // Twice the Barbarian level, which is the hero's level.
   const standing = now.sheet.level * 2
-  type Turned = T & { deathSaves?: unknown; isComplete?: boolean; hasReplied?: boolean; rollRequired?: unknown }
-  const { deathSaves: _, isComplete: __, hasReplied: ___, rollRequired: ____, ...rest } = lying as Turned
+  type Turned = T & TurnSlotFlags & { deathSaves?: unknown }
+  const { deathSaves: _, ...rest } = lying as Turned
   const turn = was as Turned
-  const flags = {
-    ...(turn.isComplete !== undefined ? { isComplete: turn.isComplete } : {}),
-    ...(turn.hasReplied !== undefined ? { hasReplied: turn.hasReplied } : {}),
-    ...(turn.rollRequired !== undefined ? { rollRequired: turn.rollRequired } : {}),
-  }
-  const stood = withHitPoints({ ...rest, ...flags, featureUses } as unknown as Parameters<typeof withHitPoints>[0], standing) as unknown as T
+  const hadSlot = turn.isComplete !== undefined || turn.hasReplied !== undefined || turn.rollRequired !== undefined || turn.rollResult !== undefined
+  const restored = hadSlot
+    ? withSlot(rest, slotOf(turn))
+    : (({ isComplete: _ic, hasReplied: _hr, rollRequired: _rr, rollResult: _res, ...clean }) => clean)(rest)
+  const stood = withHitPoints({ ...restored, featureUses } as unknown as Parameters<typeof withHitPoints>[0], standing) as unknown as T
   return { character: stood, name: "Relentless Rage", text: `${rolled}, a success. ${name} stays on their feet with ${standing} hit points.` }
 }
 

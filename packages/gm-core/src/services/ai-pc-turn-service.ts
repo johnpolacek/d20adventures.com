@@ -4,6 +4,7 @@ import { itemWords } from "../sheet/items"
 import { noOneToWorkOnNote } from "../sheet/creature-gated-spells"
 import { boundWords } from "../sheet/masters"
 import { spellWords } from "../sheet/spells"
+import { slotOf } from "../sheet/turn-slot"
 import type { StoryBeat } from "../story/beats"
 import { cleanStory, type StoryScene } from "../story/clean"
 import { type KnownFact, knowledgeNote } from "../story/knowledge"
@@ -239,13 +240,14 @@ export function createAiPcTurnService(ports: GmPorts) {
     let turn = await ports.store.getTurn({ turnId })
     if (!turn) throw new Error("Turn not found")
     let character = (turn.characters as TurnCharacter[]).find((c) => c.id === characterId)
-    if (!character || !(isAiControlledPc(character) || playsForMaster(character)) || character.isComplete || !takesTurn(character)) {
+    const initialSlot = character ? slotOf(character) : null
+    if (!character || !(isAiControlledPc(character) || playsForMaster(character)) || initialSlot?.phase === "complete" || !takesTurn(character)) {
       console.log("[AI PC] Skipping — character missing, not AI-controlled, already complete, or down:", characterId)
       return
     }
 
     // A dying companion's turn is its Death Saving Throw, asked for as the round began: the engine rolls it below.
-    const needsRollResolution = character.hasReplied && character.rollRequired && typeof character.rollResult !== "number"
+    const needsRollResolution = initialSlot?.phase === "awaiting_roll"
     const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
 
     if (!needsRollResolution) {
@@ -290,7 +292,7 @@ export function createAiPcTurnService(ports: GmPorts) {
       character = (turn.characters as TurnCharacter[]).find((c) => c.id === characterId)
     }
 
-    if (!character?.rollRequired) {
+    if (!character || slotOf(character).phase !== "awaiting_roll") {
       console.warn("[AI PC] Expected a pending roll but found none for", characterId)
       return
     }
@@ -299,8 +301,10 @@ export function createAiPcTurnService(ports: GmPorts) {
     const encounterInstructions = getEncounterInstructionsFromPlan(plan, turn.encounterId)
 
     // A roll may leave another to make in the same turn: an Extra Attack, a Hide. The companion throws each in turn.
-    for (let rolls = 0; character?.rollRequired && !character.isComplete && rolls < MAX_ROLLS_A_TURN; rolls++) {
-      console.log("[AI PC]", character.name, "rolls for", character.rollRequired.rollType)
+    for (let rolls = 0; rolls < MAX_ROLLS_A_TURN; rolls++) {
+      const currentSlot = character ? slotOf(character) : null
+      if (!character || currentSlot?.phase !== "awaiting_roll") break
+      console.log("[AI PC]", character.name, "rolls for", currentSlot.required.rollType)
       const rollResolution = await resolvePlayerRollNarrativeAndCharacters({
         turn: {
           _id: turn._id,

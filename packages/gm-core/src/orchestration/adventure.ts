@@ -11,6 +11,7 @@ import { inFight } from "../sheet/level-owed"
 import { levelOwed, takeLevel } from "../sheet/milestone"
 import { standingOrdersSchema } from "../sheet/reactions"
 import type { StandingOrders } from "../sheet/turn-effect"
+import { slotOf } from "../sheet/turn-slot"
 import type { StoryBeat } from "../story/beats"
 import { storyProse } from "../story/turn"
 import type { TurnCharacter } from "../types/adventure"
@@ -189,8 +190,9 @@ export function createAdventure(ports: GmPorts) {
     // 1. Fetch and authorize turn access + character control
     const { turn, adventure } = await assertAdventureAccessByTurn(userId, turnId)
     const character = assertPlayerCharacterControl(userId, turn, characterId)
-    if (!character.rollRequired) throw new Error("No roll required for this character")
-    if (typeof character.rollResult === "number") throw new Error("Roll already completed")
+    const slot = slotOf(character)
+    if (slot.phase === "complete") throw new Error("Roll already completed")
+    if (slot.phase !== "awaiting_roll") throw new Error("No roll required for this character")
 
     // 2. Fetch the adventure plan (wiki runtime for migrated adventures, legacy S3 JSON otherwise)
     const plan = await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId)
