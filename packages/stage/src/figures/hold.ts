@@ -300,6 +300,8 @@ export function wield(root: THREE.Object3D): Armed {
     show: (clip) => {
       const need = clip ? holds(clip) : undefined
       shown = need ? (weapons.get(need.what) ?? null) : null
+      // Clear any cached full-draw bow orientation so subsequent rests or shots recompute cleanly.
+      aimed = null
       for (const w of weapons.values()) w.group.visible = w === shown
       // A sling put away hangs straight when it is next taken up.
       for (const [w, p] of pouches) if (w !== shown) p.at = null
