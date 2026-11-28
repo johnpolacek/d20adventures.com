@@ -286,7 +286,7 @@ export function DesktopGame() {
       return
     }
     poller.start(hosting, {
-      intervalMs: 1500,
+      intervalMs: 3000,
       maxIntervalMs: 15000,
       busy: hostedPending,
       poll: async (adventureId) => {

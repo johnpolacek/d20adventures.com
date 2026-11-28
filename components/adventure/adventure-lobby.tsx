@@ -201,13 +201,13 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
   })
   const [changingHero, setChangingHero] = useState(false)
 
-  // Sequential AbortController poller for adventure updates (only when signed in). Every 3s while the lobby changes,
+  // Sequential AbortController poller for adventure updates (only when signed in). Every 6s while the lobby changes,
   // slowing to 30s while it waits, and not at all while hidden.
   useEffect(() => {
     if (!isSignedIn) return
 
     const controller = new AbortController()
-    const pace = new PollPace(3000, 30000)
+    const pace = new PollPace(6000, 30000)
 
     void (async () => {
       let last = ""
