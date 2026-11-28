@@ -323,6 +323,7 @@ export class Standees {
   private ringOn = 0
   private ringAt: string | null = null
   private ringT = 0
+  private disposed = false
 
   constructor(
     cast: CastMember[],
@@ -394,10 +395,18 @@ export class Standees {
     this.items.set(cast.id, s)
   }
   // Resolves when every front has loaded (backs may still be arriving); a failed image leaves that character hidden.
-  async load() {
+  async load(signal?: AbortSignal) {
+    if (this.disposed || signal?.aborted) return
     await Promise.all(
       [...this.items.values()].map(async (s) => {
-        const [front, back] = await Promise.all([loadImage(s.cast.art.front), s.cast.art.back ? loadImage(s.cast.art.back).catch(() => null) : Promise.resolve(null)])
+        const [front, back] = await Promise.all([
+          loadImage(s.cast.art.front).catch((err) => {
+            console.warn(`[stage] standee failed for ${s.cast.id}`, err)
+            return null
+          }),
+          s.cast.art.back ? loadImage(s.cast.art.back).catch(() => null) : Promise.resolve(null),
+        ])
+        if (!front || this.disposed || signal?.aborted) return
         s.map = this.texFor(front)
         s.normal = bulgeNormals(front)
         s.mask = alphaMask(front)
@@ -547,6 +556,7 @@ export class Standees {
     }
   }
   dispose() {
+    this.disposed = true
     for (const s of this.items.values()) {
       s.mesh.geometry.dispose()
       s.contact.geometry.dispose()

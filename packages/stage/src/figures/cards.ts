@@ -212,9 +212,18 @@ const loadImage = (path: string) =>
     i.src = src
   })
 
+export type AtlasState =
+  | { kind: "idle" }
+  | { kind: "loading"; promise: Promise<void> }
+  | { kind: "ready" }
+  | { kind: "failed"; error: unknown }
+
+export type AtlasBuilder = (lib: CrowdLibrary, maxAnisotropy: number, signal?: AbortSignal) => Promise<THREE.DataArrayTexture | null>
+
 // Each atlas is two opaque images (colour, alpha); together they become one RGBA texture array: layer by layer through a
 // canvas, so nothing is ever premultiplied. Fronts then backs, one atlas at a time, so only one decoded pair is alive at once.
-async function buildAtlasTexture(lib: CrowdLibrary, maxAnisotropy: number) {
+async function buildAtlasTexture(lib: CrowdLibrary, maxAnisotropy: number, signal?: AbortSignal): Promise<THREE.DataArrayTexture | null> {
+  if (signal?.aborted) return null
   const { meta } = lib
   const [LW, LH] = meta.layer
   const n = meta.variants.length
@@ -228,6 +237,7 @@ async function buildAtlasTexture(lib: CrowdLibrary, maxAnisotropy: number) {
     [1, lib.back],
   ] as const) {
     const [rgb, alpha] = await Promise.all([loadImage(urls.rgb), loadImage(urls.alpha)])
+    if (signal?.aborted) return null
     for (let k = 0; k < n; k++) {
       const sx = (k % meta.cols) * LW
       const sy = Math.floor(k / meta.cols) * LH
@@ -271,10 +281,20 @@ export class CardLayer {
   mesh: THREE.InstancedMesh
   slots: (CardPerson | undefined)[]
   n = 0
-  ready = false
-  loading = false
+  private _state: AtlasState = { kind: "idle" }
+  private disposed = false
   dirty = true
   readonly N: number
+
+  get state(): AtlasState {
+    return this._state
+  }
+  get ready(): boolean {
+    return this._state.kind === "ready"
+  }
+  get loading(): boolean {
+    return this._state.kind === "loading"
+  }
 
   constructor(
     public library: CrowdLibrary,
@@ -307,10 +327,30 @@ export class CardLayer {
     if (spot) this.uniforms.uFace.value.set(spot.x, spot.y, spot.z, 1)
     else this.uniforms.uFace.value.w = 0
   }
-  async load(maxAnisotropy: number) {
-    this.loading = true
-    this.uniforms.uAtlas.value = await buildAtlasTexture(this.library, maxAnisotropy)
-    this.ready = true
+  load(maxAnisotropy: number, signal?: AbortSignal, build: AtlasBuilder = buildAtlasTexture): Promise<void> {
+    if (this._state.kind === "ready" || this.disposed || signal?.aborted) return Promise.resolve()
+    if (this._state.kind === "loading") return this._state.promise
+    const promise = build(this.library, maxAnisotropy, signal)
+      .then((tex) => {
+        if (!tex || this.disposed || signal?.aborted) {
+          tex?.dispose()
+          if (this._state.kind === "loading") this._state = { kind: "idle" }
+          return
+        }
+        this.uniforms.uAtlas.value = tex
+        this._state = { kind: "ready" }
+      })
+      .catch((error) => {
+        this._state = { kind: "failed", error }
+        throw error
+      })
+    this._state = { kind: "loading", promise }
+    return promise
+  }
+  /** Resolves once the in-flight atlas load settles (ready, failed, or cancelled). */
+  whenReady(): Promise<void> {
+    if (this._state.kind === "loading") return this._state.promise.catch(() => {})
+    return Promise.resolve()
   }
   add(p: CardPerson) {
     p.cs = this.n
@@ -388,10 +428,12 @@ void main(){
     return proxy
   }
   dispose() {
+    this.disposed = true
     this.mesh.geometry.dispose()
     ;(this.mesh.material as THREE.Material).dispose()
     this.mesh.customDepthMaterial?.dispose()
     this.uniforms.uAtlas.value?.dispose()
+    this.uniforms.uAtlas.value = null
     this.mesh.dispose()
   }
 }

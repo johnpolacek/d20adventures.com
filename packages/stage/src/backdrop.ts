@@ -9,7 +9,7 @@ type BackdropSpec = SetSpec["backdrops"][number]
 // see-through thing (mist, leaves), and the set's later backdrops over its earlier ones, in `order`. The side edges fade
 // out over `feather` of its width. A painting is already display colour and the scene is tone mapped after (AgX),
 // so `gain` lowers it to come out near where it went in, and `haze` blends it toward the fog colour. Both are by eye.
-export function backdrop(root: THREE.Object3D, fog: THREE.Color, anisotropy: number, o: BackdropSpec, order: number): Disposable & { ready: Promise<void> } {
+export function backdrop(root: THREE.Object3D, fog: THREE.Color, anisotropy: number, o: BackdropSpec, order: number, signal?: AbortSignal): Disposable & { ready: Promise<void> } {
   const arc = THREE.MathUtils.degToRad(o.arc)
   const y0 = o.radius * Math.tan(THREE.MathUtils.degToRad(o.bottom))
   const y1 = o.radius * Math.tan(THREE.MathUtils.degToRad(o.top))
@@ -37,18 +37,25 @@ void main(){
   mesh.frustumCulled = false
   mesh.visible = false
   root.add(mesh)
+  let disposed = false
   // A backdrop that fails to load stays hidden rather than blocking the stage.
-  const ready = new THREE.ImageLoader()
-    .loadAsync(o.map)
-    .then((img) => {
-      map.image = img
-      map.needsUpdate = true
-      mesh.visible = true
-    })
-    .catch(() => console.warn(`[stage] backdrop failed: ${o.map}`))
+  const ready = signal?.aborted
+    ? Promise.resolve()
+    : new THREE.ImageLoader()
+        .loadAsync(o.map)
+        .then((img) => {
+          if (disposed || signal?.aborted) return
+          map.image = img
+          map.needsUpdate = true
+          mesh.visible = true
+        })
+        .catch(() => {
+          if (!disposed && !signal?.aborted) console.warn(`[stage] backdrop failed: ${o.map}`)
+        })
   return {
     ready,
     dispose() {
+      disposed = true
       root.remove(mesh)
       geo.dispose()
       mat.dispose()

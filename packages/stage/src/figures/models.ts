@@ -182,7 +182,9 @@ export class Models {
   // Called when figures have arrived or left, so the stage can list them for the character mask and the painted set.
   onChange: (() => void) | null = null
 
-  private room: Promise<THREE.Texture> | null = null
+  private room: Promise<THREE.Texture | null> | null = null
+  private roomTex: THREE.Texture | null = null
+  private disposed = false
   // The weapon each cast member keeps ready, for a figure that loads after it was asked.
   private readied = new Map<string, "bow" | "blade">()
   constructor(
@@ -203,10 +205,12 @@ export class Models {
     return n
   }
   // Turns figures on (loading them the first time) or off. A model that fails to load leaves the standee showing.
-  async enable(on: boolean) {
+  async enable(on: boolean, signal?: AbortSignal) {
+    if (this.disposed || signal?.aborted) return
     this.on = on
-    if (on && !this.loading) this.loading = this.load()
+    if (on && !this.loading) this.loading = this.load(signal)
     await this.loading
+    if (this.disposed || signal?.aborted) return
     this.sync()
   }
   private sync() {
@@ -215,29 +219,57 @@ export class Models {
     if (this.on) for (const id of this.items.keys()) this.standees.replaced.add(id)
     this.onChange?.()
   }
-  private async load() {
+  private async load(signal?: AbortSignal) {
+    if (this.disposed || signal?.aborted) return
     const wanted = this.cast.filter((c) => c.figure)
     if (!wanted.length) return
     const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js")
+    if (this.disposed || signal?.aborted) return
     const loader = new GLTFLoader()
     await Promise.all(
       wanted.map(async (c) => {
         try {
           const spec = c.figure as FigureSpec
           const gltf = await loader.loadAsync(spec.model)
-          this.make(c, spec, gltf, spec.env && this.renderer ? await this.lit() : null)
+          if (this.disposed || signal?.aborted) {
+            this.disposeScene(gltf.scene)
+            return
+          }
+          const room = spec.env && this.renderer ? await this.lit() : null
+          if (this.disposed || signal?.aborted) {
+            this.disposeScene(gltf.scene)
+            return
+          }
+          this.make(c, spec, gltf, room)
         } catch (error) {
-          console.warn(`[stage] figure for ${c.id} failed, showing the standee`, error)
+          if (!this.disposed && !signal?.aborted) console.warn(`[stage] figure for ${c.id} failed, showing the standee`, error)
         }
       })
     )
   }
+  private disposeScene(root: THREE.Object3D) {
+    root.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return
+      o.geometry.dispose()
+      const mats = Array.isArray(o.material) ? o.material : [o.material]
+      for (const mat of mats) {
+        ;(mat as Mat).map?.dispose()
+        mat.dispose()
+      }
+    })
+  }
   // The plain lit room a figure reflects, made once for the stage.
   private lit() {
     this.room ??= import("three/addons/environments/RoomEnvironment.js").then(({ RoomEnvironment }) => {
+      if (this.disposed) return null
       const pmrem = new THREE.PMREMGenerator(this.renderer as THREE.WebGLRenderer)
       const made = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
       pmrem.dispose()
+      if (this.disposed) {
+        made.dispose()
+        return null
+      }
+      this.roomTex = made
       return made
     })
     return this.room
@@ -697,6 +729,9 @@ export class Models {
     }
   }
   dispose() {
+    this.disposed = true
+    this.roomTex?.dispose()
+    this.roomTex = null
     for (const m of this.items.values()) {
       m.mixer.stopAllAction()
       m.carried?.dispose()

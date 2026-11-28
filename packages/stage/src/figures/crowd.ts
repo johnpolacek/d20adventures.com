@@ -82,6 +82,7 @@ export interface CrowdOptions {
   mode: CrowdMode
   cardRadius: number
   maxAnisotropy: number
+  signal?: AbortSignal
 }
 
 // The crowd: every person is drawn either as a procedural pawn (instanced per kind, 5-zone colours) or as an illustrated
@@ -231,10 +232,15 @@ export class Crowd {
   }
   private ensureAtlas() {
     if (!this.cards || this.cards.ready || this.cards.loading) return
-    this.cards.load(this.o.maxAnisotropy).catch((err) => {
+    this.cards.load(this.o.maxAnisotropy, this.o.signal).catch((err) => {
       console.error("[stage] crowd atlas failed; staying procedural", err)
       this.mode = "procedural"
     })
+  }
+  whenAtlasSettled(): Promise<void> {
+    if (!this.cards || this.mode === "procedural") return Promise.resolve()
+    this.ensureAtlas()
+    return this.cards.whenReady()
   }
 
   private writePawnMatrix(mesh: THREE.InstancedMesh, p: Person) {

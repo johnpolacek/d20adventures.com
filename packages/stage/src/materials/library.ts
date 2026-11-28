@@ -18,7 +18,11 @@ export interface MaterialLibrary {
 class PaintedTextures {
   private cache = new Map<string, THREE.Texture>()
   private pending: Promise<void>[] = []
-  constructor(private anisotropy: number) {}
+  private disposed = false
+  constructor(
+    private anisotropy: number,
+    private signal?: AbortSignal
+  ) {}
   // `repeat` scales the texture over the surface's uv: an `image` laid by surface metres covers `size` metres a tile.
   // `linear` keeps the image's values as they are, for a normal map.
   get(url: string, repeat?: [number, number], linear = false) {
@@ -31,30 +35,36 @@ class PaintedTextures {
     t.wrapS = t.wrapT = THREE.RepeatWrapping
     t.anisotropy = this.anisotropy
     this.cache.set(key, t)
-    this.pending.push(
-      new THREE.ImageLoader()
-        .loadAsync(url)
-        .then((img) => {
-          t.image = img
-          t.needsUpdate = true
-        })
-        .catch(() => console.warn(`[stage] texture failed: ${url}`))
-    )
+    if (!this.disposed && !this.signal?.aborted) {
+      this.pending.push(
+        new THREE.ImageLoader()
+          .loadAsync(url)
+          .then((img) => {
+            if (this.disposed || this.signal?.aborted) return
+            t.image = img
+            t.needsUpdate = true
+          })
+          .catch(() => {
+            if (!this.disposed && !this.signal?.aborted) console.warn(`[stage] texture failed: ${url}`)
+          })
+      )
+    }
     return t
   }
   ready() {
     return Promise.all(this.pending).then(() => undefined)
   }
   dispose() {
+    this.disposed = true
     for (const t of this.cache.values()) t.dispose()
   }
 }
 
 // The set's named materials, built for rendering (needs a DOM for the canvas textures).
-export function createMaterialLibrary(specs: Record<string, MaterialSpec>, shared: SharedUniforms, rand: Rand, anisotropy = 4): MaterialLibrary {
+export function createMaterialLibrary(specs: Record<string, MaterialSpec>, shared: SharedUniforms, rand: Rand, anisotropy = 4, signal?: AbortSignal): MaterialLibrary {
   const ctx = { shared, rand }
   const bank = new TextureBank(rand.fork("textures"))
-  const painted = new PaintedTextures(anisotropy)
+  const painted = new PaintedTextures(anisotropy, signal)
   const out = new Map<string, THREE.Material>()
   for (const [name, s] of Object.entries(specs)) {
     let m: THREE.Material

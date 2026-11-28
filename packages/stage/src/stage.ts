@@ -35,6 +35,7 @@ import { served } from "./served"
 import { clearView, type ViewCost } from "./spec/view"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
 import { Floor } from "./surface"
+import { StageLifecycleController } from "./stage-lifecycle"
 import { driftIn, fitView, minFov, type Spot, type TripodPoint, tripodView, type View } from "./tripod"
 
 // The Stage runtime: one set (plus an optional staging) rendered into a canvas it owns inside `container`.
@@ -190,7 +191,10 @@ export class Stage {
   motion: boolean
   activeShot: string | null = null
   private shotListeners = new Set<(shot: string | null) => void>()
-  ready = false
+  private readonly lifecycle = new StageLifecycleController()
+  get ready(): boolean {
+    return this.lifecycle.isReady
+  }
 
   private materials: MaterialLibrary
   private statics: THREE.Mesh[] = []
@@ -242,9 +246,6 @@ export class Stage {
   }
   private insets = { right: 0, bottom: 0 }
   private raf = 0
-  private running = false
-  private paused = false
-  private visible = true
   private last = 0
   private fpsT = 0
   private fpsN = 0
@@ -253,7 +254,10 @@ export class Stage {
   private stats0 = { calls: 0, triangles: 0 }
   private resizeObserver: ResizeObserver
   private intersection: IntersectionObserver | null = null
-  private onVisibility = () => this.sync()
+  private onVisibility = () => {
+    this.lifecycle.setSuspended("hidden", document.visibilityState === "hidden")
+    this.sync()
+  }
   private readyResolve: (() => void) | null = null
   readonly firstFrame: Promise<void>
   private effectListeners = new Set<(e: EffectEvent) => void>()
@@ -371,7 +375,7 @@ export class Stage {
     // The set itself: every builder into one batch, merged by material.
     o.onProgress?.("Building the set")
     const rand = createRand(hashSeed(set.seed, "stage"))
-    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy())
+    this.materials = createMaterialLibrary(set.materials, this.shared, rand.fork("materials"), renderer.capabilities.getMaxAnisotropy(), this.lifecycle.signal)
     const built = buildSetGeometry(set, this.materials)
     this.footprints = built.footprints
     this.sight = built.sight
@@ -397,7 +401,7 @@ export class Stage {
     this.extras = built.extras
     if (set.land) this.disposables.push(land(this.world, this.shared, rand.fork("land"), set.land))
     this.plate = [...this.world.children]
-    const backdrops = set.backdrops.map((b, i) => backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), b, i))
+    const backdrops = set.backdrops.map((b, i) => backdrop(this.world, (this.scene.fog as THREE.FogExp2).color, renderer.capabilities.getMaxAnisotropy(), b, i, this.lifecycle.signal))
     this.disposables.push(...backdrops)
     this.backdropReady = Promise.all(backdrops.map((b) => b.ready)).then(() => undefined)
     if (set.life.birds) this.life.push(birds(this.world, this.shared, rand.fork("birds"), set.life.birds))
@@ -413,6 +417,7 @@ export class Stage {
       mode: this.flags.crowd,
       cardRadius: this.flags.cardRadius ?? TIERS[this.tier].cardRadius,
       maxAnisotropy,
+      signal: this.lifecycle.signal,
     })
     this.world.add(this.crowd.group)
     this.cast = resolveCast(set, staging)
@@ -501,11 +506,12 @@ export class Stage {
     this.resizeObserver.observe(o.container)
     if (typeof IntersectionObserver !== "undefined") {
       this.intersection = new IntersectionObserver((entries) => {
-        this.visible = entries.some((e) => e.isIntersecting)
+        this.lifecycle.setSuspended("offscreen", !entries.some((e) => e.isIntersecting))
         this.sync()
       })
       this.intersection.observe(this.canvas)
     }
+    this.lifecycle.setSuspended("hidden", typeof document !== "undefined" && document.visibilityState === "hidden")
     document.addEventListener("visibilitychange", this.onVisibility)
     this.applyTier()
   }
@@ -531,24 +537,27 @@ export class Stage {
 
   // Waits for the character art and the crowd atlas (when cards are on), then starts the loop.
   async load() {
+    const signal = this.lifecycle.beginLoad()
+    if (!signal || signal.aborted) return
     this.o.onProgress?.("Loading characters")
     const paintings = this.painted
-      ? this.painted.load(this.renderer.capabilities.getMaxAnisotropy()).then(
-          () => true,
+      ? this.painted.load(this.renderer.capabilities.getMaxAnisotropy(), signal).then(
+          () => !signal.aborted,
           (error) => {
-            console.warn("[stage] paintings failed, showing the set as built", error)
+            if (!signal.aborted) console.warn("[stage] paintings failed, showing the set as built", error)
             return false
           }
         )
       : Promise.resolve(false)
     const [, , , , painted] = await Promise.all([
-      this.standees.load(),
+      this.standees.load(signal),
       this.materials.ready,
       this.backdropReady,
-      this.crowd.cards && this.flags.crowd !== "procedural" ? this.waitForAtlas() : Promise.resolve(),
+      this.flags.crowd !== "procedural" ? this.crowd.whenAtlasSettled() : Promise.resolve(),
       paintings,
-      this.flags.figures ? this.models.enable(true) : Promise.resolve(),
+      this.flags.figures ? this.models.enable(true, signal) : Promise.resolve(),
     ])
+    if (signal.aborted) return
     if (this.painted && painted) {
       const plate = new Set(this.plate)
       this.painted.bake(this.scene, [...this.world.children.filter((c) => !plate.has(c)), this.sky])
@@ -569,14 +578,9 @@ export class Stage {
     // The shaders compile before the first frame asks for them, where the browser can do it off the page's thread:
     // compiled by that frame instead, they held the window still for over half a second in the desktop app.
     await this.renderer.compileAsync(this.scene, this.camera).catch(() => {})
-    this.loaded = true
+    if (signal.aborted) return
+    this.lifecycle.finishLoad()
     this.sync()
-  }
-  private waitForAtlas() {
-    return new Promise<void>((resolve) => {
-      const check = () => (this.crowd.cards?.ready || this.crowd.mode === "procedural" ? resolve() : setTimeout(check, 50))
-      check()
-    })
   }
 
   // ── Events ──
@@ -1555,7 +1559,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   setFlags(f: Partial<Flags>) {
     this.flags = { ...this.flags, ...f }
-    if (f.figures !== undefined) void this.models.enable(f.figures)
+    if (f.figures !== undefined) void this.models.enable(f.figures, this.lifecycle.signal)
     this.applyTier()
   }
   private applyTier() {
@@ -1614,29 +1618,30 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // ── Loop ──
   // Rendering stops while the tab is hidden, the canvas is off screen (a hidden overlay), or the host pauses.
   pause() {
-    this.paused = true
+    this.lifecycle.setSuspended("paused", true)
     this.sync()
   }
   resume() {
-    this.paused = false
+    this.lifecycle.setSuspended("paused", false)
     this.sync()
   }
   // No frame is drawn until the stage has loaded and its shaders are compiled. A frame drawn on the way compiled them
   // itself, on the page's thread, while the stage was still loading behind the last picture.
-  private loaded = false
   private sync() {
-    const run = this.loaded && !this.paused && this.visible && document.visibilityState !== "hidden"
-    if (run && !this.running) {
-      this.running = true
+    const run = this.lifecycle.shouldRun
+    if (run && this.raf === 0) {
       this.last = performance.now()
       this.raf = requestAnimationFrame(this.tick)
-    } else if (!run && this.running) {
-      this.running = false
+    } else if (!run && this.raf !== 0) {
       cancelAnimationFrame(this.raf)
+      this.raf = 0
     }
   }
   private tick = (now: number) => {
-    if (!this.running) return
+    if (!this.lifecycle.shouldRun) {
+      this.raf = 0
+      return
+    }
     this.raf = requestAnimationFrame(this.tick)
     const raw = Math.max(0, (now - this.last) / 1000)
     this.last = now
@@ -1731,9 +1736,10 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.crowd.occlude(this.camera, this.cam.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
     this.crowd.flush()
     this.rendered(dt)
-    if (++this.frame === 3) {
-      this.ready = true
+    this.frame++
+    if (this.lifecycle.onFrameRendered()) {
       this.readyResolve?.()
+      this.readyResolve = null
     }
   }
   // Lamps from a light list at a share of their strength. Unused lamps go dark.
@@ -2154,6 +2160,9 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
 
   dispose() {
+    this.lifecycle.dispose()
+    this.readyResolve?.()
+    this.readyResolve = null
     this.shotListeners.clear()
     for (const t of this.joltTimers) clearTimeout(t)
     if (this.probe) {
@@ -2164,8 +2173,10 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       this.probe.pack.dispose()
       this.probe = null
     }
-    this.running = false
-    cancelAnimationFrame(this.raf)
+    if (this.raf !== 0) {
+      cancelAnimationFrame(this.raf)
+      this.raf = 0
+    }
     // Walks in progress end where they are, so nothing awaiting them hangs on a disposed stage.
     for (const m of this.moves.values()) m.resolve()
     this.moves.clear()

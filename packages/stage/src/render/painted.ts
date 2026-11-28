@@ -87,6 +87,7 @@ export class Painted {
   private patched = new Set<THREE.Material>()
   private cloths: THREE.Mesh[] = []
   private plate: THREE.Mesh[] = []
+  private disposed = false
   // 1 once the paintings are up: figures then show their art evenly lit (see flatFigures).
   private figures = { uPaintFigure: { value: 0 }, uPaintLight: { value: new THREE.Color(1.03, 1, 0.95) } }
   // The ground the sun's shadows are worked out over: about the current point, more of it ahead than behind. Only
@@ -210,10 +211,15 @@ ${slots(slotSurface)}
   }
 
   // Loads every painting. Rejects if one is missing: the stage then shows the set as built.
-  async load(anisotropy: number) {
+  async load(anisotropy: number, signal?: AbortSignal) {
+    if (this.disposed || signal?.aborted) return
     const loader = new THREE.TextureLoader()
     const texture = async (url: string) => {
       const t = await loader.loadAsync(url)
+      if (this.disposed || signal?.aborted) {
+        t.dispose()
+        throw new Error("aborted")
+      }
       t.colorSpace = THREE.SRGBColorSpace
       t.anisotropy = anisotropy
       return t
@@ -232,6 +238,13 @@ ${slots(slotSurface)}
             return { map, clear, depth: null, camera, viewProjection: new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), lens: 1 / point.frames[i].tanY }
           })
         )
+        if (this.disposed || signal?.aborted) {
+          for (const p of list) {
+            p.map.dispose()
+            p.clear?.dispose()
+          }
+          return
+        }
         this.paintings.set(point.name, list)
       })
     )
@@ -373,6 +386,7 @@ void main(){ float a = lin(texture2D(tA, vUv).x); float b = a; float cov = 0.0;
   }
 
   dispose() {
+    this.disposed = true
     this.dome.removeFromParent()
     this.dome.geometry.dispose()
     ;(this.dome.material as THREE.Material).dispose()
