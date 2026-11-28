@@ -207,80 +207,123 @@ export function D20Solid({
     const tilted = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.5)
     die.quaternion.copy(numbered ? (settled.current ? restOn(settled.current - 1) : tilted) : restOn(0))
     renderer.render(scene, camera)
+
+    type DieMotion =
+      | { kind: "settled" }
+      | { kind: "idle"; startedAt: number; about: THREE.Vector3 }
+      | {
+          kind: "tumbling"
+          startedAt: number
+          from: THREE.Quaternion
+          rest: THREE.Quaternion
+          axis: THREE.Vector3
+          turns: number
+        }
+    type ToneFade = {
+      startedAt: number
+      from: { color: THREE.Color; emissive: THREE.Color; glow: number; metalness: number; roughness: number }
+      target: { color: THREE.Color; emissive: THREE.Color; glow: number; metalness: number; roughness: number }
+    }
+
+    let motion: DieMotion = { kind: "settled" }
+    let toneFade: ToneFade | null = null
     let raf = 0
-    let turn = 0
-    start.current = (to) => {
-      cancelAnimationFrame(raf)
-      cancelAnimationFrame(turn)
-      settled.current = numbered && to ? to : null
-      const rest = restOn(numbered && to ? to - 1 : 0)
-      const from = die.quaternion.clone()
-      const spun = new THREE.Quaternion()
-      const axis = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
-      const turns = Math.PI * 2 * (2 + Math.random())
-      const t0 = performance.now()
-      const frame = () => {
-        const t = Math.min(1, (performance.now() - t0) / (seconds * 1000))
+    const spun = new THREE.Quaternion()
+
+    const renderFrame = (now: number) => {
+      raf = 0
+      if (motion.kind === "tumbling") {
+        const t = Math.min(1, (now - motion.startedAt) / (seconds * 1000))
         // A numbered die slows more gently, so its face cannot be read until it lands.
-        spun.setFromAxisAngle(axis, turns * (1 - t) ** (numbered ? 2 : 3)).multiply(rest)
+        spun.setFromAxisAngle(motion.axis, motion.turns * (1 - t) ** (numbered ? 2 : 3)).multiply(motion.rest)
         // The tumble takes over from wherever the die was turned, so it never jumps.
-        die.quaternion.copy(from).slerp(spun, Math.min(1, t / 0.12))
+        die.quaternion.copy(motion.from).slerp(spun, Math.min(1, t / 0.12))
         die.position.y = Math.sin(t * Math.PI) * 0.15
-        renderer.render(scene, camera)
-        if (t < 1) raf = requestAnimationFrame(frame)
+        if (t >= 1) motion = { kind: "settled" }
+      } else if (motion.kind === "idle") {
+        const t = (now - motion.startedAt) / 1000
+        die.quaternion.setFromAxisAngle(motion.about, t * 0.7).multiply(tilted)
+        die.position.y = Math.sin(t * 1.6) * 0.04
       }
-      frame()
+      if (toneFade) {
+        const t = Math.min(1, (now - toneFade.startedAt) / 500)
+        const e = t * t * (3 - 2 * t)
+        mat.color.lerpColors(toneFade.from.color, toneFade.target.color, e)
+        mat.emissive.lerpColors(toneFade.from.emissive, toneFade.target.emissive, e)
+        mat.emissiveIntensity = toneFade.from.glow + (toneFade.target.glow - toneFade.from.glow) * e
+        mat.metalness = toneFade.from.metalness + (toneFade.target.metalness - toneFade.from.metalness) * e
+        mat.roughness = toneFade.from.roughness + (toneFade.target.roughness - toneFade.from.roughness) * e
+        if (t >= 1) toneFade = null
+      }
+      renderer.render(scene, camera)
+      if (motion.kind !== "settled" || toneFade !== null) {
+        raf = requestAnimationFrame(renderFrame)
+      }
+    }
+
+    const drive = () => {
+      if (raf !== 0) {
+        cancelAnimationFrame(raf)
+        raf = 0
+      }
+      renderFrame(performance.now())
+    }
+
+    start.current = (to) => {
+      settled.current = numbered && to ? to : null
+      motion = {
+        kind: "tumbling",
+        startedAt: performance.now(),
+        from: die.quaternion.clone(),
+        rest: restOn(numbered && to ? to - 1 : 0),
+        axis: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize(),
+        turns: Math.PI * 2 * (2 + Math.random()),
+      }
+      drive()
     }
     show.current = (to) => {
-      cancelAnimationFrame(raf)
-      cancelAnimationFrame(turn)
       settled.current = to
+      motion = { kind: "settled" }
       die.quaternion.copy(restOn(to - 1))
       die.position.y = 0
-      renderer.render(scene, camera)
+      drive()
     }
     // Waiting to be rolled, the die turns slowly and rises and falls a little.
     drift.current = (on) => {
-      cancelAnimationFrame(turn)
-      if (!on || still()) return
-      const about = new THREE.Vector3(0.3, 1, 0.15).normalize()
-      const t0 = performance.now()
-      const frame = () => {
-        const t = (performance.now() - t0) / 1000
-        die.quaternion.setFromAxisAngle(about, t * 0.7).multiply(tilted)
-        die.position.y = Math.sin(t * 1.6) * 0.04
-        renderer.render(scene, camera)
-        turn = requestAnimationFrame(frame)
+      if (!on || still()) {
+        if (motion.kind === "idle") {
+          motion = { kind: "settled" }
+          drive()
+        }
+        return
       }
-      frame()
+      motion = {
+        kind: "idle",
+        startedAt: performance.now(),
+        about: new THREE.Vector3(0.3, 1, 0.15).normalize(),
+      }
+      drive()
     }
-    let fade = 0
     recolor.current = (next) => {
-      cancelAnimationFrame(fade)
       const to = TONES[next ?? "base"]
       // A numbered die's colour is in its sheet, which changes at once. The shine and the glow follow.
       if (numbered) mat.map = mapOf(next ?? "base")
-      const from = { color: mat.color.clone(), emissive: mat.emissive.clone(), glow: mat.emissiveIntensity, metalness: mat.metalness, roughness: mat.roughness }
-      const target = { color: new THREE.Color(numbered ? 0xffffff : to.color), emissive: new THREE.Color(to.emissive) }
-      const metalness = numbered ? Math.min(to.metalness, 0.4) : to.metalness
-      const t0 = performance.now()
-      const frame = () => {
-        const t = Math.min(1, (performance.now() - t0) / 500)
-        const e = t * t * (3 - 2 * t)
-        mat.color.lerpColors(from.color, target.color, e)
-        mat.emissive.lerpColors(from.emissive, target.emissive, e)
-        mat.emissiveIntensity = from.glow + (to.glow - from.glow) * e
-        mat.metalness = from.metalness + (metalness - from.metalness) * e
-        mat.roughness = from.roughness + (to.roughness - from.roughness) * e
-        renderer.render(scene, camera)
-        if (t < 1) fade = requestAnimationFrame(frame)
+      toneFade = {
+        startedAt: performance.now(),
+        from: { color: mat.color.clone(), emissive: mat.emissive.clone(), glow: mat.emissiveIntensity, metalness: mat.metalness, roughness: mat.roughness },
+        target: {
+          color: new THREE.Color(numbered ? 0xffffff : to.color),
+          emissive: new THREE.Color(to.emissive),
+          glow: to.glow,
+          metalness: numbered ? Math.min(to.metalness, 0.4) : to.metalness,
+          roughness: to.roughness,
+        },
       }
-      frame()
+      drive()
     }
     return () => {
       cancelAnimationFrame(raf)
-      cancelAnimationFrame(turn)
-      cancelAnimationFrame(fade)
+      raf = 0
       start.current = null
       recolor.current = null
       show.current = null
