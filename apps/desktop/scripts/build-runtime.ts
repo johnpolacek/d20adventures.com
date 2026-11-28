@@ -118,6 +118,16 @@ await build({
   format: "cjs",
   define: { "process.env.NODE_ENV": '"production"' },
 })
+// The website link answers host commands while the app is open (runtime/link-main.ts).
+await build({
+  entryPoints: [resolve(app, "runtime/link-main.ts")],
+  outfile: resolve(app, "src-tauri/resources/link.cjs"),
+  bundle: true,
+  platform: "node",
+  target: "node24",
+  format: "cjs",
+  define: { "process.env.NODE_ENV": '"production"' },
+})
 // The narrator runs beside the app while it is open (runtime/narrator-main.ts). Its engine is native, so it is not
 // bundled: this machine's build of it is copied in. The voices sit where Kokoro looks for them, beside its script.
 const narrator = resolve(app, "src-tauri/resources/narrator")

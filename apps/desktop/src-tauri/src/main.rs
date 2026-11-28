@@ -12,16 +12,16 @@ use tokio::{
 struct GameLock(Mutex<()>);
 // The host worker while this app hosts a website game: the adventure, its process, and its latest event.
 struct HostWorker(Mutex<Option<(String, Child)>>, Arc<std::sync::Mutex<Value>>);
-// The narrator while the app is open (runtime/narrator-main.ts): its process, its input, and its answers in turn.
-struct Narrator(
-    Mutex<
-        Option<(
-            Child,
-            tokio::process::ChildStdin,
-            tokio::io::Lines<BufReader<tokio::process::ChildStdout>>,
-        )>,
-    >,
-);
+// A runtime script kept running while the app is open: its process, its input, and its answers in turn.
+type Piped = Option<(
+    Child,
+    tokio::process::ChildStdin,
+    tokio::io::Lines<BufReader<tokio::process::ChildStdout>>,
+)>;
+// The narrator (runtime/narrator-main.ts).
+struct Narrator(Mutex<Piped>);
+// The website link for hosted games (runtime/link-main.ts).
+struct HostLink(Mutex<Piped>);
 // The user's home folder. Windows names it USERPROFILE.
 fn home() -> String {
     std::env::var("HOME")
@@ -253,7 +253,11 @@ async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Va
 }
 // Hosting reaches the website with the device token, which Rust adds here as for account actions.
 #[tauri::command]
-async fn host_command(app: tauri::AppHandle, mut command: Value) -> Result<Value, String> {
+async fn host_command(
+    app: tauri::AppHandle,
+    link: tauri::State<'_, HostLink>,
+    mut command: Value,
+) -> Result<Value, String> {
     let kind = command
         .get("kind")
         .and_then(Value::as_str)
@@ -261,13 +265,24 @@ async fn host_command(app: tauri::AppHandle, mut command: Value) -> Result<Value
     if !kind.starts_with("host") {
         return Err("Unknown host action.".into());
     }
+    // Only reads are sent again when the link stops partway, so an action is never taken twice.
+    let read = matches!(kind, "hostState" | "hostList" | "hostSheet");
     if let Some(fields) = command.as_object_mut() {
         fields.remove("token");
         if let Some(token) = read_token(&app) {
             fields.insert("token".into(), Value::String(token));
         }
     }
-    run_runtime(&app, &command).await
+    let mut slot = link.0.lock().await;
+    ask_piped(&app, &mut slot, "link.cjs", &command, read)
+        .await
+        .map_err(|e| {
+            if e.starts_with("Could not start") {
+                e
+            } else {
+                "The website link stopped. Try again.".into()
+            }
+        })
 }
 // Starts the host worker for one hosted game, replacing any other.
 #[tauri::command]
@@ -443,16 +458,29 @@ async fn narrator_command(
     command: Value,
 ) -> Result<Value, String> {
     let mut slot = narrator.0.lock().await;
+    ask_piped(&app, &mut slot, "narrator/run/narrator.cjs", &command, true)
+        .await
+        .map_err(|_| "The narrator stopped.".into())
+}
+// One request to a kept runtime script, which starts on the first and again if it stopped. A request sent before the
+// script stopped is sent once more only when `retry` is set.
+async fn ask_piped(
+    app: &tauri::AppHandle,
+    slot: &mut Piped,
+    script: &str,
+    command: &Value,
+    retry: bool,
+) -> Result<Value, String> {
     for attempt in 0..2 {
         if slot.is_none() {
-            let data = data_dir(&app)?;
+            let data = data_dir(app)?;
             std::fs::create_dir_all(&data).map_err(|e| e.to_string())?;
-            let mut child = runtime_command(&app, "narrator/run/narrator.cjs", &data)?
+            let mut child = runtime_command(app, script, &data)?
                 .stdout(Stdio::piped())
                 .spawn()
-                .map_err(|e| format!("Could not start the narrator: {e}"))?;
-            let stdin = child.stdin.take().ok_or("Missing narrator input pipe")?;
-            let stdout = child.stdout.take().ok_or("Missing narrator output pipe")?;
+                .map_err(|e| format!("Could not start {script}: {e}"))?;
+            let stdin = child.stdin.take().ok_or("Missing input pipe")?;
+            let stdout = child.stdout.take().ok_or("Missing output pipe")?;
             *slot = Some((child, stdin, BufReader::new(stdout).lines()));
         }
         let (_, stdin, lines) = slot.as_mut().unwrap();
@@ -460,18 +488,19 @@ async fn narrator_command(
         if sent.is_ok() {
             if let Ok(Some(line)) = lines.next_line().await {
                 return serde_json::from_str(&line)
-                    .map_err(|_| "The narrator returned an unreadable response.".into());
+                    .map_err(|_| format!("{script} returned an unreadable response."));
             }
         }
-        // The process stopped: it starts again once.
+        // The process stopped: it starts again once. A request it may have taken before stopping is sent again only
+        // when `retry` allows it.
         if let Some((mut child, _, _)) = slot.take() {
             let _ = child.kill().await;
         }
-        if attempt == 1 {
+        if attempt == 1 || (sent.is_ok() && !retry) {
             break;
         }
     }
-    Err("The narrator stopped.".into())
+    Err(format!("{script} stopped."))
 }
 async fn run_runtime(app: &tauri::AppHandle, command: &Value) -> Result<Value, String> {
     let data = data_dir(app)?;
@@ -540,6 +569,7 @@ fn main() {
         })
         .manage(GameLock(Mutex::new(())))
         .manage(Narrator(Mutex::new(None)))
+        .manage(HostLink(Mutex::new(None)))
         .manage(HostWorker(
             Mutex::new(None),
             Arc::new(std::sync::Mutex::new(Value::Null)),
