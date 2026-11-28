@@ -27,8 +27,8 @@ const ROOT = "asset-library/characters"
 const PUBLIC = ["lod0.glb", "lod1.glb", "lod2.glb", "front.webp", "thumb.webp", "figure.json"]
 const PRIVATE = [
   ...["character.json", "sheet.png", "apose-front.png", "apose-back.png", "joints.json", "tripo.json", "source.glb", "rig.json"],
-  // A figure pilot.ts made: the generators' answers, the model as it came and as it was rigged.
-  ...["pilot-model.json", "pilot-rig.json", "pilot-picks.json", "pilot/model.glb", "pilot/rigged-all.glb"],
+  // A figure pilot.ts made: the generators' answers, the model as it came and as it was rigged, and close-up faces.
+  ...["pilot-model.json", "pilot-rig.json", "pilot-picks.json", "pilot/model.glb", "pilot/rigged-all.glb", "face.png", "apose-face.png", "face.json"],
 ]
 const TYPES: Record<string, string> = { ".glb": "model/gltf-binary", ".webp": "image/webp", ".png": "image/png", ".json": "application/json" }
 // A figure is rebuilt under the same name, so caches stay short.

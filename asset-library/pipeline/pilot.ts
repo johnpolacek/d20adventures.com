@@ -62,6 +62,7 @@ import { facing } from "./facing"
 import { measureGaits } from "./gait"
 import { type Quat, qall, qbetween, qinv, qmix, qmul, qturn, qunit, qup } from "./quat"
 import { type Part, reader, retarget } from "./retarget"
+import { inheritBrief, type RecolorRule, recolorPixels } from "./variant"
 
 const MODEL = { endpoint: "tripo3d/h3.1/image-to-3d", cost: 0.6 }
 const RIG = { endpoint: "meshy/rigging/multi-animation", cost: 0.2, clip: 0.12 }
@@ -1907,12 +1908,20 @@ interface Brief {
   stock?: string
   // A figure whose model and sheet this one takes in place of its own. Meshy's rig and clips alone are paid for.
   body?: string
+  // A $0 shipped variant of an already-rigged figure: reuses its model AND rig, applies this brief's height, optional
+  // `recolor` rules, own close-up face (if painted via `pnpm assets <id>`), and optional `holds`/clips overrides.
+  variantOf?: string
+  // Recolour rules applied to the base colour texture (see variant.ts). Useful for non-twin guards, commoners, horses.
+  recolor?: RecolorRule[]
+  card?: { front?: string; back?: string }
+  face?: "sheet" | "close"
   // Clips copied from another skeleton's library, each by the name it is played by: "ual1:Sword_Attack".
   borrowed?: Record<string, string>
   // How Hyper3D shares the skin among its bones: "core" unless said.
   skinning?: "core" | "shell"
   // What it carries at all times, a staff: left on the skeleton for the prop built in its hand (hold.ts `carry`).
-  holds?: { what: string; hand?: "L" | "R"; length?: number }
+  // Pass `null` on a variant to drop a prop inherited from its base.
+  holds?: { what: string; hand?: "L" | "R"; length?: number } | null
   // The bow shots drawn to the jaw, and when each is at its full draw, in seconds: { "Shoot": { "until": 1.5 } }.
   drawn?: Record<string, { until: number }>
   // The most an arm is raised in a clip, in degrees up from hanging: { "Swing": 85 }.
@@ -1937,12 +1946,14 @@ interface Brief {
 }
 
 // Where a figure's sheet and model are: its own folder, or the folder of the figure it takes them from.
-const home = (brief: Brief) => (brief.body ? `asset-library/characters/${brief.body}` : dir)
+const home = (brief: Brief) => (brief.variantOf ? `asset-library/characters/${brief.variantOf}` : brief.body ? `asset-library/characters/${brief.body}` : dir)
+// Where a figure's painted close-up face lives: its own folder when a variant painted its own face, else home(brief).
+const faceHome = (brief: Brief) => (brief.variantOf && existsSync(`${dir}/apose-face.png`) ? dir : home(brief))
 
 // What came back, fetched again from the kept answers at no charge.
-async function fetched(remote: Remote, name: string) {
-  await mkdir(`${dir}/pilot`, { recursive: true })
-  const file = `${dir}/pilot/${name}.glb`
+async function fetched(remote: Remote, name: string, into = dir) {
+  await mkdir(`${into}/pilot`, { recursive: true })
+  const file = `${into}/pilot/${name}.glb`
   if (!existsSync(file) && remote?.url) await writeFile(file, await fetchBuffer(remote.url))
   return existsSync(file) ? file : null
 }
@@ -1956,9 +1967,10 @@ function report<T>(command: string, argv: string[], tag: string) {
 
 // The sheet's face on the model, when the sheet's brief asks for one and face.py has made the close head: painted,
 // fitted to the model's own face as that painting drew it out, and painted again, as build.ts does with rig.py. The
-// textures then go into lod0.glb in place of the generator's. Returns what was painted.
+// textures then go into lod0.glb in place of the generator's. Returns what was painted, and a mask of which colour
+// texels changed so `recolor` never tints a freshly painted face.
 async function face(brief: Brief, rest: string) {
-  const from = home(brief)
+  const from = faceHome(brief)
   if ((await kept<{ face?: string }>(`${from}/character.json`))?.face !== "close" || !existsSync(`${from}/apose-face.png`)) return null
   const out = `${dir}/pilot/paint`
   type Painted = { faceFromSheet?: { texels: number; fitted: boolean } | null }
@@ -1978,15 +1990,73 @@ async function face(brief: Brief, rest: string) {
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
   const doc = await io.read(`${dir}/lod0.glb`)
   doc.createExtension(EXTTextureWebP).setRequired(true)
+  let mask: { data: Uint8Array; width: number; height: number } | null = null
   for (const m of doc.getRoot().listMaterials())
     for (const [kind, texture] of [
       ["colour", m.getBaseColorTexture()],
       ["normal", m.getNormalTexture()],
       ["rough", m.getMetallicRoughnessTexture()],
-    ] as const)
-      if (texture && existsSync(`${out}/${kind}.png`)) texture.setImage(await sharp(`${out}/${kind}.png`).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
+    ] as const) {
+      if (!texture || !existsSync(`${out}/${kind}.png`)) continue
+      if (kind === "colour" && brief.recolor?.length && !mask) {
+        const prev = texture.getImage()
+        const after = await sharp(`${out}/${kind}.png`).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+        if (prev) {
+          const before = await sharp(prev).resize(after.info.width, after.info.height).removeAlpha().raw().toBuffer()
+          const diff = new Uint8Array(after.info.width * after.info.height)
+          for (let i = 0, p = 0; i < after.data.length; i += after.info.channels, p++) {
+            const delta = Math.abs(after.data[i] - before[i]) + Math.abs(after.data[i + 1] - before[i + 1]) + Math.abs(after.data[i + 2] - before[i + 2])
+            if (delta > 12) diff[p] = 1
+          }
+          mask = { data: diff, width: after.info.width, height: after.info.height }
+        }
+      }
+      texture.setImage(await sharp(`${out}/${kind}.png`).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
+    }
   await io.write(`${dir}/lod0.glb`, doc)
-  return painted.faceFromSheet
+  return { ...painted.faceFromSheet, mask }
+}
+
+// Applies a brief's `recolor` rules to lod0.glb's base colour textures, protecting metal texels and painted faces.
+async function recolor(rules: RecolorRule[], faceMask?: { data: Uint8Array; width: number; height: number } | null) {
+  const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
+  const doc = await io.read(`${dir}/lod0.glb`)
+  let texels = 0
+  const seen = new Set<Texture>()
+  for (const material of doc.getRoot().listMaterials()) {
+    const texture = material.getBaseColorTexture()
+    const image = texture?.getImage()
+    if (!texture || !image || seen.has(texture)) continue
+    seen.add(texture)
+    const { data, info } = await sharp(image).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    let metal: Uint8Array | null = null
+    const mrImage = material.getMetallicRoughnessTexture()?.getImage()
+    if (mrImage) {
+      const mr = await sharp(mrImage).resize(info.width, info.height).removeAlpha().raw().toBuffer({ resolveWithObject: true })
+      metal = new Uint8Array(info.width * info.height)
+      for (let i = 0, p = 0; i < mr.data.length; i += mr.info.channels, p++) metal[p] = mr.data[i + 2]
+    }
+    let mask: Uint8Array | null = null
+    if (faceMask) {
+      mask =
+        faceMask.width === info.width && faceMask.height === info.height
+          ? faceMask.data
+          : new Uint8Array(
+              await sharp(faceMask.data, { raw: { width: faceMask.width, height: faceMask.height, channels: 1 } })
+                .resize(info.width, info.height, { kernel: "nearest" })
+                .extractChannel(0)
+                .raw()
+                .toBuffer()
+            )
+    }
+    const changed = recolorPixels(data, info.channels, rules, metal, mask)
+    if (!changed) continue
+    texels += changed
+    doc.createExtension(EXTTextureWebP).setRequired(true)
+    texture.setImage(await sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } }).webp({ quality: 92 }).toBuffer()).setMimeType("image/webp")
+  }
+  if (texels) await io.write(`${dir}/lod0.glb`, doc)
+  return texels
 }
 
 // The model's own lids smoothed away (its brief's `lids`), so the painted eyes are what is seen. Hi3D made Poppen with
@@ -1995,7 +2065,7 @@ async function face(brief: Brief, rest: string) {
 // eye that face.py found on the model, the front of the face is smoothed pass after pass, most at the eye and none at
 // the edge, and the paint, which lies where the eye is seen from the front, stays where it was.
 async function lidless(brief: Brief) {
-  const from = home(brief)
+  const from = faceHome(brief)
   const spec = await kept<{ height: number; sole?: number; joints: Record<string, [number, number]> }>(`${from}/joints.json`)
   const eyes = (await kept<{ ownEyes?: [number, number, number, number][] }>(`${from}/face.json`))?.ownEyes
   const middle = (await kept<{ faceFromSheet?: { sheetMiddle?: number } }>(`${dir}/pilot/paint/paint.json`))?.faceFromSheet?.sheetMiddle
@@ -2405,9 +2475,11 @@ type RodinAnswer = { model_mesh?: Remote }
 // Rodin's model, or Hi3D's, from the sheet's front and back, in an A-pose, rigged by Hyper3D with its stock clips, each
 // renamed to the name the game plays it by. Returns the clips it has.
 async function rodinHyper(brief: Brief) {
-  // A brief with a body takes that figure's sheet, model and picks, and is rigged again on its own.
+  // A brief with `body` takes that figure's sheet, model and picks, and is rigged again on its own ($0.20).
+  // A brief with `variantOf` takes that figure's model AND its rig ($0), then re-scales, recolours, and repaints.
   const from = home(brief)
-  const makes = (brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker
+  const rigFrom = brief.variantOf ? from : dir
+  const makes = (brief.variantOf || brief.body ? await kept<Brief>(`${from}/character.json`) : brief)?.maker
   const hi3d = makes === "hi3d"
   const lowpoly = makes === "lowpoly"
   const maker = hi3d
@@ -2416,12 +2488,13 @@ async function rodinHyper(brief: Brief) {
       ? { name: "Hyper3D Low Poly on fal", cost: LOWMADE.cost }
       : { name: "Rodin Gen-2.5 on fal", cost: RODIN.cost }
   // A model Low Poly made is light already: "low" gives its faces, and nothing lays it again.
-  const relay = lowpoly ? undefined : brief.low
+  const relay = brief.variantOf || lowpoly ? undefined : brief.low
   const four = brief.stance === "four"
   const views = ["apose-front.png", "apose-back.png", "apose-left.png", "apose-right.png"].filter((f) => existsSync(`${from}/${f}`))
   const view = (name: string) => views.indexOf(`apose-${name}.png`)
   let picks = await kept<Record<string, string>>(`${from}/pilot-picks.json`)
   if (!picks) {
+    if (brief.variantOf) throw new Error(`No picks in ${from}/pilot-picks.json: make ${brief.variantOf} first (or pnpm assets:fetch ${brief.variantOf})`)
     const { animations } = await fal<{ animations: Stock[] }>(`pilot stock ${id}`, HYPER.list, { category: brief.stock ?? "human" })
     picks = {}
     for (const [role, match, loops] of four ? WANT_BEAST : WANT) {
@@ -2439,8 +2512,9 @@ async function rodinHyper(brief: Brief) {
       .join(", ") || "none found"
   )
   let model = await kept<RodinAnswer>(`${from}/pilot-model.json`)
-  let rig = await kept<HyperAnswer>(`${dir}/pilot-rig.json`)
-  if (brief.body && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.body} first`)
+  let rig = await kept<HyperAnswer>(`${rigFrom}/pilot-rig.json`)
+  if ((brief.body || brief.variantOf) && !model) throw new Error(`No model in ${from}/pilot-model.json: make ${brief.variantOf ?? brief.body} first`)
+  if (brief.variantOf && !rig) throw new Error(`No rig in ${from}/pilot-rig.json: make ${brief.variantOf} first (or pnpm assets:fetch ${brief.variantOf})`)
   const skinning = brief.skinning ?? "core"
   let low = relay ? await kept<RodinAnswer>(`${dir}/pilot-low.json`) : null
   const lowCost = relay ? LOW.cost : 0
@@ -2511,13 +2585,15 @@ async function rodinHyper(brief: Brief) {
   if (low && !low.model_mesh?.url) throw new Error(`No mesh in ${dir}/pilot-low.json`)
   const mesh = low?.model_mesh ?? model.model_mesh
   // Hyper3D's rigging does not turn a model. One that faces another way is not sent, so the rig is not paid for.
-  const source = await fetched(mesh, low ? "low" : "model")
-  const at = source ? await facing(source) : null
-  say("faces", at ? `${at.faces}, widest along ${at.wide}, toes ${at.toes.join(", ")}` : "not known")
-  // A beast's feet say nothing of the way it faces, as a person's toes do: it is looked at, every time.
-  if (!rig && !args.includes("--facing=ok") && (four || !(at?.faces === "+z" && at.wide === "x"))) {
-    say("rig", `not made: the rigger wants the model facing +z. Look at ${dir}/pilot/model.glb, and run again with --pay --facing=ok if it does`)
-    return null
+  if (!brief.variantOf) {
+    const source = await fetched(mesh, low ? "low" : "model")
+    const at = source ? await facing(source) : null
+    say("faces", at ? `${at.faces}, widest along ${at.wide}, toes ${at.toes.join(", ")}` : "not known")
+    // A beast's feet say nothing of the way it faces, as a person's toes do: it is looked at, every time.
+    if (!rig && !args.includes("--facing=ok") && (four || !(at?.faces === "+z" && at.wide === "x"))) {
+      say("rig", `not made: the rigger wants the model facing +z. Look at ${dir}/pilot/model.glb, and run again with --pay --facing=ok if it does`)
+      return null
+    }
   }
   if (!rig) {
     rig = await fal<HyperAnswer>(`pilot rig ${id}`, HYPER.endpoint, {
@@ -2533,10 +2609,10 @@ async function rodinHyper(brief: Brief) {
     })
     await writeFile(`${dir}/pilot-rig.json`, `${JSON.stringify(rig, null, 2)}\n`)
     say("rig", `made, $${HYPER.cost.toFixed(2)}`)
-  } else say("rig", "kept")
+  } else say("rig", brief.variantOf ? `reused from ${brief.variantOf} ($0)` : "kept")
   // One file with every clip, each renamed from the stock name to the game's.
-  const all = await fetched(rig.model_mesh, "rigged-all")
-  if (!all) throw new Error(`No rigged model in ${dir}/pilot-rig.json`)
+  const all = await fetched(rig.model_mesh, "rigged-all", rigFrom)
+  if (!all) throw new Error(`No rigged model in ${rigFrom}/pilot-rig.json`)
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS)
   const doc = await io.read(all)
   // A clip comes back under its stock name, and in the stock's order, not the order asked for.
@@ -2640,13 +2716,14 @@ async function rodinHyper(brief: Brief) {
   await io.write(`${dir}/lod0.glb`, doc)
   const order = four ? WANT_BEAST.map(([role]) => role) : ["Idle", "Walk", "Shoot", "Swing", "Dodge", "Sidestep", "Hit", "Fall"]
   made.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99))
+  const baseGen = `${maker.name}${relay ? `, laid again with ${relay.faces} faces by Hyper3D Low Poly` : ""}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`
   return {
     rod: !!way,
     clips: made,
     rest: all,
-    generator: `${maker.name}${relay ? `, laid again with ${relay.faces} faces by Hyper3D Low Poly` : ""}, rigged by Hyper3D${skinning === "shell" ? " with shell skinning" : ""}`,
+    generator: brief.variantOf ? `Variant of ${brief.variantOf} (${baseGen})` : baseGen,
     weights: "hyper3d",
-    cost: maker.cost + lowCost + HYPER.cost,
+    cost: brief.variantOf ? 0 : maker.cost + lowCost + HYPER.cost,
   }
 }
 
@@ -2661,11 +2738,16 @@ async function main() {
     await writeFile(`${dir}/figure.json`, `${JSON.stringify({ ...was, lods }, null, 2)}\n`)
     return
   }
-  const brief =JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
+  const rawBrief = JSON.parse(await readFile(`${dir}/character.json`, "utf8")) as Brief
+  const baseBrief = rawBrief.variantOf ? await kept<Record<string, unknown>>(`asset-library/characters/${rawBrief.variantOf}/character.json`) : null
+  if (rawBrief.variantOf && !baseBrief) throw new Error(`No base brief at asset-library/characters/${rawBrief.variantOf}/character.json`)
+  const brief = baseBrief ? inheritBrief(rawBrief as Brief & Record<string, unknown>, baseBrief) : rawBrief
   const sheet = `${home(brief)}/apose-front.png`
-  if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
+  if (!existsSync(sheet)) throw new Error(`No sheet: run pnpm assets ${brief.variantOf ?? brief.body ?? id} first, and look at ${home(brief)}/sheet.png`)
   // The day its model was made is kept through every time it is put together again: a trial's is its rig's.
-  const before = existsSync(`${dir}/${brief.body ? "pilot-rig.json" : "pilot-model.json"}`) ? await kept<{ source?: { made?: string } }>(`${dir}/figure.json`) : null
+  const before = existsSync(`${dir}/${brief.variantOf ? "figure.json" : brief.body ? "pilot-rig.json" : "pilot-model.json"}`)
+    ? await kept<{ source?: { made?: string } }>(`${dir}/figure.json`)
+    : null
   const today = new Date().toISOString().slice(0, 10)
   const motion = (await kept<{ motion?: unknown }>(`${dir}/figure.json`))?.motion
   const made = brief.maker === "rodin" || brief.maker === "hi3d" || brief.maker === "lowpoly" ? await rodinHyper(brief) : await tripoMeshy(brief)
@@ -2677,6 +2759,7 @@ async function main() {
     const smoothed = await lidless(brief)
     say("lids", smoothed ? `${smoothed.places} points about the eyes smoothed, moved ${smoothed.mm} mm at the most` : "no eyes found on the model: run --redo=face")
   }
+  if (brief.recolor?.length) say("recolor", `${await recolor(brief.recolor, painted?.mask)} texels recoloured`)
   if ("rod" in made && made.rod) say("rod", `${await unblue()} texels of blue beside it given the colour of the skin`)
   if (brief.gloss !== undefined && brief.gloss < 1) say("gloss", `${await dull(brief.gloss)} texels keep ${brief.gloss} of it where they are not metal`)
   if (brief.lit) say("lit", `${await lit(brief.lit.hue, brief.lit.strength)} texels of that hue give off their colour ${brief.lit.strength} times over`)
@@ -2713,7 +2796,11 @@ async function main() {
     ...(moves ? { motion: moves } : {}),
     lods,
   }
-  await sharp(sheet).resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
+  const preview =
+    brief.variantOf && brief.card?.front && existsSync(`public${brief.card.front}`)
+      ? sharp(`public${brief.card.front}`).flatten({ background: "#808080" })
+      : sharp(brief.variantOf && existsSync(`${dir}/face.png`) ? `${dir}/face.png` : sheet)
+  await preview.resize({ height: 640 }).webp({ quality: 85 }).toFile(`${dir}/front.webp`)
   await writeFile(`${dir}/figure.json`, `${JSON.stringify({ id, ...figure }, null, 2)}\n`)
   say("shelf", `on the shelf: /settings/realm-of-myr/assets?id=${id}`)
 }

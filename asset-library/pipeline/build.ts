@@ -37,12 +37,12 @@ interface Brief {
   // The cast ids this character goes by in the stagings: how the library joins the figure to its cards.
   cast: string[]
   height: number
-  card: { front: string; back: string }
+  card?: { front: string; back: string }
   who: string
   // Where what the card's hands hold goes on the sheet. A generator fuses anything held into the arm.
-  stow: string
+  stow?: string
   // How far out the arms stand, in degrees: 40, or 45 for a bulky outfit.
-  arms: number
+  arms?: number
   party?: boolean
   // What it holds, built in its hand when it is shown (props.ts) and left off the sheet: { what: "staff", hand: "R", length: 2.1 }.
   // A bow through a hand made round a rod is carried at all times (packages/stage/src/figures/weapons.ts): { what:
@@ -72,6 +72,9 @@ interface Brief {
   // "four": a beast that stands on four feet. Its sheets are painted on all fours, a second one of its two sides, and
   // `pilot.ts` makes and rigs it: the joints and the close face are a person's and are not looked for.
   stance?: "four"
+  // A $0 reskinned variant of an already-rigged figure (pilot.ts): reuses that figure's model, rig and pose framing,
+  // paints only a new close-up face here (when `face: "close"`), and recolours its outfit in pilot.ts.
+  variantOf?: string
 }
 
 const args = process.argv.slice(2)
@@ -143,6 +146,16 @@ Keep everything where it is: the same framing and crop, the head the same size a
 
 Add only what a sharper photograph would show: skin texture and pores, freckles, eyelashes, the detail of the irises with a small catch light, the lines of the lips, single hairs. Natural skin, not retouched, not shiny. Mouth closed. No text.`
 
+// A variant's own face, painted onto the base model's head framing so it fits the base mesh cleanly without looking
+// like a twin. Keeps the exact head size, position, lighting and compatible skin tone so the neck blends cleanly.
+const variantFacePrompt = (b: Brief, hasCard: boolean) => `The first attached image is a studio photograph crop of a base character's head, seen from directly in front on a grey background.${hasCard ? " The second attached image is the painted game card of a DIFFERENT person who will wear this same head silhouette." : ""}
+
+Make one square photorealistic studio portrait of THIS different person: ${b.who}.
+
+Keep the EXACT framing, head size, head position, eye line, nose position, mouth position, soft even shadowless front light, grey background, and compatible neck skin tone from the first image so it maps cleanly onto the same 3D head mesh. Keep the outer hairline/helmet/collar silhouette from the first image.
+
+Change the facial identity so they do NOT look like the same person: distinct eyes, brows, nose bridge, cheeks, jaw, age, expression (${b.expression ?? "calm neutral face, mouth closed"}), facial hair or clean-shaven look, scars or weathered skin as fits ${b.who}. Natural skin texture and pores, not retouched, not shiny. Mouth closed. No text.`
+
 function run(label: string, command: string, argv: string[]) {
   const r = spawnSync(command, argv, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
   if (r.status !== 0) throw new Error(`${label} failed: ${(r.stderr || r.stdout || "").trim().split("\n").slice(-6).join("\n")}`)
@@ -154,6 +167,7 @@ const last = (out: string, tag: string) => {
 }
 
 async function sheet(dir: string, b: Brief) {
+  if (!b.card) throw new Error(`No card in ${b.id}/character.json`)
   const card = async (file: string) => jpeg(await sharp(`public${file}`).flatten({ background: "#808080" }).toBuffer(), 1536)
   const front = b.sheet === "front"
   const png = await codexPaint(`character sheet ${b.id}`, prompt(b), [await card(b.card.front), await card(b.card.back)], front ? "portrait 2:3" : "landscape 3:2")
@@ -230,6 +244,27 @@ async function shelve(dir: string, b: Brief) {
 async function build(b: Brief) {
   const dir = `${ROOT}/${b.id}`
   const say = (step: string, what: string) => console.log(`${b.id}  ${step.padEnd(7)} ${what}`)
+  if (b.variantOf) {
+    const baseDir = `${ROOT}/${b.variantOf}`
+    if (!existsSync(`${baseDir}/apose-front.png`)) throw new Error(`No base sheet in ${baseDir}: make ${b.variantOf} first (or pnpm assets:fetch ${b.variantOf})`)
+    await mkdir(dir, { recursive: true })
+    if (b.stance !== "four" && b.face === "close") {
+      if (!existsSync(`${baseDir}/joints.json`)) throw new Error(`No joints in ${baseDir}/joints.json: run pnpm assets ${b.variantOf} first`)
+      await writeFile(`${dir}/apose-front.png`, await readFile(`${baseDir}/apose-front.png`))
+      await writeFile(`${dir}/joints.json`, await readFile(`${baseDir}/joints.json`))
+      if (made(dir, "apose-face.png", "face")) say("face", "kept")
+      else {
+        const python = (mode: string) => run(`face ${mode}`, "uv", ["run", "--quiet", "--python", "3.12", "--with", "mediapipe==0.10.14", "--with", "numpy", "asset-library/pipeline/face.py", mode, dir])
+        python("crop")
+        const refs = [await jpeg(await sharp(`${dir}/head-crop.png`).toBuffer(), 1536)]
+        const cardFront = b.card?.front && existsSync(`public${b.card.front}`) ? `public${b.card.front}` : null
+        if (cardFront) refs.push(await jpeg(await sharp(cardFront).flatten({ background: "#808080" }).toBuffer(), 1536))
+        await writeFile(`${dir}/face.png`, await codexPaint(`variant face ${b.id}`, variantFacePrompt(b, Boolean(cardFront)), refs, "square 1:1"))
+        say("face", `painted variant face and fitted: ${JSON.stringify(last(python("warp"), "FACE"))}`)
+      }
+    } else say("variant", `uses ${b.variantOf}'s model and rig ($0)`)
+    return say("next", `look at ${dir}/${b.face === "close" && b.stance !== "four" ? "face.png" : "character.json"}, then pnpm assets:pilot ${b.id}`)
+  }
   if (made(dir, "apose-front.png", "sheet")) say("sheet", "kept")
   else {
     await sheet(dir, b)
@@ -316,7 +351,7 @@ async function main() {
     for (const b of all) {
       const dir = `${ROOT}/${b.id}`
       const at = ["apose-front.png", "joints.json", "source.glb", "lod0.glb", "figure.json"].map((f) => (existsSync(`${dir}/${f}`) ? "■" : "□")).join("")
-      console.log(`${at}  ${b.id.padEnd(10)} ${b.name}${b.party ? "  (party)" : ""}`)
+      console.log(`${at}  ${b.id.padEnd(10)} ${b.name}${b.party ? "  (party)" : ""}${b.variantOf ? `  (variant of ${b.variantOf})` : ""}`)
     }
     return console.log("sheet, joints, model, rig, shelf")
   }
