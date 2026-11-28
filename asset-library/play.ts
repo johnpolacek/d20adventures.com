@@ -139,7 +139,8 @@ export async function builtPlay(setSpec: unknown, stagingSpec: unknown, look: Lo
   staging.painted = false
   const q = lookParams(look)
   applyLook(set, look, q)
-  editLook(set, look)
+  // Edits paired with `join` clear room for the joined set (scene.ts); builtPlay plays this set alone.
+  if (!look.join?.length) editLook(set, look)
   if (look.trees) markBuiltTrees(set)
   const cast = staging.cast ?? []
   const adventure = staging.id?.split("/")[0]

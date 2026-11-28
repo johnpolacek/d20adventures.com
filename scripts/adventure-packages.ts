@@ -75,7 +75,7 @@ async function gather(id: string, settingId: string) {
   const stagings: Record<string, unknown> = {}
   for (const [key, load] of Object.entries(STAGINGS)) if (key.startsWith(`${id}/`)) stagings[key.slice(id.length + 1)] = await load()
   const scenesFile = join(STAGE, "stagings", id, "scenes.json")
-  const scenes = existsSync(scenesFile) ? (JSON.parse(readFileSync(scenesFile, "utf8")) as Record<string, { set: string; staging: string }>) : {}
+  const scenes = existsSync(scenesFile) ? (JSON.parse(readFileSync(scenesFile, "utf8")) as Record<string, { set: string; staging: string; party?: string[] }>) : {}
   for (const [encounter, scene] of Object.entries(scenes)) if (!stagings[scene.staging]) missing.push(`staging ${id}/${scene.staging} (scene ${encounter})`)
   const setIds = new Set([...Object.values(stagings).map((s) => (s as { set?: string }).set), ...Object.values(scenes).map((s) => s.set)].filter((s): s is string => !!s))
   for (const set of [...setIds]) for (const j of LOOKS[set]?.join ?? []) setIds.add(j.set)
@@ -169,7 +169,10 @@ async function gather(id: string, settingId: string) {
     const want = new Set([...named].map((p) => p.slice(1)))
     want.add(`stage/art/${id}/${encounter}.webp`)
     // As asset-library/play.ts stands them: full detail for three figures or fewer, the middle level for more.
-    const standing = (staging?.cast ?? []).map((c) => looks[scene.set]?.figures?.[c.id] ?? cast[c.id]).filter((f): f is string => !!f)
+    // Adventures whose stagings use generic party slots (hero-1..3) swap premade heroes into them at play time.
+    const castIds = (staging?.cast ?? []).map((c) => c.id)
+    const premades = (scene.party?.length ? (runtime.artifacts.manifest.premadeCharacterIds ?? []) : []).filter((p) => !castIds.includes(p))
+    const standing = [...castIds, ...premades].map((c) => looks[scene.set]?.figures?.[c] ?? cast[c]).filter((f): f is string => !!f)
     const detail = standing.length <= 3 ? "lod0.glb" : "lod1.glb"
     for (const f of standing) for (const p of figurePaths(f).filter((p) => p.endsWith("figure.json") || p.endsWith(detail))) want.add(p)
     for (const c of staging?.cast ?? []) {

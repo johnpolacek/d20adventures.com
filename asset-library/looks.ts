@@ -54,6 +54,7 @@ const PIER_TREES: TreeSwap = {
 
 export const LOOKS: Record<string, Look> = {
   "realm-of-myr/kordavos-south-gate": {
+    play: true,
     // A cool fill sets the shadows against the low sun, the brazier and the post lantern throw a pool of their own
     // about the checkpoint, and rings mark the cast out of the crowd.
     params: {
@@ -73,7 +74,16 @@ export const LOOKS: Record<string, Look> = {
     // tracks across it are left off: from above they read as painted lines.
     materials: { ground: { stones: 0.2, relief: 0.03, grime: 0.8, variance: 0.45, roads: false } },
     // The party of five. Lyra and Poppen stand where the scene has Cassia and Yeva, and Thalbern is added beside them.
-    figures: { garlan: "garlan", branka: "branka", cassia: "lyra", yeva: "poppen", milos: "milos", thalbern: "thalbern" },
+    figures: {
+      garlan: "garlan",
+      branka: "branka",
+      cassia: "lyra-hi3d",
+      yeva: "poppen-hi3d-bright",
+      milos: "milos",
+      thalbern: "thalbern-hi3d",
+      "1749159962941": "lyra-hi3d",
+      "1749307435667": "poppen-hi3d-bright",
+    },
     cast: [
       {
         id: "thalbern",
@@ -320,6 +330,18 @@ export const LOOKS: Record<string, Look> = {
     play: true,
     params: { paint: "0", isobox: "-14,-14,14,14", isowhole: "1", isohaze: "1", bloom: "on" },
     shots: { wide: { iso: "20,25,40,30" } },
+  },
+  // The Marquis Road of The Road to Kordavos, played as the sets already build them: their own sun, sky and haze,
+  // with the cast standing as figures.
+  "realm-of-myr/marquis-road": {
+    play: true,
+    params: { paint: "0", isobox: "-20,-20,20,24", isowhole: "1", isohaze: "1", bloom: "on" },
+    shots: { wide: { iso: "20,25,45,30", isoat: "0,4" } },
+  },
+  "realm-of-myr/marquis-road-fortune": {
+    play: true,
+    params: { paint: "0", isobox: "-16,-16,16,16", isowhole: "1", isohaze: "1", bloom: "on" },
+    shots: { wide: { iso: "20,25,36,30", isoat: "-3,-2" } },
   },
   // The Kordavos docks after the drake broke out of the Star of Faelendar's hold, by day. Not played yet: Astrid,
   // Petra and the drake have no figures. The party stands as at the Gates, Lyra for Cassia and Poppen for Yeva.

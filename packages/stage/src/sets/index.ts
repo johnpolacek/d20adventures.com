@@ -117,6 +117,7 @@ export const STAGINGS: Record<string, () => Promise<unknown>> = {
 export const FIGURES: Record<string, () => Promise<Record<string, string>>> = {
   "covert-cargo": () => import("../stagings/covert-cargo/figures.json").then((m) => m.default),
   "the-midnight-summons": () => import("../stagings/the-midnight-summons/figures.json").then((m) => m.default),
+  "the-road-to-kordavos": () => import("../stagings/the-road-to-kordavos/figures.json").then((m) => m.default),
 }
 // Each adventure's scenes (the desktop app's scenes.ts) and the card portraits of cast whose cards have none.
 export const SCENE_FILES: Record<string, () => Promise<Record<string, unknown>>> = {
