@@ -34,6 +34,17 @@ type ChatMessage = {
   createdAt: number
 }
 
+type ChatHistoryState =
+  | { kind: "idle"; hasOlder: boolean }
+  | { kind: "loading_initial"; hasOlder: boolean }
+  | { kind: "loading_older"; hasOlder: boolean }
+  | { kind: "error"; message: string; hasOlder: boolean }
+
+type ChatSendState =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "error"; message: string }
+
 const CHAT_PAGE_SIZE = 50
 
 function ChatMessageList({
@@ -135,13 +146,18 @@ export default function GameChat({ adventureId, characterName, variant = "floati
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
-  const [isLoadingOlder, setIsLoadingOlder] = useState(false)
-  const [hasOlderMessages, setHasOlderMessages] = useState(false)
-  const [historyError, setHistoryError] = useState<string | null>(null)
+  const [history, setHistory] = useState<ChatHistoryState>({ kind: "idle", hasOlder: false })
+  const [sendState, setSendState] = useState<ChatSendState>({ kind: "idle" })
   const [unseenCount, setUnseenCount] = useState(0)
   const ids = useRef<Set<string>>(new Set())
   const unseenIds = useRef<Set<string>>(new Set())
+  const isActiveRef = useRef(isActive)
+  isActiveRef.current = isActive
+
+  const isLoadingHistory = history.kind === "loading_initial"
+  const isLoadingOlder = history.kind === "loading_older"
+  const hasOlderMessages = history.hasOlder
+  const historyError = history.kind === "error" ? history.message : null
 
   // Determine default character name for this user from latest messages as fallback
   type Character = { type?: string; userId?: string; name?: string; controlledBy?: string }
@@ -189,63 +205,76 @@ export default function GameChat({ adventureId, characterName, variant = "floati
 
   const loadLatestHistory = useCallback(async () => {
     if (!effectiveAdventureId) return
-    setIsLoadingHistory(true)
-    setHistoryError(null)
+    setHistory((prev) => ({ kind: "loading_initial", hasOlder: prev.hasOlder }))
 
     try {
       const latest = await fetchRecentMessages(effectiveAdventureId as Id<"adventures">, CHAT_PAGE_SIZE)
       mergeMessages(latest as ChatMessage[], "replace")
-      setHasOlderMessages(latest.length === CHAT_PAGE_SIZE)
+      setHistory({ kind: "idle", hasOlder: latest.length === CHAT_PAGE_SIZE })
 
       if (latest.length > 0) {
         setLastSeenTimestamp(effectiveAdventureId, latest[latest.length - 1].createdAt)
       }
     } catch (error) {
-      setHistoryError(error instanceof Error ? error.message : "Unable to load chat history")
-    } finally {
-      setIsLoadingHistory(false)
+      setHistory((prev) => ({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to load chat history",
+        hasOlder: prev.hasOlder,
+      }))
     }
   }, [effectiveAdventureId, mergeMessages])
 
   const loadOlderMessages = useCallback(async (): Promise<number> => {
-    if (!effectiveAdventureId || messages.length === 0 || isLoadingOlder) return 0
+    if (!effectiveAdventureId || messages.length === 0 || history.kind === "loading_older" || history.kind === "loading_initial") return 0
 
     const oldestMessage = messages[0]
-    setIsLoadingOlder(true)
-    setHistoryError(null)
+    setHistory((prev) => ({ kind: "loading_older", hasOlder: prev.hasOlder }))
 
     try {
       const older = await fetchMessagesBefore(effectiveAdventureId as Id<"adventures">, oldestMessage.createdAt, CHAT_PAGE_SIZE)
       const addedCount = mergeMessages(older as ChatMessage[], "prepend")
-      setHasOlderMessages(older.length === CHAT_PAGE_SIZE)
+      setHistory({ kind: "idle", hasOlder: older.length === CHAT_PAGE_SIZE })
       return addedCount
     } catch (error) {
-      setHistoryError(error instanceof Error ? error.message : "Unable to load older chat messages")
+      setHistory((prev) => ({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Unable to load older chat messages",
+        hasOlder: prev.hasOlder,
+      }))
       return 0
-    } finally {
-      setIsLoadingOlder(false)
     }
-  }, [effectiveAdventureId, isLoadingOlder, mergeMessages, messages])
+  }, [effectiveAdventureId, history.kind, mergeMessages, messages])
 
   useEffect(() => {
     if (!isActive) return
+    unseenIds.current = new Set()
+    setUnseenCount(0)
     void loadLatestHistory()
   }, [loadLatestHistory, isActive])
 
-  // Main SSE effect while the chat is visible (rail always, floating while open)
+  // Single EventSource per adventure: merges live messages when active and counts unseen messages when collapsed.
   useEffect(() => {
-    if (!isActive || !effectiveAdventureId) return
+    if (!effectiveAdventureId) return
 
     const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
     es.onmessage = (evt) => {
       try {
         const batch: ChatMessage[] = JSON.parse(evt.data)
-        if (Array.isArray(batch) && batch.length) {
-          const addedCount = mergeMessages(batch, "append")
+        if (!Array.isArray(batch) || batch.length === 0) return
 
+        if (isActiveRef.current) {
+          const addedCount = mergeMessages(batch, "append")
           if (addedCount > 0) {
             const newestTimestamp = Math.max(...batch.map((m) => m.createdAt))
             setLastSeenTimestamp(effectiveAdventureId, newestTimestamp)
+          }
+        } else {
+          const lastSeen = getLastSeenTimestamp(effectiveAdventureId)
+          for (const m of batch) {
+            if (m.createdAt > lastSeen && !unseenIds.current.has(m._id)) {
+              unseenIds.current.add(m._id)
+              setUnseenCount((prev) => prev + 1)
+            }
           }
         }
       } catch {}
@@ -256,37 +285,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
     return () => {
       es.close()
     }
-  }, [effectiveAdventureId, mergeMessages, isActive])
-
-  // Separate SSE effect for tracking unseen messages when the floating chat is closed
-  useEffect(() => {
-    if (isActive || !effectiveAdventureId) return
-
-    const lastSeen = getLastSeenTimestamp(effectiveAdventureId)
-    unseenIds.current = new Set()
-    setUnseenCount(0)
-
-    const es = new EventSource(`/api/adventure/chat/${effectiveAdventureId}`)
-    es.onmessage = (evt) => {
-      try {
-        const batch: ChatMessage[] = JSON.parse(evt.data)
-        if (Array.isArray(batch) && batch.length) {
-          batch.forEach((m) => {
-            if (m.createdAt > lastSeen && !unseenIds.current.has(m._id)) {
-              unseenIds.current.add(m._id)
-              setUnseenCount((prev) => prev + 1)
-            }
-          })
-        }
-      } catch {}
-    }
-    es.onerror = () => {
-      // Keep the stream alive; browser will retry
-    }
-    return () => {
-      es.close()
-    }
-  }, [isActive, effectiveAdventureId])
+  }, [effectiveAdventureId, mergeMessages])
 
   // Handle dialog state changes
   const handleOpenChange = (newOpen: boolean) => {
@@ -294,6 +293,7 @@ export default function GameChat({ adventureId, characterName, variant = "floati
 
     if (newOpen && effectiveAdventureId) {
       // Mark all messages as seen when opening
+      unseenIds.current = new Set()
       setUnseenCount(0)
       setLastSeenTimestamp(effectiveAdventureId, Date.now())
     }
@@ -301,30 +301,43 @@ export default function GameChat({ adventureId, characterName, variant = "floati
 
   async function handleSend() {
     const content = input.trim()
-    if (!content || !effectiveAdventureId) return
+    if (!content || !effectiveAdventureId || sendState.kind === "sending") return
     setInput("")
-    await sendChatMessage({ adventureId: effectiveAdventureId as Id<"adventures">, content, characterName: defaultCharacterName })
+    setSendState({ kind: "sending" })
+    try {
+      await sendChatMessage({ adventureId: effectiveAdventureId as Id<"adventures">, content, characterName: defaultCharacterName })
+      setSendState({ kind: "idle" })
+    } catch (error) {
+      setInput(content)
+      setSendState({ kind: "error", message: error instanceof Error ? error.message : "Could not send message" })
+    }
     // SSE will deliver the message back; no optimistic append needed
   }
 
   const currentUsername = user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || undefined
 
   const chatInput = (compact: boolean) => (
-    <div className={cn("flex gap-2 items-center", compact && "p-2")}>
-      <Input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Send a message…"
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            handleSend()
-          }
-        }}
-      />
-      <Button variant="outline" size={compact ? "sm" : "default"} onClick={handleSend} disabled={!input.trim() || !effectiveAdventureId}>
-        Send
-      </Button>
+    <div className={cn("flex flex-col gap-1", compact && "p-2")}>
+      {sendState.kind === "error" && <div className="text-xs text-red-300 px-1">{sendState.message}</div>}
+      <div className="flex gap-2 items-center">
+        <Input
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value)
+            if (sendState.kind === "error") setSendState({ kind: "idle" })
+          }}
+          placeholder="Send a message…"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault()
+              void handleSend()
+            }
+          }}
+        />
+        <Button variant="outline" size={compact ? "sm" : "default"} onClick={() => void handleSend()} disabled={!input.trim() || !effectiveAdventureId || sendState.kind === "sending"}>
+          {sendState.kind === "sending" ? "Sending…" : "Send"}
+        </Button>
+      </div>
     </div>
   )
 
