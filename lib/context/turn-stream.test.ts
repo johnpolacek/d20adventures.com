@@ -38,42 +38,44 @@ test("TurnStreamController closes EventSource before backoff, cancels backoff on
     maxDelayMs: 30,
   })
 
+  const kind = () => ctrl.state.kind
+
   ctrl.connect()
-  assert.equal(ctrl.state.kind, "connecting")
+  assert.equal(kind(), "connecting")
   assert.equal(created.length, 1)
 
   // Open + deliver a message
   created[0].source.onopen?.({})
-  assert.equal(ctrl.state.kind, "open")
+  assert.equal(kind(), "open")
   created[0].source.onmessage?.({ data: '{"ok":true}' })
   assert.deepEqual(messages, ['{"ok":true}'])
 
   // Error closes the EventSource immediately BEFORE backoff fires
   created[0].source.onerror?.({})
   assert.equal(created[0].closed, 1)
-  assert.equal(ctrl.state.kind, "backoff")
+  assert.equal(kind(), "backoff")
 
   // Wait for retry 1 -> fails -> retry 2 -> fails -> exhausted
   await new Promise((r) => setTimeout(r, 25))
   assert.equal(created.length, 2)
-  assert.equal(ctrl.state.kind, "connecting")
+  assert.equal(kind(), "connecting")
   created[1].source.onerror?.({})
   assert.equal(created[1].closed, 1)
-  assert.equal(ctrl.state.kind, "backoff")
+  assert.equal(kind(), "backoff")
 
   await new Promise((r) => setTimeout(r, 45))
   assert.equal(created.length, 3)
   created[2].source.onerror?.({})
   assert.equal(created[2].closed, 1)
-  assert.equal(ctrl.state.kind, "exhausted")
+  assert.equal(kind(), "exhausted")
 
   // Tab visibility resets attempts and reconnects cleanly
   ctrl.onVisible()
-  assert.equal(ctrl.state.kind, "connecting")
+  assert.equal(kind(), "connecting")
   assert.equal(created.length, 4)
 
   // Dispose closes active source and cancels timers
   ctrl.dispose()
   assert.equal(created[3].closed, 1)
-  assert.equal(ctrl.state.kind, "idle")
+  assert.equal(kind(), "idle")
 })

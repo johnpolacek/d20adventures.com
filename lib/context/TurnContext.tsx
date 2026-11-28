@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/nextjs"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { TurnStreamController, type TurnStreamState } from "@/lib/context/turn-stream"
+import { type EventSourceLike, TurnStreamController, type TurnStreamState } from "@/lib/context/turn-stream"
 import { mapConvexTurnToTurn } from "@/lib/utils"
 import type { Turn } from "@/types/adventure"
 
@@ -37,7 +37,7 @@ export const TurnProvider = ({ adventureId, initialTurn, disableSSE = false, chi
     }
 
     const controller = new TurnStreamController({
-      createEventSource: () => new EventSource(`/api/adventure/stream/${adventureId}`),
+      createEventSource: () => new EventSource(`/api/adventure/stream/${adventureId}`) as unknown as EventSourceLike,
       onStateChange: setStreamState,
       onMessage: (raw) => {
         let parsed: unknown = null

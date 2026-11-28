@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { buildNpcInitiativeOrder } from "../../src/services/npc-turn-intent-service"
 import { afterHarm, atRoundStart } from "../../src/sheet/death"
-import { applySlotEvent, slotFlags, slotOf, transitionTurnSlot, withSlot } from "../../src/sheet/turn-slot"
+import { applySlotEvent, slotFlags, slotOf, transitionTurnSlot, type TurnSlotFlags, withSlot } from "../../src/sheet/turn-slot"
 import type { TurnCharacter } from "../../src/types/adventure"
 import { DEATH_SAVE, type RollRequirement } from "../../src/validations/roll-requirement-schema"
 
@@ -23,7 +23,7 @@ const FOLLOWUP_ROLL: RollRequirement = {
 }
 
 test("slotOf and withSlot round-trip pending, awaiting_roll, and complete slots losslessly", () => {
-  const base = { id: "hero", name: "Lyra", hasReplied: false, isComplete: false }
+  const base: { id: string; name: string } & TurnSlotFlags = { id: "hero", name: "Lyra", hasReplied: false, isComplete: false }
   assert.deepEqual(slotOf(base), { phase: "pending" })
   assert.deepEqual(slotFlags({ phase: "pending" }), { hasReplied: false, isComplete: false })
 
@@ -98,10 +98,10 @@ test("buildNpcInitiativeOrder includes dominated heroes awaiting a roll and excl
 
   const midRollHuman = withSlot({ ...base, id: "human", initiative: 20 }, { phase: "awaiting_roll", required: SKILL_ROLL })
   const midRollDominated = withSlot(
-    { ...base, id: "dominated", initiative: 18, master: { id: "mage", spell: "dominate-person", side: "foe" } },
+    { ...base, id: "dominated", initiative: 18, master: { id: "mage", spell: "dominate-person", side: "foe" as const } },
     { phase: "awaiting_roll", required: SKILL_ROLL }
   )
-  const midRollAi = withSlot({ ...base, id: "ai", initiative: 16, controlledBy: "ai" }, { phase: "awaiting_roll", required: SKILL_ROLL })
+  const midRollAi = withSlot({ ...base, id: "ai", initiative: 16, controlledBy: "ai" as const }, { phase: "awaiting_roll", required: SKILL_ROLL })
   const dyingHuman = withSlot({ ...base, id: "dying", initiative: 14, hitPoints: 0, healthPercent: 0 }, { phase: "awaiting_roll", required: DEATH_SAVE })
   const pendingNpc = applySlotEvent({ ...base, id: "npc", type: "npc", initiative: 12 } as TurnCharacter, { type: "reset" })
   const completeNpc = applySlotEvent({ ...base, id: "done-npc", type: "npc", initiative: 25 } as TurnCharacter, { type: "complete" })
