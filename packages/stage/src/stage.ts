@@ -197,6 +197,7 @@ export class Stage {
   private shadowCap = 4096
   motion: boolean
   activeShot: string | null = null
+  private shotListeners = new Set<(shot: string | null) => void>()
   private activeFov: number | null = null
   ready = false
 
@@ -735,7 +736,11 @@ export class Stage {
     this.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
     this.sweepLeft = authored?.sweep ? THREE.MathUtils.degToRad(authored.sweep) : Number.POSITIVE_INFINITY
     if (this.controls) this.controls.minPolarAngle = 0
-    this.activeShot = typeof which === "string" ? which : null
+    const nextShot = typeof which === "string" ? which : null
+    if (this.activeShot !== nextShot) {
+      this.activeShot = nextShot
+      for (const listener of this.shotListeners) listener(nextShot)
+    }
     this.activeFov = s.fov
     if (painted) {
       const on = authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []
@@ -2190,7 +2195,16 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     return new Promise((resolve) => this.canvas.toBlob(resolve, "image/png"))
   }
 
+  /** Subscribes to changes in `activeShot`. Returns an unsubscribe function. */
+  onShotChange(listener: (shot: string | null) => void): () => void {
+    this.shotListeners.add(listener)
+    return () => {
+      this.shotListeners.delete(listener)
+    }
+  }
+
   dispose() {
+    this.shotListeners.clear()
     for (const t of this.joltTimers) clearTimeout(t)
     if (this.probe) {
       this.probe.seen.depthTexture?.dispose()
