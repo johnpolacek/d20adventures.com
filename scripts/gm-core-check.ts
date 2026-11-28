@@ -20,8 +20,9 @@ import { assembleGameplayContextPacket, buildWikiEncounterProgressionPrompt, pac
 import { build } from "esbuild"
 import ts from "typescript"
 import { z } from "zod"
-import { commitWikiTurnAdvance, joinAdventure, submitReply } from "../convex/adventure"
+import { commitWikiTurnAdvance, joinAdventure, patchAdventure, submitReply } from "../convex/adventure"
 import { claimTurnAudioGeneration, failTurnAudio, finalizeTurnAudio } from "../convex/turnAudio"
+import { createTurn as createTurnMinimal, patchAdventure as patchAdventureMinimal } from "../convex/turns"
 import { compileAdventureSourceTree } from "../lib/wiki-adventures/compiler"
 import { getLocalWikiAdventureDefinition, loadLocalWikiAdventureRuntime, readLocalWikiAdventureSourceFiles } from "../lib/wiki-adventures/local-runtime"
 
@@ -918,6 +919,38 @@ async function phase0Guards() {
   }
   await assert.rejects(() => call(submitReply, { db: slotDb }, { turnId: "slot-turn", characterId: "c-done", story: [] }), /already acted/)
   await assert.rejects(() => call(submitReply, { db: slotDb }, { turnId: "slot-turn", characterId: "c-roll", story: [] }), /already acted/)
+
+  // Phase 1C (adventure lifecycle): guarded status transitions & terminal completed guard.
+  const lifecycleAdvs = new Map<string, any>([
+    ["lobby", { _id: "lobby", status: "waitingForPlayers" }],
+    ["live", { _id: "live", status: "active", currentTurnId: "t1", currentEncounterId: "e1" }],
+    ["done", { _id: "done", status: "completed", endedAt: 1000, currentTurnId: "t1", currentEncounterId: "e1" }],
+  ])
+  const lifecycleDb = {
+    get: async (id: string) => (lifecycleAdvs.has(id) ? clone(lifecycleAdvs.get(id)) : null),
+    patch: async (id: string, patch: any) => {
+      lifecycleAdvs.set(id, { ...lifecycleAdvs.get(id), ...clone(patch) })
+    },
+  }
+  await assert.rejects(() => call(patchAdventure, { db: lifecycleDb }, { adventureId: "lobby", patch: { status: "completed" } }), /Invalid adventure status transition/)
+  await assert.rejects(() => call(patchAdventureMinimal, { db: lifecycleDb }, { adventureId: "done", patch: { status: "active" } }), /Invalid adventure status transition/)
+  await assert.rejects(
+    () =>
+      call(
+        commitWikiTurnAdvance,
+        { db: lifecycleDb },
+        { adventureId: "done", expectedCurrentTurnId: "t1", expectedCurrentEncounterId: "e1", nextEncounterId: "e2", title: "Next", story: [], characters: [], order: 2 }
+      ),
+    /already ended/
+  )
+  await assert.rejects(
+    () => call(createTurnMinimal, { db: lifecycleDb }, { adventureId: "done", encounterId: "e2", title: "Next", story: [], characters: [], order: 2 }),
+    /already ended/
+  )
+  await call(patchAdventure, { db: lifecycleDb }, { adventureId: "lobby", patch: { status: "active" } })
+  assert.equal(lifecycleAdvs.get("lobby").status, "active")
+  await call(patchAdventureMinimal, { db: lifecycleDb }, { adventureId: "lobby", patch: { status: "completed", endedAt: 2000 } })
+  assert.equal(lifecycleAdvs.get("lobby").status, "completed")
 }
 
 async function main() {

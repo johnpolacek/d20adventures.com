@@ -2,25 +2,18 @@ import { v } from "convex/values"
 import { slotOf, transitionTurnSlot, withSlot } from "../packages/gm-core/src/sheet/turn-slot"
 import { mergeKnowledge } from "../packages/gm-core/src/story/knowledge"
 import type { Doc, Id } from "./_generated/dataModel"
+import {
+  adventurePatchValidator,
+  applyAdventurePatch,
+  assertAdventureActiveForAdvance,
+  assertAdventureTransition,
+  contentRefValidator,
+  createTurnArgs,
+  generatedByValidator,
+  insertTurn,
+} from "./lib/adventure-transitions"
 import { serverAction, serverMutation, serverQuery } from "./serverSecret"
 import { knowledgeValidator, storyValidator } from "./story"
-
-const contentRefValidator = v.object({
-  source: v.union(v.literal("published"), v.literal("preview")),
-  settingId: v.string(),
-  planId: v.string(),
-  contentVersion: v.optional(v.string()),
-  contentHash: v.optional(v.string()),
-  versionId: v.optional(v.string()),
-  previewDraftId: v.optional(v.string()),
-  schemaVersion: v.string(),
-})
-
-const generatedByValidator = v.object({
-  model: v.optional(v.string()),
-  promptVersion: v.optional(v.string()),
-  contextHash: v.optional(v.string()),
-})
 
 // Create a new adventure
 export const createAdventure = serverMutation({
@@ -214,69 +207,10 @@ export const removeAiCompanion = serverMutation({
   },
 })
 
-// Create a new turn for an adventure
+// Create a new turn for an adventure and mark it active
 export const createTurn = serverMutation({
-  args: {
-    adventureId: v.id("adventures"),
-    encounterId: v.string(),
-    title: v.string(),
-    story: storyValidator,
-    characters: v.array(v.any()), // Should match character object
-    order: v.number(),
-    adventurePatch: v.optional(v.any()),
-    transition: v.optional(v.any()),
-    generatedBy: v.optional(generatedByValidator),
-  },
-  handler: async (ctx, args) => {
-    // Check for duplicate order
-    const existing = await ctx.db
-      .query("turns")
-      .withIndex("by_adventure", (q) => q.eq("adventureId", args.adventureId))
-      .filter((q) => q.eq(q.field("order"), args.order))
-      .first()
-    if (existing) {
-      throw new Error(`A turn with order ${args.order} already exists for this adventure.`)
-    }
-    const now = Date.now()
-    const turnId = await ctx.db.insert("turns", {
-      adventureId: args.adventureId,
-      encounterId: args.encounterId,
-      title: args.title,
-      story: args.story,
-      characters: args.characters,
-      order: args.order,
-      adventurePatch: args.adventurePatch,
-      transition: args.transition,
-      generatedBy: args.generatedBy,
-      createdAt: now,
-      updatedAt: now,
-    })
-    // Update adventure's currentTurnId
-    await ctx.db.patch(args.adventureId, {
-      currentTurnId: turnId,
-      currentEncounterId: args.encounterId,
-      status: "active",
-      updatedAt: now,
-    })
-    return turnId
-  },
-})
-
-// Update a turn (story or characters)
-export const updateTurn = serverMutation({
-  args: {
-    turnId: v.id("turns"),
-    story: v.optional(storyValidator),
-    characters: v.optional(v.array(v.any())),
-  },
-  handler: async (ctx, args) => {
-    const now = Date.now()
-    const patch: Partial<Doc<"turns">> = { updatedAt: now }
-    if (args.story !== undefined) patch.story = args.story
-    if (args.characters !== undefined) patch.characters = args.characters as Doc<"turns">["characters"]
-    await ctx.db.patch(args.turnId, patch)
-    return true
-  },
+  args: createTurnArgs,
+  handler: async (ctx, args) => insertTurn(ctx, args, { activateAdventure: true }),
 })
 
 // Query: Get current adventure and its current turn
@@ -498,27 +432,9 @@ export const getAdventureById = serverQuery({
 export const patchAdventure = serverMutation({
   args: {
     adventureId: v.id("adventures"),
-    patch: v.object({
-      currentTurnId: v.optional(v.id("turns")),
-      currentEncounterId: v.optional(v.string()),
-      contentRef: v.optional(contentRefValidator),
-      voiceAssignments: v.optional(v.array(v.object({ characterId: v.string(), voice: v.string() }))),
-      adventureSummaryMarkdown: v.optional(v.string()),
-      discoveries: v.optional(v.array(v.any())),
-      entityUpdates: v.optional(v.array(v.any())),
-      openThreads: v.optional(v.array(v.any())),
-      resolvedThreadIds: v.optional(v.array(v.string())),
-      updatedAt: v.optional(v.number()),
-      endedAt: v.optional(v.number()),
-      status: v.optional(v.union(v.literal("waitingForPlayers"), v.literal("active"), v.literal("completed"))),
-      arrivals: v.optional(v.record(v.string(), v.string())),
-      // Add other fields as needed
-    }),
+    patch: adventurePatchValidator,
   },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.adventureId, args.patch)
-    return true
-  },
+  handler: async (ctx, args) => applyAdventurePatch(ctx, args.adventureId, args.patch),
 })
 
 // Mutation: Set Storyview auto-narration settings (toggle and pause state).
@@ -570,6 +486,9 @@ export const commitWikiTurnAdvance = serverMutation({
   handler: async (ctx, args) => {
     const adventure = await ctx.db.get(args.adventureId)
     if (!adventure) throw new Error("Adventure not found")
+    assertAdventureActiveForAdvance(adventure)
+    const nextStatus = args.isFinalEncounter ? "completed" : "active"
+    assertAdventureTransition(adventure.status, nextStatus)
     if (adventure.currentTurnId !== args.expectedCurrentTurnId) {
       throw new Error("Stale turn advance: current turn changed")
     }
