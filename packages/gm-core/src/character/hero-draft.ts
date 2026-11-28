@@ -88,12 +88,14 @@ export function heroConceptPrompt(opts: { race: string; archetype: string; gende
     .join("\n")
 }
 
-/** Uses the game master's LLM to generate a starting name, background, and optional adventure hook. */
+/** Uses the game master's LLM to generate a starting name, background, and (when the adventure has hooks) adventure hook. */
 export async function draftHeroConcept(
   llm: Llm,
   opts: { race: string; archetype: string; gender?: string; adventure?: HeroAdventure; hook?: string; avoidNames?: string[] }
 ): Promise<HeroConcept> {
-  return (await llm.generateObject({ prompt: heroConceptPrompt(opts), schema: heroConceptSchema })).object
+  const wantsHook = Boolean(opts.adventure?.hooks?.length || opts.adventure?.hookPrompt)
+  const schema = wantsHook ? heroConceptSchema.extend({ hook: text(300).min(1) }) : heroConceptSchema
+  return (await llm.generateObject({ prompt: heroConceptPrompt(opts), schema })).object
 }
 
 const listed = (items: string[]) => items.join(", ")

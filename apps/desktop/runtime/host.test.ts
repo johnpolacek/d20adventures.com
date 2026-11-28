@@ -488,6 +488,7 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
     let claimed = false
     let finishedReport: Record<string, unknown> | undefined
     let seenPrompt = ""
+    let hookRequired = false
     const ideaJob = job({ adventureId, kind: "heroIdea", userId: "guest", text: JSON.stringify({ race: "Elf", archetype: "Ranger", gender: "Female" }) }, "idea-1")
     const post: HostPost = async (_path, body) => {
       const b = body as Record<string, unknown>
@@ -506,8 +507,9 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
     }
     const conceptLlm = {
       ...failLlm,
-      generateObject: async ({ prompt }: { prompt: string }) => {
+      generateObject: async ({ prompt, schema }: { prompt: string; schema: { safeParse: (v: unknown) => { success: boolean } } }) => {
         seenPrompt = prompt
+        hookRequired = !schema.safeParse({ name: "Elowen Moss", background: "A frontier scout." }).success
         return {
           object: {
             name: "Elowen Moss",
@@ -528,6 +530,7 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
       wait: async () => {},
     })
     assert.match(seenPrompt, /Female Elf Ranger/)
+    assert.equal(hookRequired, true, "adventures with heroHooks must require hook in the schema")
     assert.deepEqual(finishedReport?.heroConcept, {
       name: "Elowen Moss",
       background: "A frontier scout raised along the northern timberline who knows every smuggling trail in the March.",
