@@ -5,6 +5,7 @@ import type { FloorView } from "@/components/floorplan/view"
 import AdventureHomeContent from "@/components/views/adventure-home-content"
 import { AdventureProvider } from "@/lib/context/AdventureContext"
 import { TurnProvider } from "@/lib/context/TurnContext"
+import type { HeroCreation } from "@/lib/heroes/creation"
 import type { Adventure, Turn as TurnType } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 
@@ -19,6 +20,7 @@ function AdventureHome({
   floor,
   invite,
   hosted,
+  creation,
 }: {
   adventurePlanId: string
   settingId: string
@@ -30,6 +32,7 @@ function AdventureHome({
   floor?: FloorView | null
   invite?: LobbyInvite
   hosted?: boolean
+  creation?: HeroCreation
 }) {
   return (
     <AdventureProvider settingId={settingId} adventurePlanId={adventurePlanId} adventure={adventure}>
@@ -42,6 +45,7 @@ function AdventureHome({
           floor={floor}
           invite={invite}
           hosted={hosted}
+          creation={creation}
         />
       </TurnProvider>
     </AdventureProvider>

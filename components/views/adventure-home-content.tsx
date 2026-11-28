@@ -5,13 +5,14 @@ import { useParams, usePathname } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import wait from "waait"
 import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
-import { InviteSignIn, LobbyIntro } from "@/components/adventure/invite-sign-in"
+import { InviteSignIn } from "@/components/adventure/invite-sign-in"
 import Turn from "@/components/adventure/turn"
 import type { FloorView } from "@/components/floorplan/view"
 import AccountRequired from "@/components/nav/account-required"
 import ImageHeader from "@d20/ui/image-header"
 import { Presence } from "@d20/ui/presence"
 import { useTurn } from "@/lib/context/TurnContext"
+import type { HeroCreation } from "@/lib/heroes/creation"
 import { findEncounterById } from "@/lib/map-utils"
 import { headerImage } from "@/lib/images"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,7 @@ function AdventureHomeContent({
   floor,
   invite,
   hosted,
+  creation,
 }: {
   initialImage: string
   initialSubtitle: string
@@ -35,6 +37,7 @@ function AdventureHomeContent({
   invite?: LobbyInvite
   // A hosted game plays on its own page, with the GM in the host's app.
   hosted?: boolean
+  creation?: HeroCreation
 }) {
   const { adventurePlanId, settingId } = useParams()
   const { isSignedIn, isLoaded } = useUser()
@@ -94,9 +97,7 @@ function AdventureHomeContent({
   if ((!turn || hosted) && adventurePlan && !isLoaded) return <div className="min-h-screen" />
   if ((!turn || hosted) && adventurePlan)
     return isSignedIn ? (
-      <LobbyIntro plan={adventurePlan}>
-        <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} />
-      </LobbyIntro>
+      <AdventureLobby adventure={adventure} adventurePlan={adventurePlan} invite={invite} hosted={hosted} creation={creation} />
     ) : (
       <InviteSignIn plan={adventurePlan} redirectUrl={redirectUrl} />
     )

@@ -5,6 +5,7 @@ import { loadAdventureLobby, loadAdventureWithNpc } from "@/app/_actions/load-ad
 import type { LobbyInvite } from "@/components/adventure/adventure-lobby"
 import AdventureHome from "@/components/views/adventure-home"
 import type { Doc, Id } from "@/convex/_generated/dataModel"
+import { heroCreation } from "@/lib/heroes/creation"
 import { guestSeat, openSeats, seatHero } from "@/lib/host/seats"
 import { readJsonFromS3 } from "@/lib/s3-utils"
 import { mapConvexTurnToTurn, reverseSlugify } from "@/lib/utils"
@@ -135,6 +136,8 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
     invite = { seats: heroes.filter((pc): pc is PCTemplate => !!pc), as: typeof as === "string" ? as : undefined, ...guestSeat(raw, (await auth()).userId) }
   }
 
+  const creation = !currentTurn ? await heroCreation(adventurePlanId) : undefined
+
   return (
     <AdventureHome
       settingId={settingId}
@@ -145,6 +148,7 @@ export default async function AdventurePage(props: { params: Promise<{ settingId
       adventurePlan={adventurePlan}
       invite={invite}
       hosted={Boolean(raw?.host)}
+      creation={creation}
       // The turn stream answers players only.
       disableSSE={!playing}
     />

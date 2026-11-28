@@ -1,0 +1,2965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adventure Lobby Design Exploration — D20 Adventures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Rethink+Sans:wght@400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: "Cinzel Decorative", Georgia, serif;
+    --font-display-clean: "Cinzel", Georgia, serif;
+    --font-serif: "Literata", Georgia, serif;
+    --font-sans: "Rethink Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "Syne Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* D20 Core Tokens (components/theme.css) */
+    --primary-100: #bebade;
+    --primary-200: #a49ed1;
+    --primary-300: #8a83c4;
+    --primary-400: #7067b7;
+    --primary-500: #594fa6;
+    --primary-600: #453d80;
+    --primary-700: #302b5a;
+    --primary-800: #1c1934;
+    --primary-900: #07070e;
+
+    --accent-100: #fef3c7;
+    --accent-200: #fde68a;
+    --accent-300: #fcd34d;
+    --accent-400: #fbbf24;
+    --accent-500: #f59e0b;
+
+    --action-50: #eff6ff;
+    --action-200: #bfdbfe;
+    --action-500: #3b82f6;
+    --action-600: #2563eb;
+    --action-700: #1d4ed8;
+    --action-950: #172554;
+
+    --roll-success: #b7d38a;
+    --roll-failure: #e39a7c;
+
+    /* Warm Ledger & Brass Tokens */
+    --brass-50: #fff5dd;
+    --brass-150: #e6d6b8;
+    --brass-200: #d9c292;
+    --brass-300: #b9a77f;
+    --brass-400: #9f8c64;
+    --brass-600: #6c5738;
+    --brass-800: #3d2c1a;
+    --ink-850: #24211d;
+    --ink-900: #1a1612;
+    --ink-925: #14120f;
+    --ink-950: #0d0c0b;
+
+    --tex-buried: url("../../public/images/app/backgrounds/buried.png");
+    --tex-black-paper: url("../../public/images/app/backgrounds/black-paper.png");
+    --tex-paper: url("../../public/images/app/backgrounds/paper-texture.png");
+    --tex-parchment: url("../../public/images/app/backgrounds/parchment-texture.webp");
+    --tex-rule: url("../../public/images/app/art/texture-line.png");
+    --cover-art: url("../../public/stage/covers/the-road-to-kordavos.jpg");
+    --scene-art: url("../../public/stage/art/the-road-to-kordavos/well-met.webp");
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #08080b;
+    color: #f4f4f6;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+
+  /* ─────────────────────────────────────────────────────────────
+     EXPLORATION STUDIO BAR
+     ───────────────────────────────────────────────────────────── */
+  .studio-bar {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(10, 10, 14, 0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+  .studio-bar-inner {
+    max-width: 1520px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+  }
+  .studio-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-right: auto;
+  }
+  .studio-brand h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent-300);
+  }
+  .studio-brand span {
+    font-size: 12px;
+    color: #9898a8;
+  }
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #8b86a8;
+    margin-right: 4px;
+  }
+  .seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .seg button {
+    border: 0;
+    background: transparent;
+    color: #b4b4c0;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 140ms, color 140ms;
+    white-space: nowrap;
+  }
+  .seg button:hover { color: #fff; }
+  .seg button.active {
+    background: rgba(112, 103, 183, 0.36);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(164, 158, 209, 0.42);
+  }
+  .reset-btn {
+    border: 1px solid rgba(252, 211, 77, 0.32);
+    background: rgba(252, 211, 77, 0.09);
+    color: var(--accent-200);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    display: none;
+  }
+  .reset-btn.show { display: inline-flex; align-items: center; gap: 5px; }
+  .reset-btn:hover { background: rgba(252, 211, 77, 0.18); }
+
+  .jump-bar {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 7px 24px;
+    max-width: 1520px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jump-bar::-webkit-scrollbar { display: none; }
+  .jump-pill {
+    flex: none;
+    text-decoration: none;
+    font-size: 12px;
+    color: #a8a8b8;
+    padding: 4px 11px;
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 130ms;
+  }
+  .jump-pill b {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    color: var(--accent-300);
+    margin-right: 5px;
+    font-size: 11px;
+  }
+  .jump-pill:hover {
+    color: #fff;
+    border-color: rgba(252, 211, 77, 0.38);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .studio-intro {
+    max-width: 1520px;
+    margin: 22px auto 12px;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 14px;
+  }
+  .studio-intro p {
+    margin: 0;
+    max-width: 82ch;
+    color: #a3a3b4;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .studio-intro strong { color: #ececf4; font-weight: 600; }
+
+  .compare-bar {
+    display: none;
+    max-width: 1520px;
+    margin: 14px auto 0;
+    padding: 0 24px;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  body.mode-compare .compare-bar { display: flex; }
+  body.mode-compare .jump-bar { display: none; }
+  .compare-select {
+    background: #14141b;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  /* Main Gallery */
+  .gallery {
+    max-width: 1520px;
+    margin: 20px auto 100px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+  body.mode-compare .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 1280px) {
+    body.mode-compare .gallery { grid-template-columns: 1fr; }
+  }
+
+  /* Specimen Frame */
+  .specimen {
+    scroll-margin-top: 112px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .specimen-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px 20px;
+    padding: 0 4px;
+  }
+  .specimen-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .specimen-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-300);
+    letter-spacing: 0.14em;
+  }
+  .specimen-title {
+    margin: 0;
+    font-family: var(--font-display-clean);
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+  .specimen-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    padding: 3px 9px;
+    border-radius: 99px;
+    border: 1px solid rgba(164, 158, 209, 0.3);
+    color: var(--primary-200);
+    background: rgba(112, 103, 183, 0.12);
+  }
+  .specimen-desc {
+    margin: 0;
+    color: #9e9eb0;
+    font-size: 13.5px;
+    max-width: 80ch;
+    line-height: 1.5;
+  }
+  .viewport-frame {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    background: #000;
+    position: relative;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     SHARED REAL SITE HEADER (PARCHMENT BAR)
+     ───────────────────────────────────────────────────────────── */
+  .site-header {
+    height: 54px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f6ead4;
+    background-image: linear-gradient(to bottom, rgba(255, 249, 236, 0.72), rgba(242, 226, 198, 0.78)), var(--tex-paper);
+    background-size: auto, 320px;
+    border-bottom: 5px solid rgba(0, 0, 0, 0.25);
+    color: #3d2412;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+  }
+  .sh-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .sh-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: #453d80;
+    mix-blend-mode: multiply;
+  }
+  .sh-brand img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+  .sh-setting {
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(65, 36, 16, 0.8);
+  }
+  .sh-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(65, 36, 16, 0.72);
+  }
+  .sh-pill {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    background: #172554;
+    color: #dbeafe;
+    padding: 3px 9px;
+    border-radius: 6px;
+    letter-spacing: 0;
+  }
+  .sh-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 99px;
+    background: #334155;
+    border: 2px solid rgba(0,0,0,0.2);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     SHARED D20 PRIMITIVES (ModuleCover, Buttons, Pips, Tags)
+     ───────────────────────────────────────────────────────────── */
+  .mod-cover {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  .mod-cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .mod-cover-shade {
+    position: absolute;
+    inset: 0 0 auto 0;
+    padding: 11% 7% 24%;
+    background: linear-gradient(to bottom, #000, rgba(0,0,0,0.58) 55%, transparent);
+  }
+  .mod-cover-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.3vw, 31px);
+    line-height: 1.05;
+    font-weight: 400;
+    color: #fff;
+    text-shadow: 0 2px 8px #000, 0 0 2px #000;
+  }
+  .mod-cover-players {
+    position: absolute;
+    right: 5%;
+    bottom: 4%;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.72);
+    padding: 5px 11px 5px 13px;
+    border-radius: 99px;
+  }
+
+  .btn-stone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    border: 2px solid rgba(0, 0, 0, 0.66);
+    background-color: #2563eb;
+    background-image: var(--tex-buried);
+    background-size: 180px;
+    color: #eff6ff;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 12.5px;
+    padding: 5px 14px;
+    text-shadow: 0 0 2px #000, 0 0 2px #000;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.4), inset 0 0 14px rgba(0,0,0,0.35), 0 2px 10px rgba(0,0,0,0.55);
+    filter: brightness(1.1) saturate(1.2);
+    transition: filter 150ms, transform 120ms;
+    white-space: nowrap;
+  }
+  .btn-stone:hover { filter: brightness(1.22) saturate(1.2); }
+  .btn-stone:active { transform: scale(0.97); }
+  .btn-stone.lg { padding: 9px 22px; font-size: 14px; }
+
+  .btn-epic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 999px;
+    border: 3px solid rgba(0, 0, 0, 0.66);
+    background-color: #2563eb;
+    background-image: var(--tex-buried);
+    background-size: 180px;
+    color: #eff6ff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    padding: 10px 26px;
+    text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 2px #000;
+    box-shadow: -3px -6px 0 0 rgba(0,0,0,0.4) inset, 3px 3px 0 0 rgba(255,255,255,0.45) inset, -3px -6px 26px 0 rgba(0,0,0,0.5) inset, 0 6px 20px rgba(0,0,0,0.55);
+    filter: brightness(1.1) saturate(1.2);
+    transition: transform 250ms, filter 150ms;
+    white-space: nowrap;
+  }
+  .btn-epic:hover { transform: scale(1.03); filter: brightness(1.18) saturate(1.25); }
+  .btn-epic:active { transform: scale(0.99); }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(191, 219, 254, 0.22);
+    background: rgba(23, 37, 84, 0.68);
+    color: #eff6ff;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 12.5px;
+    padding: 5px 12px;
+    transition: all 140ms;
+    white-space: nowrap;
+  }
+  .btn-outline:hover { border-color: rgba(191, 219, 254, 0.42); background: rgba(23, 37, 84, 0.92); color: #fff; }
+  .btn-outline.copied { border-color: rgba(183, 211, 138, 0.5); background: rgba(183, 211, 138, 0.18); color: var(--roll-success); }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--primary-200);
+  }
+
+  .pips { display: inline-flex; align-items: center; gap: 7px; }
+  .pip {
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 200ms;
+  }
+  .pip.filled {
+    border-color: var(--accent-200);
+    background: var(--accent-300);
+    box-shadow: 0 0 8px rgba(252, 211, 77, 0.6);
+  }
+
+  .role-pill {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 99px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .role-you { border-color: rgba(252,211,77,0.38); background: rgba(252,211,77,0.14); color: var(--accent-200); }
+  .role-ai { border-color: rgba(56,189,248,0.32); background: rgba(56,189,248,0.12); color: #bae6fd; }
+  .role-player { border-color: rgba(164,158,209,0.32); background: rgba(112,103,183,0.18); color: var(--primary-100); }
+
+  .ready-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 9px 14px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  .ready-strip.go {
+    border-color: rgba(183, 211, 138, 0.32);
+    background: rgba(183, 211, 138, 0.1);
+    color: #d9ebb9;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    flex: none;
+    background: var(--accent-400);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.22);
+  }
+  .ready-strip.go .status-dot {
+    background: var(--roll-success);
+    box-shadow: 0 0 0 3px rgba(183, 211, 138, 0.2);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 01: OBSIDIAN TABLE (Refined Evolution)
+     ───────────────────────────────────────────────────────────── */
+  .d1-stage {
+    position: relative;
+    padding: 34px 36px 42px;
+    background: #06060a;
+    overflow: hidden;
+  }
+  .d1-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--cover-art) center / cover no-repeat;
+    filter: blur(48px) saturate(1.25);
+    opacity: 0.17;
+    transform: scale(1.1);
+    pointer-events: none;
+  }
+  .d1-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(112,103,183,0.16), transparent 55%),
+                linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.85));
+    pointer-events: none;
+  }
+  .d1-grid {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  .d1-teaser {
+    margin: 14px 0 0;
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(228, 228, 236, 0.86);
+  }
+  .d1-rule {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    color: rgba(252, 211, 77, 0.52);
+    font-size: 10px;
+  }
+  .d1-rule i { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(252,211,77,0.35), transparent); }
+  .d1-rule i:last-child { background: linear-gradient(270deg, rgba(252,211,77,0.35), transparent); }
+
+  .d1-panel {
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(11, 11, 16, 0.94);
+    box-shadow: 0 0 0 5px rgba(0,0,0,0.75), 0 24px 60px rgba(0,0,0,0.85);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow: hidden;
+  }
+  .d1-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--tex-black-paper);
+    background-size: 260px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .d1-well {
+    position: relative;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.46);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    padding: 16px 18px;
+  }
+  .d1-well-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .d1-empty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 9px;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.015);
+    padding: 11px 14px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .d1-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .d1-card {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.035);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 150ms, background 150ms;
+  }
+  .d1-card:hover { border-color: rgba(252, 211, 77, 0.36); background: rgba(255, 255, 255, 0.055); }
+  .d1-card-top {
+    display: flex;
+    gap: 12px;
+    padding: 13px;
+    cursor: pointer;
+    flex: 1;
+  }
+  .d1-port {
+    width: 60px;
+    height: 76px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #000;
+  }
+  .d1-port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d1-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.25;
+    color: #fff;
+  }
+  .d1-sub { font-size: 12px; color: var(--primary-200); margin-top: 2px; font-weight: 500; }
+  .d1-bio {
+    margin: 6px 0 0;
+    font-family: var(--font-serif);
+    font-size: 12px;
+    line-height: 1.42;
+    color: rgba(255, 255, 255, 0.58);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .d1-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 13px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.3);
+  }
+  .d1-sheet-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.56);
+    transition: color 140ms;
+  }
+  .d1-sheet-link:hover { color: var(--accent-200); }
+  .d1-create {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.015);
+  }
+  .d1-create:hover { border-color: rgba(252, 211, 77, 0.48); background: rgba(252, 211, 77, 0.04); }
+  .d1-plus {
+    width: 60px;
+    height: 76px;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.03);
+    display: grid;
+    place-items: center;
+    color: var(--accent-300);
+    font-size: 26px;
+    flex: none;
+  }
+  .d1-seated-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.035);
+    cursor: pointer;
+  }
+  .d1-seated-row.mine {
+    border-color: rgba(252, 211, 77, 0.42);
+    background: rgba(252, 211, 77, 0.06);
+  }
+  .d1-seated-port {
+    width: 40px;
+    height: 48px;
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.16);
+    flex: none;
+  }
+  .d1-seated-port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 02: STAGE BANNER & PORTRAIT GALLERY (Cinematic Spread)
+     ───────────────────────────────────────────────────────────── */
+  .d2-stage {
+    background: #07070b;
+    color: #fff;
+  }
+  .d2-banner {
+    position: relative;
+    padding: 34px 36px 28px;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .d2-banner-bg {
+    position: absolute;
+    inset: 0;
+    background: var(--scene-art) center 38% / cover no-repeat;
+    opacity: 0.42;
+    filter: saturate(1.1);
+  }
+  .d2-banner-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right, rgba(7,7,11,0.92) 0%, rgba(7,7,11,0.68) 46%, rgba(7,7,11,0.88) 100%),
+      linear-gradient(to bottom, rgba(7,7,11,0.25) 0%, #07070b 100%);
+  }
+  .d2-banner-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr) auto;
+    gap: 28px;
+    align-items: center;
+  }
+  .d2-cover-sm .mod-cover-title { font-size: 18px; }
+  .d2-cover-sm .mod-cover-players { font-size: 8.5px; padding: 3px 7px; }
+  .d2-meta h2 {
+    margin: 6px 0 8px;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--accent-300);
+    text-shadow: 0 2px 18px rgba(0,0,0,0.9);
+    line-height: 1.1;
+  }
+  .d2-meta p {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: rgba(240, 240, 246, 0.86);
+    max-width: 54ch;
+  }
+  .d2-medallions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .d2-med-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .d2-med {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 64px;
+  }
+  .d2-med-ring {
+    width: 52px;
+    height: 52px;
+    border-radius: 99px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1.5px dashed rgba(255, 255, 255, 0.26);
+    color: rgba(255, 255, 255, 0.4);
+    font-family: var(--font-display);
+    font-size: 16px;
+  }
+  .d2-med-ring.filled {
+    border-style: solid;
+    border-color: var(--accent-300);
+    box-shadow: 0 0 18px rgba(252, 211, 77, 0.25);
+  }
+  .d2-med-ring img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d2-med-lbl {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.62);
+    max-width: 64px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .d2-body {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 26px 36px 40px;
+  }
+  .d2-section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .d2-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .d2-pcard {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: #0d0d13;
+    display: flex;
+    flex-direction: column;
+    transition: transform 180ms, border-color 180ms, box-shadow 180ms;
+  }
+  .d2-pcard:hover {
+    transform: translateY(-3px);
+    border-color: rgba(252, 211, 77, 0.45);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+  }
+  .d2-pcard-art {
+    position: relative;
+    aspect-ratio: 4 / 4.4;
+    background: #050508;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .d2-pcard-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 14%;
+    transition: transform 320ms;
+  }
+  .d2-pcard:hover .d2-pcard-art img { transform: scale(1.04); }
+  .d2-pcard-fade {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 62%;
+    background: linear-gradient(to top, #0d0d13 10%, rgba(13,13,19,0.75) 55%, transparent);
+  }
+  .d2-pcard-info {
+    position: absolute;
+    inset: auto 14px 10px 14px;
+    z-index: 2;
+  }
+  .d2-pcard-name {
+    font-family: var(--font-display);
+    font-size: 16.5px;
+    color: var(--accent-200);
+    text-shadow: 0 2px 10px #000;
+    line-height: 1.15;
+  }
+  .d2-pcard-class {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 2px;
+  }
+  .d2-pcard-foot {
+    padding: 10px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+  .d2-pcard-bio {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.58);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .d2-pcard-actions {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .d2-create-card {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.22);
+    background: radial-gradient(circle at 50% 35%, rgba(252,211,77,0.06), rgba(13,13,19,0.9));
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px 18px;
+    gap: 12px;
+  }
+  .d2-create-sigil {
+    width: 68px;
+    height: 68px;
+    border-radius: 99px;
+    border: 1.5px dashed rgba(252, 211, 77, 0.4);
+    background: rgba(252, 211, 77, 0.06);
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    color: var(--accent-300);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 03: TAVERN LEDGER (Warm Parchment & Ink)
+     ───────────────────────────────────────────────────────────── */
+  .d3-stage {
+    position: relative;
+    padding: 34px 36px 44px;
+    background: radial-gradient(ellipse at 50% 0%, #261e16 0%, #110e0b 58%, #090807 100%);
+  }
+  .d3-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--tex-black-paper);
+    background-size: 260px;
+    opacity: 0.42;
+    pointer-events: none;
+  }
+  .d3-grid {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 285px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  .d3-ledger {
+    border-radius: 10px;
+    background-color: #f4e9d3;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(255, 252, 244, 0.7), rgba(235, 217, 184, 0.65)), var(--tex-paper);
+    background-size: auto, 280px;
+    color: #261c14;
+    border: 1px solid rgba(120, 88, 48, 0.5);
+    box-shadow: 0 26px 64px rgba(0, 0, 0, 0.82), inset 0 0 0 1px rgba(255, 250, 238, 0.72), inset 0 0 44px rgba(139, 98, 48, 0.16);
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .d3-ledger-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid rgba(74, 52, 30, 0.24);
+  }
+  .d3-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: #7b5b34;
+  }
+  .d3-ledger h3 {
+    margin: 3px 0 0;
+    font-family: var(--font-display);
+    font-size: 21px;
+    color: #2b1d12;
+    font-weight: 700;
+  }
+  .d3-seal-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .d3-seat-slot {
+    border-radius: 7px;
+    border: 1px dashed rgba(88, 62, 34, 0.34);
+    background: rgba(255, 250, 240, 0.42);
+    padding: 9px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 54px;
+  }
+  .d3-seat-slot.filled {
+    border-style: solid;
+    border-color: rgba(110, 72, 30, 0.45);
+    background: rgba(255, 252, 244, 0.85);
+    box-shadow: 0 2px 6px rgba(60, 40, 20, 0.1);
+  }
+  .d3-seat-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 5px;
+    overflow: hidden;
+    flex: none;
+    border: 1px solid rgba(60, 40, 20, 0.25);
+  }
+  .d3-seat-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d3-seat-empty-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 99px;
+    border: 1px dashed rgba(102, 72, 38, 0.4);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: #8c6b42;
+    flex: none;
+  }
+  .d3-hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .d3-card {
+    border-radius: 9px;
+    border: 1px solid rgba(84, 58, 30, 0.28);
+    background: rgba(255, 251, 242, 0.72);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(55, 36, 16, 0.08);
+    transition: border-color 150ms, transform 150ms;
+  }
+  .d3-card:hover { border-color: rgba(69, 61, 128, 0.55); transform: translateY(-1px); }
+  .d3-card-body {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    flex: 1;
+  }
+  .d3-port {
+    width: 58px;
+    height: 74px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1.5px solid rgba(74, 52, 28, 0.42);
+    flex: none;
+    box-shadow: 0 2px 6px rgba(40, 24, 10, 0.2);
+  }
+  .d3-port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d3-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: #241911; }
+  .d3-sub { font-size: 11.5px; font-weight: 600; color: #5b4880; margin-top: 1px; }
+  .d3-bio {
+    margin: 5px 0 0;
+    font-family: var(--font-serif);
+    font-size: 12px;
+    line-height: 1.42;
+    color: #4f4032;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .d3-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(84, 58, 30, 0.16);
+    background: rgba(138, 104, 62, 0.08);
+  }
+  .d3-sheet-btn {
+    border: 0;
+    background: none;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b4f32;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(107, 79, 50, 0.35);
+  }
+  .d3-sheet-btn:hover { color: #2b1d12; }
+  .d3-create {
+    border-style: dashed;
+    background: rgba(255, 250, 240, 0.36);
+  }
+  .d3-ink-btn {
+    border: 1.5px solid rgba(74, 52, 28, 0.4);
+    background: rgba(255, 250, 240, 0.8);
+    color: #2b1d12;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .d3-ink-btn:hover { background: #2b1d12; color: #f6ebd5; }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 04: MASTER-DETAIL HERO SPOTLIGHT (Interactive Dossier)
+     ───────────────────────────────────────────────────────────── */
+  .d4-stage {
+    position: relative;
+    padding: 26px 36px 40px;
+    background: #07070c;
+  }
+  .d4-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 10%, rgba(112,103,183,0.18), transparent 55%),
+                radial-gradient(ellipse at 18% 80%, rgba(252,211,77,0.08), transparent 50%);
+    pointer-events: none;
+  }
+  .d4-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .d4-top-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(14, 14, 21, 0.9);
+  }
+  .d4-adv-id {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .d4-mini-cover {
+    width: 48px;
+    height: 64px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex: none;
+  }
+  .d4-mini-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .d4-adv-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--accent-300);
+    margin: 0;
+    line-height: 1.15;
+  }
+  .d4-adv-teaser {
+    margin: 3px 0 0;
+    font-family: var(--font-serif);
+    font-size: 13px;
+    color: rgba(255,255,255,0.68);
+    max-width: 56ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .d4-party-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+  }
+  .d4-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px 5px 6px;
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 12px;
+  }
+  .d4-pill.empty {
+    border-style: dashed;
+    color: rgba(255,255,255,0.42);
+    padding: 6px 11px;
+  }
+  .d4-pill img { width: 22px; height: 22px; border-radius: 99px; object-fit: cover; object-position: 50% 15%; }
+
+  .d4-split {
+    display: grid;
+    grid-template-columns: 310px minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+  }
+  .d4-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .d4-list-item {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 140ms;
+  }
+  .d4-list-item:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.22); }
+  .d4-list-item.active {
+    border-color: rgba(252, 211, 77, 0.55);
+    background: linear-gradient(90deg, rgba(252, 211, 77, 0.12), rgba(112, 103, 183, 0.08));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  .d4-list-port {
+    width: 46px;
+    height: 54px;
+    border-radius: 7px;
+    overflow: hidden;
+    flex: none;
+    border: 1px solid rgba(255,255,255,0.16);
+  }
+  .d4-list-port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+
+  .d4-spotlight {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(12, 12, 18, 0.94);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    box-shadow: 0 22px 54px rgba(0,0,0,0.7);
+  }
+  .d4-spot-art {
+    position: relative;
+    background: #000;
+    min-height: 360px;
+  }
+  .d4-spot-art img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 14%;
+  }
+  .d4-spot-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, transparent 60%, rgba(12,12,18,0.95));
+  }
+  .d4-spot-body {
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .d4-stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .d4-stat {
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .d4-stat dt { font-family: var(--font-mono); font-size: 9.5px; color: var(--primary-200); text-transform: uppercase; }
+  .d4-stat dd { margin: 2px 0 0; font-family: var(--font-display); font-size: 16px; color: #fff; }
+  .d4-stat span { display: block; font-size: 10.5px; color: var(--accent-300); }
+  .d4-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .d4-tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    color: rgba(255,255,255,0.75);
+  }
+  .d4-spot-foot {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.09);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 05: BRASS FOLIO (Editorial Dark Ink & Gilded Hairlines)
+     ───────────────────────────────────────────────────────────── */
+  .d5-stage {
+    position: relative;
+    padding: 36px 40px 46px;
+    background: radial-gradient(ellipse at 26% 12%, rgba(217, 194, 146, 0.09), transparent 52%), #0e0d0b;
+    color: var(--brass-50);
+  }
+  .d5-grid {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+  .d5-brass-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--brass-300);
+  }
+  .d5-side-party {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(217, 194, 146, 0.22);
+  }
+  .d5-side-list {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .d5-side-slot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--brass-150);
+  }
+  .d5-side-slot.empty { color: rgba(185, 167, 127, 0.45); font-style: italic; font-family: var(--font-serif); }
+  .d5-side-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid rgba(217, 194, 146, 0.45);
+    flex: none;
+  }
+  .d5-side-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+
+  .d5-roster-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(217, 194, 146, 0.26);
+  }
+  .d5-roster-head h3 {
+    margin: 4px 0 0;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--brass-150);
+  }
+  .d5-row {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    padding: 18px 8px;
+    border-bottom: 1px solid rgba(217, 194, 146, 0.14);
+    transition: background 150ms;
+  }
+  .d5-row:hover { background: rgba(217, 194, 146, 0.035); }
+  .d5-port {
+    width: 76px;
+    height: 92px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(217, 194, 146, 0.32);
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+  }
+  .d5-port img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d5-name {
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--brass-50);
+    cursor: pointer;
+  }
+  .d5-name:hover { color: var(--accent-300); }
+  .d5-sub {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brass-300);
+    margin-top: 2px;
+  }
+  .d5-quote {
+    margin: 7px 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: rgba(230, 214, 184, 0.72);
+  }
+  .d5-skills {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: rgba(185, 167, 127, 0.65);
+  }
+  .d5-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .d5-brass-btn {
+    border: 1px solid rgba(217, 194, 146, 0.45);
+    background: rgba(217, 194, 146, 0.1);
+    color: var(--brass-50);
+    padding: 7px 18px;
+    border-radius: 5px;
+    font-family: var(--font-display-clean);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 150ms;
+  }
+  .d5-brass-btn:hover { background: var(--brass-200); color: #16120c; }
+  .d5-create-row {
+    margin-top: 16px;
+    border: 1px dashed rgba(217, 194, 146, 0.28);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: rgba(217, 194, 146, 0.025);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     DIRECTION 06: CAMPFIRE TABLE (4 Seat Cards + Hero Deck)
+     ───────────────────────────────────────────────────────────── */
+  .d6-stage {
+    position: relative;
+    padding: 30px 36px 42px;
+    background: #07070c;
+  }
+  .d6-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 65% 22%, rgba(251, 191, 36, 0.09), transparent 50%),
+                radial-gradient(ellipse at 25% 70%, rgba(112, 103, 183, 0.14), transparent 55%);
+    pointer-events: none;
+  }
+  .d6-grid {
+    position: relative;
+    z-index: 1;
+    max-width: 1140px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 265px minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  .d6-table-seats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .d6-chair {
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    min-height: 142px;
+    justify-content: center;
+  }
+  .d6-chair.filled {
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5));
+    cursor: pointer;
+  }
+  .d6-chair.mine {
+    border-color: rgba(252, 211, 77, 0.5);
+    background: linear-gradient(180deg, rgba(252,211,77,0.1), rgba(0,0,0,0.55));
+  }
+  .d6-chair-ring {
+    width: 58px;
+    height: 58px;
+    border-radius: 99px;
+    overflow: hidden;
+    border: 2px solid rgba(252, 211, 77, 0.5);
+    background: #000;
+  }
+  .d6-chair-ring img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+  .d6-chair-open {
+    width: 46px;
+    height: 46px;
+    border-radius: 99px;
+    border: 1.5px dashed rgba(255, 255, 255, 0.2);
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .d6-deck {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .d6-hero-tile {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(14, 14, 22, 0.92);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 150ms, border-color 150ms;
+  }
+  .d6-hero-tile:hover { transform: translateY(-2px); border-color: rgba(252, 211, 77, 0.42); }
+  .d6-hero-art {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .d6-hero-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%; }
+  .d6-hero-art::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(14,14,22,1), transparent);
+  }
+  .d6-hero-body {
+    padding: 0 12px 12px;
+    margin-top: -14px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+     CHARACTER SHEET PREVIEW MODAL
+     ───────────────────────────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(0, 0, 0, 0.76);
+    backdrop-filter: blur(6px);
+    display: none;
+    place-items: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: grid; }
+  .modal-card {
+    width: min(760px, 100%);
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid rgba(112, 103, 183, 0.55);
+    background: linear-gradient(135deg, #131124, #1c1934 55%, #100e1c);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 24px;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 16px;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.12); }
+
+  @media (max-width: 980px) {
+    .d1-grid, .d2-banner-inner, .d3-grid, .d4-split, .d4-spotlight, .d5-grid, .d6-grid, .modal-card {
+      grid-template-columns: 1fr;
+    }
+    .d1-hero-grid, .d2-gallery, .d3-hero-grid, .d3-seal-row, .d6-table-seats, .d6-deck {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .d2-medallions { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="studio-bar">
+  <div class="studio-bar-inner">
+    <div class="studio-brand">
+      <h1>Adventure Lobby Exploration</h1>
+      <span>The Road to Kordavos · 6 Directions</span>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Scenario</span>
+      <div class="seg" id="scenario-seg"></div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">View</span>
+      <div class="seg" id="mode-seg">
+        <button type="button" data-mode="all" class="active">All 6</button>
+        <button type="button" data-mode="compare">Compare 2</button>
+      </div>
+    </div>
+
+    <button type="button" id="reset-btn" class="reset-btn">↺ Reset</button>
+  </div>
+
+  <nav class="jump-bar" id="jump-bar"></nav>
+</header>
+
+<div class="studio-intro">
+  <p>
+    Six distinct architectural and aesthetic directions for <strong>/settings/[setting]/[plan]/[adventureId]</strong> — using real cover art, opening scene artwork, portraits, and bios for <em>The Road to Kordavos</em>. Every direction is <strong>interactive</strong>: click <strong>Join</strong> to seat a hero live, click <strong>View sheet</strong> (or a portrait) to inspect their full dossier, switch scenarios to test empty, mid-party, waiting, ready-to-start, and signed-out states, or use <strong>Compare 2</strong> side by side.
+  </p>
+</div>
+
+<div class="compare-bar" id="compare-bar">
+  <span class="ctrl-label">Left</span>
+  <select id="cmp-a" class="compare-select"></select>
+  <span class="ctrl-label" style="margin-left:8px;">Right</span>
+  <select id="cmp-b" class="compare-select"></select>
+</div>
+
+<main class="gallery" id="gallery"></main>
+
+<div class="modal-backdrop" id="sheet-modal">
+  <div class="modal-card" id="sheet-modal-card"></div>
+</div>
+
+<script>
+  const ADVENTURE = {
+    title: "The Road to Kordavos",
+    players: "1–4 Players",
+    maxSeats: 4,
+    teaser: "Travellers from across the realm head to the March of Davos seeking their fortune in a land of bustling cities and untamed wildlands.",
+    cover: "../../public/stage/covers/the-road-to-kordavos.jpg",
+    scene: "../../public/stage/art/the-road-to-kordavos/well-met.webp",
+    inviteUrl: "https://d20adventures.com/settings/realm-of-myr/the-road-to-kordavos/jh76m0kz1brk",
+  }
+
+  const HEROES = {
+    thalbern: {
+      id: "thalbern",
+      name: "Thalbern",
+      race: "Human",
+      archetype: "Ranger",
+      level: 1,
+      image: "../../public/stage/fixtures/the-midnight-summons/thalbern-portrait.jpg",
+      personality: "Solitary, cautious, loyal to those who earn his trust, and deeply connected to nature.",
+      background: "Orphaned by border raiders, raised by elves in the Valkarr forest. The druid Wollandora has sent him after Valkaran relics taken from the elven vaults, and he has tracked them to Kordavos.",
+      skills: ["Stealth", "Tracking", "Archery", "Survival", "Nature Lore"],
+      gear: ["Longbow", "Shortsword", "Dagger", "Herb Pouch"],
+      stats: { STR: 13, DEX: 17, CON: 13, INT: 11, WIS: 13, CHA: 10 },
+    },
+    lyra: {
+      id: "lyra",
+      name: "Lyra Silvanus",
+      race: "Asterian",
+      archetype: "Arcanist",
+      level: 1,
+      image: "../../public/stage/fixtures/covert-cargo/lyra-portrait.jpg",
+      personality: "Curious, studious, and deeply analytical, Lyra possesses a quiet determination.",
+      background: "Left behind Asterian academia to study Valkaran lore. After vouching for an ancient relic for men of the Blackthorn family, she was thrown in the river — and now walks back to Kordavos for answers.",
+      skills: ["Arcana", "History", "Investigation", "Linguistics", "Elven Lore"],
+      gear: ["Spellbook", "Enchanted Quill", "Wooden Staff", "Rare Texts"],
+      stats: { STR: 8, DEX: 10, CON: 10, INT: 16, WIS: 14, CHA: 12 },
+    },
+    poppen: {
+      id: "poppen",
+      name: "Poppen Quickfoot",
+      race: "Halfling",
+      archetype: "Rogue",
+      level: 1,
+      image: "../../public/stage/fixtures/covert-cargo/poppen-portrait.jpg",
+      personality: "Gregarious, ever-curious, and smooth-tongued. Poppen lives for gossip almost as much as profit.",
+      background: "Left tranquil Willowdale to make a name for himself in Kordavos. Before dawn at a smugglers' pier he watched elves sell a chained crate to the Blackthorn family, and means to find where it went.",
+      skills: ["Acrobatics", "Deception", "Perception", "Sleight of Hand", "Stealth"],
+      gear: ["Two Daggers", "Sling", "Thieves' Tools", "Waistcoat of Pockets"],
+      stats: { STR: 10, DEX: 16, CON: 14, INT: 12, WIS: 10, CHA: 14 },
+    },
+    kaelen: {
+      id: "kaelen",
+      name: "Kaelen Voss",
+      race: "Dwarf",
+      archetype: "Paladin",
+      level: 1,
+      custom: true,
+      image: "../../public/stage/fixtures/the-midnight-summons/photoreal/thalbern-portrait.jpg",
+      personality: "Steadfast and blunt, with a dry humor forged on ten winters of caravan guard duty.",
+      background: "A sworn shield of the Valkaran hearth returning to Kordavos for the Harvest Festival with an oath to keep.",
+      skills: ["Athletics", "Insight", "Intimidation", "Religion"],
+      gear: ["Warhammer", "Shield", "Chain Mail", "Holy Symbol"],
+      stats: { STR: 16, DEX: 10, CON: 15, INT: 10, WIS: 12, CHA: 14 },
+    },
+  }
+
+  const SCENARIOS = [
+    {
+      id: "empty",
+      label: "0/4 Empty",
+      signedOut: false,
+      hosted: true,
+      isOwner: false,
+      seated: [],
+      available: ["thalbern", "lyra", "poppen"],
+    },
+    {
+      id: "mid",
+      label: "2/4 Mid-Party",
+      signedOut: false,
+      hosted: true,
+      isOwner: false,
+      seated: [
+        { heroId: "thalbern", who: "player", label: "mira_k" },
+        { heroId: "poppen", who: "ai", label: "AI" },
+      ],
+      available: ["kaelen", "lyra"],
+    },
+    {
+      id: "waiting",
+      label: "Seated · Waiting",
+      signedOut: false,
+      hosted: true,
+      isOwner: false,
+      seated: [
+        { heroId: "lyra", who: "you", label: "john" },
+        { heroId: "thalbern", who: "player", label: "mira_k" },
+      ],
+      available: [],
+    },
+    {
+      id: "owner",
+      label: "Owner · Ready",
+      signedOut: false,
+      hosted: false,
+      isOwner: true,
+      seated: [
+        { heroId: "thalbern", who: "you", label: "john" },
+      ],
+      available: ["lyra", "poppen"],
+    },
+    {
+      id: "signedout",
+      label: "Signed Out",
+      signedOut: true,
+      hosted: true,
+      isOwner: false,
+      seated: [],
+      available: [],
+    },
+  ]
+
+  const DESIGNS = [
+    {
+      id: "d1",
+      num: "01",
+      title: "Obsidian Table",
+      tag: "Unified with Desktop",
+      desc: "Matches the desktop hosting lobby: recessed obsidian wells with paper grain, glowing diamond seat pips, two-tier hero dossier cards, and a dashed Create Character card completing the 2×2 grid.",
+      render: renderD1,
+    },
+    {
+      id: "d2",
+      num: "02",
+      title: "Stage Banner & Portrait Gallery",
+      tag: "Art-First · Full Width",
+      desc: "Opens with a cinematic stage banner using the opening scene painting (well-met.webp), overlapping module cover, circular party medallions, and a 4-column tall portrait card gallery below.",
+      render: renderD2,
+    },
+    {
+      id: "d3",
+      num: "03",
+      title: "Tavern Ledger",
+      tag: "Warm Parchment & Ink",
+      desc: "Extends the top header's warm parchment directly into the lobby as a campaign sign-in folio on a dark ink desk — 4 ruled seat slots above illustrated hero cards with beveled stone Join buttons.",
+      render: renderD3,
+    },
+    {
+      id: "d4",
+      num: "04",
+      title: "Master-Detail Hero Spotlight",
+      tag: "CRPG Character Select",
+      desc: "Eliminates modal-hopping: compact adventure & party bar across the top, hero roster rail on the left, and a live Hero Spotlight dossier on the right with portrait, full stats, lore, and Join as [Hero].",
+      render: renderD4,
+    },
+    {
+      id: "d5",
+      num: "05",
+      title: "Brass Folio",
+      tag: "Editorial · Minimal Chrome",
+      desc: "Zero box-inside-box borders. Warm charcoal ink with antique brass hairlines, seated party tucked cleanly under the cover on the left, and spacious literary hero rows on the right.",
+      render: renderD5,
+    },
+    {
+      id: "d6",
+      num: "06",
+      title: "Campfire Table",
+      tag: "Visual Seat Cards + Deck",
+      desc: "Makes the 4 seats tangible portrait chairs across the top so empty seats look inviting instead of vacant, paired with an art-forward 4-card hero deck directly underneath.",
+      render: renderD6,
+    },
+  ]
+
+  let currentScenario = "empty"
+  let viewMode = "all"
+  let cmpA = "d2"
+  let cmpB = "d5"
+  let spotlightId = "thalbern"
+  let showAi = false
+  let dirty = false
+  let state = cloneScenario("empty")
+
+  function cloneScenario(id) {
+    const s = SCENARIOS.find((x) => x.id === id) || SCENARIOS[0]
+    return {
+      ...s,
+      seated: s.seated.map((x) => ({ ...x })),
+      available: [...s.available],
+    }
+  }
+
+  function mod(score) {
+    const m = Math.floor((score - 10) / 2)
+    return m >= 0 ? `+${m}` : `${m}`
+  }
+
+  function headerHtml(signedOut) {
+    return `
+      <div class="site-header">
+        <div class="sh-left">
+          <div class="sh-brand">
+            <img src="../../public/images/d20.jpg" alt="" />
+            <span>D20 Adventures</span>
+          </div>
+          <span class="sh-setting">REALM OF MYR</span>
+        </div>
+        <div class="sh-right">
+          <span>ABOUT</span>
+          ${signedOut ? `<span class="btn-stone" style="padding:3px 10px;font-size:11px;">SIGN IN</span>` : `<span>ADMIN</span><span class="sh-pill">✦ 65.5k</span><span class="sh-avatar">J</span>`}
+        </div>
+      </div>
+    `
+  }
+
+  function coverHtml(extraClass = "") {
+    return `
+      <figure class="mod-cover ${extraClass}" style="margin:0;">
+        <img src="${ADVENTURE.cover}" alt="" />
+        <div class="mod-cover-shade">
+          <h4 class="mod-cover-title">${ADVENTURE.title}</h4>
+        </div>
+        <figcaption class="mod-cover-players">${ADVENTURE.players}</figcaption>
+      </figure>
+    `
+  }
+
+  function pipsHtml(count, total) {
+    return `<span class="pips">${Array.from({ length: total }).map((_, i) => `<span class="pip ${i < count ? "filled" : ""}"></span>`).join("")}</span>`
+  }
+
+  function rolePill(entry) {
+    const cls = entry.who === "you" ? "role-you" : entry.who === "ai" ? "role-ai" : "role-player"
+    return `<span class="role-pill ${cls}">${entry.label}</span>`
+  }
+
+  function isSeatedYou() {
+    return state.seated.some((s) => s.who === "you")
+  }
+
+  function inviteBarHtml(dark = true) {
+    if (dark) {
+      return `
+        <div style="display:flex;align-items:center;gap:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);background:rgba(0,0,0,0.48);padding:4px 4px 4px 12px;">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.78);">${ADVENTURE.inviteUrl}</span>
+          <button type="button" class="btn-outline" data-copy="${ADVENTURE.inviteUrl}" style="padding:4px 11px;font-size:11.5px;">Copy</button>
+        </div>
+      `
+    }
+    return `
+      <div style="display:flex;align-items:center;gap:8px;border-radius:7px;border:1px solid rgba(84,58,30,0.3);background:rgba(255,252,244,0.85);padding:4px 4px 4px 12px;">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#4f4032;">${ADVENTURE.inviteUrl}</span>
+        <button type="button" class="d3-ink-btn" data-copy="${ADVENTURE.inviteUrl}">Copy</button>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 01: OBSIDIAN TABLE ── */
+  function renderD1() {
+    const youSeated = isSeatedYou()
+    let rightBody = ""
+
+    if (state.signedOut) {
+      rightBody = `
+        <div class="d1-panel" style="max-width:560px;">
+          <div class="d1-well">
+            <div class="eyebrow">Table Invite</div>
+            <h3 style="margin:6px 0 0;font-family:var(--font-display);font-size:26px;color:var(--accent-300);">Take Your Seat</h3>
+            <p style="margin:8px 0 0;font-family:var(--font-serif);font-size:14px;line-height:1.55;color:rgba(228,228,236,0.85);">
+              Sign in or create a free account to choose your hero and join this adventure.
+            </p>
+            <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+              <button type="button" class="btn-outline" style="padding:9px 16px;font-size:13px;" data-scenario="empty">Create Account</button>
+            </div>
+          </div>
+        </div>
+      `
+    } else {
+      const partySection = `
+        <div class="d1-well">
+          <div class="d1-well-head">
+            <span class="eyebrow">Party · ${state.seated.length} of ${ADVENTURE.maxSeats}</span>
+            ${pipsHtml(state.seated.length, ADVENTURE.maxSeats)}
+          </div>
+          ${state.seated.length ? `
+            <div class="d1-hero-grid">
+              ${state.seated.map((s) => {
+                const h = HEROES[s.heroId]
+                return `
+                  <div class="d1-seated-row ${s.who === "you" ? "mine" : ""}" data-sheet="${h.id}">
+                    <div class="d1-seated-port"><img src="${h.image}" alt="" /></div>
+                    <div style="min-width:0;flex:1;">
+                      <div class="d1-name" style="font-size:14px;color:${s.who === "you" ? "var(--accent-300)" : "#fff"}">${h.name}</div>
+                      <div class="d1-sub" style="margin-top:1px;">${h.race} ${h.archetype}</div>
+                    </div>
+                    ${rolePill(s)}
+                  </div>
+                `
+              }).join("")}
+            </div>
+          ` : `
+            <div class="d1-empty"><span style="color:rgba(252,211,77,0.6);">◇</span><span>No heroes seated yet — choose a hero below to take your seat at the table.</span></div>
+          `}
+        </div>
+      `
+
+      const statusSection = youSeated && state.hosted && !state.isOwner
+        ? `<div class="ready-strip"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Waiting for the host to start the adventure…</span></span><span class="eyebrow" style="opacity:0.75;">${state.seated.length}/${ADVENTURE.maxSeats} SEATED</span></div>`
+        : youSeated && state.isOwner
+          ? `<div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="ready-strip go"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Ready to start (${state.seated.length}/${ADVENTURE.maxSeats} seated) — begin now or wait for more players.</span></span><span class="eyebrow" style="color:#d9ebb9;">READY</span></div>
+              <div style="display:flex;justify-content:flex-end;"><button type="button" class="btn-epic">Start Adventure</button></div>
+            </div>`
+          : ""
+
+      const chooseSection = !youSeated ? `
+        <div class="d1-well">
+          <div class="d1-well-head">
+            <span class="eyebrow">Choose Your Hero</span>
+            <span style="font-size:11.5px;color:rgba(255,255,255,0.45);">Select a hero to inspect their sheet</span>
+          </div>
+          <div class="d1-hero-grid">
+            ${state.available.map((id) => {
+              const h = HEROES[id]
+              return `
+                <div class="d1-card">
+                  <div class="d1-card-top" data-sheet="${h.id}">
+                    <div class="d1-port"><img src="${h.image}" alt="" /></div>
+                    <div style="min-width:0;flex:1;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                        <div class="d1-name">${h.name}</div>
+                        ${h.custom ? `<span class="role-pill role-you" style="font-size:9.5px;padding:1px 7px;">Your Hero</span>` : ""}
+                      </div>
+                      <div class="d1-sub">${h.race} ${h.archetype} <span style="color:rgba(255,255,255,0.42);">· Lv. ${h.level}</span></div>
+                      <p class="d1-bio">${h.personality}</p>
+                    </div>
+                  </div>
+                  <div class="d1-card-foot">
+                    <button type="button" class="d1-sheet-link" data-sheet="${h.id}">View sheet</button>
+                    <button type="button" class="btn-stone" data-join="${h.id}">Join</button>
+                  </div>
+                </div>
+              `
+            }).join("")}
+            <div class="d1-card d1-create">
+              <div class="d1-card-top">
+                <div class="d1-plus">+</div>
+                <div style="min-width:0;flex:1;">
+                  <div class="d1-name">Create New Character</div>
+                  <div class="d1-sub" style="color:rgba(252,211,77,0.82);">Custom Hero</div>
+                  <p class="d1-bio">Forge your own adventurer and bring them to the table.</p>
+                </div>
+              </div>
+              <div class="d1-card-foot" style="border-top-style:dashed;">
+                <span style="font-size:11.5px;color:rgba(255,255,255,0.45);">Character builder</span>
+                <button type="button" class="btn-outline" style="padding:4px 12px;">Create</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ""
+
+      const ownerExtras = youSeated && state.isOwner ? `
+        <div class="d1-well">
+          <div class="d1-well-head" style="margin-bottom:8px;">
+            <span class="eyebrow">Invite Players</span>
+            <span style="font-size:11.5px;color:rgba(255,255,255,0.48);">Share link to join the table</span>
+          </div>
+          ${inviteBarHtml(true)}
+        </div>
+        <div class="d1-well" style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span class="eyebrow">AI Companions</span>
+            <button type="button" class="btn-outline" data-toggle-ai style="border-color:rgba(56,189,248,0.34);color:#bae6fd;">${showAi ? "Hide AI Companions" : "Add AI Companions"}</button>
+          </div>
+          ${showAi ? `
+            <div class="d1-hero-grid" style="margin-top:12px;">
+              ${state.available.map((id) => {
+                const h = HEROES[id]
+                return `
+                  <div class="d1-seated-row">
+                    <div class="d1-seated-port" data-sheet="${h.id}"><img src="${h.image}" alt="" /></div>
+                    <div style="min-width:0;flex:1;" data-sheet="${h.id}">
+                      <div class="d1-name" style="font-size:13.5px;">${h.name}</div>
+                      <div class="d1-sub">${h.race} ${h.archetype}</div>
+                    </div>
+                    <button type="button" class="btn-outline" data-add-ai="${h.id}">Add as AI</button>
+                  </div>
+                `
+              }).join("")}
+            </div>
+          ` : ""}
+        </div>
+      ` : ""
+
+      rightBody = `<div class="d1-panel">${partySection}${statusSection}${chooseSection}${ownerExtras}</div>`
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d1-stage">
+        <div class="d1-grid">
+          <div>
+            ${coverHtml()}
+            <div class="d1-rule"><i></i><span>✦</span><i></i></div>
+            <p class="d1-teaser">${ADVENTURE.teaser}</p>
+          </div>
+          <div>${rightBody}</div>
+        </div>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 02: STAGE BANNER & PORTRAIT GALLERY ── */
+  function renderD2() {
+    const youSeated = isSeatedYou()
+    const medallions = Array.from({ length: ADVENTURE.maxSeats }).map((_, idx) => {
+      const s = state.seated[idx]
+      if (s) {
+        const h = HEROES[s.heroId]
+        return `
+          <div class="d2-med" data-sheet="${h.id}" style="cursor:pointer;">
+            <div class="d2-med-ring filled"><img src="${h.image}" alt="" /></div>
+            <span class="d2-med-lbl" style="color:${s.who === "you" ? "var(--accent-300)" : "#fff"}">${h.name.split(" ")[0]}</span>
+          </div>
+        `
+      }
+      return `
+        <div class="d2-med">
+          <div class="d2-med-ring">◇</div>
+          <span class="d2-med-lbl">Open</span>
+        </div>
+      `
+    }).join("")
+
+    let body = ""
+    if (state.signedOut) {
+      body = `
+        <div style="max-width:560px;margin:8px auto;text-align:center;padding:28px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);">
+          <div class="eyebrow">Table Invite</div>
+          <h3 style="margin:8px 0 6px;font-family:var(--font-display);font-size:26px;color:var(--accent-300);">Sign in to Choose Your Hero</h3>
+          <p style="margin:0 0 20px;font-family:var(--font-serif);font-size:14px;color:rgba(255,255,255,0.72);">Create a free account or sign in to take an open seat on the road to Kordavos.</p>
+          <div style="display:flex;justify-content:center;gap:12px;">
+            <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+            <button type="button" class="btn-outline" style="padding:9px 16px;" data-scenario="empty">Create Account</button>
+          </div>
+        </div>
+      `
+    } else if (!youSeated) {
+      body = `
+        <div class="d2-section-bar">
+          <div>
+            <span class="eyebrow">Choose Your Hero</span>
+          </div>
+          <span style="font-size:12px;color:rgba(255,255,255,0.48);">Click any portrait to read their full sheet</span>
+        </div>
+        <div class="d2-gallery">
+          ${state.available.map((id) => {
+            const h = HEROES[id]
+            return `
+              <div class="d2-pcard">
+                <div class="d2-pcard-art" data-sheet="${h.id}">
+                  <img src="${h.image}" alt="" />
+                  <div class="d2-pcard-fade"></div>
+                  ${h.custom ? `<span class="role-pill role-you" style="position:absolute;top:10px;left:10px;z-index:3;">Your Hero</span>` : ""}
+                  <div class="d2-pcard-info">
+                    <div class="d2-pcard-name">${h.name}</div>
+                    <div class="d2-pcard-class">${h.race} ${h.archetype} · Lv. ${h.level}</div>
+                  </div>
+                </div>
+                <div class="d2-pcard-foot">
+                  <p class="d2-pcard-bio">${h.personality}</p>
+                  <div class="d2-pcard-actions">
+                    <button type="button" class="d1-sheet-link" data-sheet="${h.id}">Sheet</button>
+                    <button type="button" class="btn-stone" data-join="${h.id}">Join as ${h.name.split(" ")[0]}</button>
+                  </div>
+                </div>
+              </div>
+            `
+          }).join("")}
+          <div class="d2-pcard d2-create-card">
+            <div class="d2-create-sigil">+</div>
+            <div style="font-family:var(--font-display);font-size:17px;color:#fff;">Create New Character</div>
+            <p class="d2-pcard-bio" style="-webkit-line-clamp:3;">Craft an original adventurer with your own species, class, and backstory.</p>
+            <button type="button" class="btn-outline" style="margin-top:6px;padding:7px 16px;">Open Builder</button>
+          </div>
+        </div>
+      `
+    } else {
+      body = `
+        <div style="max-width:740px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+          ${state.isOwner ? `
+            <div class="ready-strip go"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Your party is ready — start whenever you like or invite friends below.</span></span><button type="button" class="btn-epic" style="padding:7px 18px;font-size:12px;">Start Adventure</button></div>
+            <div class="d1-well"><div class="eyebrow" style="margin-bottom:8px;">Invite Players</div>${inviteBarHtml(true)}</div>
+          ` : `
+            <div class="ready-strip"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>You're seated at the table. Waiting for the host to begin…</span></span><span class="eyebrow">${state.seated.length}/${ADVENTURE.maxSeats} SEATED</span></div>
+          `}
+        </div>
+      `
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d2-stage">
+        <div class="d2-banner">
+          <div class="d2-banner-bg"></div>
+          <div class="d2-banner-scrim"></div>
+          <div class="d2-banner-inner">
+            <div class="d2-cover-sm">${coverHtml()}</div>
+            <div class="d2-meta">
+              <div class="eyebrow">Adventure Lobby · ${ADVENTURE.players}</div>
+              <h2>${ADVENTURE.title}</h2>
+              <p>${ADVENTURE.teaser}</p>
+            </div>
+            <div class="d2-medallions">
+              <div class="eyebrow">Party · ${state.seated.length} of ${ADVENTURE.maxSeats}</div>
+              <div class="d2-med-row">${medallions}</div>
+            </div>
+          </div>
+        </div>
+        <div class="d2-body">${body}</div>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 03: TAVERN LEDGER (Warm Parchment) ── */
+  function renderD3() {
+    const youSeated = isSeatedYou()
+    const seatSlots = Array.from({ length: ADVENTURE.maxSeats }).map((_, idx) => {
+      const s = state.seated[idx]
+      if (s) {
+        const h = HEROES[s.heroId]
+        return `
+          <div class="d3-seat-slot filled" data-sheet="${h.id}" style="cursor:pointer;">
+            <div class="d3-seat-thumb"><img src="${h.image}" alt="" /></div>
+            <div style="min-width:0;">
+              <div style="font-family:var(--font-display);font-size:12.5px;font-weight:700;color:#241911;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${h.name.split(" ")[0]}</div>
+              <div style="font-size:10.5px;color:#7b5b34;font-weight:600;">${s.label}</div>
+            </div>
+          </div>
+        `
+      }
+      return `
+        <div class="d3-seat-slot">
+          <div class="d3-seat-empty-mark">${idx + 1}</div>
+          <div style="font-family:var(--font-serif);font-style:italic;font-size:12px;color:#8c6b42;">Open seat</div>
+        </div>
+      `
+    }).join("")
+
+    let ledgerInner = ""
+    if (state.signedOut) {
+      ledgerInner = `
+        <div class="d3-ledger-head">
+          <div>
+            <div class="d3-eyebrow">Campaign Sign-In</div>
+            <h3>Take Your Seat</h3>
+          </div>
+        </div>
+        <p style="margin:0;font-family:var(--font-serif);font-size:15px;line-height:1.6;color:#3d2f22;">
+          Sign in or create a free account to claim a hero from the roster and join the company on the road to Kordavos.
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+          <button type="button" class="d3-ink-btn" style="padding:9px 16px;" data-scenario="empty">Create Account</button>
+        </div>
+      `
+    } else {
+      ledgerInner = `
+        <div class="d3-ledger-head">
+          <div>
+            <div class="d3-eyebrow">Company Roster · ${state.seated.length} of ${ADVENTURE.maxSeats}</div>
+            <h3>At the Table</h3>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:11px;color:#7b5b34;letter-spacing:0.1em;">${ADVENTURE.maxSeats - state.seated.length} SEATS OPEN</span>
+        </div>
+        <div class="d3-seal-row">${seatSlots}</div>
+
+        ${!youSeated ? `
+          <div style="padding-top:4px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
+              <span class="d3-eyebrow">Choose Your Hero</span>
+              <span style="font-size:11.5px;color:#7b5b34;">Click a portrait to inspect sheet</span>
+            </div>
+            <div class="d3-hero-grid">
+              ${state.available.map((id) => {
+                const h = HEROES[id]
+                return `
+                  <div class="d3-card">
+                    <div class="d3-card-body" data-sheet="${h.id}">
+                      <div class="d3-port"><img src="${h.image}" alt="" /></div>
+                      <div style="min-width:0;flex:1;">
+                        <div class="d3-name">${h.name}</div>
+                        <div class="d3-sub">${h.race} ${h.archetype} · Lv. ${h.level}</div>
+                        <p class="d3-bio">${h.personality}</p>
+                      </div>
+                    </div>
+                    <div class="d3-card-foot">
+                      <button type="button" class="d3-sheet-btn" data-sheet="${h.id}">View sheet</button>
+                      <button type="button" class="btn-stone" data-join="${h.id}">Join</button>
+                    </div>
+                  </div>
+                `
+              }).join("")}
+              <div class="d3-card d3-create">
+                <div class="d3-card-body">
+                  <div class="d3-port" style="display:grid;place-items:center;background:rgba(138,104,62,0.1);border-style:dashed;font-size:24px;color:#7b5b34;">+</div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="d3-name">Create New Character</div>
+                    <div class="d3-sub" style="color:#8b5e20;">Custom Hero</div>
+                    <p class="d3-bio">Inscribe your own adventurer in the ledger and join the party.</p>
+                  </div>
+                </div>
+                <div class="d3-card-foot">
+                  <span style="font-size:11.5px;color:#7b5b34;">Character builder</span>
+                  <button type="button" class="d3-ink-btn">Create</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ` : state.isOwner ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border-radius:8px;background:rgba(66,108,42,0.12);border:1px solid rgba(66,108,42,0.34);">
+            <span style="font-size:13px;color:#2c4a1d;font-weight:600;">Ready to depart — start now or share the invite below.</span>
+            <button type="button" class="btn-epic" style="padding:8px 20px;font-size:12.5px;">Start Adventure</button>
+          </div>
+          <div>
+            <div class="d3-eyebrow" style="margin-bottom:6px;">Invite Players</div>
+            ${inviteBarHtml(false)}
+          </div>
+        ` : `
+          <div style="padding:12px 14px;border-radius:8px;background:rgba(138,104,62,0.12);border:1px solid rgba(138,104,62,0.32);font-family:var(--font-serif);font-size:14px;color:#4a3520;">
+            Your name is in the ledger. Waiting for the host to begin the journey…
+          </div>
+        `}
+      `
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d3-stage">
+        <div class="d3-grid">
+          <div>
+            ${coverHtml()}
+            <p class="d1-teaser" style="color:#d6c7ae;">${ADVENTURE.teaser}</p>
+          </div>
+          <div class="d3-ledger">${ledgerInner}</div>
+        </div>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 04: MASTER-DETAIL HERO SPOTLIGHT ── */
+  function renderD4() {
+    const youSeated = isSeatedYou()
+    const pool = state.available.length ? state.available : state.seated.map((s) => s.heroId)
+    if (pool.length && !pool.includes(spotlightId)) spotlightId = pool[0]
+    const activeHero = HEROES[spotlightId] || HEROES.thalbern
+
+    const pills = Array.from({ length: ADVENTURE.maxSeats }).map((_, idx) => {
+      const s = state.seated[idx]
+      if (s) {
+        const h = HEROES[s.heroId]
+        return `<span class="d4-pill"><img src="${h.image}" alt="" /><span>${h.name.split(" ")[0]}</span></span>`
+      }
+      return `<span class="d4-pill empty">◇ Open</span>`
+    }).join("")
+
+    let mainArea = ""
+    if (state.signedOut) {
+      mainArea = `
+        <div style="padding:32px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(14,14,21,0.9);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+          <div>
+            <div class="eyebrow">Table Invite</div>
+            <h3 style="margin:6px 0 4px;font-family:var(--font-display);font-size:24px;color:var(--accent-300);">Sign in to Inspect & Choose Your Hero</h3>
+            <p style="margin:0;font-family:var(--font-serif);font-size:14px;color:rgba(255,255,255,0.68);">Browse premade adventurers or bring your own once you sign in.</p>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+            <button type="button" class="btn-outline" style="padding:9px 16px;" data-scenario="empty">Create Account</button>
+          </div>
+        </div>
+      `
+    } else {
+      const canJoinActive = !youSeated && state.available.includes(activeHero.id)
+      mainArea = `
+        <div class="d4-split">
+          <div class="d4-rail">
+            <div class="eyebrow" style="padding:0 4px 4px;">${youSeated ? "Party Roster" : "Available Heroes"}</div>
+            ${pool.map((id) => {
+              const h = HEROES[id]
+              const seatEntry = state.seated.find((s) => s.heroId === id)
+              return `
+                <button type="button" class="d4-list-item ${activeHero.id === id ? "active" : ""}" data-spotlight="${h.id}">
+                  <div class="d4-list-port"><img src="${h.image}" alt="" /></div>
+                  <div style="min-width:0;flex:1;">
+                    <div style="font-family:var(--font-display);font-size:14.5px;color:${activeHero.id === id ? "var(--accent-200)" : "#fff"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${h.name}</div>
+                    <div style="font-size:12px;color:var(--primary-200);margin-top:2px;">${h.race} ${h.archetype}</div>
+                  </div>
+                  ${seatEntry ? rolePill(seatEntry) : h.custom ? `<span class="role-pill role-you" style="font-size:9.5px;">Yours</span>` : ""}
+                </button>
+              `
+            }).join("")}
+            ${!youSeated ? `
+              <button type="button" class="d4-list-item" style="border-style:dashed;border-color:rgba(252,211,77,0.3);margin-top:4px;">
+                <div class="d4-list-port" style="display:grid;place-items:center;border-style:dashed;color:var(--accent-300);font-size:20px;background:rgba(252,211,77,0.06);">+</div>
+                <div>
+                  <div style="font-family:var(--font-display);font-size:14px;color:var(--accent-200);">Create New Character</div>
+                  <div style="font-size:11.5px;color:rgba(255,255,255,0.52);">Bring a custom hero</div>
+                </div>
+              </button>
+            ` : state.isOwner ? `
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:10px;">
+                <button type="button" class="btn-epic" style="width:100%;">Start Adventure</button>
+                ${inviteBarHtml(true)}
+              </div>
+            ` : `
+              <div class="ready-strip" style="margin-top:8px;"><span class="status-dot"></span><span>Waiting for host to start…</span></div>
+            `}
+          </div>
+
+          <div class="d4-spotlight">
+            <div class="d4-spot-art">
+              <img src="${activeHero.image}" alt="" />
+            </div>
+            <div class="d4-spot-body">
+              <div>
+                <div class="eyebrow">Level ${activeHero.level} ${activeHero.race} ${activeHero.archetype}</div>
+                <h3 style="margin:4px 0 0;font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--accent-300);">${activeHero.name}</h3>
+              </div>
+              <p style="margin:0;font-family:var(--font-serif);font-style:italic;font-size:14px;line-height:1.5;color:rgba(255,255,255,0.88);">
+                “${activeHero.personality}”
+              </p>
+              <p style="margin:0;font-family:var(--font-serif);font-size:13px;line-height:1.55;color:rgba(255,255,255,0.66);">
+                ${activeHero.background}
+              </p>
+              <dl class="d4-stats" style="margin:0;">
+                ${Object.entries(activeHero.stats).map(([k, v]) => `
+                  <div class="d4-stat"><dt>${k}</dt><dd>${v}</dd><span>${mod(v)}</span></div>
+                `).join("")}
+              </dl>
+              <div>
+                <div class="eyebrow" style="margin-bottom:6px;font-size:10px;">Skills & Gear</div>
+                <div class="d4-tags">
+                  ${activeHero.skills.slice(0, 4).map((s) => `<span class="d4-tag">${s}</span>`).join("")}
+                  ${activeHero.gear.slice(0, 2).map((g) => `<span class="d4-tag" style="border-color:rgba(252,211,77,0.22);color:var(--accent-200);">${g}</span>`).join("")}
+                </div>
+              </div>
+              <div class="d4-spot-foot">
+                <button type="button" class="d1-sheet-link" data-sheet="${activeHero.id}">Open full character sheet →</button>
+                ${canJoinActive ? `<button type="button" class="btn-stone lg" data-join="${activeHero.id}">Join as ${activeHero.name.split(" ")[0]}</button>` : `<span class="eyebrow" style="color:var(--roll-success);">Seated at Table</span>`}
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d4-stage">
+        <div class="d4-wrap">
+          <div class="d4-top-strip">
+            <div class="d4-adv-id">
+              <div class="d4-mini-cover"><img src="${ADVENTURE.cover}" alt="" /></div>
+              <div style="min-width:0;">
+                <h3 class="d4-adv-title">${ADVENTURE.title}</h3>
+                <p class="d4-adv-teaser">${ADVENTURE.teaser}</p>
+              </div>
+            </div>
+            <div class="d4-party-pills">${pills}</div>
+          </div>
+          ${mainArea}
+        </div>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 05: BRASS FOLIO (Editorial Dark Ink) ── */
+  function renderD5() {
+    const youSeated = isSeatedYou()
+    const sideParty = `
+      <div class="d5-side-party">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="d5-brass-label">At the Table · ${state.seated.length}/${ADVENTURE.maxSeats}</span>
+          ${pipsHtml(state.seated.length, ADVENTURE.maxSeats)}
+        </div>
+        <ul class="d5-side-list">
+          ${Array.from({ length: ADVENTURE.maxSeats }).map((_, idx) => {
+            const s = state.seated[idx]
+            if (s) {
+              const h = HEROES[s.heroId]
+              return `
+                <li class="d5-side-slot" data-sheet="${h.id}" style="cursor:pointer;">
+                  <span class="d5-side-avatar"><img src="${h.image}" alt="" /></span>
+                  <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-display);font-size:13.5px;color:${s.who === "you" ? "var(--accent-300)" : "var(--brass-50)"}">${h.name}</span>
+                  ${rolePill(s)}
+                </li>
+              `
+            }
+            return `<li class="d5-side-slot empty"><span style="width:28px;text-align:center;font-style:normal;">◇</span><span>Seat ${idx + 1} — open</span></li>`
+          }).join("")}
+        </ul>
+      </div>
+    `
+
+    let right = ""
+    if (state.signedOut) {
+      right = `
+        <div class="d5-roster-head">
+          <div>
+            <div class="d5-brass-label">Invitation</div>
+            <h3>Take Your Place at the Table</h3>
+          </div>
+        </div>
+        <p style="margin:18px 0 24px;font-family:var(--font-serif);font-size:15.5px;line-height:1.7;color:var(--brass-150);max-width:52ch;">
+          Sign in or create a free account to choose one of the premade travellers or bring a hero of your own to the road to Kordavos.
+        </p>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+          <button type="button" class="d5-brass-btn" data-scenario="empty">Create Account</button>
+        </div>
+      `
+    } else if (!youSeated) {
+      right = `
+        <div class="d5-roster-head">
+          <div>
+            <div class="d5-brass-label">Dramatis Personae</div>
+            <h3>Choose Your Hero</h3>
+          </div>
+          <span style="font-family:var(--font-serif);font-style:italic;font-size:12.5px;color:var(--brass-300);">Click a portrait for full sheet</span>
+        </div>
+        <div>
+          ${state.available.map((id) => {
+            const h = HEROES[id]
+            return `
+              <div class="d5-row">
+                <div class="d5-port" data-sheet="${h.id}"><img src="${h.image}" alt="" /></div>
+                <div style="min-width:0;">
+                  <div class="d5-name" data-sheet="${h.id}">${h.name}${h.custom ? ` <span class="role-pill role-you" style="vertical-align:middle;margin-left:6px;">Your Hero</span>` : ""}</div>
+                  <div class="d5-sub">${h.race} · ${h.archetype} · Level ${h.level}</div>
+                  <p class="d5-quote">“${h.personality}”</p>
+                  <div class="d5-skills">${h.skills.slice(0, 4).join(" · ")}</div>
+                </div>
+                <div class="d5-actions">
+                  <button type="button" class="d5-brass-btn" data-join="${h.id}">Join</button>
+                  <button type="button" class="d1-sheet-link" style="color:var(--brass-300);" data-sheet="${h.id}">Inspect sheet</button>
+                </div>
+              </div>
+            `
+          }).join("")}
+        </div>
+        <div class="d5-create-row">
+          <div>
+            <div style="font-family:var(--font-display);font-size:16px;color:var(--brass-50);">Or Create a New Character</div>
+            <div style="font-family:var(--font-serif);font-size:13px;color:var(--brass-300);margin-top:2px;">Bring a custom adventurer built to your own design.</div>
+          </div>
+          <button type="button" class="d5-brass-btn">Build Hero</button>
+        </div>
+      `
+    } else {
+      right = `
+        <div class="d5-roster-head">
+          <div>
+            <div class="d5-brass-label">Company Assembled</div>
+            <h3>${state.isOwner ? "Ready to Set Out" : "Awaiting the Host"}</h3>
+          </div>
+        </div>
+        <p style="margin:16px 0 22px;font-family:var(--font-serif);font-size:15px;line-height:1.65;color:var(--brass-150);">
+          ${state.isOwner ? "Your party meets the minimum size. Begin the journey now, or share the invite link below while others choose their heroes." : "Your hero is seated at the table. The adventure begins as soon as the host starts the session."}
+        </p>
+        ${state.isOwner ? `
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div><button type="button" class="btn-epic">Start Adventure</button></div>
+            <div><div class="d5-brass-label" style="margin-bottom:8px;">Invite Link</div>${inviteBarHtml(true)}</div>
+          </div>
+        ` : `<div class="ready-strip"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Waiting for the host to start…</span></span><span class="d5-brass-label">${state.seated.length}/${ADVENTURE.maxSeats} SEATED</span></div>`}
+      `
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d5-stage">
+        <div class="d5-grid">
+          <div>
+            ${coverHtml()}
+            <p class="d1-teaser" style="color:var(--brass-150);opacity:0.85;">${ADVENTURE.teaser}</p>
+            ${!state.signedOut ? sideParty : ""}
+          </div>
+          <div>${right}</div>
+        </div>
+      </div>
+    `
+  }
+
+  /* ── DIRECTION 06: CAMPFIRE TABLE (4 Seat Cards + Hero Deck) ── */
+  function renderD6() {
+    const youSeated = isSeatedYou()
+    const chairs = Array.from({ length: ADVENTURE.maxSeats }).map((_, idx) => {
+      const s = state.seated[idx]
+      if (s) {
+        const h = HEROES[s.heroId]
+        return `
+          <div class="d6-chair filled ${s.who === "you" ? "mine" : ""}" data-sheet="${h.id}">
+            <div class="d6-chair-ring"><img src="${h.image}" alt="" /></div>
+            <div style="font-family:var(--font-display);font-size:13.5px;color:${s.who === "you" ? "var(--accent-300)" : "#fff"}">${h.name.split(" ")[0]}</div>
+            <div style="font-size:11px;color:var(--primary-200);margin-top:-4px;">${h.archetype}</div>
+            ${rolePill(s)}
+          </div>
+        `
+      }
+      return `
+        <div class="d6-chair">
+          <div class="d6-chair-open">${idx + 1}</div>
+          <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.38);">Open Seat</div>
+        </div>
+      `
+    }).join("")
+
+    let lower = ""
+    if (state.signedOut) {
+      lower = `
+        <div style="margin-top:18px;padding:24px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(14,14,22,0.9);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div class="eyebrow">Join the Table</div>
+            <div style="font-family:var(--font-display);font-size:21px;color:var(--accent-300);margin-top:4px;">Sign in to Claim an Open Seat</div>
+          </div>
+          <button type="button" class="btn-epic" data-scenario="empty">Sign in to Join</button>
+        </div>
+      `
+    } else if (!youSeated) {
+      lower = `
+        <div style="margin-top:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="eyebrow">Hero Deck · Pick to Sit Down</span>
+            <span style="font-size:11.5px;color:rgba(255,255,255,0.45);">Click portrait to inspect sheet</span>
+          </div>
+          <div class="d6-deck">
+            ${state.available.map((id) => {
+              const h = HEROES[id]
+              return `
+                <div class="d6-hero-tile">
+                  <div class="d6-hero-art" data-sheet="${h.id}"><img src="${h.image}" alt="" /></div>
+                  <div class="d6-hero-body">
+                    <div>
+                      <div style="font-family:var(--font-display);font-size:14.5px;color:#fff;line-height:1.2;">${h.name}</div>
+                      <div style="font-size:11.5px;color:var(--primary-200);margin-top:2px;">${h.race} ${h.archetype}</div>
+                    </div>
+                    <button type="button" class="btn-stone" style="width:100%;margin-top:auto;" data-join="${h.id}">Join</button>
+                  </div>
+                </div>
+              `
+            }).join("")}
+            <div class="d6-hero-tile" style="border-style:dashed;border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.02);padding:16px 12px;justify-content:space-between;align-items:center;text-align:center;">
+              <div style="margin-top:16px;width:54px;height:54px;border-radius:99px;border:1.5px dashed rgba(252,211,77,0.42);display:grid;place-items:center;font-size:24px;color:var(--accent-300);">+</div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:14px;color:#fff;">New Hero</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">Build your own</div>
+              </div>
+              <button type="button" class="btn-outline" style="width:100%;">Create</button>
+            </div>
+          </div>
+        </div>
+      `
+    } else {
+      lower = `
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:14px;">
+          ${state.isOwner ? `
+            <div class="ready-strip go"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Table ready (${state.seated.length}/${ADVENTURE.maxSeats}) — launch whenever you're set.</span></span><button type="button" class="btn-epic" style="padding:7px 18px;font-size:12px;">Start Adventure</button></div>
+            ${inviteBarHtml(true)}
+          ` : `
+            <div class="ready-strip"><span style="display:inline-flex;align-items:center;gap:10px;"><span class="status-dot"></span><span>Seated and ready — waiting for the host to start…</span></span><span class="eyebrow">${state.seated.length}/${ADVENTURE.maxSeats}</span></div>
+          `}
+        </div>
+      `
+    }
+
+    return `
+      ${headerHtml(state.signedOut)}
+      <div class="d6-stage">
+        <div class="d6-grid">
+          <div>
+            ${coverHtml()}
+            <p class="d1-teaser">${ADVENTURE.teaser}</p>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span class="eyebrow">The Table · ${state.seated.length} of ${ADVENTURE.maxSeats} Seats Filled</span>
+              ${pipsHtml(state.seated.length, ADVENTURE.maxSeats)}
+            </div>
+            <div class="d6-table-seats">${chairs}</div>
+            ${lower}
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  /* ── CHARACTER SHEET MODAL ── */
+  function openSheet(id) {
+    const h = HEROES[id]
+    if (!h) return
+    const modal = document.getElementById("sheet-modal")
+    const card = document.getElementById("sheet-modal-card")
+    card.innerHTML = `
+      <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+      <div>
+        <div style="aspect-ratio:4/5;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.22);background:#000;">
+          <img src="${h.image}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 15%;" />
+        </div>
+        <dl class="d4-stats" style="grid-template-columns:repeat(3,1fr);margin:14px 0 0;">
+          ${Object.entries(h.stats).map(([k, v]) => `<div class="d4-stat"><dt>${k}</dt><dd>${v}</dd><span>${mod(v)}</span></div>`).join("")}
+        </dl>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div class="eyebrow">Level ${h.level} ${h.race} ${h.archetype}</div>
+          <h3 style="margin:4px 0 0;font-family:var(--font-display);font-size:28px;color:var(--accent-300);">${h.name}</h3>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;font-size:10px;">Personality</div>
+          <p style="margin:0;font-family:var(--font-serif);font-size:14px;line-height:1.55;color:rgba(255,255,255,0.88);">${h.personality}</p>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;font-size:10px;">Background</div>
+          <p style="margin:0;font-family:var(--font-serif);font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.72);">${h.background}</p>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px;font-size:10px;">Skills</div>
+          <div class="d4-tags">${h.skills.map((s) => `<span class="d4-tag">${s}</span>`).join("")}</div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px;font-size:10px;">Equipment</div>
+          <div class="d4-tags">${h.gear.map((g) => `<span class="d4-tag" style="border-color:rgba(252,211,77,0.22);color:var(--accent-200);">${g}</span>`).join("")}</div>
+        </div>
+        ${!isSeatedYou() && state.available.includes(h.id) ? `
+          <div style="margin-top:auto;padding-top:10px;display:flex;justify-content:flex-end;">
+            <button type="button" class="btn-stone lg" data-join="${h.id}" data-close-after>Join Adventure as ${h.name.split(" ")[0]}</button>
+          </div>
+        ` : ""}
+      </div>
+    `
+    modal.classList.add("open")
+  }
+
+  function closeSheet() {
+    document.getElementById("sheet-modal").classList.remove("open")
+  }
+
+  /* ── STUDIO CHROME & RENDER ── */
+  const gallery = document.getElementById("gallery")
+  const scenarioSeg = document.getElementById("scenario-seg")
+  const jumpBar = document.getElementById("jump-bar")
+  const resetBtn = document.getElementById("reset-btn")
+  const cmpASel = document.getElementById("cmp-a")
+  const cmpBSel = document.getElementById("cmp-b")
+
+  function initChrome() {
+    scenarioSeg.innerHTML = SCENARIOS.map((s) => `<button type="button" data-scenario="${s.id}" class="${s.id === currentScenario ? "active" : ""}">${s.label}</button>`).join("")
+    jumpBar.innerHTML = DESIGNS.map((d) => `<a class="jump-pill" href="#${d.id}"><b>${d.num}</b>${d.title}</a>`).join("")
+    const opts = DESIGNS.map((d) => `<option value="${d.id}">${d.num} — ${d.title}</option>`).join("")
+    cmpASel.innerHTML = opts
+    cmpBSel.innerHTML = opts
+    cmpASel.value = cmpA
+    cmpBSel.value = cmpB
+  }
+
+  function syncChrome() {
+    scenarioSeg.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.scenario === currentScenario))
+    document.querySelectorAll("#mode-seg button").forEach((b) => b.classList.toggle("active", b.dataset.mode === viewMode))
+    document.body.classList.toggle("mode-compare", viewMode === "compare")
+    resetBtn.classList.toggle("show", dirty)
+  }
+
+  function render() {
+    const shown = viewMode === "compare"
+      ? [DESIGNS.find((d) => d.id === cmpA), DESIGNS.find((d) => d.id === cmpB)].filter(Boolean)
+      : DESIGNS
+
+    gallery.innerHTML = shown.map((d) => `
+      <section class="specimen" id="${d.id}">
+        <div class="specimen-head">
+          <div class="specimen-title-wrap">
+            <span class="specimen-num">${d.num}</span>
+            <h2 class="specimen-title">${d.title}</h2>
+            <span class="specimen-tag">${d.tag}</span>
+          </div>
+          <p class="specimen-desc">${d.desc}</p>
+        </div>
+        <div class="viewport-frame">${d.render()}</div>
+      </section>
+    `).join("")
+  }
+
+  document.addEventListener("click", (e) => {
+    const scenBtn = e.target.closest("[data-scenario]")
+    if (scenBtn) {
+      currentScenario = scenBtn.dataset.scenario
+      state = cloneScenario(currentScenario)
+      dirty = false
+      showAi = false
+      syncChrome()
+      render()
+      return
+    }
+
+    const modeBtn = e.target.closest("[data-mode]")
+    if (modeBtn) {
+      viewMode = modeBtn.dataset.mode
+      syncChrome()
+      render()
+      return
+    }
+
+    if (e.target.closest("#reset-btn")) {
+      state = cloneScenario(currentScenario)
+      dirty = false
+      showAi = false
+      syncChrome()
+      render()
+      return
+    }
+
+    const joinBtn = e.target.closest("[data-join]")
+    if (joinBtn) {
+      const id = joinBtn.dataset.join
+      if (!state.seated.some((s) => s.heroId === id)) {
+        state.seated.unshift({ heroId: id, who: "you", label: "john" })
+        state.available = state.available.filter((x) => x !== id)
+        dirty = true
+        if (joinBtn.hasAttribute("data-close-after")) closeSheet()
+        syncChrome()
+        render()
+      }
+      return
+    }
+
+    const addAiBtn = e.target.closest("[data-add-ai]")
+    if (addAiBtn) {
+      const id = addAiBtn.dataset.addAi
+      if (!state.seated.some((s) => s.heroId === id) && state.seated.length < ADVENTURE.maxSeats) {
+        state.seated.push({ heroId: id, who: "ai", label: "AI" })
+        state.available = state.available.filter((x) => x !== id)
+        dirty = true
+        syncChrome()
+        render()
+      }
+      return
+    }
+
+    if (e.target.closest("[data-toggle-ai]")) {
+      showAi = !showAi
+      render()
+      return
+    }
+
+    const spotBtn = e.target.closest("[data-spotlight]")
+    if (spotBtn) {
+      spotlightId = spotBtn.dataset.spotlight
+      render()
+      return
+    }
+
+    const copyBtn = e.target.closest("[data-copy]")
+    if (copyBtn) {
+      if (navigator.clipboard) navigator.clipboard.writeText(copyBtn.dataset.copy).catch(() => {})
+      const prev = copyBtn.textContent
+      copyBtn.textContent = "Copied!"
+      copyBtn.classList.add("copied")
+      setTimeout(() => {
+        copyBtn.textContent = prev
+        copyBtn.classList.remove("copied")
+      }, 1400)
+      return
+    }
+
+    const sheetEl = e.target.closest("[data-sheet]")
+    if (sheetEl) {
+      openSheet(sheetEl.dataset.sheet)
+      return
+    }
+
+    if (e.target.closest("[data-close-modal]") || e.target.id === "sheet-modal") {
+      closeSheet()
+    }
+  })
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSheet()
+  })
+
+  cmpASel.addEventListener("change", () => { cmpA = cmpASel.value; render() })
+  cmpBSel.addEventListener("change", () => { cmpB = cmpBSel.value; render() })
+
+  initChrome()
+  syncChrome()
+  render()
+</script>
+</body>
+</html>

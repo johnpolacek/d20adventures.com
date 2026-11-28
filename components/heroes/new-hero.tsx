@@ -18,11 +18,29 @@ export type HeroLobby = { href: string; settingId: string; planId: string; adven
 
 // The website's hero creator: the app's, with the races, classes and hooks of the adventure it is made for. In a hosted
 // game the hero takes an open seat with the hook the player chose, for the host's GM to write their arrival.
-export function NewHero({ creation, lobby }: { creation: HeroCreation; lobby?: HeroLobby }) {
+export function NewHero({
+  creation,
+  lobby,
+  inline,
+  onClose,
+  onPendingSeat,
+}: {
+  creation: HeroCreation
+  lobby?: HeroLobby
+  /** Renders inline on the lobby page without navigating away. */
+  inline?: boolean
+  onClose?: () => void
+  /** Called in inline hosted lobbies when the hero was saved and is now waiting on host approval. */
+  onPendingSeat?: (name: string) => void
+}) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const hook = useRef("")
-  const leave = () => (lobby ? router.push(lobby.href) : router.back())
+  const leave = () => {
+    if (onClose) return onClose()
+    if (lobby) router.push(lobby.href)
+    else router.back()
+  }
 
   const onDraft = async (idea: HeroIdea, making: HeroMaking) => {
     setBusy(true)
@@ -49,8 +67,16 @@ export function NewHero({ creation, lobby }: { creation: HeroCreation; lobby?: H
         return true
       }
       if (lobby.hosted) {
-        const { error } = await requestSeat({ adventureId: lobby.adventureId, characterId: saved.characterId, hook: hook.current || undefined })
+        const { seated, error } = await requestSeat({ adventureId: lobby.adventureId, characterId: saved.characterId, hook: hook.current || undefined })
         if (error) toast.error(`${hero.name} is saved, but ${error.charAt(0).toLowerCase()}${error.slice(1)}`)
+        if (inline && !seated && !error && onPendingSeat) {
+          onPendingSeat(hero.name)
+          return true
+        }
+        if (inline) {
+          window.location.replace(window.location.pathname + window.location.search)
+          return true
+        }
         window.location.href = lobby.href
         return true
       }
@@ -61,17 +87,21 @@ export function NewHero({ creation, lobby }: { creation: HeroCreation; lobby?: H
     }
   }
 
-  return (
-    <div className="relative z-10 min-h-screen">
-      <HeroCreator
-        options={creation.options}
-        adventure={creation.adventure?.hooks?.length ? { id: creation.adventure.planId, hooks: creation.adventure.hooks } : undefined}
-        figures={false}
-        busy={busy}
-        onDraft={onDraft}
-        onSave={onSave}
-        onClose={leave}
-      />
-    </div>
+  const creator = (
+    <HeroCreator
+      options={creation.options}
+      adventure={creation.adventure?.hooks?.length ? { id: creation.adventure.planId, hooks: creation.adventure.hooks } : undefined}
+      figures={false}
+      inline={inline}
+      saveLabel={lobby ? "Save & Join Table" : "Save Hero"}
+      busy={busy}
+      onDraft={onDraft}
+      onSave={onSave}
+      onClose={leave}
+    />
   )
+
+  if (inline) return creator
+
+  return <div className="relative z-10 min-h-screen">{creator}</div>
 }

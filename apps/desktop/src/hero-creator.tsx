@@ -1,6 +1,7 @@
 import { Heading } from "@d20/ui/typography/heading"
 import type { CreationChoices, CreationPick } from "@d20/gm-core/sheet/create"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { ArrowLeft, Check } from "lucide-react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { useSheetView } from "@d20/ui/adventure/use-sheet-view"
 import { HeroRules } from "@d20/ui/heroes/hero-rules"
 import { useHeroRules } from "@d20/ui/heroes/use-hero-rules"
@@ -30,7 +31,9 @@ const figure = (chosen: boolean) =>
   )
 const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 const STEPS = ["pick", "rules", "review"] as const
-const footer = "sticky -bottom-7 z-10 -mx-7 -mb-7 flex flex-wrap items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4"
+const STEP_LABELS: Record<(typeof STEPS)[number], string> = { pick: "Identity", rules: "Rules", review: "Review" }
+const dialogFooter = "sticky -bottom-7 z-10 -mx-7 -mb-7 flex flex-wrap items-center justify-end gap-3 border-t border-primary-700 bg-primary-900 px-7 py-4"
+const inlineWell = "rounded-xl border border-white/10 bg-black/40 p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.45)] sm:p-5"
 
 // Making a hero in three steps. The player picks a species, a class and a background and says who the hero is. The
 // rules then ask their choices, filled in to begin with. Last, one GM call writes the hero's story to fit those rules,
@@ -46,6 +49,10 @@ export function HeroCreator(props: {
   painted?: FigureArt
   // False where the stage does not read a chosen figure yet, as on the website.
   figures?: boolean
+  // True renders inline inside a lobby page instead of opening a floating modal dialog.
+  inline?: boolean
+  // Optional label for the final save CTA (e.g. "Save & Join Table").
+  saveLabel?: string
   // False closes the dialog while it stays mounted, so it is seen to go. `onClosed` runs once it has.
   open?: boolean
   onClosed?: () => void
@@ -61,11 +68,15 @@ export function HeroCreator(props: {
   const [pick, setPick] = useState<CreationPick | null>(null)
   const [choices, setChoices] = useState<CreationChoices | null>(null)
   const [step, setStep] = useState<(typeof STEPS)[number]>(props.editing ? "review" : "pick")
+  const inlineRef = useRef<HTMLElement>(null)
   // A later step comes in from the right and an earlier one from the left.
   const [back, setBack] = useState(false)
   const go = (to: (typeof STEPS)[number]) => {
     setBack(STEPS.indexOf(to) < STEPS.indexOf(step))
     setStep(to)
+    if (props.inline) {
+      requestAnimationFrame(() => inlineRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }))
+    }
   }
   const [hero, setHero] = useState<Edited | null>(props.editing ?? null)
 
@@ -120,6 +131,284 @@ export function HeroCreator(props: {
       ].filter((label): label is string => Boolean(label))
     : []
   const title = step === "pick" ? "New Hero" : step === "rules" ? "Rules" : "Review Hero"
+  const stepIndex = STEPS.indexOf(step)
+  const saveLabel = props.saveLabel ?? "Save Hero"
+
+  if (props.inline) {
+    return (
+      <section
+        ref={inlineRef}
+        aria-label={title}
+        className="relative w-full scroll-mt-24 overflow-hidden rounded-2xl border border-white/15 bg-[#0d0d13]/95 text-left font-serif text-white shadow-[0_18px_48px_rgba(0,0,0,0.65)]"
+      >
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 stage-grain opacity-30" />
+
+        {/* Header: Back to Heroes, step heading, and 3-step indicator */}
+        <div className="relative flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-black/35 px-5 py-4 sm:px-7">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <Button variant="outline" size="xs" disabled={props.busy} onClick={props.onClose} className="gap-1.5">
+              <ArrowLeft aria-hidden="true" className="size-3.5" />
+              <span>Back to Heroes</span>
+            </Button>
+            <div>
+              <div className={siteLabel}>Create New Character</div>
+              <Heading variant="h3" as="h2" className="mt-0.5 text-xl sm:text-2xl">
+                {step === "rules" && idea.name.trim() ? idea.name.trim() : title}
+              </Heading>
+            </div>
+          </div>
+
+          <ol aria-label="Creation steps" className="flex items-center gap-2 font-sans text-xs">
+            {STEPS.map((s, idx) => {
+              const active = idx === stepIndex
+              const done = idx < stepIndex
+              return (
+                <li
+                  key={s}
+                  aria-current={active ? "step" : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors",
+                    active
+                      ? "border-accent-300/45 bg-accent-300/12 font-medium text-accent-200"
+                      : done
+                        ? "border-roll-success/35 bg-roll-success/10 text-roll-success"
+                        : "border-white/10 bg-white/[0.02] text-white/40"
+                  )}
+                >
+                  {done ? <Check aria-hidden="true" className="size-3" /> : <span className="font-mono text-4xs">{idx + 1}</span>}
+                  <span>{STEP_LABELS[s]}</span>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+
+        <Swap id={step} motion={back ? "left" : "right"} exit={back ? "right" : "left"} className="relative flex flex-col">
+          {step === "pick" && (
+            <>
+              <div className="flex flex-col gap-4 p-5 sm:gap-5 sm:p-7">
+                <div className={inlineWell}>
+                  <Swap id={!menu || !pick ? "loading" : "menu"} className="flex flex-col gap-4">
+                    {!menu || !pick ? (
+                      <p className="font-sans text-sm text-white/60 italic">Loading species, classes, and backgrounds…</p>
+                    ) : (
+                      <>
+                        <Choice label="Species" values={menu.species} value={pick.species} onPick={(id) => repick({ species: id })} />
+                        <Choice label="Class" values={menu.classes} value={pick.class} onPick={(id) => repick({ class: id as CreationPick["class"] })} />
+                        <Choice label="Background" values={menu.backgrounds} value={pick.background} onPick={(id) => repick({ background: id })} />
+                      </>
+                    )}
+                  </Swap>
+                </div>
+
+                <div className={cn(inlineWell, "flex flex-col gap-4")}>
+                  <div className="grid gap-3.5 sm:grid-cols-[2fr_1fr]">
+                    <Labeled label="Name">
+                      <Input placeholder="e.g. Rowan Brightwood" value={idea.name} maxLength={80} onChange={(e) => set("name", e.target.value)} />
+                    </Labeled>
+                    <Labeled label="Gender">
+                      <Input placeholder="Optional" value={idea.gender} maxLength={40} onChange={(e) => set("gender", e.target.value)} />
+                    </Labeled>
+                  </div>
+                  <Labeled label="Idea">
+                    <Textarea
+                      className="resize-none"
+                      rows={2}
+                      maxLength={600}
+                      placeholder="A sentence or two about who they are, their temperament, or what drives them (optional)"
+                      value={idea.idea}
+                      onChange={(e) => set("idea", e.target.value)}
+                    />
+                  </Labeled>
+                </div>
+
+                {props.adventure && props.adventure.hooks.length > 0 && (
+                  <div className={inlineWell}>
+                    <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
+                      <div className={siteLabel}>Why They Came</div>
+                      <span className="font-sans text-2xs text-white/45">Pick a hook or write your own</span>
+                    </div>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {props.adventure.hooks.map((h) => (
+                        <Option key={h} aria-pressed={h === idea.hook} active={h === idea.hook} className="text-left" onClick={() => set("hook", h === idea.hook ? "" : h)}>
+                          {h}
+                        </Option>
+                      ))}
+                    </div>
+                    <Input aria-label="Why They Came" placeholder="Or leave blank to let the GM choose" value={idea.hook} maxLength={300} onChange={(e) => set("hook", e.target.value)} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-black/45 px-5 py-4 sm:px-7">
+                <span className="font-sans text-xs text-white/50">
+                  {!idea.name.trim() ? "Enter a hero name to continue." : "Next: customize ability scores, skills, and gear."}
+                </span>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={props.onClose}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" size="lg" className="px-6 font-sans font-semibold" disabled={!kit || !pick || !idea.name.trim()} onClick={toRules}>
+                    Choose Rules
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === "rules" && kit && pick && choices && (
+            <>
+              <div className="flex flex-col gap-5 p-5 sm:p-7">
+                <div className="rounded-xl border border-white/10 bg-black/45 px-4 py-3 font-sans text-sm text-white/85">
+                  {view
+                    ? `Level 1 ${view.speciesName} ${view.className} · ${view.backgroundName} · Hit Points ${view.hitPoints.maximum} · Armor Class ${view.armorClass} · Speed ${view.speed} ft.`
+                    : "These choices do not make a legal hero yet."}
+                </div>
+                <HeroRules kit={kit} pick={pick} choices={choices} onChange={setChoices} />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 border-t border-white/10 bg-black/45 px-5 py-4 sm:px-7">
+                <Presence show={problems.length > 0} motion="fade" asChild>
+                  <p role="alert" className="mr-auto max-w-[32rem] font-sans text-xs text-red-300">
+                    {problems.map((problem) => problem.charAt(0).toUpperCase() + problem.slice(1)).join(". ")}.
+                  </p>
+                </Presence>
+                <Presence show={props.busy} motion="fade" asChild>
+                  <span className="mr-auto font-sans text-xs text-accent-200 italic">The GM is writing your hero…</span>
+                </Presence>
+                <Button variant="outline" disabled={props.busy} onClick={() => go("pick")}>
+                  Back
+                </Button>
+                <Button variant="outline" disabled={props.busy} onClick={() => setChoices(kit.auto(pick))}>
+                  Choose For Me
+                </Button>
+                <Button variant="primary" size="lg" className="px-6 font-sans font-semibold" disabled={props.busy || problems.length > 0} onClick={() => void write()}>
+                  {props.busy ? "Writing Hero…" : "Write My Hero"}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {step === "review" && hero && (
+            <>
+              <div className="flex flex-col gap-5 p-5 sm:p-7">
+                <div className={cn(inlineWell, "grid gap-5", props.figures !== false && "md:grid-cols-[220px_1fr]")}>
+                  <div hidden={props.figures === false}>
+                    <div className={cn(siteLabel, "mb-2")}>Figure</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {props.painted && (
+                        <Button
+                          variant="plain"
+                          type="button"
+                          aria-pressed={Boolean(hero.painted)}
+                          aria-label="Painted Figure"
+                          onClick={() => setHero({ ...hero, painted: true })}
+                          className={figure(Boolean(hero.painted))}
+                        >
+                          <img src={props.painted.front} alt="" className="block h-56 w-full object-contain" />
+                        </Button>
+                      )}
+                      {figuresFor(hero.race).map((f) => (
+                        <Button
+                          variant="plain"
+                          key={f.id}
+                          type="button"
+                          aria-pressed={!hero.painted && hero.figure === f.id}
+                          aria-label={`Figure ${f.id.endsWith("-a") ? 1 : 2}`}
+                          onClick={() => setHero({ ...hero, figure: f.id, painted: false })}
+                          className={figure(!hero.painted && hero.figure === f.id)}
+                        >
+                          <img src={f.art.front} alt="" className="block h-56 w-full object-contain" />
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid content-start gap-3.5">
+                    <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+                      <Labeled label="Name">
+                        <Input className="font-display text-lg text-accent-300" value={hero.name} maxLength={80} onChange={(e) => setHero({ ...hero, name: e.target.value })} />
+                      </Labeled>
+                      <Labeled label="Gender">
+                        <Input value={hero.gender ?? ""} maxLength={40} onChange={(e) => setHero({ ...hero, gender: e.target.value })} />
+                      </Labeled>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-black/40 p-3.5 font-sans text-sm text-white/85">
+                      <div className="font-display text-base text-accent-300">
+                        {sheet ? `Level ${sheet.level} ${hero.race} ${sheet.className}${sheet.subclassName ? ` · ${sheet.subclassName}` : ""} · ${sheet.backgroundName}` : `${hero.race} ${hero.archetype}`}
+                      </div>
+                      {sheet && (
+                        <>
+                          <div className="mt-1 text-xs text-white/80">
+                            Hit Points {sheet.hitPoints.maximum} · Armor Class {sheet.armorClass} · Speed {sheet.speed} ft. · Initiative {signed(sheet.initiative)}
+                          </div>
+                          <div className="mt-1.5 font-mono text-xs tabular-nums text-primary-200">{sheet.abilities.map((a) => `${a.name.slice(0, 3)} ${a.score}`).join(" · ")}</div>
+                          <div className="mt-1.5 text-xs text-white/75">
+                            {sheet.skills
+                              .filter((s) => s.proficient)
+                              .map((s) => `${s.name} ${signed(s.bonus)}`)
+                              .join(", ")}
+                          </div>
+                          {sheet.spellcasting && <div className="mt-1 text-xs text-accent-200/85">{[...sheet.spellcasting.cantrips, ...sheet.spellcasting.prepared].join(", ")}</div>}
+                        </>
+                      )}
+                      {(hero.equipment?.length ?? 0) > 0 && <div className="mt-1.5 text-xs text-white/60">{hero.equipment?.map((item) => item.name).join(", ")}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                {arrival && (
+                  <div className={cn(inlineWell, "grid gap-3.5 md:grid-cols-2")}>
+                    <div className="md:col-span-2">
+                      <Labeled label="Arrival">
+                        <Textarea className="resize-y" rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
+                      </Labeled>
+                    </div>
+                    <Labeled label="Why They Came">
+                      <Textarea className="resize-y" rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
+                    </Labeled>
+                    <Labeled label="What Others Notice">
+                      <Textarea className="resize-y" rows={2} maxLength={200} value={arrival.tell} onChange={(e) => setArrival("tell", e.target.value)} />
+                    </Labeled>
+                  </div>
+                )}
+
+                <div className={cn(inlineWell, "grid gap-3.5 md:grid-cols-2")}>
+                  {(["appearance", "personality", "background", "motivation", "behavior"] as const).map((key) => (
+                    <Labeled key={key} label={key === "background" ? "Past" : key}>
+                      <Textarea className="resize-y" rows={3} value={hero[key] ?? ""} onChange={(e) => setHero({ ...hero, [key]: e.target.value })} />
+                    </Labeled>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-3 border-t border-white/10 bg-black/45 px-5 py-4 sm:px-7">
+                <Presence show={props.busy} motion="fade" asChild>
+                  <span className="mr-auto font-sans text-xs text-accent-200 italic">Saving…</span>
+                </Presence>
+                <Presence show={!props.busy && missing.length > 0} motion="fade" initial={false} asChild>
+                  <p className="mr-auto font-sans text-xs text-white/65">Still to fill in: {missing.join(", ")}.</p>
+                </Presence>
+                {!props.editing && (
+                  <Button variant="outline" disabled={props.busy} onClick={() => go("rules")}>
+                    Back
+                  </Button>
+                )}
+                <Button
+                  variant="epic"
+                  size="default"
+                  className="scale-100 hover:scale-[1.02]"
+                  disabled={props.busy || missing.length > 0}
+                  onClick={() => void props.onSave(hero, !props.editing && pick && choices ? { pick, choices } : undefined)}
+                >
+                  {props.busy ? "Saving…" : saveLabel}
+                </Button>
+              </div>
+            </>
+          )}
+        </Swap>
+      </section>
+    )
+  }
 
   return (
     // Escape and the close button close it. A press outside does not, so a hero in progress is not lost.
@@ -179,7 +468,7 @@ export function HeroCreator(props: {
                   <Input aria-label="Why They Came" placeholder="Let the GM choose" value={idea.hook} maxLength={300} onChange={(e) => set("hook", e.target.value)} />
                 </div>
               )}
-              <div className={footer}>
+              <div className={dialogFooter}>
                 <Button variant="epic" className="text-lg" disabled={!kit || !pick || !idea.name.trim()} onClick={toRules}>
                   Choose Rules
                 </Button>
@@ -197,7 +486,7 @@ export function HeroCreator(props: {
                 </p>
               </div>
               <HeroRules kit={kit} pick={pick} choices={choices} onChange={setChoices} />
-              <div className={footer}>
+              <div className={dialogFooter}>
                 <Presence show={problems.length > 0} motion="fade" asChild>
                   <p role="alert" className="mr-auto max-w-[32rem] text-sm text-red-300">
                     {problems.map((problem) => problem.charAt(0).toUpperCase() + problem.slice(1)).join(". ")}.
@@ -306,7 +595,7 @@ export function HeroCreator(props: {
                   </Labeled>
                 ))}
               </div>
-              <div className={footer}>
+              <div className={dialogFooter}>
                 <Presence show={props.busy} motion="fade" asChild>
                   <span className="text-sm text-white/70 italic">Saving…</span>
                 </Presence>
@@ -324,7 +613,7 @@ export function HeroCreator(props: {
                   disabled={props.busy || missing.length > 0}
                   onClick={() => void props.onSave(hero, !props.editing && pick && choices ? { pick, choices } : undefined)}
                 >
-                  Save Hero
+                  {saveLabel}
                 </Button>
               </div>
             </>

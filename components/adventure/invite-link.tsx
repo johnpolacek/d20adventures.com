@@ -1,10 +1,13 @@
 "use client"
 
-import { Check, Copy, Share2 } from "lucide-react"
+import { Check, Copy } from "lucide-react"
 import { useState } from "react"
-import { toast } from "@d20/ui/toast"
 import { Button } from "@d20/ui/button"
+import { Input } from "@d20/ui/input"
 import { Swap } from "@d20/ui/presence"
+import { siteLabel } from "@d20/ui/site"
+import { toast } from "@d20/ui/toast"
+import { cn } from "@/lib/utils"
 
 interface InviteLinkProps {
   inviteLink: string
@@ -21,23 +24,49 @@ export function InviteLink({ inviteLink }: InviteLinkProps) {
       setTimeout(() => setIsCopied(false), 2000)
     } catch (error) {
       toast.error("Failed to copy link")
-
       console.error("Copy failed:", error)
     }
   }
 
   return (
-    <div className="mb-6 border border-white/30 bg-primary-800/70 rounded-lg pt-2 pb-6 px-4">
-      <p className="text-sm text-accent-400 pt-3 pb-2 font-display font-bold text-xl text-center">Invite Players</p>
-      <div className="flex items-center gap-2 bg-black rounded-lg p-3 max-w-xl mx-auto">
-        <Share2 className="w-4 h-4 text-action-400 flex-shrink-0" />
-        <code className="flex-1 text-xs text-zinc-300 truncate">{inviteLink}</code>
-        <Button size="sm" variant="outline" onClick={handleCopyInvite} className="flex-shrink-0 h-7 px-2">
-          <Swap id={isCopied ? "copied" : "copy"} motion="pop" as="span" className="inline-flex">
-            {isCopied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+    <section className="rounded-xl border border-white/10 bg-black/45 p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.5)] sm:p-5">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <div className={siteLabel}>Invite Players</div>
+        <span className="font-sans text-2xs text-white/50">Share link to join the table</span>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg border border-white/15 bg-black/50 py-1 pr-1 pl-3 transition-colors focus-within:border-primary-400/70">
+        <Input
+          plain
+          readOnly
+          value={inviteLink}
+          onFocus={(e) => e.currentTarget.select()}
+          aria-label="Adventure invite link"
+          className="min-w-0 flex-1 bg-transparent font-sans text-xs text-white/85 outline-none"
+        />
+        <Button
+          size="xs"
+          variant="outline"
+          onClick={handleCopyInvite}
+          className={cn(
+            "shrink-0 gap-1.5 px-3",
+            isCopied && "border-roll-success/45 bg-roll-success/20 text-roll-success"
+          )}
+        >
+          <Swap id={isCopied ? "copied" : "copy"} motion="pop" as="span" className="inline-flex items-center gap-1.5">
+            {isCopied ? (
+              <>
+                <Check aria-hidden="true" className="size-3" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy aria-hidden="true" className="size-3" />
+                <span>Copy</span>
+              </>
+            )}
           </Swap>
         </Button>
       </div>
-    </div>
+    </section>
   )
 }
