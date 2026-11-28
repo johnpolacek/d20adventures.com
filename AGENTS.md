@@ -66,6 +66,7 @@ Each finishes in under 30 seconds. There is no root lint or typecheck script.
 - Work on `main` in the main checkout. No feature branches or worktrees until beta.
 - `pnpm dev` starts Convex, the website, and the desktop app. `pnpm dev:web` and `pnpm dev:app` start one each. `pnpm dev:fresh` kills the ports first.
 - The dev app runs as "D20 Adventures Dev" (`com.d20adventures.desktop.dev`), the name computer-use tools ask for. `VITE_D20_TRACE=1` writes its sound buses and frame rate to `apps/desktop/.logs/window.log`.
+- This machine has 8 GB of RAM shared across concurrent CLI sessions. Heavy scripts (`assets`, `assets:pilot`, `assets:views`, `assets:thumbs`, `stage:check`, `build`, Playwright) serialize across sessions through `scripts/heavy-lock.mjs` and cap Node (`--max-old-space-size=2048`) and `sharp` (`VIPS_CONCURRENCY=2`). Check whether port `3000` or `1422` is already listening before starting a dev server, and shut down any temporary server or headless browser right after verification.
 
 ## Doc Upkeep
 
