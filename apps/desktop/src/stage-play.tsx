@@ -12,7 +12,7 @@ import { readingSeconds } from "@d20/stage/beats"
 import { compose, planTakes, speakerShot, type ComposeContext, type Take } from "@d20/stage/director"
 import { served } from "@d20/stage/served"
 import type { StagingShot } from "@d20/stage/spec/staging"
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { useSheetView, useSheetViews } from "@d20/ui/adventure/use-sheet-view"
 import { CharacterCard } from "@d20/ui/stage/character-card"
 import { CityMapInset, CityMapPanel } from "@d20/ui/stage/city-map"
@@ -49,6 +49,17 @@ import { traceLine } from "./dev-trace"
 import { characterInfo } from "./character-info"
 import type { FigureArt } from "./figures"
 import { openingParagraph, storyMoments } from "./moments"
+import {
+  heldRollOf,
+  initialPlaybackState,
+  isPausedOf,
+  isReadingOf,
+  isStorySynced,
+  levellingHeroIdOf,
+  playbackReducer,
+  prowlingKeyOf,
+  viewingTurnIdOf,
+} from "./playback-machine"
 import { useSceneFiles } from "./files"
 import { adventureOf, castIdFor, partyScene, portraitFor, sceneFor } from "./scenes"
 import { loadPlay, loadPronunciations } from "./stage-data"
@@ -306,10 +317,18 @@ export function StagePlay(props: {
 
   const [draft, setDraft] = useState("")
   const [open, setOpen] = useState<"journal" | "chat" | "settings" | "map" | "feedback" | null>(null)
-  // The hero whose level-up screen is open.
-  const [levelling, setLevelling] = useState<string | null>(null)
-  // The turn whose levels the player put off till the next round.
-  const [levelLater, setLevelLater] = useState<string | null>(null)
+  const [playback, dispatch] = useReducer(playbackReducer, save?.adventure._id ?? null, initialPlaybackState)
+  const reading = isReadingOf(playback)
+  const paragraph = playback.paragraph
+  const paused = isPausedOf(playback)
+  const prowling = prowlingKeyOf(playback)
+  const held = heldRollOf(playback)
+  const tries = playback.rollTries
+  // The hero whose level-up screen is open, and the turn whose levels the player put off till the next round.
+  const levelling = levellingHeroIdOf(playback)
+  const levelLater = playback.levelDeferredTurnId
+  const viewing = viewingTurnIdOf(playback)
+  const continued = playback.continuedKey
   const [feedbackStart, setFeedbackStart] = useState<FeedbackStart>({ kind: "general" })
   const [endingSent, setEndingSent] = useState(false)
   const closePanel = useCallback(() => setOpen(null), [])
@@ -329,51 +348,30 @@ export function StagePlay(props: {
   openRef.current = open
   const overlay = useRef(false)
   overlay.current = props.overlay || Boolean(levelling)
-  const [paragraph, setParagraph] = useState(0)
   const [auto, setAuto] = useState(false)
-  // A beast prowling on, by its entrance's key: the story waits on its paragraph until it has walked all the way in, so
-  // the next card does not cut the camera away mid-walk.
-  const [prowling, setProwling] = useState<string | null>(null)
   const [sound, setSound] = useState(soundOn)
-  const [reading, setReading] = useState(true)
-  // The turn held by the player: the narrator stops where it is, and nothing moves on until it is played again.
-  const [paused, setPaused] = useState(false)
   // The first-look tour, the first time the game opens on this device. The story waits while it is up.
   const tour = useTour()
-  // The roll a hero has just made. It stays on the card, with how it came out, while the GM answers it, and the story
-  // after it is read once the player continues. `tries` renews the card for a roll that was not taken.
-  // `from` is how many beats the turn's story had when the roll was made: the engine's answer comes after them.
-  const [held, setHeld] = useState<{ turn: string; actor: CardCharacter; roll: CardRoll; dice: number[]; at: number; from: number } | null>(null)
-  const heldRef = useRef(held)
-  heldRef.current = held
-  const [tries, setTries] = useState(0)
-  const previousText = useRef<{ turn?: string; paragraphs: string[] }>({ paragraphs: [] })
-  const [, redraw] = useState(0)
+  // Used only for polling stage.activeShot / stage.tier / stage.motion UI controls (replaced in Phase 3B).
+  const [, redrawStageUi] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const compact = useCompact()
   const latest = save?.turns.find((t) => t._id === save.adventure.currentTurnId)
   // The turn on screen. A round's end written while the round is still read, or while a roll's answer waits on the
   // card, waits to replace it until the round has been read.
-  const [onScreen, setOnScreen] = useState<string | null>(null)
-  const kept = latest && onScreen !== latest._id ? save?.turns.find((t) => t._id === onScreen) : undefined
-  const live = kept && (reading || held?.turn === kept._id) ? kept : latest
+  const kept = latest && playback.onScreenTurnId && playback.onScreenTurnId !== latest._id ? save?.turns.find((t) => t._id === playback.onScreenTurnId) : undefined
+  const live = kept && (reading || held?.turnId === kept._id) ? kept : latest
   // A past round read again, reached by stepping back from a round's first paragraph or by the round arrows. It is only
   // read: nothing in it is played, and the game waits on the round in play until the reader returns to it.
-  const [viewing, setViewing] = useState<string | null>(null)
   const past = viewing ? save?.turns.find((t) => t._id === viewing) : undefined
   const turn = past ?? live
   const turnRef = useRef(turn)
   turnRef.current = turn
   useEffect(() => {
-    if (turn && !past) setOnScreen(turn._id)
-  }, [turn?._id, past])
-  useEffect(() => setViewing(null), [save?.adventure._id])
-  // Where the reader lands in a round moved to: its first paragraph or its last, read. And where they were in the
-  // round in play when they left it, to return to. `moved` places the cast for the round moved to, as `land` is read.
-  const land = useRef<{ turn: string; paragraph: number; reading: boolean } | null>(null)
-  const resume = useRef<{ turn: string; paragraph: number; reading: boolean } | null>(null)
+    dispatch({ type: "RESET_ADVENTURE", adventureId: save?.adventure._id ?? null })
+  }, [save?.adventure._id])
+  // `moved` places the cast for the round moved to; `reframe` resets the opening view when landing on an unframed paragraph.
   const moved = useRef<{ turn: string; where: "start" | "end" } | null>(null)
-  // A round moved to whose paragraph frames nothing takes the set's opening view, not the last close shot of another.
   const reframe = useRef<string | null>(null)
   const cardCharacter = turn?.characters.find((c) => c.id === cardId)
   // A turn that opens a new encounter starts with the end of the last round, which closes the old one. Those
@@ -384,12 +382,11 @@ export function StagePlay(props: {
     const end = turn.story.findIndex((b) => b.by.step !== "round")
     return story({ story: end < 0 ? turn.story : turn.story.slice(0, end) }).length
   }, [before, turn])
-  // A turn not yet read starts at its first paragraph. Until the reader is set there, the old scene stays, so the new
-  // scene is not built and then thrown away for the closing paragraphs.
-  const newTurn = turn !== undefined && previousText.current.turn !== turn._id
-  // A round stepped back into lands at its end, past the closing paragraphs, so the old scene is not built for it.
-  const landing = land.current?.turn === turn?._id ? land.current : null
-  const closingNow = closing > 0 && (newTurn ? !(landing && landing.paragraph >= closing) : reading && paragraph < closing)
+  // A turn not yet synced starts at its first paragraph. Until synced, the old scene stays, so the new
+  // scene is not built and then thrown away for the closing paragraphs. A round stepped back into already
+  // syncs its paragraph to the end in GO_TO_ROUND, so `newTurn` is false and `paragraph < closing` is false.
+  const newTurn = turn !== undefined && playback.seen.turnId !== turn._id
+  const closingNow = closing > 0 && (newTurn ? true : reading && paragraph < closing)
   const shown = closingNow ? before : turn
   // With no save, the stage shows the fallback encounter. Encounters without an authored scene play in story view.
   // In a game the scene holds the actual party, keyed by value so a reloaded save does not rebuild the stage. Each round
@@ -475,25 +472,32 @@ export function StagePlay(props: {
   const roundAfter = at >= 0 && at < rounds.length - 1 ? rounds[at + 1] : undefined
   const goTo = (to: (typeof rounds)[number] | undefined, where: "start" | "end") => {
     if (!to || !live || held) return
-    if (to._id !== live._id && !past) resume.current = { turn: live._id, paragraph, reading }
-    if (to._id === live._id) resume.current = null
-    land.current = { turn: to._id, paragraph: where === "start" ? 0 : Number.POSITIVE_INFINITY, reading: true }
     moved.current = { turn: to._id, where }
     reframe.current = to._id
-    setViewing(to._id === live._id ? null : to._id)
+    dispatch({
+      type: "GO_TO_ROUND",
+      targetTurnId: to._id,
+      targetParagraphs: story(to).map((p) => p.text),
+      where,
+      liveTurnId: live._id,
+      liveParagraphCount: story(live).length,
+    })
   }
   // Back to the round in play, where the reader left it.
   const toNow = () => {
     if (!live) return
-    const back = resume.current?.turn === live._id ? resume.current : { turn: live._id, paragraph: 0, reading: true }
-    resume.current = null
-    land.current = back
-    moved.current = { turn: live._id, where: back.paragraph > 0 || !back.reading ? "end" : "start" }
+    const saved = playback.phase === "reading" ? playback.returnTo : null
+    const back = saved?.turnId === live._id ? saved : null
+    moved.current = { turn: live._id, where: back && (back.paragraph > 0 || !back.wasReading) ? "end" : "start" }
     reframe.current = live._id
-    setViewing(null)
+    dispatch({ type: "RETURN_TO_LIVE", liveTurnId: live._id, liveParagraphs: story(live).map((p) => p.text) })
   }
   // On from the paragraph on screen: the next one, or past the last, the next round read again or the round's end.
-  const advance = () => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : past ? goTo(roundAfter, "start") : setReading(false))
+  const advance = () => {
+    if (paragraph < text.length - 1) dispatch({ type: "ADVANCE", paragraphCount: text.length })
+    else if (past) goTo(roundAfter, "start")
+    else dispatch({ type: "ADVANCE", paragraphCount: text.length })
+  }
   // The paragraph's dice roll, for the narration to show: the numbers from the roll, the names and how a dying hero
   // stands from the turn, the roller's portrait from the scene. Or the class feature it tells.
   const rolled = paragraphs[paragraph]?.roll
@@ -531,11 +535,6 @@ export function StagePlay(props: {
     on: reading && !hidden && !props.overlay && !sceneWaits,
     paused: paused || tour.open,
   })
-  // A pause lasts until the turn is played again, or the reading ends.
-  useEffect(() => {
-    if (!reading) setPaused(false)
-  }, [reading])
-  useEffect(() => setPaused(false), [turn?._id])
   // What the stage shows keeps time with the narrator. A paragraph read aloud plays nothing until its first words are
   // heard, and a cue tied to a later sentence ("the cabin door opened") waits for that sentence. `heard` is the sentence
   // being heard in the paragraph on screen: -1 before the first, and all of them when nothing is read aloud. While the
@@ -734,7 +733,7 @@ export function StagePlay(props: {
       const key = `${e.cast}:${e.at}`
       if (toCome(e.at, e.s)) {
         entered.current.delete(key)
-        setProwling((k) => (k === key ? null : k))
+        dispatch({ type: "CLEAR_PROWLING", key })
         stage.placeCast(e.cast, from, e.here ? home.facing : undefined)
         stage.setOnStage(e.cast, e.here)
       } else if (reached(e.at, e.s) && !entered.current.has(key)) {
@@ -745,16 +744,16 @@ export function StagePlay(props: {
         // A prowl is one too. A rerun of this effect does not call it off. Stepping back, or a new stage, does.
         const prowl = e.speed <= PROWL
         if (prowl) {
-          setProwling(key)
+          dispatch({ type: "SET_PROWLING", key })
           // Should the walk be cut off unseen, as by a new stage, the story still goes on once it would have ended.
           const seconds = Math.hypot(to[0] - from[0], to[1] - from[1]) / e.speed + REVEAL_BEAT / 1000 + 3
-          setTimeout(() => setProwling((k) => (k === key ? null : k)), seconds * 1000)
+          setTimeout(() => dispatch({ type: "CLEAR_PROWLING", key }), seconds * 1000)
         }
         const walk = () => {
-          if (enteredOn.current !== stage || !entered.current.has(key)) return setProwling((k) => (k === key ? null : k))
+          if (enteredOn.current !== stage || !entered.current.has(key)) return dispatch({ type: "CLEAR_PROWLING", key })
           void stage.moveCast(e.cast, to, { speed: e.speed, pace: e.sneak ? "sneak" : undefined }).then(() => {
             stage.faceCast(e.cast, home.facing)
-            setProwling((k) => (k === key ? null : k))
+            dispatch({ type: "CLEAR_PROWLING", key })
           })
         }
         if (e.shot || prowl) setTimeout(walk, REVEAL_BEAT)
@@ -1029,7 +1028,7 @@ export function StagePlay(props: {
     for (const loop of stage.loops.values()) loop.paused = true
     logShot(turn?._id, -1, `new stage, opening ${stage.staging?.shot ?? "none"}`, true)
     if (stage.staging?.shot) stage.shot(stage.staging.shot, { instant: true })
-    const timer = setInterval(() => redraw((n) => n + 1), 1000)
+    const timer = setInterval(() => redrawStageUi((n) => n + 1), 1000)
     return () => clearInterval(timer)
   }, [stage])
   // Everyone where the engine has them. A new stage, or a new encounter on it, places them at once. After that, someone
@@ -1362,35 +1361,18 @@ export function StagePlay(props: {
     onStage?.({ waiting: Boolean(scene && !stage && !stageError), progress: files.ready ? null : files.progress, error: stageError ?? null })
   }, [onStage, scene, stage, stageError, files.ready, files.progress])
 
-  const readingRef = useRef(reading)
-  readingRef.current = reading
+  const heldActorId = held?.actor.id
   useEffect(() => {
-    const old = previousText.current
-    const sameTurn = old.turn === turn?._id
-    const firstChanged = sameTurn ? text.findIndex((p, i) => p !== old.paragraphs[i]) : 0
-    // The same paragraphs again: nothing new to read.
-    if (sameTurn && firstChanged < 0 && text.length === old.paragraphs.length) return
-    previousText.current = { turn: turn?._id, paragraphs: text }
-    // `taken` reads the ref, so a turn with nothing to read still draws its card.
-    redraw((n) => n + 1)
-    // The answer to a roll on the card waits for Continue, and starts after the roll the card has shown.
-    const hold = heldRef.current
-    if (hold) {
-      const at = paragraphs.findLastIndex((p) => p.roll?.character === hold.actor.id)
-      return void setParagraph(at >= 0 ? at + 1 : Math.max(0, firstChanged))
-    }
-    // A round moved to, or the round in play returned to.
-    const to = land.current
-    if (to && to.turn === turn?._id) {
-      land.current = null
-      setParagraph(Math.max(0, Math.min(to.paragraph, text.length - 1)))
-      return void setReading(to.reading && text.length > 0)
-    }
-    // Narration that arrives while an earlier paragraph is still being read waits its turn.
-    setParagraph((p) => (sameTurn && readingRef.current && firstChanged > p ? p : Math.max(0, firstChanged)))
-    // A turn with nothing told yet, such as the hero's own turn opening a round, has nothing to read: its card shows.
-    setReading(text.length > 0)
-  }, [text, paragraphs, turn?._id])
+    const rollBeatIndex = heldActorId ? paragraphs.findLastIndex((p) => p.roll?.character === heldActorId) : -1
+    dispatch({
+      type: "SYNC_STORY",
+      adventureId: save?.adventure._id ?? null,
+      turnId: turn?._id ?? null,
+      paragraphs: text,
+      isPast: Boolean(past),
+      rollBeatIndex,
+    })
+  }, [save?.adventure._id, turn?._id, text, paragraphs, past, heldActorId])
   // A reply being written is kept while a past round is read.
   const liveActor = live ? findCurrentActor(live.characters)?.id : undefined
   useEffect(() => {
@@ -1535,13 +1517,13 @@ export function StagePlay(props: {
     }
   }, [holdTurn, holdActor, holdCharacters])
   // The engine's answer to the roll on the card, once it is in: the roll beat after the story the roll was made on.
-  const heldTurn = held ? save?.turns.find((t) => t._id === held.turn) : undefined
-  const answer = held && heldTurn?.story.slice(held.from).find((b): b is RollBeat => b.kind === "roll" && b.character === held.actor.id)
+  const heldTurn = held ? save?.turns.find((t) => t._id === held.turnId) : undefined
+  const answer = held && heldTurn?.story.slice(held.fromBeatCount).find((b): b is RollBeat => b.kind === "roll" && b.character === held.actor.id)
   const result = useMemo(() => (answer && heldTurn ? rollView(answer, heldTurn.characters) : undefined), [answer, heldTurn?.characters])
   let mode: CardMode | null = null
   // The pace of the roll on the card, which is a roll of its own beside the story's.
   const cardRoller = (held?.actor ?? cardActor)?.id
-  const cardPace = turn && cardRoller ? rollPace(paces, `${held?.turn ?? turn._id}:card:${cardRoller}`) : "full"
+  const cardPace = turn && cardRoller ? rollPace(paces, `${held?.turnId ?? turn._id}:card:${cardRoller}`) : "full"
   if (held) mode = { kind: "roll", roll: held.roll, made: held.dice, resolving: props.busy, ...(result ? { result } : {}) }
   else if (past) mode = null
   else if (busy) mode = playing(turn?._id, actor, aiActor, portrait)
@@ -1579,9 +1561,8 @@ export function StagePlay(props: {
   const offerHolds = Boolean(reaction && (reaction.answer !== undefined || !offerExpired))
   const next = latest ? findCurrentActor(latest.characters) : undefined
   const nextAi = next?.type === "pc" && next.controlledBy === "ai"
-  const unseen = reading || previousText.current.paragraphs !== text
-  // Narration just in has not yet set `reading`, so for a frame the card would show over the story it comes after.
-  const taken = previousText.current.turn === turn?._id && previousText.current.paragraphs.length === text.length && text.every((p, i) => p === previousText.current.paragraphs[i])
+  const taken = isStorySynced(playback.seen, turn?._id, text)
+  const unseen = reading || !taken
   // Levels are offered between rounds: once the latest narration has been read and nothing waits on a roll, before
   // the next action card comes up or the game moves on.
   const levelStep = Boolean(owed.length > 0 && !ended && !past && !busy && !held && !reading && taken && turn === latest && levelLater !== latest?._id)
@@ -1590,10 +1571,9 @@ export function StagePlay(props: {
     !past && !finished && !busy && !offerHolds && (ahead || (!unseen && !mode)) && !props.overlay && !levelStep && !levelHero && latest && !(next?.type === "pc" && !nextAi)
       ? `${latest._id}:${next?.id ?? "round"}${reaction ? `:${reaction.expiresAt}` : ""}`
       : null
-  const [continued, setContinued] = useState<string | null>(null)
   useEffect(() => {
     if (!autoContinue || !continueKey || continued === continueKey) return
-    setContinued(continueKey)
+    dispatch({ type: "MARK_CONTINUED", key: continueKey })
     onContinue(continueKey.split(":")[0])
   }, [autoContinue, continueKey, continued, onContinue])
   // The offer shows once the story before it has been read to its last paragraph, so it never cuts into one.
@@ -1621,20 +1601,20 @@ export function StagePlay(props: {
   }
   const makeRoll = async (dice: number[]) => {
     if (!turn || !actor || !cardActor || mode?.kind !== "roll") return
-    setHeld({ turn: turn._id, actor: cardActor, roll: mode.roll, dice, at: Date.now(), from: turn.story.length })
+    dispatch({
+      type: "START_ROLL",
+      roll: { turnId: turn._id, actor: cardActor, roll: mode.roll, dice, at: Date.now(), fromBeatCount: turn.story.length },
+    })
     if (await props.onRoll(turn._id, actor.id, dice[0], dice[1])) return
-    setHeld(null)
-    setTries((n) => n + 1)
+    dispatch({ type: "ROLL_REJECTED" })
   }
   // From the roll on the card to the story after it.
   const leaveRoll = () => {
-    setHeld(null)
-    setTries((n) => n + 1)
-    if (paragraph < text.length) setReading(true)
+    dispatch({ type: "LEAVE_ROLL", paragraphCount: text.length })
   }
   // A roll from a game no longer on screen.
   useEffect(() => {
-    if (held && !save?.turns.some((t) => t._id === held.turn)) setHeld(null)
+    if (held && !save?.turns.some((t) => t._id === held.turnId)) dispatch({ type: "CLEAR_STALE_ROLL" })
   }, [held, save])
   const leaveRef = useRef(leaveRoll)
   leaveRef.current = leaveRoll
@@ -1777,15 +1757,14 @@ export function StagePlay(props: {
                 autoMs={continueMs}
                 progress={voiced.status === "off" || busy ? undefined : voiced.progress}
                 paused={paused || tour.open}
-                onPause={setPaused}
+                onPause={(next) => dispatch({ type: "SET_PAUSED", paused: next })}
                 onReplay={() => {
                   lastShot.current = null
-                  setParagraph(0)
-                  setReading(true)
+                  if (turn) dispatch({ type: "REPLAY", turnId: turn._id, paragraphCount: text.length })
                 }}
-                onBack={() => (paragraph > 0 ? setParagraph((n) => n - 1) : goTo(roundBefore, "end"))}
-                onNext={() => (paragraph < text.length - 1 ? setParagraph((n) => n + 1) : goTo(roundAfter, "start"))}
-                onSkip={() => (past ? toNow() : setReading(false))}
+                onBack={() => (paragraph > 0 ? dispatch({ type: "STEP_BACK" }) : goTo(roundBefore, "end"))}
+                onNext={() => (paragraph < text.length - 1 ? dispatch({ type: "STEP_NEXT", paragraphCount: text.length }) : goTo(roundAfter, "start"))}
+                onSkip={() => (past ? toNow() : dispatch({ type: "SKIP_READING" }))}
                 onContinue={advance}
                 canBack={Boolean(roundBefore)}
                 rounds={rounds.length > 1 ? { onPrev: roundBefore && (() => goTo(roundBefore, "start")), onNext: roundAfter && (() => goTo(roundAfter, "start")) } : undefined}
@@ -1797,10 +1776,7 @@ export function StagePlay(props: {
             <Presence show={on && !reading && !held && !past} motion="rise" asChild>
               <Pill
                 className="pointer-events-auto"
-                onClick={() => {
-                  setParagraph(0)
-                  setReading(true)
-                }}
+                onClick={() => turn && dispatch({ type: "REPLAY", turnId: turn._id, paragraphCount: text.length })}
               >
                 Read turn
               </Pill>
@@ -1835,7 +1811,7 @@ export function StagePlay(props: {
               {owed.length > 0 && (
                 <div className="mb-3 flex flex-wrap justify-center gap-2">
                   {owed.map((c) => (
-                    <Pill key={c.id} variant="primary" onClick={() => setLevelling(c.id)}>
+                    <Pill key={c.id} variant="primary" onClick={() => latest && dispatch({ type: "OPEN_LEVEL", turnId: latest._id, heroId: c.id })}>
                       Level Up {c.name}
                     </Pill>
                   ))}
@@ -1859,11 +1835,11 @@ export function StagePlay(props: {
           <Presence show={on && !opening && levelStep && !levelHero} motion="rise" asChild>
             <div className="absolute bottom-28 left-1/2 z-raised flex -translate-x-1/2 flex-wrap justify-center gap-2">
               {owed.map((c) => (
-                <Pill key={c.id} variant="primary" onClick={() => setLevelling(c.id)}>
+                <Pill key={c.id} variant="primary" onClick={() => latest && dispatch({ type: "OPEN_LEVEL", turnId: latest._id, heroId: c.id })}>
                   Level Up {c.name}
                 </Pill>
               ))}
-              <Pill onClick={() => setLevelLater(latest?._id ?? null)}>Later</Pill>
+              <Pill onClick={() => latest && dispatch({ type: "DEFER_LEVEL", turnId: latest._id })}>Later</Pill>
             </div>
           </Presence>
           <Presence show={on && Boolean(levelHero?.sheet && latest)} motion="fade" asChild>
@@ -1875,10 +1851,10 @@ export function StagePlay(props: {
                   sheet={levelHero.sheet}
                   compact={compact}
                   className={compact ? "max-h-full w-[min(480px,100%)]" : "max-h-[88%] w-[min(600px,100%)]"}
-                  onClose={() => setLevelling(null)}
+                  onClose={() => dispatch({ type: "CLOSE_LEVEL" })}
                   onTake={async (choices) => {
                     const refused = await props.onLevel?.(latest._id, levelHero.id, choices)
-                    if (!refused) setLevelling(null)
+                    if (!refused) dispatch({ type: "CLOSE_LEVEL" })
                     return refused
                   }}
                 />
@@ -2000,7 +1976,7 @@ export function StagePlay(props: {
                     active={stage?.tier === t}
                     onClick={() => {
                       stage?.setTier(t)
-                      redraw((n) => n + 1)
+                      redrawStageUi((n) => n + 1)
                     }}
                   >
                     {t}
@@ -2013,7 +1989,7 @@ export function StagePlay(props: {
                 onClick={() => {
                   if (stage) {
                     stage.motion = !stage.motion
-                    redraw((n) => n + 1)
+                    redrawStageUi((n) => n + 1)
                   }
                 }}
               >
