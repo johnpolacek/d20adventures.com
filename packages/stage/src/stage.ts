@@ -3,6 +3,8 @@ import { FullScreenQuad } from "three/addons/postprocessing/Pass.js"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import { backdrop } from "./backdrop"
 import type { Footprint } from "./builders/types"
+import { type ActiveTakeMove, CameraController } from "./camera-controller"
+import { ScreenCurtain } from "./curtain"
 import { type BodyAct, type EffectEnd, type EffectEvent, type EffectKind, Effects, type Element, type PropKind, propMesh, type Shot, type SoundCue } from "./effects"
 import type { CrowdLibrary, CrowdLibraryMeta } from "./figures/cards"
 import { SLUNG } from "./figures/clips"
@@ -146,10 +148,6 @@ const DRIFT_PUSH = 0.03
 // from the take's shake: a plain hit about 0.05, a crit 0.08. The camera's jolt plays on through it. After Brushwild
 // (kevintngo/procedural-rpg, MIT).
 const HOLD = { base: 0.02, per: 0.06, max: 0.12, rate: 0.06 }
-type Transition = { from: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; to: { pos: THREE.Vector3; target: THREE.Vector3; fov: number }; start: number; duration: number; ease: Ease }
-// A take's move once the camera has arrived (see director.ts): `start` on the stage's clock when it began, null until
-// the camera arrives, and `done` the share of it already made.
-type Moving = CameraMove & { start: number | null; done: number }
 // A shake's seconds: how long a jolt takes to die away, and how long a lens punch takes to reach its widest.
 const SHAKE_SECONDS = 0.32
 const PUNCH_RISE = 0.05
@@ -174,19 +172,13 @@ export class Stage {
   controls: OrbitControls | null = null
   readonly sun: THREE.DirectionalLight
   // A painted set's paintings, and the tripod the camera stands on: the point, what it looks at, and a cut to another
-  // point in progress. `tripod` is null until the paintings are up, and for good if they fail.
+  // point in progress. `cam.rig` switches to `"tripod"` once the paintings are up.
   readonly painted: Painted | null = null
-  // `want` is what the camera was asked for: a shot's subject, set where the panels leave room (`placed`), or the way
-  // the player turned it.
-  private tripod: { point: TripodPoint; aim: THREE.Vector3; want: { target: THREE.Vector3; fov: number; placed: boolean } } | null = null
+  private readonly cam = new CameraController()
+  private readonly curtain: ScreenCurtain
   private look: LookControls | null = null
-  private cut: { arrive: () => void; timer: ReturnType<typeof setTimeout> } | null = null
-  // The picture dipped to put someone in a new place unseen (see `unseen`).
-  private dip: { dark: Promise<void>; lift: ReturnType<typeof setTimeout> | null } | null = null
   // Loops whose line is being put in its new place under a dip.
   private closing = new Set<QueueLoop>()
-  // When the camera arrived at its painted point, on the stage's clock: its drift in runs from here.
-  private arrived = 0
   // What the paintings were made of: the built set alone.
   private plate: THREE.Object3D[] = []
   tier: TierName
@@ -198,7 +190,6 @@ export class Stage {
   motion: boolean
   activeShot: string | null = null
   private shotListeners = new Set<(shot: string | null) => void>()
-  private activeFov: number | null = null
   ready = false
 
   private materials: MaterialLibrary
@@ -210,10 +201,6 @@ export class Stage {
   // What hides a figure from the camera: the set's solid geometry as built, roots and crooked trunks included.
   private sight: Sight = { x0: 0, z0: 0, w: 0, d: 0, bits: new Uint32Array(0) }
   private shotsFor: { key: string; shots: Record<string, ResolvedShot> } | null = null
-  // The view last asked for, to take again when someone it follows stops where it no longer shows them.
-  private asked: { which: string | StagingShot; follow: string[]; duration: number } | null = null
-  // The player is steering the camera, not a shot.
-  private driving = false
   private doors: ReturnType<typeof doorways> = []
   private hemisphere: THREE.HemisphereLight
   private fill: THREE.PointLight | null = null
@@ -235,8 +222,6 @@ export class Stage {
   private backdropReady: Promise<void> = Promise.resolve()
   private sky: THREE.Mesh
   private envTexture: THREE.Texture
-  private transition: Transition | null = null
-  private settleWaiters: (() => void)[] = []
   private listeners: { [K in keyof Events]?: Set<(e: Events[K]) => void> } = {}
   private cues = new Set<string>()
   private cueWaiters = new Map<string, (() => void)[]>()
@@ -244,19 +229,7 @@ export class Stage {
   private coinMesh: THREE.Mesh | null = null
   // `unseen`: not walked, but put there once the picture has dipped.
   private moves = new Map<string, { tx: number; tz: number; speed: number; pace?: Pace; resolve: () => void; unseen?: boolean }>()
-  // Who the current shot is on, and the walkers the camera follows, by where it last saw them. A walker is followed
-  // when the shot is on them, or when they set off in view.
-  private framed = new Set<string>()
-  // How fast the camera circles what it looks at, in radians a second: the shot's `orbit`. The player's own drag, or a
-  // new shot without one, stops it.
-  private circling = 0
-  // How far it has still to go round, in radians, when the shot gave a sweep.
-  private sweepLeft = Number.POSITIVE_INFINITY
-  private followed = new Map<string, { x: number; z: number }>()
-  // Whether the current shot holds its ground while those in it walk, as a prowl's does (see `shot`).
-  private planted = false
-  // The take's move, its dutch tilt now (radians), an impact waiting for the next blow to land, and the jolts playing.
-  private moving: Moving | null = null
+  // The take's dutch tilt now (radians), an impact waiting for the next blow to land, and the jolts playing.
   private roll = 0
   private waiting: (Impact & { until: number }) | null = null
   private jolts: { shake: number; punch: number; at: number; seed: number }[] = []
@@ -264,7 +237,9 @@ export class Stage {
   // Seconds left of a blow's hold (HOLD).
   private stop = 0
   // What the current take is, by the director's name for it.
-  take: string | null = null
+  get take(): string | null {
+    return this.cam.take
+  }
   private insets = { right: 0, bottom: 0 }
   private raf = 0
   private running = false
@@ -305,6 +280,7 @@ export class Stage {
     this.motion = o.motion ?? !(typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches)
     this.canvas = document.createElement("canvas")
     this.canvas.style.cssText = "display:block;width:100%;height:100%;touch-action:none"
+    this.curtain = new ScreenCurtain(this.canvas)
     o.container.appendChild(this.canvas)
     const renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, powerPreference: "high-performance" })
     this.renderer = renderer
@@ -545,10 +521,7 @@ export class Stage {
     c.rotateSpeed = 0.5
     c.zoomSpeed = 0.8
     c.addEventListener("start", () => {
-      this.transition = null
-      this.driving = true
-      this.circling = 0
-      this.moving = null
+      this.cam.onOrbitStart()
       // The player looks down at most about 40 degrees. From higher, the crowd's painted cards read as flat pegs. An
       // authored shot that is steeper keeps its angle when the drag starts, so nothing jumps.
       c.minPolarAngle = Math.min(STEEPEST_ORBIT, c.getPolarAngle())
@@ -586,11 +559,7 @@ export class Stage {
       this.applyTier()
       if (this.o.controls !== false)
         this.look = new LookControls(this.canvas, {
-          start: () => {
-            if (this.cut) this.finishShot()
-            this.transition = null
-            this.settle()
-          },
+          start: () => this.cam.onLookStart(() => this.finishShot()),
           turn: (dx, dy) => this.turnTripod(dx, dy),
           zoom: (factor) => this.zoomTripod(factor),
         })
@@ -654,7 +623,7 @@ export class Stage {
         else l.skipToFront()
       }
     }
-    if (PEOPLE_STILL && this.motion) void this.unseen().then(skip)
+    if (PEOPLE_STILL && this.motion) void this.curtain.dip().then((ok) => ok && skip())
     else skip()
   }
 
@@ -710,15 +679,15 @@ export class Stage {
       s = undefined
     }
     if (!s) return false
-    this.asked = { which, follow, duration }
-    this.take = take ?? null
+    this.cam.asked = { which, follow, duration, ease, move, take, planted }
+    this.cam.take = take ?? null
     // On a painted set the last take's push is a tighter lens: the new view glides from it, rather than pop wide.
     const pushed = this.pushZoom()
     if (pushed !== 1) {
       this.camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) / pushed))
       this.camera.updateProjectionMatrix()
     }
-    this.moving = move && this.motion ? { ...move, start: null, done: 0 } : null
+    this.cam.takeMove = move && this.motion ? { ...move, start: null, done: 0 } : null
     for (const t of this.joltTimers) clearTimeout(t)
     this.joltTimers = []
     this.waiting = null
@@ -726,22 +695,21 @@ export class Stage {
       if (impact.on === "land") this.waiting = { ...impact, until: performance.now() + 12_000 }
       else this.joltTimers.push(setTimeout(() => this.jolt(impact.shake, impact.punch ?? 0), (impact.delay ?? 0) * 1000))
     }
-    this.framed = new Set(on)
-    this.planted = planted
+    this.cam.framed = new Set(on)
+    this.cam.planted = planted
     // A walker the new shot is not on is let go. One it is on is followed from where they stand now. A planted camera
     // follows no one: it holds its ground and lets them come, so they grow in the frame.
-    for (const id of this.followed.keys()) if (planted || !this.framed.has(id)) this.followed.delete(id)
-    if (!planted) for (const id of this.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.followed.has(id)) this.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
-    this.driving = false
-    this.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
-    this.sweepLeft = authored?.sweep ? THREE.MathUtils.degToRad(authored.sweep) : Number.POSITIVE_INFINITY
+    for (const id of this.cam.followed.keys()) if (planted || !this.cam.framed.has(id)) this.cam.followed.delete(id)
+    if (!planted) for (const id of this.cam.framed) if (this.moves.has(id) && !this.moves.get(id)!.unseen && !this.cam.followed.has(id)) this.cam.followed.set(id, { x: this.member(id).x, z: this.member(id).z })
+    this.cam.circling = THREE.MathUtils.degToRad(authored?.orbit ?? 0)
+    this.cam.sweepLeft = authored?.sweep ? THREE.MathUtils.degToRad(authored.sweep) : Number.POSITIVE_INFINITY
     if (this.controls) this.controls.minPolarAngle = 0
     const nextShot = typeof which === "string" ? which : null
     if (this.activeShot !== nextShot) {
       this.activeShot = nextShot
       for (const listener of this.shotListeners) listener(nextShot)
     }
-    this.activeFov = s.fov
+    this.cam.activeFov = s.fov
     if (painted) {
       const on = authored && "subject" in authored ? [authored.subject] : authored && "subjects" in authored ? authored.subjects : []
       const members = this.cast.filter((m) => on.includes(m.id))
@@ -771,13 +739,12 @@ export class Stage {
       this.camera.fov = to.fov
       this.camera.updateProjectionMatrix()
       this.controls?.update()
-      this.transition = null
       this.standees.reset()
       this.models.reset()
-      this.settle()
+      this.cam.finishMoveToIdle()
     } else {
       const target = this.controls ? this.controls.target.clone() : this.camera.getWorldDirection(V()).multiplyScalar(10).add(this.camera.position)
-      this.transition = { from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration, ease }
+      this.cam.beginGlide({ from: { pos: this.camera.position.clone(), target, fov: this.camera.fov }, to, start: performance.now(), duration, ease })
     }
     return true
   }
@@ -789,7 +756,7 @@ export class Stage {
   private lensRetook = 0
   private keepLensClear(dt: number) {
     this.lensCheck += dt
-    if (this.lensCheck < 0.25 || this.transition || this.painted?.on || !this.asked) return
+    if (this.lensCheck < 0.25 || this.cam.transition || this.painted?.on || !this.cam.asked) return
     this.lensCheck = 0
     const now = performance.now()
     if (now - this.lensRetook < 1500) return
@@ -797,8 +764,8 @@ export class Stage {
     const inside = this.cast.some((m) => this.isOnStage(m.id) && !this.isDown(m.id) && p.y < (m.y ?? 0) + m.height && Math.hypot(p.x - m.x, p.z - m.z) < 0.35 + m.height * 0.15)
     if (!inside) return
     this.lensRetook = now
-    const { which, follow, duration } = this.asked
-    this.shot(which, { follow, duration, take: this.take ?? undefined })
+    const { which, follow, duration, ease, move, take, planted } = this.cam.asked
+    this.shot(which, { follow, duration, ease, move, take, planted })
   }
   // Whether the straight line from `from` to `to` passes through anyone on stage standing: inside the round of their
   // body, below the top of their head. Its two ends are left out, which the shot itself answers for.
@@ -961,41 +928,34 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // Whether the camera is on its way to a view, or the picture has dipped. A painted set's slow drift in is not counted.
   // What is pinned to someone on screen, such as a speech bubble, waits for this to end.
   get cameraMoving() {
-    return !!(this.transition || this.cut || this.dip)
+    return this.cam.settling || this.curtain.active
   }
   // Resolves when the current camera move has finished.
   shotSettled() {
-    return this.transition || this.cut ? new Promise<void>((r) => this.settleWaiters.push(r)) : Promise.resolve()
+    return this.cam.shotSettled()
   }
   // Circle round what the camera looks at now, at `orbit` degrees a second (negative goes the other way), easing out
   // once it has gone `sweep` degrees: a new paragraph with nothing new to frame still moves. Not while the player has
   // the camera, nor with reduced motion.
   circleOn(orbit: number, sweep: number) {
-    if (this.driving || !this.motion) return
-    this.circling = THREE.MathUtils.degToRad(orbit)
-    this.sweepLeft = THREE.MathUtils.degToRad(sweep)
-  }
-  private settle() {
-    const w = this.settleWaiters
-    this.settleWaiters = []
-    for (const r of w) r()
+    if (this.cam.driving || !this.motion) return
+    this.cam.circling = THREE.MathUtils.degToRad(orbit)
+    this.cam.sweepLeft = THREE.MathUtils.degToRad(sweep)
   }
   // Jump an in-progress camera move to its end.
   finishShot() {
-    if (this.cut) {
-      clearTimeout(this.cut.timer)
-      this.cut.arrive()
+    if (this.curtain.cutting) {
+      this.curtain.finishCut()
     }
-    const tr = this.transition
+    const tr = this.cam.transition
     if (!tr) return
     this.camera.position.copy(tr.to.pos)
     this.controls?.target.copy(tr.to.target)
-    this.tripod?.aim.copy(tr.to.target)
+    this.cam.tripod?.aim.copy(tr.to.target)
     if (!this.controls) this.camera.lookAt(tr.to.target)
     this.camera.fov = tr.to.fov
     this.camera.updateProjectionMatrix()
-    this.transition = null
-    this.settle()
+    this.cam.finishMoveToIdle()
   }
 
   // ── Takes: moves, tilts and jolts (director.ts) ──
@@ -1010,34 +970,34 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.stop = Math.max(this.stop, Math.min(seconds, HOLD.max))
   }
   // How far along the take's move is, 0..1, easing out.
-  private moveShare(m: Moving) {
+  private moveShare(m: ActiveTakeMove) {
     if (m.start === null) return 0
     const t = THREE.MathUtils.clamp((this.shared.time.value - m.start - (m.delay ?? 0)) / Math.max(0.1, m.seconds), 0, 1)
     return 1 - (1 - t) ** 3
   }
   // On a painted set, whose camera cannot leave its point, a push is the lens closing in.
   private pushZoom() {
-    const m = this.moving
-    if (!m?.push || !this.tripod) return 1
+    const m = this.cam.takeMove
+    if (!m?.push || !this.cam.tripod) return 1
     return 1 / Math.max(0.4, 1 - m.push * this.moveShare(m))
   }
   // The take's move, made a step at a time once the camera has arrived, so the player's drag or someone walking it
   // follows still compose with it. It ends short of a wall or a trunk.
   private stepMove() {
-    const m = this.moving
-    if (!m || this.transition || this.cut) return
+    const m = this.cam.takeMove
+    if (!m || this.cam.settling) return
     if (m.start === null) m.start = this.shared.time.value
     const share = this.moveShare(m)
     const d = share - m.done
     m.done = share
-    if (d <= 0 || this.tripod || !this.controls) return
+    if (d <= 0 || this.cam.tripod || !this.controls) return
     const p = this.camera.position
     const t = this.controls.target
     const next = p.clone().addScaledVector(V().subVectors(t, p), (m.push ?? 0) * d)
     next.y += (m.rise ?? 0) * d
     // Never through what it looks at, nor below the ground.
     if (next.distanceTo(t) < 0.6 || next.y < 0.25 || !roomAt(this.sight, next.x, next.y, next.z)) {
-      this.moving = { ...m, push: 0, rise: 0 }
+      this.cam.takeMove = { ...m, push: 0, rise: 0 }
       return
     }
     p.copy(next)
@@ -1045,8 +1005,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // Draws the frame with the take's tilt and any jolt, then puts the camera back as it was, so the controls and the
   // tripod never see them.
   private rendered(dt: number) {
-    const m = this.moving
-    const want = m?.roll && this.motion ? THREE.MathUtils.degToRad(m.roll) * Math.max(this.moveShare(m), this.transition ? 0 : 0.15) : 0
+    const m = this.cam.takeMove
+    const want = m?.roll && this.motion ? THREE.MathUtils.degToRad(m.roll) * Math.max(this.moveShare(m), this.cam.transition ? 0 : 0.15) : 0
     this.roll += (want - this.roll) * (1 - Math.exp(-dt / 0.35))
     if (Math.abs(this.roll) < 1e-5) this.roll = 0
     const now = this.shared.time.value
@@ -1111,13 +1071,15 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // Take a view from a painted point. On the same point the camera turns and zooms to it. To another point it cuts,
   // through a short fade: the way between two points was never painted.
   private standOn(view: View, instant: boolean, duration: number, ease: Ease = "glide") {
-    if (this.cut) {
-      clearTimeout(this.cut.timer)
-      this.cut = null
-    }
+    this.curtain.cancelCut()
     const arrive = () => {
-      this.cut = null
-      this.tripod = { point: view.point, aim: view.target.clone(), want: { target: view.wanted.clone(), fov: view.asked, placed: true } }
+      this.cam.rig = {
+        kind: "tripod",
+        point: view.point,
+        aim: view.target.clone(),
+        want: { target: view.wanted.clone(), fov: view.asked, placed: true },
+        arrivedAt: this.shared.time.value,
+      }
       this.painted?.setPoint(view.point)
       this.fitSun()
       this.standees.tripod = view.point.position
@@ -1126,32 +1088,28 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       this.camera.lookAt(view.target)
       this.camera.fov = view.fov
       this.camera.updateProjectionMatrix()
-      this.transition = null
       // The window may have changed shape since the view was worked out.
       this.refit()
       this.standees.reset()
       this.models.reset()
-      this.arrived = this.shared.time.value
-      // A dip under way brings the picture back itself, once whoever it hides has been put in place.
-      if (!this.dip) this.canvas.style.opacity = "1"
-      this.settle()
+      this.curtain.liftIfIdle()
+      this.cam.finishMoveToIdle()
     }
-    if (this.tripod?.point === view.point && !instant && this.motion) {
-      this.tripod.want = { target: view.wanted.clone(), fov: view.asked, placed: true }
-      this.transition = {
-        from: { pos: view.point.position.clone(), target: this.tripod.aim.clone(), fov: this.camera.fov },
+    const tripod = this.cam.tripod
+    if (tripod?.point === view.point && !instant && this.motion) {
+      tripod.want = { target: view.wanted.clone(), fov: view.asked, placed: true }
+      this.cam.beginGlide({
+        from: { pos: view.point.position.clone(), target: tripod.aim.clone(), fov: this.camera.fov },
         to: { pos: view.point.position.clone(), target: view.target, fov: view.fov },
         start: performance.now(),
         duration,
         ease,
-      }
+      })
       return
     }
-    if (instant || !this.motion || !this.tripod || this.tripod.point === view.point) return arrive()
-    this.transition = null
-    this.canvas.style.transition = "opacity 170ms ease"
-    this.canvas.style.opacity = "0"
-    this.cut = { arrive, timer: setTimeout(arrive, 190) }
+    if (instant || !this.motion || !tripod || tripod.point === view.point) return arrive()
+    this.cam.beginCut()
+    this.curtain.beginCut(arrive)
   }
   // The sun's shadow map covers the ground about the current point and no more: figures' shadows are the only ones in
   // it, and over the whole set a figure is a few texels wide.
@@ -1173,7 +1131,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // The player turns the camera: a drag of the canvas's height turns it by one lens. It stops at the paint's edge.
   private turnTripod(dx: number, dy: number) {
-    const t = this.tripod
+    const t = this.cam.tripod
     if (!t) return
     const aim = t.aim.clone().sub(t.point.position)
     const far = aim.length()
@@ -1186,7 +1144,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // The wheel or a pinch: the lens the player ends with is the one a resized window keeps.
   private zoomTripod(factor: number) {
-    const t = this.tripod
+    const t = this.cam.tripod
     if (!t) return
     const aim = t.aim.clone().sub(t.point.position)
     this.lookFrom(t, aim, aim.length(), THREE.MathUtils.clamp(this.camera.fov * factor, minFov(t.point, aim), 110), [0, 0])
@@ -1195,11 +1153,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // The view the camera was asked for, fitted to the paintings again: the window or a docked panel changed its shape.
   // A move in progress ends at the new fit.
   private refit() {
-    const t = this.tripod
+    const t = this.cam.tripod
     if (!t) return
     const p = t.point.position
     const aim = V().subVectors(t.want.target, p)
-    const tr = this.transition
+    const tr = this.cam.transition
     const at: Spot = t.want.placed ? this.spot() : [0, 0]
     if (!tr) return this.lookFrom(t, aim, aim.length(), t.want.fov, at)
     const fit = fitView(t.point, aim, t.want.fov, this.camera.aspect, at)
@@ -1252,7 +1210,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         this.putUnseen(id)
       })
     }
-    if (!this.planted && !this.followed.has(id) && (this.framed.has(id) || this.inView(c))) this.followed.set(id, { x: c.x, z: c.z })
+    if (!this.cam.planted && !this.cam.followed.has(id) && (this.cam.framed.has(id) || this.inView(c))) this.cam.followed.set(id, { x: c.x, z: c.z })
     if (this.cameOn.delete(id)) this.body(id, "enter", speed)
     // Frames stop while the window is hidden or covered. The walk still arrives on time, so nothing awaiting it stalls.
     const due = (Math.hypot(p.x - c.x, p.z - c.z) / speed) * 1000 + 1000
@@ -1317,7 +1275,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       c.ry = Math.atan2(c.x - p.x, c.z - p.z)
     }
     // Nobody is seen to fall: they are down when the picture comes back. A 3D figure has a fall of its own, and is seen.
-    if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id) && !this.models.active(id)) return void this.unseen().then(() => this.standees.lay(id, down, true))
+    if (PEOPLE_STILL && this.motion && !instant && down !== this.standees.down.has(id) && !this.models.active(id))
+      return void this.curtain.dip().then((ok) => ok && this.standees.lay(id, down, true))
     if (down && !instant && this.motion && !this.standees.down.has(id)) this.body(id, "fall")
     this.standees.lay(id, down, instant)
     if (instant) this.models.settle(id)
@@ -1367,25 +1326,6 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.sinking.delete(id)
     if (facing !== undefined) this.faceCast(id, facing)
   }
-  // The picture dips to dark and comes back, as it does when the camera cuts. Resolves while it is dark, which is when
-  // to put someone in a new place. Placements that follow one another at once, such as the legs of one walk, share
-  // the dip: it lifts a moment after the last of them.
-  private unseen() {
-    if (!this.dip) {
-      this.canvas.style.transition = "opacity 170ms ease"
-      this.canvas.style.opacity = "0"
-      this.dip = { dark: new Promise<void>((r) => setTimeout(r, 190)), lift: null }
-    }
-    const d = this.dip
-    return d.dark.then(() => {
-      if (d.lift) clearTimeout(d.lift)
-      d.lift = setTimeout(() => {
-        if (this.dip === d) this.dip = null
-        // A cut under way brings the picture back itself.
-        if (!this.cut) this.canvas.style.opacity = "1"
-      }, 90)
-    })
-  }
   // Puts a cast member where their move was taking them, once the picture has dipped. A move that was replaced or
   // finished meanwhile is left alone.
   private putUnseen(id: string) {
@@ -1394,8 +1334,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     m.unseen = true
     const c = this.member(id)
     c.walking = false
-    void this.unseen().then(() => {
-      if (this.moves.get(id) !== m) return
+    void this.curtain.dip().then((ok) => {
+      if (!ok || this.moves.get(id) !== m) return
       // They end facing the way they went, as a walk leaves them.
       if (Math.hypot(m.tx - c.x, m.tz - c.z) > 0.02) c.ry = Math.atan2(m.tx - c.x, m.tz - c.z)
       c.x = m.tx
@@ -1412,25 +1352,26 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // The camera keeps up with whoever it follows: it moves with them, or on a painted set, where it cannot leave its
   // point, it turns after them. With two on screen and one walking, it goes half the way, to keep both.
   private follow() {
-    if (!this.followed.size) return
+    if (!this.cam.followed.size) return
     let dx = 0
     let dz = 0
-    for (const [id, was] of this.followed) {
+    for (const [id, was] of this.cam.followed) {
       const c = this.member(id)
       dx += c.x - was.x
       dz += c.z - was.z
       was.x = c.x
       was.z = c.z
-      if (!this.moves.has(id)) this.followed.delete(id)
+      if (!this.moves.has(id)) this.cam.followed.delete(id)
     }
-    const n = Math.max(1, this.framed.size)
+    const n = Math.max(1, this.cam.framed.size)
     dx /= n
     dz /= n
-    const tr = this.transition
-    if (Math.abs(dx) + Math.abs(dz) >= 1e-6 && !this.cut) {
+    const tr = this.cam.transition
+    if (Math.abs(dx) + Math.abs(dz) >= 1e-6 && !this.curtain.cutting) {
       const d = V(dx, 0, dz)
-      if (this.tripod) {
-        this.tripod.want.target.add(d)
+      const tripod = this.cam.tripod
+      if (tripod) {
+        tripod.want.target.add(d)
         if (tr) tr.from.target.add(d)
         this.refit()
         return
@@ -1450,11 +1391,11 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       }
     }
     // The last of them has stopped. The view was framed on where they stood when it was taken: if it hides them where
-    // they stand now, it is taken again.
-    if (this.followed.size || this.tripod || this.cut || this.driving || !this.asked || !this.controls) return
+    // they stand now, it is taken again with all director modifiers preserved.
+    if (this.cam.followed.size || this.cam.tripod || this.curtain.cutting || this.cam.driving || !this.cam.asked || !this.controls) return
     if (!this.hides(tr ? tr.to.pos : this.camera.position, tr ? tr.to.target : this.controls.target)) return
-    const { which, follow, duration } = this.asked
-    this.shot(which, { follow, duration })
+    const { which, follow, duration, ease, move, take, planted } = this.cam.asked
+    this.shot(which, { follow, duration, ease, move, take, planted })
   }
   // A cast member as the sight test sees them: where they stand and how much of them there is to hide.
   private seenAs = (m: CastMember) => ({ x: m.x, z: m.z, y: m.y, height: this.isLow(m.id) ? m.height * LOW : m.height, down: this.isDown(m.id) })
@@ -1473,31 +1414,40 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   }
   // Whether a view from a point hides those the current shot is on, by more than a shoulder.
   private hides(from: THREE.Vector3, target: THREE.Vector3) {
-    const figures = this.cast.filter((m) => this.framed.has(m.id) && this.isOnStage(m.id))
+    const figures = this.cast.filter((m) => this.cam.framed.has(m.id) && this.isOnStage(m.id))
     if (!figures.length) return false
-    const lens = { position: [from.x, from.y, from.z] as const, target: [target.x, target.y, target.z] as const, fov: this.activeFov ? this.lens(this.activeFov) : this.camera.fov, aspect: this.camera.aspect }
+    const lens = { position: [from.x, from.y, from.z] as const, target: [target.x, target.y, target.z] as const, fov: this.cam.activeFov ? this.lens(this.cam.activeFov) : this.camera.fov, aspect: this.camera.aspect }
     const v = viewCost(this.sight, lens, figures.map(this.seenAs))
     return v.hidden > 0.2 || v.out > 0.3 || v.cover > 0.3
   }
   // A slow move round what the camera looks at, level, at the shot's pace. A painted set cannot: its camera stands on
   // a painted point. During a shot's ease in, the point it eases to moves round as well.
   private circle(dt: number) {
-    if (!this.circling || this.tripod || !this.controls) return
+    if (!this.cam.circling || this.cam.tripod || !this.controls) {
+      this.cam.clearPanning()
+      return
+    }
+    this.cam.setPanning()
     // A sweep slows over its last second or so and stops.
-    const rate = Math.abs(this.circling)
-    const way = Math.sign(this.circling)
-    const ease = THREE.MathUtils.clamp(this.sweepLeft / (rate * 1.2), 0.08, 1)
-    const step = Math.min(this.sweepLeft, rate * ease * dt)
-    this.sweepLeft -= step
-    if (this.sweepLeft <= 1e-4) this.circling = 0
+    const rate = Math.abs(this.cam.circling)
+    const way = Math.sign(this.cam.circling)
+    const ease = THREE.MathUtils.clamp(this.cam.sweepLeft / (rate * 1.2), 0.08, 1)
+    const step = Math.min(this.cam.sweepLeft, rate * ease * dt)
+    this.cam.sweepLeft -= step
+    if (this.cam.sweepLeft <= 1e-4) {
+      this.cam.circling = 0
+      this.cam.clearPanning()
+    }
     const a = way * step
     const turn = (pos: THREE.Vector3, about: THREE.Vector3) => {
       const next = pos.clone().sub(about).applyAxisAngle(V(0, 1, 0), a).add(about)
       // The move ends short of a trunk or a wall, and short of putting one between the lens and its subjects.
-      if (!roomAt(this.sight, next.x, next.y, next.z) || (this.hides(next, about) && !this.hides(pos, about))) this.circling = 0
-      else pos.copy(next)
+      if (!roomAt(this.sight, next.x, next.y, next.z) || (this.hides(next, about) && !this.hides(pos, about))) {
+        this.cam.circling = 0
+        this.cam.clearPanning()
+      } else pos.copy(next)
     }
-    const tr = this.transition
+    const tr = this.cam.transition
     if (tr) return void turn(tr.to.pos, tr.to.target)
     turn(this.camera.position, this.controls.target)
   }
@@ -1559,7 +1509,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   // tower, it stops in front of the tower instead of showing it. Stalls and tables are low, so the arm passes over them.
   private walls: Footprint[] | null = null
   private collide() {
-    if (!this.driving || !this.controls || !this.solids.length) return
+    if (!this.cam.driving || !this.controls || !this.solids.length) return
     const p = this.camera.position
     const t = this.controls.target
     // The last point outside, between one known to be outside (lo) and one inside (hi).
@@ -1651,8 +1601,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.camera.aspect = whole ? w / h : vw / vh
     if (!whole && (vw !== w || vh !== h)) this.camera.setViewOffset(vw, vh, 0, 0, w, h)
     else this.camera.clearViewOffset()
-    if (this.tripod) this.refit()
-    else if (!this.transition && this.activeFov) this.camera.fov = this.lens(this.activeFov)
+    if (this.cam.tripod) this.refit()
+    else if (!this.cam.transition && this.cam.activeFov) this.camera.fov = this.lens(this.cam.activeFov)
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(w, h, false)
     this.pipeline.setSize(w, h, this.renderer.getPixelRatio())
@@ -1697,7 +1647,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
   private aimFocus(dt: number) {
     const f = this.pipeline.focus
     if (!f.enabled) return
-    const at = this.tripod?.want.target ?? this.controls?.target
+    const at = this.cam.tripod?.want.target ?? this.controls?.target
     if (!at) return
     const ahead = this.camera.getWorldDirection(new THREE.Vector3())
     f.target = Math.max(this.camera.near * 2, ahead.dot(at.clone().sub(this.camera.position)))
@@ -1722,37 +1672,37 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
         for (const l of this.loops.values()) {
           if (l.paused || !l.busy || this.closing.has(l)) continue
           this.closing.add(l)
-          void this.unseen().then(() => {
+          void this.curtain.dip().then((ok) => {
             this.closing.delete(l)
-            l.finish()
+            if (ok) l.finish()
           })
         }
       this.shared.time.value += dt
       this.crowd.update(dt, PEOPLE_STILL)
       for (const f of this.life) f(this.shared.time.value)
     }
-    if (this.transition) {
-      const tr = this.transition
+    const tr = this.cam.transition
+    if (tr) {
       const t = THREE.MathUtils.clamp((performance.now() - tr.start) / tr.duration, 0, 1)
       const e = eased(tr.ease, t)
       this.camera.position.lerpVectors(tr.from.pos, tr.to.pos, e)
       const target = V().lerpVectors(tr.from.target, tr.to.target, e)
       if (this.controls) this.controls.target.copy(target)
       else this.camera.lookAt(target)
-      this.tripod?.aim.copy(target)
+      this.cam.tripod?.aim.copy(target)
       this.camera.fov = THREE.MathUtils.lerp(tr.from.fov, tr.to.fov, e)
       this.camera.updateProjectionMatrix()
       if (t === 1) {
-        this.transition = null
-        this.settle()
+        this.cam.finishMoveToIdle()
       }
     }
     this.stepMove()
-    if (this.tripod) {
+    const tripod = this.cam.tripod
+    if (tripod) {
       // The camera drifts in to its point, looking at what it was aimed at, and then holds still.
-      const { point, aim } = this.tripod
+      const { point, aim, arrivedAt } = tripod
       const amp = this.set.painted?.drift ?? 0
-      const left = this.motion && amp ? (1 - THREE.MathUtils.clamp((this.shared.time.value - this.arrived) / DRIFT_SECONDS, 0, 1)) ** 3 : 0
+      const left = this.motion && amp ? (1 - THREE.MathUtils.clamp((this.shared.time.value - arrivedAt) / DRIFT_SECONDS, 0, 1)) ** 3 : 0
       this.camera.position.copy(point.position).add(driftIn(V().subVectors(aim, point.position), this.camera.fov, amp, left))
       this.camera.lookAt(aim)
       const zoom = (amp ? 1 + DRIFT_PUSH * (1 - left) : 1) * this.pushZoom()
@@ -1778,7 +1728,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.models.update(held, this.motion, this.camera)
     this.crowd.updateLOD(this.camera)
     // A fade takes a third of a second, or none with motion off.
-    this.crowd.occlude(this.camera, this.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
+    this.crowd.occlude(this.camera, this.cam.tripod?.aim ?? this.controls?.target ?? this.camera.getWorldDirection(V()).multiplyScalar(6).add(this.camera.position), this.motion ? dt / 0.3 : 1)
     this.crowd.flush()
     this.rendered(dt)
     if (++this.frame === 3) {
@@ -1882,7 +1832,7 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
       dof: this.pipeline.focus.enabled,
       shot: this.activeShot,
       take: this.take,
-      point: this.tripod?.point.name ?? null,
+      point: this.cam.tripod?.point.name ?? null,
       camera: this.camera.position.toArray().map((v) => +v.toFixed(2)),
       programs: this.renderer.info.programs?.length ?? 0,
       frame: this.frame,
@@ -2224,8 +2174,8 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.intersection?.disconnect()
     this.controls?.dispose()
     this.look?.dispose()
-    if (this.cut) clearTimeout(this.cut.timer)
-    if (this.dip?.lift) clearTimeout(this.dip.lift)
+    this.curtain.dispose()
+    this.cam.dispose()
     this.painted?.dispose()
     for (const m of this.statics) m.geometry.dispose()
     for (const e of this.extras)
