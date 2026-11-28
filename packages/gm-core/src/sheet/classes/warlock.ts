@@ -2,7 +2,7 @@ import type { DamageTypeId } from "@d20/srd"
 import { classFeatureById } from "@d20/srd/class-features"
 import { equipmentById } from "@d20/srd/equipment"
 import { z } from "zod"
-import type { RequiredFeature } from "../../validations/roll-requirement-schema"
+import type { FollowKey, RequiredFeature } from "../../validations/roll-requirement-schema"
 import { type Attack, damageTaken, defensesOf, parseDice, rollDamage } from "../attack"
 import { attackable, nearestEnemy } from "../attack-roll"
 import { ownBlockOf } from "../blocks"
@@ -276,7 +276,7 @@ const hurlCast: CastChoice = {
 
 // The pact weapon's next attack of the Attack action, at the one just attacked where it still can be, else the nearest
 // enemy in reach: Thirsting Blade's second attack, and Devouring Blade's third.
-const pactFollow = (key: string, option: string): FollowRule => ({
+const pactFollow = (key: FollowKey, option: string): FollowRule => ({
   key,
   attack: true,
   offer: (character) => hasInvocation(character, option) && !!pactWeaponOf(character),

@@ -21,6 +21,7 @@ import { premiseNote } from "../wiki-adventures/player-safety"
 import { createAdventureRollResultService, getEncounterInstructionsFromPlan } from "./adventure-roll-result-service"
 import { createAdventureTurnReplyService } from "./adventure-turn-reply-service"
 import { createLegendaryActionService } from "./legendary-action-service"
+import { primaryReadingOf } from "./roll-requirement-service"
 
 // The character as a player knows them. Each line ends with a newline.
 function characterSheet(character: TurnCharacter): string {
@@ -272,8 +273,10 @@ export function createAiPcTurnService(ports: GmPorts) {
         characterPerformingAction: character,
         narrativeAction: intent,
       })
-      // A spell with nothing to throw goes the same way as a roll: the companion's turn resolves it just below.
-      const rollRequirement = reading.roll ?? reading.cast ?? reading.feature ?? null
+      // A spell or feature with nothing to throw goes the same way as a roll: the companion's turn resolves it just below.
+      const primary = primaryReadingOf(reading)
+      const rollRequirement =
+        primary.kind === "roll" ? primary.roll : primary.kind === "cast" ? primary.cast : primary.kind === "feature" ? primary.feature : null
 
       await ports.store.submitReply({
         turnId,

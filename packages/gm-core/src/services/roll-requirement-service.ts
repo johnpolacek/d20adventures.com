@@ -131,6 +131,27 @@ type Present = Pick<TurnCharacter, "id" | "name"> &
     side?: Side
   }
 
+/** The mutually exclusive primary resolution outcome of a `TurnReading` (shared precedence across PC, AI PC, and NPC orchestrators). */
+export type PrimaryReading =
+  | { kind: "roll"; roll: ChosenRoll }
+  | { kind: "cast"; cast: RequiredCast }
+  | { kind: "feature"; feature: RequiredFeature }
+  | { kind: "rest"; rest: RestKind }
+  | { kind: "action"; action: TakenAction }
+  | { kind: "ruling"; ruling: { name: string; text: string } }
+  | { kind: "none" }
+
+/** Derive the single primary outcome of a `TurnReading` with canonical precedence. */
+export function primaryReadingOf(reading: TurnReading): PrimaryReading {
+  if (reading.roll) return { kind: "roll", roll: reading.roll }
+  if (reading.cast) return { kind: "cast", cast: reading.cast }
+  if (reading.feature) return { kind: "feature", feature: reading.feature }
+  if (reading.rest) return { kind: "rest", rest: reading.rest }
+  if (reading.action) return { kind: "action", action: reading.action }
+  if (reading.ruling) return { kind: "ruling", ruling: reading.ruling }
+  return { kind: "none" }
+}
+
 /** What the game master reads a character's move as: a roll the engine asks for, an action that takes none, or neither. */
 export type TurnReading = {
   roll: ChosenRoll | null
@@ -268,12 +289,22 @@ export function createRollRequirementService(ports: GmPorts) {
     const first = follow?.first && self ? follow.first({ ...character, id: self } as InScene) : undefined
     if (!follow || !first) return reading
     const key = follow.key
-    if (reading.roll && "check" in reading.roll && reading.roll.rollType === first.rollType) return reading
-    if (reading.roll) return { ...reading, roll: { ...reading.roll, after: { ...reading.roll.after, [key]: true } } }
-    if (reading.cast) return { ...reading, cast: { ...reading.cast, after: { ...reading.cast.after, [key]: true } } }
-    if (reading.feature) return { ...reading, feature: { ...reading.feature, after: { ...reading.feature.after, [key]: true } } }
-    if (reading.rest) return reading
-    return { ...reading, roll: first as ChosenRoll }
+    const primary = primaryReadingOf(reading)
+    switch (primary.kind) {
+      case "roll":
+        if ("check" in primary.roll && primary.roll.rollType === first.rollType) return reading
+        return { ...reading, roll: { ...primary.roll, after: { ...primary.roll.after, [key]: true } } }
+      case "cast":
+        return { ...reading, cast: { ...primary.cast, after: { ...primary.cast.after, [key]: true } } }
+      case "feature":
+        return { ...reading, feature: { ...primary.feature, after: { ...primary.feature.after, [key]: true } } }
+      case "rest":
+        return reading
+      case "action":
+      case "ruling":
+      case "none":
+        return { ...reading, roll: first as ChosenRoll }
+    }
   }
 
   async function readPicked(action: string, character: Character, options?: Options): Promise<TurnReading> {

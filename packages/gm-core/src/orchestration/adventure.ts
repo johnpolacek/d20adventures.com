@@ -6,6 +6,7 @@ import { createAdventureTurnReplyService } from "../services/adventure-turn-repl
 import { createLegendaryActionService } from "../services/legendary-action-service"
 import { createNarrativeGenerationService } from "../services/narrative-generation-service"
 import { createNpcTurnService } from "../services/npc-turn-service"
+import { primaryReadingOf } from "../services/roll-requirement-service"
 import type { LevelUpChoices } from "../sheet/level-up"
 import { inFight } from "../sheet/level-owed"
 import { levelOwed, takeLevel } from "../sheet/milestone"
@@ -46,46 +47,67 @@ export function createAdventure(ports: GmPorts) {
       ...(originalPlayerInput ? [{ kind: "reply" as const, by: { step: "reply" as const, character: characterId }, character: characterId, text: originalPlayerInput }] : []),
       ...story,
     ]
-    const rollRequirementDetails: RollRequirement = reading.roll
     // With `playerDeath: false` a blow the hero draws as they move leaves them Stable instead of dead.
     const rules = { playerDeath: (await loadAdventurePlanForRuntime(adventure.settingId, adventure.planId))?.playerDeath }
+    const primary = primaryReadingOf(reading)
 
-    if (rollRequirementDetails) {
-      await ports.store.submitReply({
-        turnId,
-        characterId,
-        story: reply,
-        rollRequirement: rollRequirementDetails,
-      })
-      // A Bonus Action used beside the roll is applied now, before the die is thrown. A hero dropped as they moved
-      // throws nothing: their turn is over, and the others play on.
-      const { fell } = await applyReading({ turnId, characterId, reading, rules })
-      // A fall ends the hero's turn: a Legendary creature may act on it (../sheet/legendary-actions).
-      if (fell) await afterHeroTurn(turnId, characterId)
-      if (fell && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
-      ports.narration.afterTurn(turnId)
-      return { rollRequired: fell ? null : rollRequirementDetails }
+    switch (primary.kind) {
+      case "roll": {
+        await ports.store.submitReply({
+          turnId,
+          characterId,
+          story: reply,
+          rollRequirement: primary.roll,
+        })
+        // A Bonus Action used beside the roll is applied now, before the die is thrown. A hero dropped as they moved
+        // throws nothing: their turn is over, and the others play on.
+        const { fell } = await applyReading({ turnId, characterId, reading, rules })
+        // A fall ends the hero's turn: a Legendary creature may act on it (../sheet/legendary-actions).
+        if (fell) await afterHeroTurn(turnId, characterId)
+        if (fell && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+        ports.narration.afterTurn(turnId)
+        return { rollRequired: fell ? null : primary.roll }
+      }
+      case "cast":
+      case "feature": {
+        const quiet = primary.kind === "cast" ? primary.cast : primary.feature
+        await ports.store.submitReply({
+          turnId,
+          characterId,
+          story: reply,
+          rollRequirement: undefined,
+        })
+        const { fell } = await applyReading({ turnId, characterId, reading, rules })
+        // A spell or a feature that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
+        if (!fell) await resolveCast({ turnId, characterId, cast: quiet })
+        // What the turn still holds for the hero once the cast is resolved, such as a Hide taken with Cunning Action: the
+        // hero throws it next, and the others wait on it.
+        const after = !fell ? await ports.store.getTurn({ turnId }) : undefined
+        const owed = (after?.characters as TurnCharacter[] | undefined)?.find((entry) => entry.id === characterId)?.rollRequired ?? null
+        // A cast it resolved has had its Legendary Actions taken with the roll's outcome; a fall while moving has not.
+        if (fell) await afterHeroTurn(turnId, characterId)
+        if (!owed && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+        ports.narration.afterTurn(turnId)
+        return { rollRequired: owed }
+      }
+      case "action":
+      case "rest":
+      case "ruling":
+      case "none": {
+        await ports.store.submitReply({
+          turnId,
+          characterId,
+          story: reply,
+          rollRequirement: undefined,
+        })
+        // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
+        await applyReading({ turnId, characterId, reading, rules })
+        await afterHeroTurn(turnId, characterId)
+        if (ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
+        ports.narration.afterTurn(turnId)
+        return { rollRequired: null }
+      }
     }
-    await ports.store.submitReply({
-      turnId,
-      characterId,
-      story: reply,
-      rollRequirement: undefined,
-    })
-    // An action with no roll (Dodge, Help) is the hero's whole turn: what it leaves is written before anyone else acts.
-    const { fell } = await applyReading({ turnId, characterId, reading, rules })
-    // A spell or a feature that asks for no throw is resolved now: the engine rolls it, and the GM tells it.
-    const quiet = reading.cast ?? reading.feature
-    if (quiet && !fell) await resolveCast({ turnId, characterId, cast: quiet })
-    // What the turn still holds for the hero once the cast is resolved, such as a Hide taken with Cunning Action: the
-    // hero throws it next, and the others wait on it.
-    const after = quiet && !fell ? await ports.store.getTurn({ turnId }) : undefined
-    const owed = (after?.characters as TurnCharacter[] | undefined)?.find((entry) => entry.id === characterId)?.rollRequired ?? null
-    // The hero's turn is over. A cast it resolved has had its Legendary Actions taken with the roll's outcome.
-    if (fell || !quiet) await afterHeroTurn(turnId, characterId)
-    if (!owed && ports.npcTurnsPerCall === undefined) await processNpcTurnsAfterCurrent(turnId)
-    ports.narration.afterTurn(turnId)
-    return { rollRequired: owed }
   }
 
   // A player's reply in their own words: written into the story as their hero's beats, then taken as the hero's turn.

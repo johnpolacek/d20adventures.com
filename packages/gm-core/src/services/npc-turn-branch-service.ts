@@ -30,7 +30,7 @@ import { useBonus } from "./bonus-action"
 import { buildNpcOutcomePrompt, createNpcTurnGenerationService } from "./npc-turn-generation-service"
 import { applyNpcEffectsToCharacters, type NpcTurnEffect } from "./npc-turn-resolution-service"
 import { ReactionPending } from "./reaction-pending"
-import { createRollRequirementService, type TurnReading } from "./roll-requirement-service"
+import { createRollRequirementService, primaryReadingOf, type TurnReading } from "./roll-requirement-service"
 
 export type NpcRollInfo = {
   rollType: string
@@ -137,7 +137,8 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     // The Owlbear's turn told it padding along the trail to the ferns, and the read named no move: it walks there.
     const measured = !!read.cast || !!read.feature || (!!read.roll && (isAttackRoll(read.roll) || isCastRoll(read.roll)))
     const reading = !read.move && args.own && !measured ? { ...read, move: args.own } : read
-    const rollRequirement = reading.roll
+    const primary = primaryReadingOf(reading)
+    const rollRequirement = primary.kind === "roll" ? primary.roll : null
     // The turn's dice are kept, so the turn can be played again the same after a player answers a reaction.
     const dice = replaying(args.resume?.dice)
     const answers = args.resume?.answers ?? []
@@ -250,7 +251,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
     })
 
     // A spell of the NPC's stat block: one with a spell attack came back as a roll, and any other as a cast to resolve.
-    const casting = reading.cast ?? (isCastRoll(rollRequirement) ? rollRequirement : undefined)
+    const casting = primary.kind === "cast" ? primary.cast : primary.kind === "roll" && isCastRoll(primary.roll) ? primary.roll : undefined
     if (casting) {
       // The engine resolves it by the spell's typed data and spends the stat block's count for it. The NPC's spell
       // attack and every target's saving throw are rolled here, a hero's too.
@@ -506,13 +507,14 @@ export function createNpcTurnBranchService(ports: GmPorts) {
       ]
       effects = outcomeResult.effects
       updatedCharacters = applyNpcEffectsToCharacters({ characters: updatedCharacters, npcId: args.npc.id, effects })
-    } else if (reading.feature) {
+    } else if (primary.kind === "feature") {
       // An action of the stat block that is a save (a breath weapon): the engine rolls every target's save and the
       // damage, and spends its use, as a hero's Channel Divinity is resolved. It is told by the path of a cast.
-      const used = featureResolver(reading.feature.feature.id)({
+      const featureRoll = primary.feature
+      const used = featureResolver(featureRoll.feature.id)({
         characters: updatedCharacters as Featured[],
         actorId: args.npc.id,
-        feature: reading.feature.feature,
+        feature: featureRoll.feature,
         d20: dice.d20,
         roll: dice.roll,
         rules: args.rules,
@@ -527,10 +529,10 @@ export function createNpcTurnBranchService(ports: GmPorts) {
         by: args.npc.id,
       })
       updatedCharacters = kept.characters
-      const then = following(reading.feature)
+      const then = following(featureRoll)
       const names = storyNames(args.turn.characters)
       const facts = [...bonusFacts, ...(used.problem ? [used.problem] : used.facts), ...kept.facts, ...then.facts]
-      console.log("[LLM] NPC uses:", { feature: reading.feature.feature, facts })
+      console.log("[LLM] NPC uses:", { feature: featureRoll.feature, facts })
       const outcomeResult = await generateNpcOutcome(
         buildNpcOutcomePrompt({
           contextString: args.npcActionContext.contextString,
@@ -540,7 +542,7 @@ export function createNpcTurnBranchService(ports: GmPorts) {
           actionSummary: args.actionResult.actionSummary,
           rollType: used.name,
           result: 0,
-          difficulty: reading.feature.difficulty,
+          difficulty: featureRoll.difficulty,
           success: !used.problem,
           scene: args.scene,
           spell: { name: used.name, facts, verb: "uses" },

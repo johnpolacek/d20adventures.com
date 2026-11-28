@@ -5,6 +5,30 @@ import { stakeSchema } from "../sheet/stakes"
 
 const point = z.object({ x: z.number(), y: z.number() })
 
+/** Closed set of follow-up roll flags carried on `RollRequirement.after`. */
+export const FOLLOW_KEYS = [
+  "hide",
+  "horde",
+  "thirsting-blade",
+  "devouring-blade",
+  "martial-arts",
+  "flurry",
+  "flurry-again",
+  "flurry-third",
+  "flurry-addle",
+  "flurry-addle-again",
+  "flurry-addle-third",
+  "flurry-topple",
+  "flurry-topple-again",
+  "flurry-topple-third",
+  "flurry-push",
+  "flurry-push-again",
+  "flurry-push-third",
+] as const
+export type FollowKey = (typeof FOLLOW_KEYS)[number]
+
+const followFlagFields = Object.fromEntries(FOLLOW_KEYS.map((key) => [key, z.literal(true).optional()])) as Record<FollowKey, z.ZodOptional<z.ZodLiteral<true>>>
+
 // What every asked-for roll carries. The numbers are the engine's.
 const asked = {
   rollType: z.string().describe('The roll\'s name on screen and in the story: "Stealth", "Wisdom Saving Throw", "Fog Cloud (Intelligence)", "Longbow"'),
@@ -21,9 +45,8 @@ const asked = {
       attacks: z.number().int().min(1).optional().describe("Attacks of the Attack action still to make after this one, with the same weapon"),
       multiattack: z.array(z.array(z.string()).min(1)).min(1).optional().describe("The attacks of an NPC's Multiattack still to make after this one, each the ids of the attacks it may be made with"),
       struck: z.array(z.string()).optional().describe("Who has been attacked this turn, by id"),
-      hide: z.literal(true).optional().describe("A Hide taken with Cunning Action is still to roll"),
+      ...followFlagFields,
     })
-    .catchall(z.unknown())
     .optional(),
 }
 

@@ -3,7 +3,7 @@ import type { Spell } from "@d20/srd/schema/spells"
 import type { z } from "zod"
 import type { TurnReading } from "../services/roll-requirement-service"
 import type { Character } from "../types/character"
-import type { RequiredFeature, RequiredRoll } from "../validations/roll-requirement-schema"
+import type { FollowKey, RequiredFeature, RequiredRoll } from "../validations/roll-requirement-schema"
 import type { Attack, AttackResult, DamagePart, DamageRoll, RolledAttack, Target } from "./attack"
 import type { InScene } from "./attack-roll"
 import { type Check, type CheckResult, checkBonus, type Roller } from "./check"
@@ -409,7 +409,7 @@ export type BonusActionRule = {
   /** Advantage or Disadvantage it gives the turn's attack roll. */
   attackModes?: readonly ModeSource[]
   /** The roll it leaves to follow the turn's own, by the key of a follow-up (`FollowRule`): "hide". */
-  follow?: string
+  follow?: FollowKey
   /** Whether a move taken with it draws no Opportunity Attacks, by the feet moved. */
   disengages?: (character: Roller & { id: string; position?: { x: number; y: number } }, feet: number) => boolean
   /**
@@ -709,7 +709,7 @@ export type After = NonNullable<RequiredRoll["after"]>
  * without follows everything else (Hide).
  */
 export type FollowRule = {
-  key: string
+  key: FollowKey
   attack?: true
   /** Whether a hero's Attack action holds it from its first attack. */
   offer?: (character: InScene) => boolean

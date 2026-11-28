@@ -4,7 +4,7 @@ import { classById } from "@d20/srd/classes"
 import { equipmentById } from "@d20/srd/equipment"
 import { z } from "zod"
 import { hasFled, isDead, isDown, isIncapacitated } from "../../utils/turn-actors"
-import type { RequiredFeature } from "../../validations/roll-requirement-schema"
+import type { FollowKey, RequiredFeature } from "../../validations/roll-requirement-schema"
 import { takeAction } from "../actions"
 import { type Attack, attacksOf, damageTaken, defensesOf, parseDice, rollDamage, type Target, UNARMED_STRIKE } from "../attack"
 import { attackable, type InScene, nearestEnemy } from "../attack-roll"
@@ -198,7 +198,7 @@ const flurry = (technique?: Technique): BonusActionRule =>
  * reach, or the nearest enemy in reach. `then` is the strike still to come after it (Flurry of Blows' next), and
  * `technique` the Open Hand Technique each hit carries.
  */
-const strikeAfter = (key: string, then?: (character: InScene) => string | undefined, technique?: Technique): FollowRule => ({
+const strikeAfter = (key: FollowKey, then?: (character: InScene) => FollowKey | undefined, technique?: Technique): FollowRule => ({
   key,
   attack: true,
   next: ({ character, made, struck, present, ask, rest }) => {
@@ -218,11 +218,18 @@ const strikeAfter = (key: string, then?: (character: InScene) => string | undefi
 
 // A Flurry of Blows' strikes: two, and a third with Heightened Focus.
 function flurryStrikes(technique?: Technique): FollowRule[] {
-  const key = technique ? `flurry-${technique}` : "flurry"
+  const keys: [FollowKey, FollowKey, FollowKey] =
+    technique === "addle"
+      ? ["flurry-addle", "flurry-addle-again", "flurry-addle-third"]
+      : technique === "topple"
+        ? ["flurry-topple", "flurry-topple-again", "flurry-topple-third"]
+        : technique === "push"
+          ? ["flurry-push", "flurry-push-again", "flurry-push-third"]
+          : ["flurry", "flurry-again", "flurry-third"]
   return [
-    strikeAfter(key, () => `${key}-again`, technique),
-    strikeAfter(`${key}-again`, (character) => (hasFeature(character, HEIGHTENED) ? `${key}-third` : undefined), technique),
-    strikeAfter(`${key}-third`, undefined, technique),
+    strikeAfter(keys[0], () => keys[1], technique),
+    strikeAfter(keys[1], (character) => (hasFeature(character, HEIGHTENED) ? keys[2] : undefined), technique),
+    strikeAfter(keys[2], undefined, technique),
   ]
 }
 

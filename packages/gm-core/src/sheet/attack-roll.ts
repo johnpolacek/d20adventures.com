@@ -1,5 +1,5 @@
 import { hasFled, isDead, isDown, isIncapacitated } from "../utils/turn-actors"
-import type { RequiredAttack, RequiredRoll } from "../validations/roll-requirement-schema"
+import type { FollowKey, RequiredAttack, RequiredRoll } from "../validations/roll-requirement-schema"
 import { type Acting, attackModesFromActions, hideRoll } from "./actions"
 import { attackStockRuling, useOf } from "./ammunition"
 import { type Attack, attacksOf, averageDamage } from "./attack"
@@ -279,7 +279,7 @@ const HIDE: FollowRule = { key: "hide", first: hideRoll, next: ({ character }) =
 const follows = (): FollowRule[] => [...followRules(), HIDE]
 
 /** A follow-up by its key on `after`: "hide", "horde". */
-export const followRule = (key: string | undefined): FollowRule | undefined => follows().find((rule) => rule.key === key)
+export const followRule = (key: FollowKey | undefined): FollowRule | undefined => follows().find((rule) => rule.key === key)
 
 // How a roll's mode ranks when the engine picks a weapon: Advantage over none, none over Disadvantage.
 const MODE_RANK: Record<RollMode, number> = { advantage: 2, normal: 1, disadvantage: 0 }
