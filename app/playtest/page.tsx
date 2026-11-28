@@ -21,6 +21,7 @@ const repo = REPO
 const soloDemo = "/settings/realm-of-myr/the-midnight-summons"
 const installSource = `${repo}/blob/main/public/install.sh`
 const setupPrompt = hostPrompt()
+const gameplayVideos = "https://www.youtube.com/playlist?list=PLNG7xDkjzMUY"
 
 const hairline = "h-px w-full bg-gradient-to-r from-accent-200/0 via-accent-200/45 to-accent-200/0"
 
@@ -46,7 +47,11 @@ export default async function PlaytestPage() {
               </Heading>
             </div>
             <p className=" font-serif text-lg leading-relaxed text-white/80">
-              Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so your feedback is appreciated while we are in development.
+              Run a tabletop adventure with an AI Game Master. Host it on your computer, and your friends join from the web. D20 Adventures is in alpha, so your feedback is appreciated while we are in development. You can also watch the{" "}
+              <a href={gameplayVideos} target="_blank" rel="noopener noreferrer" className="text-white underline decoration-accent-200/40 underline-offset-4 transition-[color,opacity] duration-150 hover:text-accent-200 active:opacity-70">
+                latest gameplay videos
+              </a>
+              .
             </p>
           </header>
 
