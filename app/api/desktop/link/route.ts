@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
-import { cleanDeviceName, displayUserCode, POLL_INTERVAL_S } from "@/lib/desktop/link"
+import { cleanDeviceName, cleanInstallId, displayUserCode, POLL_INTERVAL_S } from "@/lib/desktop/link"
 import { startLink } from "@/lib/desktop/server"
 
 // The desktop app starts a link. No account yet: the player approves the code on the website.
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => ({}))) as { deviceName?: unknown }
-    const { userCode, pollSecret, expiresAt } = await startLink(cleanDeviceName(body.deviceName))
+    const body = (await request.json().catch(() => ({}))) as { deviceName?: unknown; installId?: unknown }
+    const { userCode, pollSecret, expiresAt } = await startLink(cleanDeviceName(body.deviceName), cleanInstallId(body.installId))
     const verifyUrl = new URL(`/desktop/link?code=${userCode}`, request.url).toString()
     return NextResponse.json({ userCode: displayUserCode(userCode), pollSecret, verifyUrl, expiresAt, interval: POLL_INTERVAL_S })
   } catch (error) {

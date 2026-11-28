@@ -1,11 +1,14 @@
+import { randomBytes } from "node:crypto"
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { hostname } from "node:os"
+import { join } from "node:path"
 import { z } from "zod"
 import type { LibraryEntry } from "../../../lib/store/catalog"
 import type { Packs } from "./game"
 import { syncPacks } from "./packs"
 
-// Linking this computer to a website account. Rust adds the Keychain token to each command
-// and stores or clears it from storeToken and clearToken, so the token never reaches the webview.
+// Linking this computer to a website account. Rust adds the stored device token to each command
+// and writes or deletes it from storeToken and clearToken, so the token never reaches the webview.
 const token = z.string().optional()
 export const accountCommandSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("accountStatus"), token }),
@@ -31,12 +34,39 @@ export type AccountResponse = {
 }
 
 type Fetch = typeof fetch
-const deviceName = () => hostname().replace(/\.local$/, "") || "Desktop app"
+const INSTALL_ID_RE = /^[A-Za-z0-9_-]{16,128}$/
+
+function deviceName(dev: boolean) {
+  const base = hostname().replace(/\.local$/, "") || "Desktop app"
+  return dev ? `${base.slice(0, 54)} (Dev)` : base
+}
+
+// One stable random id per app install (dev and release keep separate ids), so re-linking replaces
+// this install's existing device record instead of adding a duplicate computer on the website.
+function installIdIn(dataDir: string | undefined, dev: boolean): string | undefined {
+  if (!dataDir) return undefined
+  const file = join(dataDir, dev ? "device-id.dev" : "device-id")
+  try {
+    const existing = readFileSync(file, "utf8").trim()
+    if (INSTALL_ID_RE.test(existing)) return existing
+  } catch {
+    // Missing or unreadable: create one below.
+  }
+  const fresh = randomBytes(24).toString("base64url")
+  try {
+    mkdirSync(dataDir, { recursive: true })
+    writeFileSync(file, `${fresh}\n`, { mode: 0o600 })
+    return fresh
+  } catch {
+    return undefined
+  }
+}
 
 // With packs, a linked status also downloads the story packs of owned adventures.
-type PackPlace = { data: string; bundled: Packs }
+type PackPlace = { data: string; bundled: Packs; dev?: boolean }
 
 export async function accountCommand(command: AccountCommand, site: string, fetchImpl: Fetch = fetch, packs?: PackPlace): Promise<AccountResponse> {
+  const dev = packs?.dev ?? process.env.D20_DEV_BUILD === "1"
   const call = (path: string, init: RequestInit = {}, bearer?: string) =>
     fetchImpl(`${site}${path}`, {
       ...init,
@@ -66,7 +96,11 @@ export async function accountCommand(command: AccountCommand, site: string, fetc
     case "accountStatus":
       return status(command.token)
     case "accountLinkStart": {
-      const res = await call("/api/desktop/link", { method: "POST", body: JSON.stringify({ deviceName: deviceName() }) }).catch(() => null)
+      const installId = installIdIn(packs?.data, dev)
+      const res = await call("/api/desktop/link", {
+        method: "POST",
+        body: JSON.stringify({ deviceName: deviceName(dev), ...(installId ? { installId } : {}) }),
+      }).catch(() => null)
       if (!res?.ok) return { account: { linked: false }, error: "Could not reach D20 Adventures to link this computer." }
       const body = (await res.json()) as { userCode: string; pollSecret: string; verifyUrl: string; expiresAt: number; interval: number }
       const verify = new URL(body.verifyUrl)
@@ -76,7 +110,10 @@ export async function accountCommand(command: AccountCommand, site: string, fetc
       }
     }
     case "accountLinkPoll": {
-      const res = await call("/api/desktop/link/token", { method: "POST", body: JSON.stringify({ pollSecret: command.pollSecret }) }).catch(() => null)
+      const res = await call("/api/desktop/link/token", {
+        method: "POST",
+        body: JSON.stringify({ pollSecret: command.pollSecret, ...(command.token ? { previousToken: command.token } : {}) }),
+      }).catch(() => null)
       if (!res) return { account: { linked: false }, link: { status: "pending" } }
       if (res.status === 410) return { account: { linked: false }, link: { status: "expired" } }
       if (!res.ok) return { account: { linked: false }, link: { status: "pending" } }

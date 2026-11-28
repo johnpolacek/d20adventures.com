@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { bearerToken, cleanDeviceName, displayUserCode, newSecret, newUserCode, normalizeUserCode, sha256 } from "./link"
+import { bearerToken, cleanDeviceName, cleanInstallId, cleanSecret, displayUserCode, newSecret, newUserCode, normalizeUserCode, sha256 } from "./link"
 
 test("user codes are eight unambiguous characters and survive how people type them", () => {
   for (let i = 0; i < 200; i++) {
@@ -34,4 +34,14 @@ test("device names are trimmed, stripped of control characters, and capped", () 
   assert.equal(cleanDeviceName("x".repeat(100)).length, 60)
   assert.equal(cleanDeviceName(42), "Desktop app")
   assert.equal(cleanDeviceName(""), "Desktop app")
+})
+
+test("install IDs and secrets only accept well-formed tokens", () => {
+  const id = newSecret()
+  assert.equal(cleanInstallId(id), id)
+  assert.equal(cleanInstallId("short"), undefined)
+  assert.equal(cleanInstallId("bad space character here"), undefined)
+  assert.equal(cleanInstallId(null), undefined)
+  assert.equal(cleanSecret(id), id)
+  assert.equal(cleanSecret("short"), undefined)
 })

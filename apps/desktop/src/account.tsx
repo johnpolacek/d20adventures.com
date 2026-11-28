@@ -65,12 +65,24 @@ export function useAccount(opts: { onPacks: () => void }) {
       stop()
       return setError("The code expired. Try again.")
     }
-    if (res?.account?.linked === true) {
+    if (res?.account?.linked === true || res?.account?.linked === "offline") {
       stop()
       return settle(res)
     }
     setTimeout(poll, current.interval * 1000)
   }, [stop, settle])
+
+  const refresh = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      settle(await account({ kind: "accountStatus" }))
+    } catch {
+      setState({ linked: "offline" })
+    } finally {
+      setBusy(false)
+    }
+  }, [settle])
 
   const start = useCallback(async () => {
     setBusy(true)
@@ -112,6 +124,7 @@ export function useAccount(opts: { onPacks: () => void }) {
     busy,
     start,
     stop,
+    refresh,
     unlink,
   }
 }
@@ -160,13 +173,15 @@ function Waiting({ account: a }: { account: Account }) {
 }
 
 // In the header: the linked account's picture, as the website's user button, which opens the account menu with who
-// is linked and Unlink. Otherwise Link account, when play does not need one or the link is unconfirmed.
+// is linked and Unlink. When offline, shows an Offline menu with Retry and Unlink so a brief disconnect never prompts
+// linking the same computer again. Otherwise Link account.
 export function AccountBadge({ account: a }: { account: Account }) {
   const state = a.ready && !a.gated ? a.state : null
+  const view = state?.linked === true ? "linked" : state?.linked === "offline" ? "offline" : "unlinked"
   return (
     <Presence show={Boolean(state)} motion="fade" className="flex items-center">
       {state && (
-        <Swap id={state.linked === true ? "linked" : "unlinked"} className="flex items-center">
+        <Swap id={view} className="flex items-center">
           {state.linked === true ? (
             <Menu>
               <MenuTrigger
@@ -183,8 +198,22 @@ export function AccountBadge({ account: a }: { account: Account }) {
                 </MenuItem>
               </MenuContent>
             </Menu>
+          ) : state.linked === "offline" ? (
+            <Menu>
+              <MenuTrigger className={buttonClassName("emboss", "sm", "my-2 px-4 py-1 font-display text-sm normal-case tracking-normal")}>
+                Offline
+              </MenuTrigger>
+              <MenuContent align="end" className={cn(cardVariants({ variant: "frame" }), "w-64 p-3")}>
+                <p className="px-1 text-sm text-zinc-300">Could not reach D20 Adventures. This computer is still linked.</p>
+                <MenuItem className={buttonClassName("outline", "sm", "mt-3 w-full justify-center data-highlighted:bg-action-950/90")} disabled={a.busy} onSelect={() => void a.refresh()}>
+                  {a.busy ? "Checking…" : "Retry"}
+                </MenuItem>
+                <MenuItem className={buttonClassName("outline", "sm", "mt-2 w-full justify-center data-highlighted:bg-action-950/90")} disabled={a.busy} onSelect={() => void a.unlink()}>
+                  Unlink
+                </MenuItem>
+              </MenuContent>
+            </Menu>
           ) : (
-            // Offline too: a stored token the website could not confirm. Linking again replaces it.
             <Button variant="emboss" className="my-2 px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy || Boolean(a.link)} onClick={() => void a.start()}>
               Link account
             </Button>
@@ -214,10 +243,18 @@ export function AccountNotice({ account: a }: { account: Account }) {
 
 // In the feedback panel, in place of the form, until this computer is linked. Feedback is sent under the account.
 export function FeedbackLink({ account: a }: { account: Account }) {
+  const offline = a.state?.linked === "offline"
   return (
-    <Swap id={a.link ? "code" : "start"} className="text-center">
+    <Swap id={a.link ? "code" : offline ? "offline" : "start"} className="text-center">
       {a.link ? (
         <Waiting account={a} />
+      ) : offline ? (
+        <div className="space-y-4">
+          <p className="font-serif text-foreground/80">Could not reach D20 Adventures right now. Check your connection and try again.</p>
+          <Button variant="emboss" className="px-4 py-1 font-display text-sm normal-case tracking-normal" disabled={a.busy} onClick={() => void a.refresh()}>
+            {a.busy ? "Checking…" : "Retry"}
+          </Button>
+        </div>
       ) : (
         <div className="space-y-4">
           <p className="font-serif text-foreground/80">Link this computer to your account to send feedback.</p>

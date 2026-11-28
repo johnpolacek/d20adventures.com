@@ -6,12 +6,19 @@ import { serverSecret } from "@/lib/convex/server-secret"
 import { bearerToken, LINK_TTL_MS, newSecret, newUserCode, sha256 } from "./link"
 
 // Server only. Raw codes and tokens never reach Convex, only their hashes.
-export async function startLink(deviceName: string) {
+export async function startLink(deviceName: string, installId?: string) {
   const pollSecret = newSecret()
   const expiresAt = Date.now() + LINK_TTL_MS
   for (let attempt = 0; attempt < 3; attempt++) {
     const userCode = newUserCode()
-    const { created } = await convex.mutation(api.devices.createLink, { secret: serverSecret(), userCode, pollHash: sha256(pollSecret), deviceName, expiresAt })
+    const { created } = await convex.mutation(api.devices.createLink, {
+      secret: serverSecret(),
+      userCode,
+      pollHash: sha256(pollSecret),
+      deviceName,
+      ...(installId ? { installId } : {}),
+      expiresAt,
+    })
     if (created) return { userCode, pollSecret, expiresAt }
   }
   throw new Error("Could not allocate a link code.")
@@ -22,9 +29,14 @@ export const lookupLink = (userCode: string) => convex.query(api.devices.linkByC
 export const approveLink = (userCode: string, userId: string) => convex.mutation(api.devices.approveLink, { secret: serverSecret(), userCode, userId })
 
 /** Pending until the player approves. On approval the device token is returned once and only its hash is kept. */
-export async function redeemLink(pollSecret: string) {
+export async function redeemLink(pollSecret: string, previousToken?: string) {
   const token = newSecret()
-  const result = await convex.mutation(api.devices.redeemLink, { secret: serverSecret(), pollHash: sha256(pollSecret), tokenHash: sha256(token) })
+  const result = await convex.mutation(api.devices.redeemLink, {
+    secret: serverSecret(),
+    pollHash: sha256(pollSecret),
+    tokenHash: sha256(token),
+    ...(previousToken ? { previousTokenHash: sha256(previousToken) } : {}),
+  })
   return result.status === "linked" ? { status: "linked" as const, token } : result
 }
 

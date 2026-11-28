@@ -76,7 +76,7 @@ fn site_url() -> String {
         .to_string()
 }
 // Saves, rosters and downloaded packs. Development builds can use another folder with D20_DATA_DIR, so a test run
-// never touches real saves. Overriding HOME instead would also hide the login Keychain.
+// never touches real saves.
 fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if cfg!(debug_assertions) {
         if let Some(dir) = std::env::var_os("D20_DATA_DIR") {
@@ -85,14 +85,90 @@ fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     }
     app.path().app_data_dir().map_err(|e| e.to_string())
 }
-// The account link's device token. Development builds keep their own item so they never touch the shipped app's link.
-fn keychain() -> Result<keyring::Entry, String> {
-    let service = if cfg!(debug_assertions) {
-        "com.d20adventures.desktop.dev"
+// Host name from site_url(), normalized so localhost and 127.0.0.1 share one dev token slot.
+fn site_slug(url: &str) -> String {
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))
+        .unwrap_or(url);
+    let host = rest
+        .split('/')
+        .next()
+        .unwrap_or_default()
+        .split(':')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    let host = if host == "127.0.0.1" { "localhost" } else { host.as_str() };
+    let slug: String = host
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '.' || *c == '-')
+        .collect();
+    if slug.is_empty() {
+        "default".into()
     } else {
-        "com.d20adventures.desktop"
-    };
-    keyring::Entry::new(service, "account").map_err(|e| e.to_string())
+        slug
+    }
+}
+fn token_file_name(debug: bool, url: &str) -> String {
+    let slug = site_slug(url);
+    if debug {
+        format!("device-token.dev.{slug}")
+    } else if slug == "d20adventures.com" {
+        "device-token".into()
+    } else {
+        format!("device-token.{slug}")
+    }
+}
+// The account link's device token, stored in a private (0600 on Unix) file in the app data folder so ad-hoc signed
+// macOS updates never lose Keychain access. Development builds keep their own file per site host so they never touch
+// the shipped app's link or clobber tokens when switching between localhost and d20adventures.com.
+fn token_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    Ok(data_dir(app)?.join(token_file_name(cfg!(debug_assertions), &site_url())))
+}
+fn read_token(app: &tauri::AppHandle) -> Option<String> {
+    let path = token_path(app).ok()?;
+    let token = std::fs::read_to_string(path).ok()?;
+    let trimmed = token.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+fn write_token(app: &tauri::AppHandle, token: &str) -> Result<(), String> {
+    use std::io::Write;
+    let path = token_path(app)?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let mut tmp = path.clone().into_os_string();
+    tmp.push(".tmp");
+    let tmp = PathBuf::from(tmp);
+    let mut opts = std::fs::OpenOptions::new();
+    opts.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        opts.mode(0o600);
+    }
+    let mut file = opts.open(&tmp).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = file.set_permissions(std::fs::Permissions::from_mode(0o600));
+    }
+    file.write_all(format!("{token}\n").as_bytes())
+        .map_err(|e| e.to_string())?;
+    file.sync_all().map_err(|e| e.to_string())?;
+    drop(file);
+    std::fs::rename(&tmp, &path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+fn clear_token(app: &tauri::AppHandle) {
+    if let Ok(path) = token_path(app) {
+        let _ = std::fs::remove_file(path);
+    }
 }
 #[tauri::command]
 async fn game_command(
@@ -146,7 +222,7 @@ async fn model_command(app: tauri::AppHandle, provider: String) -> Result<Value,
     )
     .await
 }
-// Account actions only reach the website, so they skip the game lock. The token travels from the Keychain
+// Account actions only reach the website, so they skip the game lock. The stored token travels from Rust
 // to the runtime over stdin and back, and the webview never sees it.
 #[tauri::command]
 async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Value, String> {
@@ -157,22 +233,20 @@ async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Va
     if !kind.starts_with("account") {
         return Err("Unknown account action.".into());
     }
-    let entry = keychain()?;
     if let Some(fields) = command.as_object_mut() {
         fields.remove("token");
-        if let Ok(token) = entry.get_password() {
+        if let Some(token) = read_token(&app) {
             fields.insert("token".into(), Value::String(token));
         }
     }
     let mut response = run_runtime(&app, &command).await?;
     if let Some(fields) = response.as_object_mut() {
         if let Some(Value::String(token)) = fields.remove("storeToken") {
-            entry
-                .set_password(&token)
+            write_token(&app, &token)
                 .map_err(|e| format!("Could not save the account link: {e}"))?;
         }
         if fields.remove("clearToken") == Some(Value::Bool(true)) {
-            let _ = entry.delete_credential();
+            clear_token(&app);
         }
     }
     Ok(response)
@@ -189,7 +263,7 @@ async fn host_command(app: tauri::AppHandle, mut command: Value) -> Result<Value
     }
     if let Some(fields) = command.as_object_mut() {
         fields.remove("token");
-        if let Ok(token) = keychain()?.get_password() {
+        if let Some(token) = read_token(&app) {
             fields.insert("token".into(), Value::String(token));
         }
     }
@@ -204,9 +278,8 @@ async fn host_start(
     provider: String,
     model: Option<String>,
 ) -> Result<(), String> {
-    let token = keychain()?
-        .get_password()
-        .map_err(|_| "Link this computer to your D20 Adventures account to host a game.")?;
+    let token = read_token(&app)
+        .ok_or("Link this computer to your D20 Adventures account to host a game.")?;
     let mut slot = worker.0.lock().await;
     if let Some((_, mut old)) = slot.take() {
         let _ = old.kill().await;
@@ -264,11 +337,9 @@ async fn host_running(worker: tauri::State<'_, HostWorker>) -> Result<Value, Str
 // Playing needs a linked account (owner, 2026-10-08). Development builds skip that unless D20_REQUIRE_ACCOUNT is set,
 // so local playtests and checks keep working without the website.
 #[tauri::command]
-fn account_info() -> Value {
+fn account_info(app: tauri::AppHandle) -> Value {
     let required = !cfg!(debug_assertions) || std::env::var_os("D20_REQUIRE_ACCOUNT").is_some();
-    let linked = keychain()
-        .and_then(|entry| entry.get_password().map_err(|e| e.to_string()))
-        .is_ok();
+    let linked = read_token(&app).is_some();
     serde_json::json!({ "required": required, "linked": linked })
 }
 // Fills the screen, or returns to a window. Answers whether the window is now fullscreen.
@@ -356,6 +427,9 @@ fn runtime_command(
         .stdin(Stdio::piped())
         .stderr(Stdio::null())
         .kill_on_drop(true);
+    if cfg!(debug_assertions) {
+        command.env("D20_DEV_BUILD", "1");
+    }
     // No console window flashes up for it on Windows.
     #[cfg(windows)]
     command.creation_flags(0x0800_0000);
@@ -492,4 +566,33 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("D20 Adventures failed to start");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{site_slug, token_file_name};
+
+    #[test]
+    fn site_slug_normalizes_local_and_remote_hosts() {
+        assert_eq!(site_slug("https://d20adventures.com"), "d20adventures.com");
+        assert_eq!(site_slug("http://localhost:3000"), "localhost");
+        assert_eq!(site_slug("http://127.0.0.1:3058/"), "localhost");
+    }
+
+    #[test]
+    fn token_files_stay_separate_for_release_and_dev_sites() {
+        assert_eq!(token_file_name(false, "https://d20adventures.com"), "device-token");
+        assert_eq!(
+            token_file_name(true, "https://d20adventures.com"),
+            "device-token.dev.d20adventures.com"
+        );
+        assert_eq!(
+            token_file_name(true, "http://localhost:3000"),
+            "device-token.dev.localhost"
+        );
+        assert_eq!(
+            token_file_name(true, "http://127.0.0.1:3058"),
+            "device-token.dev.localhost"
+        );
+    }
 }

@@ -370,6 +370,7 @@ export default defineSchema({
     userCode: v.string(),
     pollHash: v.string(),
     deviceName: v.string(),
+    installId: v.optional(v.string()),
     createdAt: v.number(),
     expiresAt: v.number(),
     userId: v.optional(v.string()), // Clerk User ID, set on approval
@@ -379,17 +380,19 @@ export default defineSchema({
     .index("by_poll_hash", ["pollHash"])
     .index("by_expires", ["expiresAt"]),
 
-  // Linked desktop apps. The app keeps its token in the Keychain.
+  // Linked desktop apps. The app keeps its token in its private app data folder.
   devices: defineTable({
     userId: v.string(), // Clerk User ID
     tokenHash: v.string(),
     name: v.string(),
+    installId: v.optional(v.string()),
     createdAt: v.number(),
     lastSeenAt: v.optional(v.number()),
     revokedAt: v.optional(v.number()),
   })
     .index("by_token_hash", ["tokenHash"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_install", ["userId", "installId"]),
 
   // What the site's own AI calls cost, a row per day (a date in US Central time), and the daily limit the owner set.
   // See convex/aiBudget.ts.

@@ -1,4 +1,7 @@
 import assert from "node:assert/strict"
+import { mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { test } from "node:test"
 import { accountCommand } from "./account"
 
@@ -78,4 +81,38 @@ test("unlink clears the token even when the website is unreachable", async () =>
   const { calls, fetchImpl } = site({})
   assert.deepEqual(await accountCommand({ kind: "accountUnlink", token: "t".repeat(43) }, SITE, fetchImpl), { account: { linked: false }, clearToken: true })
   assert.equal(calls[0].url, `${SITE}/api/desktop/unlink`)
+})
+
+test("link start persists a stable installId per build kind and tags dev builds", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "d20-account-test-"))
+  try {
+    const response = { userCode: "ABCD-EFGH", pollSecret: "p".repeat(43), verifyUrl: `${SITE}/desktop/link?code=ABCDEFGH`, expiresAt: 1, interval: 3 }
+    const { calls, fetchImpl } = site({ "/api/desktop/link": [200, response] })
+
+    await accountCommand({ kind: "accountLinkStart" }, SITE, fetchImpl, { data: dir, bundled: {}, dev: false })
+    await accountCommand({ kind: "accountLinkStart" }, SITE, fetchImpl, { data: dir, bundled: {}, dev: false })
+    await accountCommand({ kind: "accountLinkStart" }, SITE, fetchImpl, { data: dir, bundled: {}, dev: true })
+
+    const [first, second, dev] = calls.map((c) => c.body as { deviceName: string; installId?: string })
+    assert.ok(first.installId && first.installId.length >= 16)
+    assert.equal(second.installId, first.installId)
+    assert.ok(dev.installId && dev.installId !== first.installId)
+    assert.ok(!first.deviceName.endsWith(" (Dev)"))
+    assert.ok(dev.deviceName.endsWith(" (Dev)"))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("polling sends any previous token so the server replaces the old device", async () => {
+  const prev = "o".repeat(43)
+  const next = "n".repeat(43)
+  const { calls, fetchImpl } = site({
+    "/api/desktop/link/token": [200, { status: "linked", token: next }],
+    "/api/desktop/me": [200, { account: "a@b.test", device: "Mac" }],
+    "/api/desktop/library": [200, { adventures: ADVENTURES }],
+  })
+  const res = await accountCommand({ kind: "accountLinkPoll", pollSecret: "p".repeat(43), token: prev }, SITE, fetchImpl)
+  assert.equal(res.storeToken, next)
+  assert.deepEqual(calls[0].body, { pollSecret: "p".repeat(43), previousToken: prev })
 })

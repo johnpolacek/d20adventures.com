@@ -6,7 +6,7 @@ import { requireServer } from "./serverSecret"
 const SEEN_EVERY_MS = 10 * 60 * 1000
 
 export const createLink = mutation({
-  args: { secret: v.string(), userCode: v.string(), pollHash: v.string(), deviceName: v.string(), expiresAt: v.number() },
+  args: { secret: v.string(), userCode: v.string(), pollHash: v.string(), deviceName: v.string(), installId: v.optional(v.string()), expiresAt: v.number() },
   handler: async (ctx, { secret, ...args }) => {
     requireServer(secret)
     const now = Date.now()
@@ -57,7 +57,7 @@ export const approveLink = mutation({
 
 /** The app trades its poll secret for a device token once the player approves. The link is single use. */
 export const redeemLink = mutation({
-  args: { secret: v.string(), pollHash: v.string(), tokenHash: v.string() },
+  args: { secret: v.string(), pollHash: v.string(), tokenHash: v.string(), previousTokenHash: v.optional(v.string()) },
   handler: async (ctx, args) => {
     requireServer(args.secret)
     const link = await ctx.db
@@ -67,7 +67,55 @@ export const redeemLink = mutation({
     const now = Date.now()
     if (!link || link.expiresAt < now) return { status: "expired" as const }
     if (!link.userId) return { status: "pending" as const }
-    await ctx.db.insert("devices", { userId: link.userId, tokenHash: args.tokenHash, name: link.deviceName, createdAt: now, lastSeenAt: now })
+    const userId = link.userId
+
+    // Replace an existing active link for this installation (or the previous token the app is replacing)
+    // instead of creating duplicate entries for the same computer.
+    const sameInstall = link.installId
+      ? (
+          await ctx.db
+            .query("devices")
+            .withIndex("by_user_install", (q) => q.eq("userId", userId).eq("installId", link.installId))
+            .collect()
+        ).filter((row) => row.revokedAt === undefined)
+      : []
+
+    const previous = args.previousTokenHash
+      ? await ctx.db
+          .query("devices")
+          .withIndex("by_token_hash", (q) => q.eq("tokenHash", args.previousTokenHash!))
+          .first()
+      : null
+    const activePrevious = previous && previous.revokedAt === undefined ? previous : null
+
+    const reusable = [...sameInstall]
+    if (activePrevious && activePrevious.userId === userId && !reusable.some((row) => row._id === activePrevious._id)) {
+      reusable.push(activePrevious)
+    } else if (activePrevious && activePrevious.userId !== userId) {
+      // The app switched accounts; revoke the old token it is about to overwrite locally.
+      await ctx.db.patch(activePrevious._id, { revokedAt: now })
+    }
+
+    if (reusable.length > 0) {
+      const [primary, ...duplicates] = reusable
+      await ctx.db.patch(primary._id, {
+        tokenHash: args.tokenHash,
+        name: link.deviceName,
+        lastSeenAt: now,
+        ...(link.installId ? { installId: link.installId } : {}),
+      })
+      for (const extra of duplicates) await ctx.db.patch(extra._id, { revokedAt: now })
+    } else {
+      await ctx.db.insert("devices", {
+        userId,
+        tokenHash: args.tokenHash,
+        name: link.deviceName,
+        ...(link.installId ? { installId: link.installId } : {}),
+        createdAt: now,
+        lastSeenAt: now,
+      })
+    }
+
     await ctx.db.delete(link._id)
     return { status: "linked" as const }
   },

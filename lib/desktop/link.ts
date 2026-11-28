@@ -34,3 +34,7 @@ export const cleanDeviceName = (name: unknown) => {
       : ""
   return text || "Desktop app"
 }
+
+export const cleanInstallId = (id: unknown) => (typeof id === "string" && /^[A-Za-z0-9_-]{16,128}$/.test(id) ? id : undefined)
+
+export const cleanSecret = (value: unknown) => (typeof value === "string" && /^[A-Za-z0-9_-]{20,200}$/.test(value) ? value : undefined)
