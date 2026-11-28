@@ -15,7 +15,7 @@ import { roundBeats } from "../story/turn"
 import type { Turn, TurnCharacter } from "../types/adventure"
 import type { AdventurePlan } from "../types/adventure-plan"
 import { rollD20, rollDie } from "../utils/game-utils"
-import { hasFled, isDead } from "../utils/turn-actors"
+import { isDead } from "../utils/turn-actors"
 import { findEncounterInPlan } from "./advance-turn-prompt-service"
 
 type TurnHistoryRow = {
@@ -44,7 +44,8 @@ function buildContinuingEncounterTurn(args: { turn: Turn; adventureId: string; c
   // As the round ends, lasting spells do what they do at a turn's end or start (Acid Arrow's burn, Spirit Guardians, a
   // repeated save), told after the round's story. One they drop is not carried on.
   const turned = roundTurns({ characters: args.turn.characters as TurnCharacter[], d20: rollD20, roll: rollDie, rules: args.rules })
-  let newCharacters: TurnCharacter[] = turned.characters.filter((c) => !isDead(c) && !hasFled(c))
+  // One away for now (../utils/turn-actors `isAway`) stays: they come back as their spell ends.
+  let newCharacters: TurnCharacter[] = turned.characters.filter((c) => !isDead(c) && !c.fled)
 
   // Last round's rolls are over. Initiative was rolled as the encounter began, and every round keeps that order. A
   // dying hero's turn is their Death Saving Throw.
@@ -76,7 +77,7 @@ function buildTransitionEncounterTurn(args: { turn: Turn; plan: AdventurePlan; a
   }
 
   let pcs: TurnCharacter[] = (args.turn.characters as TurnCharacter[])
-    .filter((c) => c.type === "pc" && !isDead(c) && !hasFled(c))
+    .filter((c) => c.type === "pc" && !isDead(c) && !c.fled)
     // Initiative from the sheet: the d20 and its bonus, with Advantage where the sheet gives it.
     .map(({ rollResult: _rollResult, ...pc }) => ({
       ...pc,

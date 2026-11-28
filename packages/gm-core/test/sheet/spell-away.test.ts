@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
+import { buildNextTurnFromProgression } from "../../src/services/advance-turn-builder-service"
 import { hurled } from "../../src/sheet/classes/warlock"
 import type { ConditionEntry } from "../../src/sheet/condition-entry"
 import { takeMove } from "../../src/sheet/moves"
@@ -10,6 +11,8 @@ import { endConcentration } from "../../src/sheet/spell-effects"
 import { spellsAtRoundEnd } from "../../src/sheet/spell-rounds"
 import { castSpell, spellById, spellLabel } from "../../src/sheet/spells"
 import type { SpellEffect } from "../../src/sheet/turn-effect"
+import type { Turn, TurnCharacter } from "../../src/types/adventure"
+import type { AdventurePlan } from "../../src/types/adventure-plan"
 import { hasFled, isAway, takesTurn } from "../../src/utils/turn-actors"
 
 // Every expected value below was worked out by hand from the SRD 5.2.1 texts of Banishment, Maze and Hurl Through
@@ -110,4 +113,86 @@ test("Hurl Through Hell takes the one who fails its save away while they are Inc
   // Incapacitated through his next turn, and away as long: one turn.
   assert.deepEqual(done.target.spellEffects, [{ spell: "fiend-patron-hurl-through-hell", by: "lyra", turns: 1, away: true }])
   assert.equal(takesTurn({ ...done.target, type: "npc" }), false)
+})
+
+test("buildNextTurnFromProgression keeps banished characters across round and encounter advance while dropping fled ones", () => {
+  const caster = { ...lyra, type: "pc" as const, initiative: 15, hitPoints: 6, healthPercent: 100, concentration: { spell: "banishment" } } as unknown as TurnCharacter
+  const banishedPc = {
+    ...lyra,
+    id: "ally",
+    name: "Ally",
+    type: "pc" as const,
+    initiative: 12,
+    hitPoints: 6,
+    healthPercent: 100,
+    spellEffects: [{ spell: "banishment", by: "lyra", turns: 5, away: true as const }],
+  } as unknown as TurnCharacter
+  const banishedNpc = {
+    ...bandit,
+    type: "npc" as const,
+    initiative: 10,
+    hitPoints: 11,
+    healthPercent: 100,
+    spellEffects: [{ spell: "banishment", by: "lyra", turns: 5, away: true as const }],
+  } as unknown as TurnCharacter
+  const fledNpc = { ...goblin, type: "npc" as const, initiative: 8, hitPoints: 10, healthPercent: 100, fled: true as const } as unknown as TurnCharacter
+  const fledPc = { ...lyra, id: "runner", name: "Runner", type: "pc" as const, initiative: 7, hitPoints: 6, healthPercent: 100, fled: true as const } as unknown as TurnCharacter
+
+  const turn: Turn = {
+    id: "t1",
+    adventureId: "adv1",
+    encounterId: "enc1",
+    title: "Enc 1",
+    story: [],
+    characters: [caster, banishedPc, banishedNpc, fledNpc, fledPc],
+  }
+  const plan = {
+    id: "p1",
+    title: "Plan",
+    npcs: {},
+    sections: [
+      {
+        title: "S1",
+        summary: "",
+        scenes: [
+          {
+            title: "Sc1",
+            summary: "",
+            encounters: [
+              { id: "enc1", title: "Enc 1", intro: "", instructions: "", npc: [], transitions: [{ target: "enc2", condition: "go" }] },
+              { id: "enc2", title: "Enc 2", intro: "", instructions: "", npc: [], transitions: [] },
+            ],
+          },
+        ],
+      },
+    ],
+  } as unknown as AdventurePlan
+
+  const continuing = buildNextTurnFromProgression({
+    turn,
+    plan,
+    allTurns: [{ encounterId: "enc1", order: 1 }],
+    adventureId: "adv1",
+    currentEncounterTitle: "Enc 1",
+    llmResult: { nextEncounterId: "enc1", story: [] },
+  })
+  assert.equal(continuing.status, "turn_built")
+  assert.deepEqual(
+    continuing.turn.characters.map((c) => c.id),
+    ["lyra", "ally", "bandit"]
+  )
+
+  const transitioned = buildNextTurnFromProgression({
+    turn,
+    plan,
+    allTurns: [{ encounterId: "enc1", order: 1 }],
+    adventureId: "adv1",
+    currentEncounterTitle: "Enc 1",
+    llmResult: { nextEncounterId: "enc2", story: [] },
+  })
+  assert.equal(transitioned.status, "turn_built")
+  assert.deepEqual(
+    transitioned.turn.characters.map((c) => c.id).sort(),
+    ["ally", "lyra"]
+  )
 })
