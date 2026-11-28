@@ -1,5 +1,5 @@
 import { v } from "convex/values"
-import { adventurePatchValidator, applyAdventurePatch, createTurnArgs, insertTurn } from "./lib/adventure-transitions"
+import { adventurePatchValidator, applyAdventurePatch, createTurnArgs, insertTurn } from "./lib/adventureTransitions"
 import { serverMutation } from "./serverSecret"
 import { pendingReactionValidator, storyValidator } from "./story"
 

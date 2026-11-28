@@ -63,7 +63,7 @@ Make the domain state machines explicit first so desktop and web clients can rel
 - **Design:** Scope strictly to `buildNextTurnFromProgression` (`buildContinuingEncounterTurn` L47 and `buildTransitionEncounterTurn` L79): distinguish temporary `isAway(c)` (Banishment/Maze) from permanent `c.fled === true` (matching `orchestration/advance-turn.ts:210`) so banished/mazed characters are not dropped on legacy round advance.
 
 ### 1C. Adventure Lifecycle & Reaction Suspend/Replay
-- **Files:** new `convex/lib/adventure-transitions.ts`, `convex/adventure.ts`, `convex/turns.ts`, `convex/schema.ts`, `packages/gm-core/src/sheet/reactions.ts`, `packages/gm-core/src/services/npc-turn-service.ts`, `packages/gm-core/src/orchestration/adventure.ts`, `lib/host/server.ts`.
+- **Files:** new `convex/lib/adventureTransitions.ts`, `convex/adventure.ts`, `convex/turns.ts`, `convex/schema.ts`, `packages/gm-core/src/sheet/reactions.ts`, `packages/gm-core/src/services/npc-turn-service.ts`, `packages/gm-core/src/orchestration/adventure.ts`, `lib/host/server.ts`.
 - **Design:**
   - Centralize adventure status transitions behind an `ALLOWED` table (`waitingForPlayers → active`, `active → active | completed`, `completed → []`), and reject `commitWikiTurnAdvance` on `"completed"` adventures.
   - Delete unused duplicate `convex/adventure.ts:updateTurn`. Merge `createTurn` and `patchAdventure` between `convex/adventure.ts` and `convex/turns.ts` **only while preserving their extra fields** (`isFinalEncounter` in `turns.ts:createTurn`; `voiceAssignments` and `arrivals` in `adventure.ts:patchAdventure`).

@@ -11,7 +11,7 @@ import {
   createTurnArgs,
   generatedByValidator,
   insertTurn,
-} from "./lib/adventure-transitions"
+} from "./lib/adventureTransitions"
 import { serverAction, serverMutation, serverQuery } from "./serverSecret"
 import { knowledgeValidator, storyValidator } from "./story"
 
