@@ -3,6 +3,83 @@
 import type { Flags, Stage, TierName } from "@d20/stage"
 import { type RefObject, useEffect, useRef, useState } from "react"
 
+export type StageBuildState =
+  | { kind: "idle" }
+  | { kind: "building"; status: string }
+  | { kind: "ready"; stage: Stage }
+  | { kind: "error"; message: string }
+
+export interface CoverCanvasLike {
+  style: { transition: string; opacity: string }
+  remove: () => void
+}
+
+export type CoverState<T extends CoverCanvasLike = HTMLCanvasElement> =
+  | { kind: "none" }
+  | { kind: "holding"; canvas: T }
+  | { kind: "fading"; canvas: T; timer: ReturnType<typeof setTimeout> }
+
+export class CoverController<T extends CoverCanvasLike = HTMLCanvasElement> {
+  private _state: CoverState<T> = { kind: "none" }
+
+  constructor(private readonly fadeMs = 400) {}
+
+  get state(): CoverState<T> {
+    return this._state
+  }
+
+  get hasCover(): boolean {
+    return this._state.kind === "holding"
+  }
+
+  hold(canvas: T): void {
+    if (this._state.kind === "fading") {
+      clearTimeout(this._state.timer)
+      this._state.canvas.remove()
+    } else if (this._state.kind === "holding") {
+      this._state.canvas.remove()
+    }
+    this._state = { kind: "holding", canvas }
+  }
+
+  lift(fade: boolean): void {
+    if (this._state.kind === "none") return
+    if (this._state.kind === "fading") {
+      if (!fade) {
+        clearTimeout(this._state.timer)
+        this._state.canvas.remove()
+        this._state = { kind: "none" }
+      }
+      return
+    }
+    const { canvas } = this._state
+    if (!fade) {
+      canvas.remove()
+      this._state = { kind: "none" }
+      return
+    }
+    canvas.style.transition = "opacity 350ms ease"
+    canvas.style.opacity = "0"
+    const timer = setTimeout(() => {
+      canvas.remove()
+      if (this._state.kind === "fading" && this._state.canvas === canvas) {
+        this._state = { kind: "none" }
+      }
+    }, this.fadeMs)
+    this._state = { kind: "fading", canvas, timer }
+  }
+
+  dispose(): void {
+    if (this._state.kind === "fading") {
+      clearTimeout(this._state.timer)
+      this._state.canvas.remove()
+    } else if (this._state.kind === "holding") {
+      this._state.canvas.remove()
+    }
+    this._state = { kind: "none" }
+  }
+}
+
 /** The built looks a game plays its sets in. The app passes asset-library/play.ts, since that is not in this package. */
 export interface PlayLooks<L> {
   playedLook: (set: string | undefined) => L | null
@@ -34,39 +111,35 @@ let building: Promise<unknown> = Promise.resolve()
 // its files download, so the scene change never shows the new set before it is built and framed.
 export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: StageOptions<L> | null, hold = false) {
   const stageRef = useRef<Stage | null>(null)
-  const [stage, setStage] = useState<Stage | null>(null)
-  const [status, setStatus] = useState("Loading")
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<StageBuildState>({ kind: "idle" })
   // The last picture of the stage being replaced, held over the container until the next one is built, dressed and
   // framed. Without it the scene change shows black, then the new set before its trees are planted and before the
   // play screen has put the camera where the scene opens.
-  const cover = useRef<HTMLCanvasElement | null>(null)
+  const cover = useRef<CoverController | null>(null)
+  if (!cover.current) cover.current = new CoverController()
 
-  const lift = (fade: boolean) => {
-    const c = cover.current
-    cover.current = null
-    if (!c) return
-    if (!fade) return void c.remove()
-    c.style.transition = "opacity 350ms ease"
-    c.style.opacity = "0"
-    setTimeout(() => c.remove(), 400)
-  }
+  useEffect(() => () => cover.current?.dispose(), [])
 
   // With nothing to build and nothing to hold for, the old picture comes down. A change of hold alone never rebuilds
   // the stage.
   useEffect(() => {
-    if (!opts && !hold) lift(false)
+    if (!opts && !hold) cover.current?.lift(false)
   }, [opts, hold])
 
   useEffect(() => {
     const el = container.current
-    if (!el || !opts) return
+    if (!el || !opts) {
+      setState({ kind: "idle" })
+      return
+    }
     let cancelled = false
     let created: Stage | null = null
     let undress: (() => void) | null = null
     // A new set starts clean: no error or status left over from the one it replaces.
-    setError(null)
-    setStatus("Loading")
+    const setProgress = (status: string) => {
+      if (!cancelled) setState({ kind: "building", status })
+    }
+    setState({ kind: "building", status: "Loading" })
     const before = building
     const build = (async () => {
       await before.catch(() => {})
@@ -83,7 +156,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
         staging: built?.staging ?? opts.staging,
         tier: opts.tier ?? "auto",
         flags: { ...built?.flags, ...opts.flags },
-        onProgress: setStatus,
+        onProgress: setProgress,
       })
       // Unseen until it is dressed and framed. Without a picture held over it, a first stage drew its bare set the moment
       // it was made: the figures on open ground, then the wood planted round them, then the camera cut to the opening.
@@ -94,7 +167,7 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
         return
       }
       if (built) {
-        setStatus("Planting the wood")
+        setProgress("Planting the wood")
         const off = await built.dress(created)
         // Taken down while it was being dressed: the stage has gone already.
         if (cancelled) return off()
@@ -103,33 +176,33 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       await created.firstFrame
       if (cancelled) return
       stageRef.current = created
-      setStage(created)
+      setState({ kind: "ready", stage: created })
       ;(window as unknown as { __stage?: Stage }).__stage = created
       // The play screen places the cast and frames the opening view as it takes the stage. A few frames on, that is
       // drawn, and the old picture fades off it.
       for (let i = 0; i < 4 && !cancelled; i++) await new Promise((r) => requestAnimationFrame(r))
       if (cancelled) return
       // Under a held picture the stage is simply there as the picture fades off it. On black it fades up itself.
-      if (!cover.current) canvas.style.transition = "opacity 350ms ease"
+      if (!cover.current?.hasCover) canvas.style.transition = "opacity 350ms ease"
       canvas.style.opacity = ""
-      lift(true)
+      cover.current?.lift(true)
     })().catch((err) => {
       console.error(err)
       if (!cancelled) {
-        lift(false)
-        setError(err instanceof Error ? err.message : String(err))
+        cover.current?.lift(false)
+        setState({ kind: "error", message: err instanceof Error ? err.message : String(err) })
       }
     })
     building = build
     return () => {
       cancelled = true
       // Leave the stage's last picture up while the next one loads.
-      if (created && !cover.current && el.isConnected) {
+      if (created && !cover.current?.hasCover && el.isConnected) {
         try {
           const still = created.picture()
           still.style.cssText = "position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none"
           el.appendChild(still)
-          cover.current = still
+          cover.current?.hold(still)
         } catch {
           // A stage that cannot draw any more is simply taken down.
         }
@@ -137,11 +210,14 @@ export function useStage<L>(container: RefObject<HTMLDivElement | null>, opts: S
       undress?.()
       created?.dispose()
       stageRef.current = null
-      setStage(null)
+      setState({ kind: "idle" })
       const w = window as unknown as { __stage?: Stage }
       if (w.__stage === created) delete w.__stage
     }
   }, [container, opts])
 
-  return { stage, stageRef, status, error }
+  const stage = state.kind === "ready" ? state.stage : null
+  const status = state.kind === "building" ? state.status : "Loading"
+  const error = state.kind === "error" ? state.message : null
+  return { stage, stageRef, status, error, state }
 }
