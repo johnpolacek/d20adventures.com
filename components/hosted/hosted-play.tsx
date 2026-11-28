@@ -44,7 +44,7 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
       let last = ""
       while (!controller.signal.aborted) {
         const seqAtStart = mutationSeqRef.current
-        let busy = true
+        let busy = false
         const res = await fetch(`/api/hosted/${adventureId}`, { cache: "no-store", signal: controller.signal }).catch(() => null)
         if (controller.signal.aborted) return
         const text = res ? await res.text().catch(() => "") : ""
@@ -59,9 +59,12 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
         if (res && !res.ok) setError(body?.error ?? "Could not load the game.")
         else if (res && body) {
           busy = text !== last || hostedPending(body)
-          last = text
-          // Drop poll responses that started before an optimistic local mutation (e.g. sent chat).
-          if (seqAtStart === mutationSeqRef.current) setState(body)
+          // Drop poll responses that started before an optimistic local mutation (e.g. sent chat). Only a changed
+          // state is applied, and it counts as seen only once applied.
+          if (text !== last && seqAtStart === mutationSeqRef.current) {
+            last = text
+            setState(body)
+          }
         }
         if (!(await pace.after(busy, controller.signal))) return
       }
@@ -77,11 +80,11 @@ export function HostedPlay({ adventureId }: { adventureId: string }) {
   }, [work?.failed])
   const act = async (action: Parameters<typeof queueHostedAction>[0]) => {
     mutationSeqRef.current++
-    paceRef.current?.wake()
     setMutation({ kind: "acting" })
     setError(null)
     try {
       await queueHostedAction(action)
+      paceRef.current?.wake()
       return true
     } catch (e) {
       setError(e instanceof Error ? e.message : "The action was not sent.")

@@ -256,6 +256,7 @@ async fn account_command(app: tauri::AppHandle, mut command: Value) -> Result<Va
 async fn host_command(
     app: tauri::AppHandle,
     link: tauri::State<'_, HostLink>,
+    worker: tauri::State<'_, HostWorker>,
     mut command: Value,
 ) -> Result<Value, String> {
     let kind = command
@@ -274,15 +275,25 @@ async fn host_command(
         }
     }
     let mut slot = link.0.lock().await;
-    ask_piped(&app, &mut slot, "link.cjs", &command, read)
+    let response = ask_piped(&app, &mut slot, "link.cjs", &command, read)
         .await
         .map_err(|e| {
             if e.starts_with("Could not start") {
                 e
             } else {
-                "The website link stopped. Try again.".into()
+                "The website link stopped. Try again.".to_string()
             }
-        })
+        })?;
+    drop(slot);
+    // The host's own action may have queued GM work: the worker asks for it at once (host-main.ts).
+    if !read {
+        if let Some((_, child)) = worker.0.lock().await.as_mut() {
+            if let Some(stdin) = child.stdin.as_mut() {
+                let _ = stdin.write_all(b"wake\n").await;
+            }
+        }
+    }
+    Ok(response)
 }
 // Starts the host worker for one hosted game, replacing any other.
 #[tauri::command]

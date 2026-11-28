@@ -5,7 +5,7 @@ import { serverSecret } from "@/lib/convex/server-secret"
 import { deviceFromRequest } from "@/lib/desktop/server"
 import { postTableChat, tableChat } from "@/lib/host/chat"
 import { thrownMessage } from "@/lib/host/seats"
-import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, queueArrival, queuePaint, seatHost, siteOrigin, takesArrivals } from "@/lib/host/server"
+import { guestHero, HostError, hostErrorResponse, hostedAdventure, hostedSummary, queueArrival, queuePaint, seatHost, siteOrigin, takesArrivals, withoutSeenAt } from "@/lib/host/server"
 import { startWikiAdventure } from "@/lib/wiki-adventures/start"
 
 // A hosted game's state for the host's app: the adventure, its current turn, recent GM work, and the table chat.
@@ -19,7 +19,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ adve
       convex.query(api.hosting.recentJobs, { secret: serverSecret(), adventureId: adventure._id }),
       tableChat(adventure._id),
     ])
-    return NextResponse.json({ adventure, turn, jobs, chat, summary: await hostedSummary(adventure, siteOrigin(request), turn), userId: device.userId })
+    // seenAt moves every 30s, so a poll reads the same while nothing happens.
+    return NextResponse.json({ adventure: withoutSeenAt(adventure), turn, jobs, chat, summary: await hostedSummary(adventure, siteOrigin(request), turn), userId: device.userId })
   } catch (e) {
     return hostErrorResponse(e)
   }

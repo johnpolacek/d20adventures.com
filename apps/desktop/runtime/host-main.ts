@@ -39,8 +39,11 @@ async function main() {
     start = JSON.parse(line) as Start
     break
   }
-  // Closing stdin stops the worker.
+  // Closing stdin stops the worker. Any line after the first wakes it to ask for work at once, as after the host's
+  // own action.
   process.stdin.on("end", stop)
+  let wake: (() => void) | null = null
+  process.stdin.on("data", () => wake?.())
   if (!start) return
   const scratch = mkdtempSync(join(start.data, "host-"))
   const model = localLlm(start.provider, scratch, undefined, false, start.model)
@@ -83,15 +86,15 @@ async function main() {
             resolve()
             return
           }
-          const onAbort = () => {
+          const done = () => {
             clearTimeout(timer)
+            stopController.signal.removeEventListener("abort", done)
+            if (wake === done) wake = null
             resolve()
           }
-          const timer = setTimeout(() => {
-            stopController.signal.removeEventListener("abort", onAbort)
-            resolve()
-          }, ms)
-          stopController.signal.addEventListener("abort", onAbort, { once: true })
+          const timer = setTimeout(done, ms)
+          stopController.signal.addEventListener("abort", done, { once: true })
+          wake = done
         }),
     })
   } finally {

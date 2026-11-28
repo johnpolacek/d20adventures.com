@@ -136,8 +136,12 @@ export class HostedPollController<S, W> {
 
   /** Marks a local mutation (`act` / `say`) so any already-in-flight poll won't overwrite its state. */
   beginMutation(): number {
-    this.pace?.wake()
     return ++this.epoch
+  }
+
+  /** Polls at once, at the base pace. Called once a mutation has landed, so the poll reads what it changed. */
+  wake() {
+    this.pace?.wake()
   }
 
   /** Starts polling `adventureId` sequentially. Stops any previous poll loop first. */
@@ -167,18 +171,20 @@ export class HostedPollController<S, W> {
       let last = ""
       while (!signal.aborted) {
         const startedEpoch = this.epoch
-        let busy = true
+        let busy = false
         try {
           const result = await opts.poll(adventureId, signal)
           if (signal.aborted) return
           // Only apply polled state when no mutation superseded this poll while it was in flight.
-          if (result.state) {
-            const seen = JSON.stringify(result.state)
-            busy = seen !== last || Boolean(opts.busy?.(result.state))
-            last = seen
-          }
+          // Only a changed state is applied, and it counts as seen only once applied.
+          const seen = result.state ? JSON.stringify(result.state) : last
+          const changed = seen !== last
+          busy = changed || Boolean(result.state && opts.busy?.(result.state))
           if (startedEpoch === this.epoch) {
-            if (result.state) opts.onState(result.state)
+            if (result.state && changed) {
+              last = seen
+              opts.onState(result.state)
+            }
             if (result.error) opts.onError(result.error)
           }
           opts.onWorker(result.worker)

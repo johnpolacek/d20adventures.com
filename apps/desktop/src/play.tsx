@@ -330,6 +330,7 @@ export function DesktopGame() {
     setSending(true)
     const res = await fn()
     setSending(false)
+    pollRef.current?.wake()
     if (res.state) setHosted(res.state)
     if (res.error) setError(res.error)
     return !res.error
@@ -339,6 +340,7 @@ export function DesktopGame() {
     if (!hosting) return false
     pollRef.current?.beginMutation()
     const res = await host({ kind: "hostChat", adventureId: hosting, text })
+    pollRef.current?.wake()
     if (res.state) setHosted(res.state)
     if (res.error) setError(res.error)
     return !res.error

@@ -239,6 +239,13 @@ export async function seatHost(adventure: Doc<"adventures">, ais?: string[]) {
 }
 
 /** The adventure, if this account hosts it. */
+/** An adventure as a poll returns it, without when the host last asked for work, which moves every 30s. */
+export function withoutSeenAt<A extends { host?: { seenAt?: number } }>(adventure: A): A {
+  if (!adventure.host || adventure.host.seenAt === undefined) return adventure
+  const { seenAt: _seen, ...host } = adventure.host
+  return { ...adventure, host } as A
+}
+
 export async function hostedAdventure(adventureId: string, userId: string) {
   const adventure = await convex.query(api.adventure.getAdventureById, { adventureId: adventureId as Id<"adventures"> }).catch(() => null)
   if (!adventure) throw new HostError(404, "Adventure not found.")

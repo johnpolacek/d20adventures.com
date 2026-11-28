@@ -6,6 +6,7 @@ import { assertAdventureAccess } from "@/lib/adventure-access"
 import { convex } from "@/lib/convex/server"
 import { serverSecret } from "@/lib/convex/server-secret"
 import { tableChat } from "@/lib/host/chat"
+import { withoutSeenAt } from "@/lib/host/server"
 
 // The host's app counts as online while it has asked for GM work within this long.
 const ONLINE_MS = 60 * 1000
@@ -23,7 +24,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ adv
       tableChat(adventure._id),
     ])
     const hostOnline = Boolean(adventure.host.seenAt && Date.now() - adventure.host.seenAt < ONLINE_MS)
-    return NextResponse.json({ adventure, turn, jobs, chat, hostOnline, userId })
+    // seenAt moves every 30s. Players see hostOnline instead, so a poll reads the same while nothing happens.
+    return NextResponse.json({ adventure: withoutSeenAt(adventure), turn, jobs, chat, hostOnline, userId })
   } catch (error) {
     const status = (error as { status?: number }).status ?? 500
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not load the game." }, { status })

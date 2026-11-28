@@ -235,6 +235,8 @@ export type HostWorkerPhase =
   | { phase: "stopping" }
 
 /** Claims and runs jobs until stopped. Waits between polls while there is no work or the website cannot be reached. */
+const IDLE_AFTER_MS = 30_000
+
 export async function hostLoop(opts: {
   adventureId: string
   post: HostPost
@@ -318,6 +320,9 @@ export async function hostLoop(opts: {
       return false
     }
   }
+  // Asks for work every 1.5s, and every 4s once nothing has come for 30s, well inside the website's minute before it
+  // shows the host offline. The host's own actions wake the loop at once (host-main.ts).
+  let lastWork = Date.now()
   while (!opts.stopped()) {
     let job: HostJob | null
     try {
@@ -341,9 +346,10 @@ export async function hostLoop(opts: {
       } else if (worker.phase === "idle" && worker.retryFollowAt !== retryFollowAt) {
         worker = transition({ phase: "idle", retryFollowAt })
       }
-      await opts.wait(1500)
+      await opts.wait(Date.now() - lastWork < IDLE_AFTER_MS ? 1500 : 4000)
       continue
     }
+    lastWork = Date.now()
     if (job.kind === "paint") {
       void paintHero(job)
       continue

@@ -214,7 +214,7 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
       if (!(await pace.wait(pace.baseMs, controller.signal))) return
       for (;;) {
         const seq = mutationSeqRef.current
-        let changed = true
+        let changed = false
         try {
           const response = await fetch(`/api/adventure/${params.adventureId}`, {
             cache: "no-store",
@@ -223,8 +223,8 @@ export default function AdventureLobby({ adventure: initialAdventure, adventureP
           if (response.ok && !controller.signal.aborted) {
             const text = await response.text()
             changed = text !== last
-            last = text
             if (changed && !controller.signal.aborted && seq === mutationSeqRef.current) {
+              last = text
               const updatedAdventure = JSON.parse(text)
               setAdventure(updatedAdventure)
               if (updatedAdventure.seat) setSeat(updatedAdventure.seat)
