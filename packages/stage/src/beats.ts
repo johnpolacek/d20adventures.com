@@ -52,6 +52,33 @@ export interface BeatHooks {
   onWaiting?: (waiting: boolean) => void
 }
 
+/** Narrow Stage contract used by BeatPlayer (satisfied by `Stage`). */
+export type BeatStage = Pick<
+  Stage,
+  | "activeShot"
+  | "cast"
+  | "loops"
+  | "castAt"
+  | "faceCast"
+  | "finishMoves"
+  | "finishShot"
+  | "moveCast"
+  | "placeCast"
+  | "say"
+  | "shot"
+  | "skipLoops"
+  | "waitCue"
+>
+
+/** Explicit playback phase of BeatPlayer. */
+export type BeatPlaybackState =
+  | { kind: "idle" }
+  | { kind: "running"; index: number; credit: boolean }
+  | { kind: "rushing"; index: number; credit: boolean }
+  | { kind: "atGate"; index: number }
+  | { kind: "skipping"; index: number; stopAt: number | null }
+  | { kind: "jumping"; target: number }
+
 // Reading time for a spoken line: long enough to read in a bubble, short enough to keep the scene moving.
 export const lineSeconds = (text: string) => Math.min(9, 1.3 + text.length * 0.052)
 // Reading time for a narrated paragraph, at about 170 words a minute while the scene plays.
@@ -79,91 +106,165 @@ interface Mark {
 // with more beats after the last ones (the rest of a turn after a roll), keeping the earlier paragraphs to step back to.
 export class BeatPlayer {
   private beats: Beat[] = []
-  private skipping = false
-  private stopAt: number | null = null
-  private jumpTo: number | null = null
-  private wake: (() => void) | null = null
+  private state: BeatPlaybackState = { kind: "idle" }
+  private runToken = 0
+  private waiter: { resolve: () => void; cleanup?: () => void } | null = null
   private narrationEnds = 0
   private marks = new Map<number, Mark>()
   // Loop controls already given in this sequence: stepping back or replaying doesn't move the line again.
   private looped = new Set<number>()
   private actors: string[] = []
   private lastShot: string | StagingShot | null = null
-  private index = 0
   private section = -1
   private paragraphPending = false
-  private atGate = false
-  private credit = false
-  private rushing = false
-  mode: "step" | "auto" = "auto"
-  playing = false
+  private _mode: "step" | "auto" = "auto"
 
   constructor(
-    private stage: Stage,
+    private stage: BeatStage,
     private hooks: BeatHooks = {}
   ) {}
 
-  // Leaving: what's left of this stretch is dropped (skipping to the end, or jumping back). Hurrying: nothing waits on a
-  // timer, a walk or a cue either (also while rushing to the next step).
-  private get leaving() {
-    return this.skipping || this.jumpTo !== null
-  }
-  private get hurrying() {
-    return this.leaving || this.rushing
+  get playback(): BeatPlaybackState {
+    return this.state
   }
 
-  private sleep(seconds: number) {
-    if (this.hurrying || seconds <= 0) return Promise.resolve()
+  get playing(): boolean {
+    return this.state.kind !== "idle"
+  }
+
+  get mode(): "step" | "auto" {
+    return this._mode
+  }
+
+  set mode(next: "step" | "auto") {
+    this.setMode(next)
+  }
+
+  /** Explicit mode transition: leaving step mode while at a gate releases the gate immediately. */
+  setMode(next: "step" | "auto") {
+    if (this._mode === next) return
+    this._mode = next
+    if (next === "auto" && this.state.kind === "atGate") {
+      this.transition({ kind: "running", index: this.state.index, credit: false })
+    } else if (next === "step" && this.state.kind === "running") {
+      this.narrationEnds = 0
+      this.cancelWaiter()
+    }
+  }
+
+  // Leaving: what's left of this stretch is dropped (skipping to the end, or jumping back). Hurrying: nothing waits on a
+  // timer, a walk or a cue either (also while rushing to the next step).
+  private get isJumping() {
+    return this.state.kind === "jumping"
+  }
+
+  private get leaving() {
+    return this.state.kind === "skipping" || this.state.kind === "jumping"
+  }
+
+  private get hurrying() {
+    return this.leaving || this.state.kind === "rushing"
+  }
+
+  private get currentIndex(): number {
+    return this.state.kind === "idle" ? 0 : this.state.kind === "jumping" ? this.state.target : this.state.index
+  }
+
+  private cancelWaiter() {
+    const w = this.waiter
+    if (!w) return
+    this.waiter = null
+    w.cleanup?.()
+    w.resolve()
+  }
+
+  private transition(next: BeatPlaybackState) {
+    const prev = this.state
+    this.state = next
+    if (prev.kind === "atGate" && next.kind !== "atGate") {
+      this.hooks.onWaiting?.(false)
+    } else if (prev.kind !== "atGate" && next.kind === "atGate") {
+      this.hooks.onWaiting?.(true)
+    }
+    if (next.kind === "idle" || next.kind === "skipping" || next.kind === "jumping" || next.kind === "rushing" || prev.kind === "atGate") {
+      this.cancelWaiter()
+    }
+  }
+
+  private sleep(seconds: number, token: number): Promise<void> {
+    if (this.runToken !== token || this.hurrying || seconds <= 0) return Promise.resolve()
+    this.cancelWaiter()
     return new Promise<void>((resolve) => {
-      const t = setTimeout(done, seconds * 1000)
-      function done() {
+      const done = () => {
+        if (this.waiter?.resolve === done) this.waiter = null
         clearTimeout(t)
         resolve()
       }
-      this.wake = done
+      const t = setTimeout(done, seconds * 1000)
+      this.waiter = { resolve: done, cleanup: () => clearTimeout(t) }
     })
   }
 
   // Waits for a walk or a cue, unless the player is asked to move on first.
-  private orWake(p: Promise<void>) {
-    if (this.hurrying) return Promise.resolve()
-    return Promise.race([p, new Promise<void>((r) => (this.wake = r))])
+  private orWake(p: Promise<void>, token: number): Promise<void> {
+    if (this.runToken !== token || this.hurrying) return Promise.resolve()
+    this.cancelWaiter()
+    return new Promise<void>((resolve) => {
+      let settled = false
+      const done = () => {
+        if (settled) return
+        settled = true
+        if (this.waiter?.resolve === done) this.waiter = null
+        resolve()
+      }
+      this.waiter = { resolve: done }
+      void p.then(done, done)
+    })
   }
 
   // Waits until the paragraph being narrated has had its time (auto), or until the player continues past it (step).
-  private narrated() {
-    if (this.mode === "auto") return this.sleep((this.narrationEnds - performance.now()) / 1000)
+  private narrated(token: number): Promise<void> {
+    if (this.runToken !== token) return Promise.resolve()
+    if (this._mode === "auto") return this.sleep((this.narrationEnds - performance.now()) / 1000, token)
     if (!this.paragraphPending) return Promise.resolve()
     this.paragraphPending = false
-    return this.gate()
+    return this.gate(token)
   }
 
   // Step mode: wait for continue(), unless one already came in while the beats were on their way here.
-  private async gate() {
-    if (this.leaving) return
-    this.rushing = false
-    if (this.credit) {
-      this.credit = false
+  private async gate(token: number) {
+    if (this.runToken !== token || this.leaving) return
+    const index = this.currentIndex
+    const hasCredit = (this.state.kind === "running" || this.state.kind === "rushing") && this.state.credit
+    if (hasCredit) {
+      this.transition({ kind: "running", index, credit: false })
       return
     }
-    this.atGate = true
-    this.hooks.onWaiting?.(true)
-    await new Promise<void>((r) => (this.wake = r))
-    this.atGate = false
-    this.hooks.onWaiting?.(false)
+    this.transition({ kind: "atGate", index })
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        if (this.waiter?.resolve === done) this.waiter = null
+        resolve()
+      }
+      this.waiter = { resolve: done }
+    })
+    if (this.runToken !== token) return
+    if (this.state.kind === "atGate") {
+      this.transition({ kind: "running", index, credit: false })
+    }
   }
 
   // On to the next thing: past the paragraph or line being waited on (step), or to the next paragraph (auto).
   continue() {
     if (!this.playing) return
-    if (this.mode === "auto") return this.next()
-    if (this.atGate) {
-      this.wake?.()
+    if (this._mode === "auto") return this.next()
+    if (this.state.kind === "atGate") {
+      this.transition({ kind: "running", index: this.state.index, credit: false })
       return
     }
-    this.credit = true
-    this.rushing = true
-    this.wake?.()
+    if (this.state.kind === "running" || this.state.kind === "rushing") {
+      this.transition({ kind: "rushing", index: this.state.index, credit: true })
+    }
   }
 
   private snapshot(): Mark {
@@ -188,8 +289,20 @@ export class BeatPlayer {
     }
   }
 
+  /** Cancels any active run cleanly without starting a new one. */
+  stop() {
+    if (!this.playing) return
+    this.runToken++
+    this.transition({ kind: "idle" })
+  }
+
   async play(input: Beat[], { append = false } = {}) {
     const more = beatsSchema.parse(input)
+    // Cancel any in-flight run so overlapping play() calls never interleave.
+    if (this.playing) {
+      this.runToken++
+      this.transition({ kind: "idle" })
+    }
     const from = append ? this.beats.length : 0
     this.beats = append ? [...this.beats, ...more] : more
     const cast = new Set(this.stage.cast.map((c) => c.id))
@@ -224,125 +337,117 @@ export class BeatPlayer {
   // On to the next paragraph now (the last one finishes the beats).
   next() {
     if (!this.playing) return
-    const n = this.beats.findIndex((b, j) => j > this.index && "narrate" in b)
+    const index = this.currentIndex
+    const n = this.beats.findIndex((b, j) => j > index && "narrate" in b)
     if (n < 0) return this.skip()
-    this.stopAt = n
     this.narrationEnds = 0
-    this.skipping = true
     this.stage.finishShot()
     this.stage.finishMoves()
-    this.wake?.()
+    this.transition({ kind: "skipping", index, stopAt: n })
   }
 
   skip() {
     if (!this.playing) return
-    this.stopAt = null
-    this.skipping = true
     this.stage.finishShot()
     this.stage.finishMoves()
-    this.wake?.()
+    this.transition({ kind: "skipping", index: this.currentIndex, stopAt: null })
   }
 
   private jump(i: number) {
     if (!this.playing) return
-    this.jumpTo = i
-    this.skipping = false
-    this.stopAt = null
     this.narrationEnds = 0
     this.paragraphPending = false
-    this.credit = false
-    this.rushing = false
-    this.wake?.()
+    this.transition({ kind: "jumping", target: i })
   }
 
   private async run(from: number) {
-    this.playing = true
-    this.skipping = false
-    this.stopAt = null
-    this.jumpTo = null
+    const token = ++this.runToken
     this.narrationEnds = 0
     this.paragraphPending = false
-    this.credit = false
-    this.rushing = false
+    this.transition({ kind: "running", index: from, credit: false })
     let i = from
     try {
       for (;;) {
-        if (this.jumpTo !== null) {
-          i = this.jumpTo
-          this.jumpTo = null
+        if (this.runToken !== token) return
+        if (this.state.kind === "jumping") {
+          i = this.state.target
           this.restore(i)
+          this.transition({ kind: "running", index: i, credit: false })
         }
         if (i >= this.beats.length) {
           // The last paragraph still has its time (and can be stepped back from).
-          await this.narrated()
-          if (this.jumpTo !== null) continue
+          await this.narrated(token)
+          if (this.runToken !== token) return
+          if (this.state.kind === "jumping") continue
           break
         }
-        this.index = i
-        await this.step(this.beats[i], i)
+        if (this.state.kind === "running" || this.state.kind === "rushing") {
+          this.state = { ...this.state, index: i }
+        } else if (this.state.kind === "skipping") {
+          this.state = { ...this.state, index: i }
+        }
+        await this.step(this.beats[i], i, token)
+        if (this.runToken !== token) return
+        if (this.state.kind === "jumping") continue
         i++
       }
     } finally {
-      if (this.skipping) {
-        this.stage.finishShot()
-        this.stage.finishMoves()
-      }
-      this.playing = false
-      this.skipping = false
-      this.stopAt = null
-      this.jumpTo = null
-      this.credit = false
-      this.rushing = false
-      if (this.atGate) {
-        this.atGate = false
-        this.hooks.onWaiting?.(false)
+      if (this.runToken === token) {
+        if (this.state.kind === "skipping") {
+          this.stage.finishShot()
+          this.stage.finishMoves()
+        }
+        this.transition({ kind: "idle" })
       }
     }
   }
 
-  private async step(b: Beat, i: number) {
+  private async step(b: Beat, i: number, token: number) {
+    if (this.runToken !== token) return
     const s = this.stage
     if ("shot" in b) {
       this.lastShot = b.shot
-      s.shot(b.shot, { instant: this.skipping || !!b.cut, duration: b.duration === undefined ? undefined : b.duration * 1000 })
+      s.shot(b.shot, { instant: this.state.kind === "skipping" || !!b.cut, duration: b.duration === undefined ? undefined : b.duration * 1000 })
     } else if ("move" in b) {
       const arrive = s.moveCast(b.move, b.to, { speed: b.speed, stop: b.stop })
-      if (this.skipping) s.finishMoves()
-      else if (b.wait) await this.orWake(arrive)
+      if (this.state.kind === "skipping") s.finishMoves()
+      else if (b.wait) await this.orWake(arrive, token)
     } else if ("face" in b) s.faceCast(b.face, b.to)
     else if ("line" in b) {
-      await this.narrated()
-      if (this.leaving) return
+      await this.narrated(token)
+      if (this.runToken !== token || this.leaving) return
       const fromLoop = b.group !== undefined || b.fromParty !== undefined
       const speaker = fromLoop ? s.loops.get(b.line)?.speaker({ group: b.group, fromParty: b.fromParty }) : { castId: b.line }
       if (!speaker) return
       // In step mode a line stays up until the player continues (the caller clears it then).
-      const step = this.mode === "step"
+      const step = this._mode === "step"
       const seconds = step ? 600 : (b.duration ?? (await this.hooks.lineSeconds?.(b.line, b.text)) ?? lineSeconds(b.text))
+      if (this.runToken !== token || this.leaving) return
       s.say({ ...speaker, text: b.text, seconds })
       if ("castId" in speaker) this.hooks.onLine?.(speaker.castId, b.text, seconds)
-      if (step) await this.gate()
-      else await this.sleep(seconds)
+      if (step) await this.gate(token)
+      else await this.sleep(seconds, token)
     } else if ("narrate" in b) {
-      if (this.stopAt !== null && i >= this.stopAt) {
-        this.skipping = false
-        this.stopAt = null
+      if (this.state.kind === "skipping" && this.state.stopAt !== null && i >= this.state.stopAt) {
+        this.transition({ kind: "running", index: i, credit: false })
       }
-      await this.narrated()
-      if (this.jumpTo !== null) return
+      await this.narrated(token)
+      if (this.runToken !== token || this.isJumping) return
       if (!this.marks.has(i)) this.marks.set(i, this.snapshot())
       this.section = i
       this.hooks.onNarrate?.(b.narrate)
-      if (this.mode === "step") this.paragraphPending = !this.skipping
+      if (this._mode === "step") this.paragraphPending = this.state.kind !== "skipping"
       else {
-        const seconds = this.skipping ? 0 : ((await this.hooks.narrationSeconds?.(b.narrate)) ?? 0)
+        const seconds = this.state.kind === "skipping" ? 0 : ((await this.hooks.narrationSeconds?.(b.narrate)) ?? 0)
+        if (this.runToken !== token || this.isJumping) return
         this.narrationEnds = performance.now() + seconds * 1000
       }
-    } else if ("wait" in b) await this.sleep(b.wait)
+    } else if ("wait" in b) await this.sleep(b.wait, token)
     else if ("cue" in b) {
-      if (this.skipping || this.rushing) s.skipLoops(b.cue)
-      await this.orWake(s.waitCue(b.cue))
-      if (this.skipping || this.rushing) {
+      if (this.state.kind === "skipping" || this.state.kind === "rushing") s.skipLoops(b.cue)
+      await this.orWake(s.waitCue(b.cue), token)
+      if (this.runToken !== token) return
+      if (this.state.kind === "skipping" || this.state.kind === "rushing") {
         s.skipLoops(b.cue)
         await s.waitCue(b.cue)
       }
