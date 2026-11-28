@@ -12,7 +12,6 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import React, { useEffect } from "react"
 import { generatePracticeReport, getPracticeReportsForAdventure } from "@/app/_actions/adventure-reports"
-import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import StoryviewButton from "@/components/adventure/storyview/storyview-button"
 import { WEB_NARRATION } from "@/lib/narration"
 import { Button } from "@d20/ui/button"
@@ -24,8 +23,8 @@ import { useTurnContext } from "@/lib/context/TurnContext"
 import { scrollToBottom } from "@d20/ui/scroll"
 import TurnNarrativeBody from "./turn-narrative-body"
 import TurnSound from "./turn-sound"
-import { controlsHero } from "./turn-reaction"
 import { useTurnActor } from "./use-turn-actor"
+import { useTurnDriver } from "./use-turn-driver"
 
 export default function TurnNarrative({ nextAdventure }: { nextAdventure?: string }) {
   const params = useParams()
@@ -33,7 +32,8 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
   const { currentTurn, disableSSE } = useTurnContext()
   const { settingId, adventurePlanId, adventure } = useAdventure()
   const { isSignedIn, user } = useUser()
-  const { currentCharacter, isTurnComplete, isNpcProcessing, shouldShowReply } = useTurnActor()
+  const { currentCharacter, isTurnComplete, shouldShowReply } = useTurnActor()
+  useTurnDriver({ turn: currentTurn, disableSSE, userId: user?.id })
   const [initialNarrative, setInitialNarrative] = React.useState("")
   const [showOriginalReplies, setShowOriginalReplies] = React.useState(false)
   const [isGeneratingPracticeReport, setIsGeneratingPracticeReport] = React.useState(false)
@@ -162,58 +162,6 @@ export default function TurnNarrative({ nextAdventure }: { nextAdventure?: strin
       })
     }
   }, [currentTurn, currentCharacter, isTurnComplete, disableSSE])
-
-  // Trigger NPC processing when an NPC turn is detected. Not while the turn holds a reaction offer: the round waits on
-  // it, the answer plays the turn on itself, and the nudge below plays it on once the offer runs out.
-  React.useEffect(() => {
-    if (!disableSSE && currentTurn && !currentTurn.reaction && isNpcProcessing && currentCharacter && !currentTurn.isFinalEncounter) {
-      console.log("[TurnNarrative] Detected NPC turn, triggering ensureNpcProcessed:", {
-        turnId: currentTurn.id,
-        npcId: currentCharacter.id,
-        npcName: currentCharacter.name,
-        hasReplied: currentCharacter.hasReplied,
-        isComplete: currentCharacter.isComplete,
-      })
-      ensureNpcProcessed(currentTurn.id as Id<"turns">)
-        .then((result) => {
-          console.log("[TurnNarrative] ensureNpcProcessed result:", result)
-        })
-        .catch((error) => {
-          console.error("[TurnNarrative] Error calling ensureNpcProcessed:", error)
-        })
-    }
-  }, [currentTurn, isNpcProcessing, currentCharacter, disableSSE])
-
-  // An offer no one answered: once it runs out, the server is asked once to play on by the hero's standing order. The
-  // hero's player asks a second after it runs out, and again if the server's clock had not yet reached it. Anyone
-  // else asks once, later, in case that player has gone.
-  const reaction = currentTurn?.reaction
-  const turnId = currentTurn?.id
-  const offerKey = reaction && reaction.answer === undefined ? `${turnId}:${reaction.npc}:${reaction.expiresAt}` : null
-  const offerMine = controlsHero(
-    currentTurn?.characters.find((c) => c.id === reaction?.offer.to),
-    user?.id
-  )
-  React.useEffect(() => {
-    if (disableSSE || !offerKey || !turnId) return
-    const expiresAt = Number(offerKey.split(":").pop())
-    let live = true
-    let tries = offerMine ? 3 : 1
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const nudge = () => {
-      if (!live || tries-- <= 0) return
-      ensureNpcProcessed(turnId as Id<"turns">)
-        .catch((error) => console.error("[TurnNarrative] Error playing on after a reaction ran out:", error))
-        .finally(() => {
-          if (live) timer = setTimeout(nudge, 3000)
-        })
-    }
-    timer = setTimeout(nudge, Math.max(0, expiresAt - Date.now()) + (offerMine ? 1000 : 8000))
-    return () => {
-      live = false
-      clearTimeout(timer)
-    }
-  }, [disableSSE, offerKey, turnId, offerMine])
 
   if (!currentTurn) {
     return null

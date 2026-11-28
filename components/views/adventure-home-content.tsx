@@ -4,7 +4,6 @@ import { useUser } from "@clerk/nextjs"
 import { useParams, usePathname } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import wait from "waait"
-import { ensureNpcProcessed } from "@/app/_actions/ensure-npc-processed"
 import AdventureLobby, { type LobbyInvite } from "@/components/adventure/adventure-lobby"
 import { InviteSignIn, LobbyIntro } from "@/components/adventure/invite-sign-in"
 import Turn from "@/components/adventure/turn"
@@ -12,12 +11,10 @@ import type { FloorView } from "@/components/floorplan/view"
 import AccountRequired from "@/components/nav/account-required"
 import ImageHeader from "@d20/ui/image-header"
 import { Presence } from "@d20/ui/presence"
-import type { Id } from "@/convex/_generated/dataModel"
 import { useTurn } from "@/lib/context/TurnContext"
 import { findEncounterById } from "@/lib/map-utils"
 import { headerImage } from "@/lib/images"
 import { cn } from "@/lib/utils"
-import { findCurrentActor, hasPendingAutonomousAction } from "@/lib/utils/turn-actors"
 import type { Adventure } from "@/types/adventure"
 import type { AdventurePlan } from "@/types/adventure-plan"
 import { scrollToTop } from "@d20/ui/scroll"
@@ -43,7 +40,6 @@ function AdventureHomeContent({
   const { isSignedIn, isLoaded } = useUser()
   const pathname = usePathname()
   const [image, setImage] = useState(initialImage)
-  const [initialCheckDone, setInitialCheckDone] = useState(false)
   const [lastEncounterId, setLastEncounterId] = useState<string | null>(null)
 
   const turn = useTurn()
@@ -89,25 +85,6 @@ function AdventureHomeContent({
       setLastEncounterId(turn.encounterId)
     }
   }, [turn?.encounterId, lastEncounterId])
-
-  useEffect(() => {
-    if (turn?.id && !initialCheckDone) {
-      setInitialCheckDone(true)
-
-      const currentActor = findCurrentActor(turn.characters || [])
-
-      if (currentActor && hasPendingAutonomousAction(currentActor) && !turn.isFinalEncounter) {
-        console.log(`[AdventureHomeContent] Initial turn load: autonomous actor (${currentActor.id}) waiting for turn ${turn.id}. Triggering check.`)
-        ensureNpcProcessed(turn.id as Id<"turns">)
-          .then((result) => {
-            console.log("[AdventureHomeContent] ensureNpcProcessed result:", result)
-          })
-          .catch((error) => {
-            console.error("[AdventureHomeContent] Error calling ensureNpcProcessed:", error)
-          })
-      }
-    }
-  }, [turn, initialCheckDone])
 
   const currentEncounter = React.useMemo(() => findEncounterById(adventurePlan?.sections || [], turn?.encounterId), [adventurePlan?.sections, turn?.encounterId])
 

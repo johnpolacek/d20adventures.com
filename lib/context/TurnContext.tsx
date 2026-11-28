@@ -1,13 +1,15 @@
 import { useUser } from "@clerk/nextjs"
 import type React from "react"
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import { TurnStreamController, type TurnStreamState } from "@/lib/context/turn-stream"
 import { mapConvexTurnToTurn } from "@/lib/utils"
-import type { Turn } from "@/types/adventure" // Adjust as needed
+import type { Turn } from "@/types/adventure"
 
 type TurnContextType = {
   currentTurn: Turn | null
   disableSSE: boolean
   isConnected: boolean
+  streamState: TurnStreamState
 }
 
 const TurnContext = createContext<TurnContextType | undefined>(undefined)
@@ -15,130 +17,55 @@ const TurnContext = createContext<TurnContextType | undefined>(undefined)
 export const TurnProvider = ({ adventureId, initialTurn, disableSSE = false, children }: { adventureId: string; initialTurn: Turn | null; disableSSE?: boolean; children: React.ReactNode }) => {
   const { isSignedIn, isLoaded } = useUser()
   const [currentTurn, setCurrentTurn] = useState<Turn | null>(initialTurn)
-  const [isConnected, setIsConnected] = useState(false)
-  const eventSourceRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const reconnectAttempts = useRef(0)
-  const maxReconnectAttempts = 5
+  const [streamState, setStreamState] = useState<TurnStreamState>(() => (disableSSE ? { kind: "historical" } : { kind: "idle" }))
 
-  // Effect to ensure currentTurn reflects initialTurn when SSE is disabled
+  // Sync currentTurn with initialTurn when viewing a historical turn (SSE disabled).
+  useEffect(() => {
+    if (!disableSSE) return
+    setCurrentTurn((prev) => (prev?.id === initialTurn?.id && Boolean(prev) === Boolean(initialTurn) ? prev : initialTurn))
+  }, [initialTurn, disableSSE])
+
+  // Manage the live SSE connection without depending on `initialTurn` (which changes on every server refresh).
   useEffect(() => {
     if (disableSSE) {
-      // Only update if they are actually different to prevent unnecessary re-renders
-      if (currentTurn?.id !== initialTurn?.id || (currentTurn === null && initialTurn !== null) || (currentTurn !== null && initialTurn === null)) {
-        console.log(
-          "[TurnProvider SyncEffect] SSE is disabled. Syncing currentTurn with initialTurn. initialTurn ID:",
-          initialTurn?.id,
-          "initialTurn Title:",
-          initialTurn?.title,
-          "Previous currentTurn ID:",
-          currentTurn?.id
-        )
-        setCurrentTurn(initialTurn)
-      }
+      setStreamState({ kind: "historical" })
+      return
     }
-    // If !disableSSE, currentTurn is managed by its own state + SSE updates.
-  }, [initialTurn, disableSSE, currentTurn])
-
-  const createConnection = () => {
-    // Don't create connection if user is not authenticated
-    if (!isLoaded || !isSignedIn) {
-      console.warn("[TurnProvider] Not creating SSE connection: user not authenticated")
-      setIsConnected(false)
+    if (!isLoaded || !isSignedIn || !adventureId || adventureId === "demo-adventure") {
+      setStreamState({ kind: "idle" })
       return
     }
 
-    if (!adventureId || adventureId === "demo-adventure") {
-      console.warn("[TurnProvider] Not creating SSE connection: adventureId is", adventureId)
-      return
-    }
-
-    if (disableSSE) {
-      console.warn("[TurnProvider] SSE disabled for historical turn viewing")
-      return
-    }
-
-    // Close existing connection if any
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-    }
-
-    const es = new EventSource(`/api/adventure/stream/${adventureId}`)
-    eventSourceRef.current = es
-
-    es.onopen = () => {
-      setIsConnected(true)
-      reconnectAttempts.current = 0 // Reset on successful connection
-    }
-
-    es.onmessage = (event) => {
-      let rawData = null // Default to null
-      if (event.data) {
-        // Check if event.data is not null, undefined, empty string, 0, false
+    const controller = new TurnStreamController({
+      createEventSource: () => new EventSource(`/api/adventure/stream/${adventureId}`),
+      onStateChange: setStreamState,
+      onMessage: (raw) => {
+        let parsed: unknown = null
         try {
-          rawData = JSON.parse(event.data)
+          parsed = JSON.parse(raw)
         } catch (e) {
-          console.error("[TurnProvider SSE OnMessage] JSON.parse error. Data will be treated as null.", "Error:", e, "Raw event.data:", event.data)
-          // rawData remains null if parsing fails
+          console.error("[TurnProvider SSE OnMessage] JSON.parse error. Data will be treated as null.", "Error:", e, "Raw event.data:", raw)
         }
-      }
+        const newTurn = mapConvexTurnToTurn(parsed)
+        if (newTurn !== null) setCurrentTurn(newTurn)
+      },
+    })
 
-      const newTurn = mapConvexTurnToTurn(rawData)
+    controller.connect(0)
 
-      // Only update currentTurn if newTurn is not null.
-      // This prevents a null message from SSE from wiping out a valid initialTurn or a previously valid SSE turn.
-      if (newTurn !== null) {
-        setCurrentTurn(newTurn)
-      }
-    }
-
-    es.onerror = (err) => {
-      console.error("[TurnProvider] SSE error:", JSON.stringify(err, null, 2))
-      setIsConnected(false)
-
-      // Only attempt reconnection if we haven't exceeded max attempts and user is still authenticated
-      if (reconnectAttempts.current < maxReconnectAttempts && isSignedIn) {
-        const backoffDelay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000) // Max 30 seconds
-        console.log(`[TurnProvider] Attempting reconnection in ${backoffDelay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`)
-
-        reconnectAttempts.current++
-        reconnectTimeoutRef.current = setTimeout(() => {
-          createConnection()
-        }, backoffDelay)
-      } else {
-        console.error("[TurnProvider] Max reconnection attempts reached or user not authenticated, giving up")
-      }
-    }
-  }
-
-  useEffect(() => {
-    createConnection()
-
-    // Handle visibility change to reconnect when tab becomes active
     const handleVisibilityChange = () => {
-      if (!document.hidden && isSignedIn && (!eventSourceRef.current || eventSourceRef.current.readyState === EventSource.CLOSED)) {
-        // Reset attempts when user returns to tab
-        reconnectAttempts.current = 0
-        createConnection()
-      }
+      if (!document.hidden) controller.onVisible()
     }
-
     document.addEventListener("visibilitychange", handleVisibilityChange)
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
-
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-      }
-
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
+      controller.dispose()
     }
-  }, [adventureId, disableSSE, isLoaded, isSignedIn, initialTurn]) // Added initialTurn
+  }, [adventureId, disableSSE, isLoaded, isSignedIn])
 
-  return <TurnContext.Provider value={{ currentTurn, disableSSE, isConnected }}>{children}</TurnContext.Provider>
+  const isConnected = streamState.kind === "open"
+  return <TurnContext.Provider value={{ currentTurn, disableSSE, isConnected, streamState }}>{children}</TurnContext.Provider>
 }
 
 export const useTurn = () => {
