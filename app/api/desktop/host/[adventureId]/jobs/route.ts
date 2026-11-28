@@ -49,7 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
         : undefined
       // An arrival job finishes with the hero's arrival.
       const arrival = reportedArrival(body.arrival)
-      // A heroIdea job finishes with a generated name, gender, and background.
+      // A heroIdea job finishes with a generated name and background.
       const parsedConcept = body.heroConcept ? heroConceptSchema.safeParse(body.heroConcept) : undefined
       const heroConcept = parsedConcept?.success ? parsedConcept.data : undefined
       await hostedAdventure(adventureId, device.userId)

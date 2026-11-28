@@ -479,6 +479,51 @@
     filter: brightness(1.22) saturate(1.2);
   }
 }
+/* AI-assisted action: Tempered Prism at rest (1px muted violet→antique-brass rim on dark velvet), waking into the full
+   Starlight Prism violet→gold rim and glow on hover. Icon strokes take warm brass and brighten to gold on hover. */
+@keyframes stage-ai-sheen {
+  0% {
+    background-position: 200% 0, 0 0;
+  }
+  100% {
+    background-position: -200% 0, 0 0;
+  }
+}
+@utility stage-ai {
+  border-color: transparent;
+  background:
+    linear-gradient(180deg, #161326 0%, #100e1c 100%) padding-box,
+    linear-gradient(130deg, rgb(164 158 209 / 0.52) 0%, rgb(112 103 183 / 0.34) 48%, rgb(217 194 146 / 0.56) 100%) border-box;
+  color: #ebe7f8;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  & svg {
+    color: #d9c292;
+    transition: color 150ms ease;
+  }
+  &:hover:not(:disabled) {
+    background:
+      linear-gradient(180deg, #211c3a 0%, #141126 100%) padding-box,
+      linear-gradient(125deg, #c4b5fd 0%, #8a83c4 32%, #fde68a 100%) border-box;
+    color: #ffffff;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      0 0 18px rgb(138 131 196 / 0.28),
+      0 0 10px rgb(252 211 77 / 0.16);
+  }
+  &:hover:not(:disabled) svg {
+    color: #fcd34d;
+  }
+  &[data-loading="true"] {
+    background:
+      linear-gradient(110deg, #161326 32%, #241f42 50%, #161326 68%) padding-box,
+      linear-gradient(130deg, rgb(164 158 209 / 0.65) 0%, rgb(252 211 77 / 0.65) 55%, rgb(164 158 209 / 0.65) 100%) border-box;
+    background-size: 220% 100%, 100% 100%;
+    animation: stage-ai-sheen 2.1s linear infinite;
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
 @utility stage-navy {
   background-color: rgb(23 37 84 / 0.7);
   box-shadow: 0 2px 8px #00000066;

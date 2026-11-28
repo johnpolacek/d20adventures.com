@@ -17,9 +17,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
 
   try {
     const { adventureId } = await params
-    const body = (await request.json().catch(() => ({}))) as { race?: unknown; archetype?: unknown; hook?: unknown }
+    const body = (await request.json().catch(() => ({}))) as { race?: unknown; archetype?: unknown; gender?: unknown; hook?: unknown }
     const race = clip(body.race, 60)
     const archetype = clip(body.archetype, 60)
+    const gender = clip(body.gender, 40)
     const hook = clip(body.hook, 300)
     if (!race || !archetype) return NextResponse.json({ error: "Choose a species and class first." }, { status: 400 })
 
@@ -34,7 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ adv
       secret: serverSecret(),
       adventureId: adventure._id,
       userId,
-      text: JSON.stringify({ race, archetype, ...(hook ? { hook } : {}) }),
+      text: JSON.stringify({ race, archetype, ...(gender ? { gender } : {}), ...(hook ? { hook } : {}) }),
     })
 
     return NextResponse.json({ jobId, hostOnline })

@@ -200,9 +200,9 @@ export async function runHeroIdeaJob(job: HostJob, store: Store, packs: Packs, l
   const adventure = (await store.getAdventure({ adventureId: job.adventureId })) as (AdventureRecord & { currentTurnId?: string }) | null
   if (!adventure) throw new Error("The hosted game is missing.")
   if (adventure.currentTurnId) throw new Error("This game has already started.")
-  let req: { race?: string; archetype?: string; hook?: string } = {}
+  let req: { race?: string; archetype?: string; gender?: string; hook?: string } = {}
   try {
-    req = JSON.parse(job.text ?? "{}") as { race?: string; archetype?: string; hook?: string }
+    req = JSON.parse(job.text ?? "{}") as { race?: string; archetype?: string; gender?: string; hook?: string }
   } catch {
     throw new Error("The hero concept request could not be read.")
   }
@@ -216,7 +216,7 @@ export async function runHeroIdeaJob(job: HostJob, store: Store, packs: Packs, l
         .map((c) => (c.sheet as { name?: string } | undefined)?.name)
         .filter((name): name is string => Boolean(name))
     : []
-  return draftHeroConcept(llm, { race, archetype, adventure: about, hook: req.hook?.trim() || undefined, avoidNames })
+  return draftHeroConcept(llm, { race, archetype, gender: req.gender?.trim() || undefined, adventure: about, hook: req.hook?.trim() || undefined, avoidNames })
 }
 
 export type HostEvent =

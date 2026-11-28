@@ -7,12 +7,13 @@ import { cn } from "./utils"
 // One button, in a rank of looks. Pick the lowest rank that reads.
 //   epic         the one call of a screen: start, continue, sign in
 //   primary      the main action of a panel or form, and the default
+//   ai           an AI-assisted action: generate, suggest, write
 //   outline      a secondary action, or one choice among several (with `active`)
 //   ghost        a quiet action: back, cancel, later
 //   destructive  delete, leave, ban
 //   emboss       the nav's sign-in and sign-up
 //   plain        no look at all, for a control with one of its own, like a stage card or a map pin
-export type ButtonVariant = "epic" | "primary" | "outline" | "ghost" | "destructive" | "emboss" | "plain"
+export type ButtonVariant = "epic" | "primary" | "ai" | "outline" | "ghost" | "destructive" | "emboss" | "plain"
 export type ButtonSize = "xs" | "sm" | "default" | "lg" | "icon"
 
 export type ButtonProps = Omit<ComponentProps<typeof BaseButton>, "className" | "style" | "children"> & {
@@ -40,6 +41,7 @@ const looks: Record<Exclude<ButtonVariant, "plain">, string> = {
   // The epic grows on hover slowly enough to be seen, easing in and out.
   epic: "duration-1000 ease-in-out rounded-full border-[rgba(0,0,0,.66)] bg-action-600 tex-buried font-display font-bold tracking-label text-action-50 brightness-110 saturate-[1.2] scale-105 not-disabled:hover:scale-110 not-disabled:hover:text-white not-disabled:active:scale-100",
   primary: cn(control, "stage-stone"),
+  ai: "rounded-md border font-sans font-medium leading-tight not-disabled:active:scale-[0.97] stage-ai",
   outline: cn(control, "border-action-200/20 bg-action-950/70 text-action-50 not-disabled:hover:border-action-200/35 not-disabled:hover:bg-action-950/90 not-disabled:hover:text-white"),
   ghost: cn(control, "border-transparent bg-transparent text-action-50/80 not-disabled:hover:bg-white/5 not-disabled:hover:text-white"),
   destructive: cn(control, "border-red-400/50 bg-red-950/70 text-red-100 not-disabled:hover:border-red-400/80 not-disabled:hover:bg-red-800/80 not-disabled:hover:text-white"),

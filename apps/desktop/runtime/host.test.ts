@@ -487,7 +487,8 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
     })
     let claimed = false
     let finishedReport: Record<string, unknown> | undefined
-    const ideaJob = job({ adventureId, kind: "heroIdea", userId: "guest", text: JSON.stringify({ race: "Elf", archetype: "Ranger" }) }, "idea-1")
+    let seenPrompt = ""
+    const ideaJob = job({ adventureId, kind: "heroIdea", userId: "guest", text: JSON.stringify({ race: "Elf", archetype: "Ranger", gender: "Female" }) }, "idea-1")
     const post: HostPost = async (_path, body) => {
       const b = body as Record<string, unknown>
       if (b.op === "claim") {
@@ -505,9 +506,12 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
     }
     const conceptLlm = {
       ...failLlm,
-      generateObject: async () => ({
-        object: { name: "Elowen Moss", gender: "Female", background: "A frontier scout tracking stolen Valkaran relics toward Kordavos." },
-      }),
+      generateObject: async ({ prompt }: { prompt: string }) => {
+        seenPrompt = prompt
+        return {
+          object: { name: "Elowen Moss", background: "A frontier scout tracking stolen Valkaran relics toward Kordavos." },
+        }
+      },
     } as typeof failLlm
     await hostLoop({
       adventureId,
@@ -519,9 +523,9 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
       stopped: () => Boolean(finishedReport),
       wait: async () => {},
     })
+    assert.match(seenPrompt, /Female Elf Ranger/)
     assert.deepEqual(finishedReport?.heroConcept, {
       name: "Elowen Moss",
-      gender: "Female",
       background: "A frontier scout tracking stolen Valkaran relics toward Kordavos.",
     })
   } finally {

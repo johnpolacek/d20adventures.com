@@ -100,8 +100,8 @@ export function HeroCreator(props: {
   open?: boolean
   onClosed?: () => void
   busy: boolean
-  // Auto-generates a starting name, gender, and background using the GM Host's AI (or local/server LLM).
-  onGenerate?: (input: { race: string; archetype: string; hook?: string }) => Promise<HeroConcept | undefined>
+  // Auto-generates a starting name and background using the GM Host's AI (leaving race, class, and gender untouched).
+  onGenerate?: (input: { race: string; archetype: string; gender?: string; hook?: string }) => Promise<HeroConcept | undefined>
   // Builds the hero from the rules choices and writes their story. Nothing is saved yet.
   onDraft: (idea: HeroIdea, making: HeroMaking) => Promise<HeroDraft | undefined>
   // `making` is given for a new hero, whose rules the host builds again and checks.
@@ -191,13 +191,13 @@ export function HeroCreator(props: {
       const concept = await props.onGenerate({
         race: speciesName,
         archetype: className,
+        gender: idea.gender.trim() || undefined,
         hook: idea.hook.trim() || undefined,
       })
       if (!concept) return
       setIdea((current) => ({
         ...current,
         name: concept.name,
-        gender: concept.gender,
         idea: concept.background.slice(0, 1200),
       }))
     } finally {
@@ -237,12 +237,13 @@ export function HeroCreator(props: {
 
   const autoGenerateButton = props.onGenerate && (
     <Button
-      variant="primary"
+      variant="ai"
       size="xs"
       type="button"
+      data-loading={generating ? "true" : undefined}
       disabled={!menu || !pick || generating || props.busy}
       onClick={() => void autoGenerate()}
-      className="shrink-0 gap-1.5 px-3 font-sans font-semibold"
+      className="shrink-0 gap-1.5 px-3"
     >
       {generating ? <Loader2 aria-hidden="true" className="size-3.5 animate-spin" /> : <Sparkles aria-hidden="true" className="size-3.5" />}
       <span>{generating ? "Generating…" : "Auto Generate"}</span>

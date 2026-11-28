@@ -18,8 +18,8 @@ import { requireServer } from "./serverSecret"
 const SEEN_EVERY_MS = 30 * 1000
 // A created hero's arrival in the opening scene. See packages/gm-core/src/character/hero-draft.ts.
 const arrivalValidator = v.object({ reason: v.string(), intro: v.string(), tell: v.string() })
-// A generated starting concept (name, gender, background) for Step 1 of hero creation in a hosted lobby.
-const heroConceptValidator = v.object({ name: v.string(), gender: v.string(), background: v.string() })
+// A generated starting concept (name and background) for Step 1 of hero creation in a hosted lobby.
+const heroConceptValidator = v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string() })
 
 export const setHost = mutation({
   args: {
@@ -343,7 +343,7 @@ export const claimJob = mutation({
   },
 })
 
-/** Asks the host's GM to generate a starting name, gender, and background for a player creating a hero in the lobby. */
+/** Asks the host's GM to generate a starting name and background for a player creating a hero in the lobby. */
 export const queueHeroIdea = mutation({
   args: { secret: v.string(), adventureId: v.id("adventures"), userId: v.string(), text: v.string() },
   handler: async (ctx, { secret, adventureId, userId, text }) => {
@@ -364,7 +364,7 @@ export const finishJob = mutation({
     arrival: v.optional(arrivalValidator),
     // A finished paint job's art, for the hero it painted.
     art: v.optional(v.object({ heroId: v.string(), paths: artValidator })),
-    // A finished heroIdea job's generated name, gender, and background.
+    // A finished heroIdea job's generated name and background.
     heroConcept: v.optional(heroConceptValidator),
   },
   handler: async (ctx, { secret, jobId, userId, error, suggestions, arrival, art, heroConcept }) => {

@@ -35,6 +35,7 @@ export const heroCommandSchema = z.discriminatedUnion("kind", [
     model: gmModelSchema,
     race: text(60).min(1),
     archetype: text(60).min(1),
+    gender: text(40).optional(),
     adventure: text(100).optional(),
     hook: text(300).optional(),
   }),
@@ -95,6 +96,7 @@ export async function heroCommand(
     const concept = await draftHeroConcept(llm, {
       race: command.race,
       archetype: command.archetype,
+      gender: command.gender || undefined,
       adventure: pack && heroAdventure(pack),
       hook: command.hook || undefined,
       avoidNames,

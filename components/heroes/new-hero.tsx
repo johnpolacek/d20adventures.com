@@ -65,8 +65,8 @@ export function NewHero({
     else router.back()
   }
 
-  // Generates a starting name, gender, and background. In a hosted game this runs on the GM Host's AI via gmJobs.
-  const onGenerate = async (input: { race: string; archetype: string; hook?: string }): Promise<HeroConcept | undefined> => {
+  // Generates a starting name and background. In a hosted game this runs on the GM Host's AI via gmJobs.
+  const onGenerate = async (input: { race: string; archetype: string; gender?: string; hook?: string }): Promise<HeroConcept | undefined> => {
     generateAbort.current?.abort()
     const controller = new AbortController()
     generateAbort.current = controller

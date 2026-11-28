@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Button Variant Exploration — D20 Adventures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=Rethink+Sans:wght@400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: "Cinzel Decorative", Georgia, serif;
+    --font-display-clean: "Cinzel", Georgia, serif;
+    --font-serif: "Literata", Georgia, serif;
+    --font-sans: "Rethink Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "Syne Mono", ui-monospace, SFMono-Regular, monospace;
+
+    --primary-100: #bebade;
+    --primary-200: #a49ed1;
+    --primary-300: #8a83c4;
+    --primary-400: #7067b7;
+    --primary-500: #594fa6;
+    --primary-600: #453d80;
+    --primary-700: #302b5a;
+    --primary-800: #1c1934;
+    --primary-900: #07070e;
+
+    --accent-100: #fef3c7;
+    --accent-200: #fde68a;
+    --accent-300: #fcd34d;
+    --accent-400: #fbbf24;
+    --accent-500: #f59e0b;
+
+    --brass-50: #fff5dd;
+    --brass-200: #d9c292;
+    --brass-300: #b9a77f;
+    --brass-400: #9f8c64;
+
+    --tex-buried: url("../../public/images/app/backgrounds/buried.png");
+    --tex-black-paper: url("../../public/images/app/backgrounds/black-paper.png");
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: #07070b;
+    color: #f4f4f6;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* ── STUDIO BAR ── */
+  .studio-bar {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+  .studio-bar-inner {
+    max-width: 1460px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+  }
+  .studio-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-right: auto;
+  }
+  .studio-brand h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent-300);
+  }
+  .studio-brand span { font-size: 12px; color: #9898a8; }
+  .ctrl-group { display: flex; align-items: center; gap: 6px; }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #8b86a8;
+    margin-right: 4px;
+  }
+  .seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    gap: 2px;
+  }
+  .seg button {
+    border: 0;
+    background: transparent;
+    color: #b4b4c0;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 140ms, color 140ms;
+    white-space: nowrap;
+  }
+  .seg button:hover { color: #fff; }
+  .seg button.active {
+    background: rgba(112, 103, 183, 0.36);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(164, 158, 209, 0.42);
+  }
+
+  .jump-bar {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 7px 24px;
+    max-width: 1460px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jump-bar::-webkit-scrollbar { display: none; }
+  .jump-pill {
+    flex: none;
+    text-decoration: none;
+    font-size: 12px;
+    color: #a8a8b8;
+    padding: 4px 11px;
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 130ms;
+  }
+  .jump-pill b { font-family: var(--font-mono); font-weight: 400; color: var(--accent-300); margin-right: 5px; font-size: 11px; }
+  .jump-pill:hover { color: #fff; border-color: rgba(252, 211, 77, 0.38); background: rgba(255, 255, 255, 0.06); }
+
+  .studio-intro {
+    max-width: 1460px;
+    margin: 20px auto 10px;
+    padding: 0 24px;
+  }
+  .studio-intro p {
+    margin: 0;
+    max-width: 82ch;
+    color: #a3a3b4;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .studio-intro strong { color: #ececf4; }
+
+  .compare-bar {
+    display: none;
+    max-width: 1460px;
+    margin: 12px auto 0;
+    padding: 0 24px;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  body.mode-compare .compare-bar { display: flex; }
+  body.mode-compare .jump-bar { display: none; }
+  .compare-select {
+    background: #14141b;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  /* ── GALLERY ── */
+  .gallery {
+    max-width: 1460px;
+    margin: 18px auto 96px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  body.mode-grid .gallery,
+  body.mode-compare .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 1080px) {
+    body.mode-grid .gallery,
+    body.mode-compare .gallery { grid-template-columns: 1fr; }
+  }
+
+  /* ── SPECIMEN CARD ── */
+  .spec {
+    scroll-margin-top: 112px;
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: #0d0d13;
+    overflow: hidden;
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.65);
+  }
+  .spec::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--tex-black-paper);
+    background-size: 260px;
+    opacity: 0.34;
+    pointer-events: none;
+  }
+  .spec-head {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 18px;
+    padding: 16px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.35);
+  }
+  .spec-title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .spec-num { font-family: var(--font-mono); font-size: 12px; color: var(--accent-300); letter-spacing: 0.14em; }
+  .spec-title { margin: 0; font-family: var(--font-display-clean); font-size: 18px; font-weight: 600; color: #fff; }
+  .spec-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    border: 1px solid rgba(164, 158, 209, 0.28);
+    color: var(--primary-200);
+    background: rgba(112, 103, 183, 0.12);
+  }
+  .spec-desc { margin: 0; font-size: 13px; color: #9c9caf; line-height: 1.45; max-width: 72ch; }
+
+  .spec-body {
+    position: relative;
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .well {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.44);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+    padding: 14px 16px;
+  }
+  .well-lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--primary-200);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+  }
+  .context-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  body.mode-grid .context-grid,
+  body.mode-compare .context-grid {
+    grid-template-columns: 1fr;
+  }
+  @media (max-width: 820px) {
+    .context-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Mock Hero Creator Header Bar */
+  .mock-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 11px 14px;
+  }
+  .mock-steps { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+  .mock-step {
+    padding: 3px 9px;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.42);
+  }
+  .mock-step.on {
+    border-color: rgba(252,211,77,0.45);
+    background: rgba(252,211,77,0.12);
+    color: var(--accent-200);
+    font-weight: 500;
+  }
+
+  /* ── EXISTING D20 BUTTON RANKS (for side-by-side comparison) ── */
+  .d20-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    user-select: none;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    line-height: 1.2;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1), color 140ms, background-color 140ms, border-color 140ms, filter 140ms, box-shadow 140ms, opacity 140ms;
+    white-space: nowrap;
+  }
+  .d20-btn:active:not(:disabled) { transform: scale(0.97); }
+  .d20-btn:disabled { cursor: not-allowed; opacity: 0.58; filter: saturate(0.7); }
+
+  .sz-xs { min-height: 28px; padding: 3px 10px; font-size: 12px; }
+  .sz-sm { min-height: 32px; padding: 5px 12px; font-size: 13.5px; }
+  .sz-default { min-height: 36px; padding: 7px 16px; font-size: 14px; }
+  .sz-lg { min-height: 44px; padding: 10px 22px; font-size: 15.5px; }
+
+  .btn-primary {
+    border-color: rgba(0, 0, 0, 0.66);
+    background-color: #2563eb;
+    background-image: var(--tex-buried);
+    background-size: 180px;
+    color: #eff6ff;
+    text-shadow: 0 0 2px #000, 0 0 2px #000;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.4), inset 0 0 14px rgba(0,0,0,0.35), 0 2px 10px rgba(0,0,0,0.55);
+    filter: brightness(1.1) saturate(1.2);
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.22) saturate(1.2); }
+
+  .btn-outline {
+    border-color: rgba(191, 219, 254, 0.2);
+    background: rgba(23, 37, 84, 0.7);
+    color: #eff6ff;
+  }
+  .btn-outline:hover:not(:disabled) { border-color: rgba(191, 219, 254, 0.36); background: rgba(23, 37, 84, 0.9); color: #fff; }
+
+  .btn-ghost {
+    border-color: transparent;
+    background: transparent;
+    color: rgba(239, 246, 255, 0.78);
+  }
+  .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); color: #fff; }
+
+  .btn-epic {
+    border-radius: 999px;
+    border: 3px solid rgba(0, 0, 0, 0.66);
+    background-color: #2563eb;
+    background-image: var(--tex-buried);
+    background-size: 180px;
+    color: #eff6ff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 7px 20px;
+    font-size: 12.5px;
+    text-shadow: 0 0 2px #000, 0 0 2px #000;
+    box-shadow: -2.6px -5px 0 0 rgba(0,0,0,0.4) inset, 2.6px 2.6px 0 0 rgba(255,255,255,0.45) inset, -2.6px -5px 22px 0 rgba(0,0,0,0.5) inset;
+    filter: brightness(1.1) saturate(1.2);
+  }
+
+  /* Sparkle / Spinner Icons */
+  .ico { width: 14px; height: 14px; flex: none; display: inline-block; }
+  .sz-xs .ico { width: 13px; height: 13px; }
+  .sz-lg .ico { width: 16px; height: 16px; }
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  @keyframes pulse-glint {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.86); }
+  }
+  @keyframes sheen-move {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .loading .ico-spin { animation: spin-slow 1.1s linear infinite; }
+  .loading .ico-pulse { animation: pulse-glint 1.2s ease-in-out infinite; }
+
+  /* ═════════════════════════════════════════════════════════════
+     01 · ARCANE AMETHYST STONE (Sibling of primary stage-stone)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v1 {
+    border-color: rgba(0, 0, 0, 0.66);
+    background-color: #594fa6;
+    background-image: var(--tex-buried);
+    background-size: 180px;
+    color: #f5f3ff;
+    text-shadow: 0 0 2px #000, 0 0 2px #000;
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.34),
+      inset 0 -3px 0 rgba(0, 0, 0, 0.45),
+      inset 0 0 14px rgba(0, 0, 0, 0.35),
+      0 2px 10px rgba(0, 0, 0, 0.55);
+    filter: brightness(1.08) saturate(1.18);
+  }
+  .ai-v1 .ico { color: var(--accent-200); }
+  .ai-v1:hover:not(:disabled) {
+    filter: brightness(1.22) saturate(1.25);
+    box-shadow:
+      inset 0 2px 0 rgba(254, 243, 199, 0.48),
+      inset 0 -3px 0 rgba(0, 0, 0, 0.45),
+      inset 0 0 16px rgba(138, 131, 196, 0.3),
+      0 4px 18px rgba(89, 79, 166, 0.42);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     02 · GILDED OBSIDIAN (Gold-etched dark tabletop plate)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v2 {
+    border: 1.5px solid rgba(252, 211, 77, 0.42);
+    background: linear-gradient(180deg, rgba(252, 211, 77, 0.11) 0%, rgba(16, 15, 22, 0.94) 100%);
+    color: #fef3c7;
+    box-shadow:
+      inset 0 1px 0 rgba(254, 243, 199, 0.25),
+      0 2px 10px rgba(0, 0, 0, 0.45);
+  }
+  .ai-v2 .ico { color: var(--accent-300); }
+  .ai-v2:hover:not(:disabled) {
+    border-color: rgba(252, 211, 77, 0.72);
+    background: linear-gradient(180deg, rgba(252, 211, 77, 0.2) 0%, rgba(22, 19, 28, 0.96) 100%);
+    color: #fffbeb;
+    box-shadow:
+      inset 0 1px 0 rgba(254, 243, 199, 0.42),
+      0 0 20px rgba(252, 211, 77, 0.18),
+      0 4px 14px rgba(0, 0, 0, 0.55);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     03 · STARLIGHT PRISM (Iridescent Violet → Gold Rim)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v3 {
+    border: 1.5px solid transparent;
+    background:
+      linear-gradient(180deg, #171429 0%, #0f0d1b 100%) padding-box,
+      linear-gradient(125deg, #a49ed1 0%, #7067b7 38%, #fcd34d 100%) border-box;
+    color: #f6f3ff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 2px 12px rgba(0, 0, 0, 0.5);
+  }
+  .ai-v3 .ico { color: var(--accent-300); }
+  .ai-v3:hover:not(:disabled) {
+    background:
+      linear-gradient(180deg, #211c3a 0%, #141126 100%) padding-box,
+      linear-gradient(125deg, #c4b5fd 0%, #8a83c4 32%, #fde68a 100%) border-box;
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 18px rgba(138, 131, 196, 0.28),
+      0 0 10px rgba(252, 211, 77, 0.16);
+  }
+  .ai-v3.loading {
+    background:
+      linear-gradient(110deg, #171429 30%, #2b2450 50%, #171429 70%) padding-box,
+      linear-gradient(125deg, #a49ed1 0%, #fcd34d 50%, #a49ed1 100%) border-box;
+    background-size: 220% 100%, 100% 100%;
+    animation: sheen-move 2s linear infinite;
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     04 · ETHEREAL AETHER (Sky-Cyan — Semantic Match for AI Tags)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v4 {
+    border: 1.5px solid rgba(56, 189, 248, 0.42);
+    background: linear-gradient(180deg, rgba(12, 74, 110, 0.55) 0%, rgba(8, 35, 58, 0.88) 100%);
+    color: #e0f2fe;
+    box-shadow:
+      inset 0 1px 0 rgba(186, 230, 253, 0.24),
+      0 2px 10px rgba(0, 0, 0, 0.48);
+  }
+  .ai-v4 .ico { color: #7dd3fc; }
+  .ai-v4:hover:not(:disabled) {
+    border-color: rgba(125, 211, 252, 0.7);
+    background: linear-gradient(180deg, rgba(14, 116, 144, 0.65) 0%, rgba(12, 52, 84, 0.92) 100%);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(224, 242, 254, 0.35),
+      0 0 18px rgba(56, 189, 248, 0.24);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     05 · RUNIC DOUBLE-FRAME (Refreshed Legacy D20 AI Pill)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v5 {
+    border-radius: 999px;
+    border: 3px double rgba(252, 211, 77, 0.45);
+    background: rgba(17, 15, 28, 0.85);
+    color: #f3ecff;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    box-shadow:
+      inset 0 0 10px rgba(0, 0, 0, 0.65),
+      0 2px 10px rgba(0, 0, 0, 0.45);
+  }
+  .ai-v5.sz-xs { font-size: 11px; padding: 3px 12px; }
+  .ai-v5.sz-sm { font-size: 11.5px; padding: 5px 14px; }
+  .ai-v5.sz-default { font-size: 12px; padding: 7px 18px; }
+  .ai-v5.sz-lg { font-size: 13px; padding: 10px 24px; }
+  .ai-v5 .ico { color: var(--accent-300); }
+  .ai-v5:hover:not(:disabled) {
+    border-color: rgba(252, 211, 77, 0.78);
+    background: rgba(34, 28, 56, 0.92);
+    color: #fff;
+    box-shadow:
+      inset 0 0 12px rgba(112, 103, 183, 0.35),
+      0 0 16px rgba(252, 211, 77, 0.16);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     06 · ARCANE VELVET & BRASS (Indigo Velvet + Antique Brass)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v6 {
+    border: 1.5px solid rgba(217, 194, 146, 0.46);
+    background: linear-gradient(180deg, #2a244f 0%, #191532 100%);
+    color: var(--brass-50);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 245, 221, 0.2),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+      0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+  .ai-v6 .ico { color: var(--brass-200); }
+  .ai-v6:hover:not(:disabled) {
+    border-color: rgba(217, 194, 146, 0.78);
+    background: linear-gradient(180deg, #352d64 0%, #211c42 100%);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 245, 221, 0.3),
+      0 4px 16px rgba(42, 36, 79, 0.55);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     07 · SPELLBOUND GLASS (Luminous Translucent Plate)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v7 {
+    border: 1px solid rgba(190, 186, 222, 0.3);
+    background: linear-gradient(135deg, rgba(112, 103, 183, 0.24) 0%, rgba(252, 211, 77, 0.08) 100%);
+    backdrop-filter: blur(8px);
+    color: #f4f2ff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 4px 16px rgba(0, 0, 0, 0.38);
+  }
+  .ai-v7 .ico { color: var(--accent-200); }
+  .ai-v7:hover:not(:disabled) {
+    border-color: rgba(252, 211, 77, 0.52);
+    background: linear-gradient(135deg, rgba(112, 103, 183, 0.36) 0%, rgba(252, 211, 77, 0.16) 100%);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      0 0 20px rgba(138, 131, 196, 0.28);
+  }
+
+  /* ═════════════════════════════════════════════════════════════
+     08 · ILLUMINATED SEAL (Textured Dark Ember + Gold Foil)
+     ═════════════════════════════════════════════════════════════ */
+  .ai-v8 {
+    border-radius: 999px;
+    border: 1.5px solid rgba(251, 191, 36, 0.52);
+    background-color: #1f1722;
+    background-image: radial-gradient(ellipse at 50% 0%, rgba(252, 211, 77, 0.18), transparent 72%), var(--tex-buried);
+    background-size: auto, 180px;
+    color: #fef3c7;
+    font-family: var(--font-display-clean);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    box-shadow:
+      inset 0 1px 0 rgba(254, 243, 199, 0.3),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.5),
+      0 2px 12px rgba(0, 0, 0, 0.55);
+  }
+  .ai-v8 .ico { color: var(--accent-300); }
+  .ai-v8:hover:not(:disabled) {
+    border-color: rgba(253, 230, 138, 0.85);
+    background-color: #291e2e;
+    color: #fffbeb;
+    box-shadow:
+      inset 0 1px 0 rgba(254, 243, 199, 0.45),
+      0 0 22px rgba(251, 191, 36, 0.25);
+  }
+</style>
+</head>
+<body>
+
+<header class="studio-bar">
+  <div class="studio-bar-inner">
+    <div class="studio-brand">
+      <h1>AI Button Variant Exploration</h1>
+      <span>@d20/ui/button · 8 Refreshed Takes</span>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">State</span>
+      <div class="seg" id="state-seg">
+        <button type="button" data-state="interactive" class="active">Interactive</button>
+        <button type="button" data-state="loading">Loading</button>
+        <button type="button" data-state="disabled">Disabled</button>
+      </div>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Layout</span>
+      <div class="seg" id="mode-seg">
+        <button type="button" data-mode="full" class="active">Full</button>
+        <button type="button" data-mode="grid">2-Up Grid</button>
+        <button type="button" data-mode="compare">Compare 2</button>
+      </div>
+    </div>
+  </div>
+  <nav class="jump-bar" id="jump-bar"></nav>
+</header>
+
+<div class="studio-intro">
+  <p>
+    Eight refreshed directions for a dedicated <strong>variant="ai"</strong> in <code>@d20/ui/button</code> — shown alongside existing ranks (<code>epic</code>, <code>primary</code>, <code>outline</code>, <code>ghost</code>), across all four sizes, and in real D20 contexts (<strong>Auto Generate</strong> in the Hero Creator header and <strong>Suggest / Write My Hero</strong> in action bars). Click any AI button in <strong>Interactive</strong> mode to preview its generating animation.
+  </p>
+</div>
+
+<div class="compare-bar">
+  <span class="ctrl-label">Left</span>
+  <select id="cmp-a" class="compare-select"></select>
+  <span class="ctrl-label" style="margin-left:8px;">Right</span>
+  <select id="cmp-b" class="compare-select"></select>
+</div>
+
+<main class="gallery" id="gallery"></main>
+
+<script>
+  const SPARKLE_SVG = `<svg class="ico ico-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>`
+  const LOADER_SVG = `<svg class="ico ico-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+  const STAR_SVG = `<svg class="ico ico-pulse" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3z"/></svg>`
+
+  const VARIANTS = [
+    {
+      id: "v1",
+      num: "01",
+      title: "Arcane Amethyst Stone",
+      tag: "Sibling of Primary",
+      cls: "ai-v1",
+      icon: SPARKLE_SVG,
+      desc: "Same buried.png stone texture and bevel craft as D20's blue primary button, cast in royal arcane violet (#594fa6) with a warm gold sparkle. Strongest physical weight.",
+    },
+    {
+      id: "v2",
+      num: "02",
+      title: "Gilded Obsidian",
+      tag: "Gold-Etched Dark Plate",
+      cls: "ai-v2",
+      icon: SPARKLE_SVG,
+      desc: "Deep obsidian face with a delicate antique-gold rim and top glint. Quiet, refined, and sits cleanly beside blue primary buttons without competing for the main CTA.",
+    },
+    {
+      id: "v3",
+      num: "03",
+      title: "Starlight Prism",
+      tag: "Violet → Gold Rim",
+      cls: "ai-v3",
+      icon: SPARKLE_SVG,
+      desc: "Dark arcane velvet face framed by a crisp gradient rim from D20 primary violet into gold, with a subtle sheen sweep while generating.",
+    },
+    {
+      id: "v4",
+      num: "04",
+      title: "Ethereal Aether",
+      tag: "Matches AI Companion Sky",
+      cls: "ai-v4",
+      icon: SPARKLE_SVG,
+      desc: "Uses the same sky-cyan semantic hue D20 already uses for AI Companion tags and pills — deep midnight-cyan plate with luminous ice-blue border and sparkle.",
+    },
+    {
+      id: "v5",
+      num: "05",
+      title: "Runic Double-Frame",
+      tag: "Refreshed Legacy AI",
+      cls: "ai-v5",
+      icon: STAR_SVG,
+      desc: "A crisp, wearable evolution of D20's original double-bordered font-mono AI pill — tightened border, warm gold double hairline, four-point star, works at every size.",
+    },
+    {
+      id: "v6",
+      num: "06",
+      title: "Arcane Velvet & Brass",
+      tag: "Violet + Antique Brass",
+      cls: "ai-v6",
+      icon: SPARKLE_SVG,
+      desc: "Deep royal-indigo velvet gradient bordered in warm antique brass (#d9c292) — bridges D20's purple brand color with the parchment header and editor brass.",
+    },
+    {
+      id: "v7",
+      num: "07",
+      title: "Spellbound Glass",
+      tag: "Translucent Toolbar Plate",
+      cls: "ai-v7",
+      icon: SPARKLE_SVG,
+      desc: "Smoked translucent violet-gold glass with a crisp top highlight. Light and unobtrusive in headers and toolbars like the upper-right Auto Generate slot.",
+    },
+    {
+      id: "v8",
+      num: "08",
+      title: "Illuminated Seal",
+      tag: "Textured Foil Pill",
+      cls: "ai-v8",
+      icon: STAR_SVG,
+      desc: "Dark plum-stone pill with hammered-gold rim, subtle buried.png grain, and clean Cinzel lettering — feels like summoning the GM's quill.",
+    },
+  ]
+
+  let stateMode = "interactive"
+  let layoutMode = "full"
+  let cmpA = "v2"
+  let cmpB = "v3"
+  const activeLoads = new Set()
+
+  function aiBtn(v, { size = "default", label = "Auto Generate", loadingLabel = "Generating…", key = "" }) {
+    const isLoad = stateMode === "loading" || activeLoads.has(key)
+    const isDis = stateMode === "disabled"
+    return `
+      <button
+        type="button"
+        class="d20-btn ${v.cls} sz-${size} ${isLoad ? "loading" : ""}"
+        data-ai-key="${key}"
+        ${isDis || isLoad ? "disabled" : ""}
+      >
+        ${isLoad ? LOADER_SVG : v.icon}
+        <span>${isLoad ? loadingLabel : label}</span>
+      </button>
+    `
+  }
+
+  function renderSpec(v) {
+    return `
+      <section class="spec" id="${v.id}">
+        <div class="spec-head">
+          <div class="spec-title-row">
+            <span class="spec-num">${v.num}</span>
+            <h2 class="spec-title">${v.title}</h2>
+            <span class="spec-tag">${v.tag}</span>
+          </div>
+          <p class="spec-desc">${v.desc}</p>
+        </div>
+
+        <div class="spec-body">
+          <div class="well">
+            <div class="well-lbl">
+              <span>In the Button Rank</span>
+              <span style="opacity:0.6;font-family:var(--font-sans);text-transform:none;letter-spacing:0;">epic · primary · <strong>ai</strong> · outline · ghost</span>
+            </div>
+            <div class="row">
+              <button type="button" class="d20-btn btn-epic">Start Adventure</button>
+              <button type="button" class="d20-btn btn-primary sz-default">Choose Rules</button>
+              ${aiBtn(v, { size: "default", label: "Auto Generate", key: `${v.id}-rank` })}
+              <button type="button" class="d20-btn btn-outline sz-default">Randomize</button>
+              <button type="button" class="d20-btn btn-ghost sz-default">Cancel</button>
+            </div>
+          </div>
+
+          <div class="context-grid">
+            <div class="well">
+              <div class="well-lbl"><span>All Sizes</span></div>
+              <div class="row">
+                ${aiBtn(v, { size: "xs", label: "Auto Generate", key: `${v.id}-xs` })}
+                ${aiBtn(v, { size: "sm", label: "Suggest", loadingLabel: "Thinking…", key: `${v.id}-sm` })}
+                ${aiBtn(v, { size: "default", label: "Write My Hero", loadingLabel: "Writing…", key: `${v.id}-def` })}
+                ${aiBtn(v, { size: "lg", label: "Generate Hero", key: `${v.id}-lg` })}
+              </div>
+            </div>
+
+            <div class="well">
+              <div class="well-lbl"><span>In Context · Hero Creator Header</span></div>
+              <div class="mock-bar">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button type="button" class="d20-btn btn-outline sz-xs">← Back</button>
+                  <span style="font-family:var(--font-display);font-size:17px;color:var(--accent-300);">New Hero</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <div class="mock-steps">
+                    <span class="mock-step on">1 Identity</span>
+                    <span class="mock-step">2 Rules</span>
+                  </div>
+                  ${aiBtn(v, { size: "xs", label: "Auto Generate", key: `${v.id}-ctx` })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `
+  }
+
+  const gallery = document.getElementById("gallery")
+  const jumpBar = document.getElementById("jump-bar")
+  const cmpASel = document.getElementById("cmp-a")
+  const cmpBSel = document.getElementById("cmp-b")
+
+  function init() {
+    jumpBar.innerHTML = VARIANTS.map((v) => `<a class="jump-pill" href="#${v.id}"><b>${v.num}</b>${v.title}</a>`).join("")
+    const opts = VARIANTS.map((v) => `<option value="${v.id}">${v.num} — ${v.title}</option>`).join("")
+    cmpASel.innerHTML = opts
+    cmpBSel.innerHTML = opts
+    cmpASel.value = cmpA
+    cmpBSel.value = cmpB
+  }
+
+  function syncChrome() {
+    document.querySelectorAll("#state-seg button").forEach((b) => b.classList.toggle("active", b.dataset.state === stateMode))
+    document.querySelectorAll("#mode-seg button").forEach((b) => b.classList.toggle("active", b.dataset.mode === layoutMode))
+    document.body.classList.toggle("mode-grid", layoutMode === "grid")
+    document.body.classList.toggle("mode-compare", layoutMode === "compare")
+  }
+
+  function render() {
+    const list = layoutMode === "compare"
+      ? [VARIANTS.find((v) => v.id === cmpA), VARIANTS.find((v) => v.id === cmpB)].filter(Boolean)
+      : VARIANTS
+    gallery.innerHTML = list.map(renderSpec).join("")
+  }
+
+  document.addEventListener("click", (e) => {
+    const st = e.target.closest("[data-state]")
+    if (st) {
+      stateMode = st.dataset.state
+      activeLoads.clear()
+      syncChrome()
+      render()
+      return
+    }
+    const md = e.target.closest("[data-mode]")
+    if (md) {
+      layoutMode = md.dataset.mode
+      syncChrome()
+      render()
+      return
+    }
+    const ai = e.target.closest("[data-ai-key]")
+    if (ai && stateMode === "interactive") {
+      const key = ai.dataset.aiKey
+      if (activeLoads.has(key)) return
+      activeLoads.add(key)
+      render()
+      setTimeout(() => {
+        activeLoads.delete(key)
+        render()
+      }, 2200)
+    }
+  })
+
+  cmpASel.addEventListener("change", () => { cmpA = cmpASel.value; render() })
+  cmpBSel.addEventListener("change", () => { cmpB = cmpBSel.value; render() })
+
+  init()
+  syncChrome()
+  render()
+</script>
+</body>
+</html>

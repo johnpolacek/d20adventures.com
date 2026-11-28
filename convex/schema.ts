@@ -157,7 +157,7 @@ export default defineSchema({
     // An arrival job writes a created hero's arrival before the game starts, for their sheet's key, with their hook as text.
     // A paint job paints a guest's hero through the host's image CLI, for their sheet's key. It holds up no other job.
     // A react job is a player's answer to a reaction offered to their hero, `take` or not, and plays the turn on.
-    // A heroIdea job asks the host's GM to generate a starting name, gender, and background for a new character in the lobby.
+    // A heroIdea job asks the host's GM to generate a starting name and background for a new character in the lobby.
     kind: v.union(v.literal("reply"), v.literal("roll"), v.literal("continue"), v.literal("suggest"), v.literal("skip"), v.literal("arrival"), v.literal("paint"), v.literal("react"), v.literal("heroIdea")),
     // Who asked, and for which character. Continue jobs have no character.
     userId: v.string(),
@@ -168,7 +168,7 @@ export default defineSchema({
     second: v.optional(v.number()),
     take: v.optional(v.boolean()),
     suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
-    heroConcept: v.optional(v.object({ name: v.string(), gender: v.string(), background: v.string() })),
+    heroConcept: v.optional(v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string() })),
     // Which pictures a running paint job has uploaded so far; all three must be present before finishing.
     uploadedKinds: v.optional(v.array(v.union(v.literal("front"), v.literal("back"), v.literal("portrait")))),
     status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),

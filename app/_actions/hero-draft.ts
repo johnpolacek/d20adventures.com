@@ -9,8 +9,8 @@ import type { PCTemplate } from "@/types/character"
 
 const clip = (value: string | undefined, max: number) => (value ?? "").trim().slice(0, max)
 
-// Generates a starting name, gender, and background via the site's budgeted LLM (used outside hosted games).
-export async function generateHeroIdea(input: { planId?: string; race: string; archetype: string; hook?: string }): Promise<{ concept?: HeroConcept; error?: string }> {
+// Generates a starting name and background via the site's budgeted LLM (used outside hosted games).
+export async function generateHeroIdea(input: { planId?: string; race: string; archetype: string; gender?: string; hook?: string }): Promise<{ concept?: HeroConcept; error?: string }> {
   const { userId } = await auth()
   if (!userId) return { error: "Sign in to generate a hero." }
   const race = clip(input.race, 60)
@@ -21,6 +21,7 @@ export async function generateHeroIdea(input: { planId?: string; race: string; a
     const concept = await draftHeroConcept(createServerLlm(), {
       race,
       archetype,
+      gender: clip(input.gender, 40) || undefined,
       adventure: adventure && { title: adventure.title, teaser: adventure.teaser, hooks: adventure.hooks },
       hook: clip(input.hook, 300) || undefined,
     })
