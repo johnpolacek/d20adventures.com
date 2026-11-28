@@ -18,8 +18,8 @@ import { requireServer } from "./serverSecret"
 const SEEN_EVERY_MS = 30 * 1000
 // A created hero's arrival in the opening scene. See packages/gm-core/src/character/hero-draft.ts.
 const arrivalValidator = v.object({ reason: v.string(), intro: v.string(), tell: v.string() })
-// A generated starting concept (name and background) for Step 1 of hero creation in a hosted lobby.
-const heroConceptValidator = v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string() })
+// A generated starting concept (name, background, and optional hook) for Step 1 of hero creation in a hosted lobby.
+const heroConceptValidator = v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string(), hook: v.optional(v.string()) })
 
 export const setHost = mutation({
   args: {

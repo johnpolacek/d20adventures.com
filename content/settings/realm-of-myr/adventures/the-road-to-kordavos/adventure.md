@@ -7,6 +7,7 @@ startEncounter: "well-met"
 minPlayers: 1
 maxPlayers: 4
 strangers: true
+heroHookPrompt: "Why They Are Headed to Kordavos"
 premadeCharacters:
   - "thalbern"
   - "1749159962941"

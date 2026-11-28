@@ -60,20 +60,6 @@ function backgroundForClass(classId: CreationPick["class"], backgrounds: readonl
   return backgrounds.some((b) => b.id === preferred) ? preferred : (backgrounds[0]?.id ?? preferred)
 }
 
-// Toggles an adventure hook cleanly inside the freeform Background textarea.
-function toggleHookInText(current: string, hook: string): { nextText: string; active: boolean } {
-  const trimmed = current.trim()
-  if (trimmed.includes(hook)) {
-    const cleaned = trimmed
-      .replace(hook, "")
-      .replace(/\s{2,}/g, " ")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-    return { nextText: cleaned, active: false }
-  }
-  return { nextText: trimmed ? `${trimmed}\n\n${hook}` : hook, active: true }
-}
-
 const STEPS = ["pick", "rules", "review"] as const
 const RANDOM_GENDERS = ["Male", "Female"] as const
 const STEP_LABELS: Record<(typeof STEPS)[number], string> = { pick: "Identity", rules: "Rules", review: "Review" }
@@ -87,7 +73,7 @@ const inlineWell = "rounded-xl border border-white/10 bg-black/40 p-4 shadow-[in
 export function HeroCreator(props: {
   options: Options
   // The adventure the hero is made for, from its party screen.
-  adventure?: { id: string; hooks: string[] }
+  adventure?: { id: string; hooks: string[]; hookPrompt?: string }
   editing?: Hero
   // Art painted for the hero being edited, offered beside the stock figures.
   painted?: FigureArt
@@ -174,16 +160,6 @@ export function HeroCreator(props: {
     setIdea((current) => ({ ...current, gender: pickOne(RANDOM_GENDERS) }))
     setChoices(null)
   }
-  const toggleHook = (h: string) => {
-    setIdea((current) => {
-      const { nextText, active } = toggleHookInText(current.idea, h)
-      return {
-        ...current,
-        idea: nextText.slice(0, 1200),
-        hook: active ? h : current.hook === h ? "" : current.hook,
-      }
-    })
-  }
   const autoGenerate = async () => {
     if (!props.onGenerate || !menu || !pick || generating || props.busy) return
     const speciesName = menu.species.find((s) => s.id === pick.species)?.name
@@ -195,13 +171,13 @@ export function HeroCreator(props: {
         race: speciesName,
         archetype: className,
         gender: idea.gender.trim() || undefined,
-        hook: idea.hook.trim() || undefined,
       })
       if (!concept) return
       setIdea((current) => ({
         ...current,
         name: concept.name,
         idea: concept.background.slice(0, 1200),
+        ...(concept.hook ? { hook: concept.hook.slice(0, 300) } : {}),
       }))
     } finally {
       setGenerating(false)
@@ -224,8 +200,12 @@ export function HeroCreator(props: {
   const setArrival = (key: keyof Arrival, value: string) => {
     if (props.adventure && arrival && hero) setHero({ ...hero, arrivals: { ...hero.arrivals, [props.adventure.id]: { ...arrival, [key]: value } } })
   }
+  const hooks = props.adventure?.hooks ?? []
+  const showHook = Boolean(props.adventure && (hooks.length > 0 || props.adventure.hookPrompt))
+  const hookLabel = props.adventure?.hookPrompt ?? "Why They Came"
+  const hookPlaceholder = hooks[0] ? `e.g. ${hooks[0]}` : "What brings them to this adventure…"
   // What Save Hero still waits on, said beside it.
-  const arrivalLabels: Record<string, string> = { intro: "Arrival", reason: "Why They Came", tell: "What Others Notice" }
+  const arrivalLabels: Record<string, string> = { intro: "Arrival", reason: hookLabel, tell: "What Others Notice" }
   const missing = hero
     ? [
         !hero.name.trim() && "Name",
@@ -236,7 +216,6 @@ export function HeroCreator(props: {
   const title = step === "pick" ? "New Hero" : step === "rules" ? "Rules" : "Review Hero"
   const stepIndex = STEPS.indexOf(step)
   const saveLabel = props.saveLabel ?? "Save Hero"
-  const hooks = props.adventure?.hooks ?? []
 
   const autoGenerateButton = props.onGenerate && (
     <Button
@@ -345,33 +324,28 @@ export function HeroCreator(props: {
                   </div>
                   <Labeled label="Background">
                     <Textarea
-                      className="min-h-32 resize-y leading-relaxed"
-                      rows={5}
+                      className="min-h-28 resize-y leading-relaxed"
+                      rows={4}
                       maxLength={1200}
                       disabled={generating}
-                      placeholder="Who they are, their past, and why they came to this adventure…"
+                      placeholder={showHook ? "Who they are, where they come from, and what shaped them…" : "Who they are, their past, and what drives them…"}
                       value={idea.idea}
                       onChange={(e) => set("idea", e.target.value)}
                     />
                   </Labeled>
 
-                  {hooks.length > 0 && (
-                    <div className="border-t border-white/10 pt-3.5">
-                      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="font-mono text-3xs uppercase tracking-label text-primary-200/80">Why They Came</span>
-                        <span className="font-sans text-2xs text-white/45">Click a hook to fold into background</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {hooks.map((h) => {
-                          const active = idea.idea.includes(h)
-                          return (
-                            <Option key={h} size="xs" disabled={generating} aria-pressed={active} active={active} className="text-left" onClick={() => toggleHook(h)}>
-                              {h}
-                            </Option>
-                          )
-                        })}
-                      </div>
-                    </div>
+                  {showHook && (
+                    <Labeled label={hookLabel}>
+                      <Textarea
+                        className="min-h-16 resize-y leading-relaxed"
+                        rows={2}
+                        maxLength={300}
+                        disabled={generating}
+                        placeholder={hookPlaceholder}
+                        value={idea.hook}
+                        onChange={(e) => set("hook", e.target.value)}
+                      />
+                    </Labeled>
                   )}
                 </div>
               </div>
@@ -503,7 +477,7 @@ export function HeroCreator(props: {
                         <Textarea className="resize-y" rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
                       </Labeled>
                     </div>
-                    <Labeled label="Why They Came">
+                    <Labeled label={hookLabel}>
                       <Textarea className="resize-y" rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
                     </Labeled>
                     <Labeled label="What Others Notice">
@@ -601,29 +575,27 @@ export function HeroCreator(props: {
               </div>
               <Labeled label="Background">
                 <Textarea
-                  className="min-h-32 resize-y leading-relaxed"
-                  rows={5}
+                  className="min-h-28 resize-y leading-relaxed"
+                  rows={4}
                   maxLength={1200}
                   disabled={generating}
-                  placeholder="Who they are, their past, and why they came to this adventure…"
+                  placeholder={showHook ? "Who they are, where they come from, and what shaped them…" : "Who they are, their past, and what drives them…"}
                   value={idea.idea}
                   onChange={(e) => set("idea", e.target.value)}
                 />
               </Labeled>
-              {hooks.length > 0 && (
-                <div>
-                  <div className={cn(siteLabel, "mb-2")}>Why They Came</div>
-                  <div className="flex flex-wrap gap-2">
-                    {hooks.map((h) => {
-                      const active = idea.idea.includes(h)
-                      return (
-                        <Option key={h} size="xs" disabled={generating} aria-pressed={active} active={active} className="text-left" onClick={() => toggleHook(h)}>
-                          {h}
-                        </Option>
-                      )
-                    })}
-                  </div>
-                </div>
+              {showHook && (
+                <Labeled label={hookLabel}>
+                  <Textarea
+                    className="min-h-16 resize-y leading-relaxed"
+                    rows={2}
+                    maxLength={300}
+                    disabled={generating}
+                    placeholder={hookPlaceholder}
+                    value={idea.hook}
+                    onChange={(e) => set("hook", e.target.value)}
+                  />
+                </Labeled>
               )}
               <div className={dialogFooter}>
                 <Presence show={generating} motion="fade" asChild>
@@ -740,7 +712,7 @@ export function HeroCreator(props: {
                       <Textarea className="resize-y" rows={2} maxLength={600} value={arrival.intro} onChange={(e) => setArrival("intro", e.target.value)} />
                     </Labeled>
                   </div>
-                  <Labeled label="Why They Came">
+                  <Labeled label={hookLabel}>
                     <Textarea className="resize-y" rows={2} maxLength={400} value={arrival.reason} onChange={(e) => setArrival("reason", e.target.value)} />
                   </Labeled>
                   <Labeled label="What Others Notice">

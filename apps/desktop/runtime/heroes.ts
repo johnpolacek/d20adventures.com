@@ -152,7 +152,7 @@ export async function heroCommand(
 export function heroAdventure(pack: Pack) {
   const m = pack.artifacts.manifest
   const opening = m.heroHooks?.length ? pack.artifacts.encounters[m.startEncounterId]?.sections.intro : undefined
-  return { title: m.title, teaser: m.teaser, hooks: m.heroHooks, opening }
+  return { title: m.title, teaser: m.teaser, hooks: m.heroHooks, hookPrompt: m.heroHookPrompt, opening }
 }
 
 // Writes the arrival each chosen roster hero lacks for an adventure with hooks, such as a hero made from the Characters

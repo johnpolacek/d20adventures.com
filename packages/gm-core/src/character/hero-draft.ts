@@ -16,7 +16,7 @@ export type Arrival = z.infer<typeof arrivalSchema>
 
 export type HeroIdea = { name: string; race: string; archetype: string; gender?: string; idea?: string }
 // The adventure a hero is made for: its title and teaser, and with hooks the start encounter's intro they arrive in.
-export type HeroAdventure = { title: string; teaser?: string; hooks?: string[]; opening?: string }
+export type HeroAdventure = { title: string; teaser?: string; hooks?: string[]; hookPrompt?: string; opening?: string }
 
 const who = (h: Pick<HeroIdea, "name" | "race" | "archetype" | "gender">) =>
   `${h.name}, a ${[h.gender, h.race, h.archetype].filter(Boolean).join(" ")}, a hero of the Realm of Myr, a medieval fantasy world.`
@@ -58,35 +58,37 @@ export const heroStorySchema = z.object({
 })
 export type HeroStory = z.infer<typeof heroStorySchema>
 
-/** A generated starting concept for Step 1 of hero creation: name and background (including why they came). */
+/** A generated starting concept for Step 1 of hero creation: name, background, and (when in an adventure with hooks) why they came. */
 export const heroConceptSchema = z.object({
   name: text(80).min(1),
   background: text(1200).min(1),
+  hook: text(300).optional(),
 })
 export type HeroConcept = z.infer<typeof heroConceptSchema>
 
-/** Prompt that invents a fresh name and background for a chosen species, class, and optional gender in an adventure. */
+/** Prompt that invents a fresh name, background, and adventure hook for a chosen species, class, and optional gender. */
 export function heroConceptPrompt(opts: { race: string; archetype: string; gender?: string; adventure?: HeroAdventure; hook?: string; avoidNames?: string[] }) {
   const identity = [opts.gender, opts.race, opts.archetype].filter(Boolean).join(" ")
+  const wantsHook = Boolean(opts.adventure?.hooks?.length || opts.adventure?.hookPrompt)
+  const hookLabel = opts.adventure?.hookPrompt ?? "Why they came to this adventure"
   return [
-    `Invent a name and background for an original ${identity} player character in the Realm of Myr, a medieval fantasy world.`,
+    `Invent a name${wantsHook ? ", background, and reason for coming" : " and background"} for an original ${identity} player character in the Realm of Myr, a medieval fantasy world.`,
     opts.adventure ? about(opts.adventure) : "",
-    opts.hook
-      ? `Why they came to this adventure: ${opts.hook.replace(/\.?$/, ".")} Weave this naturally into their background.`
-      : opts.adventure?.hooks?.length
-        ? `Pick one of these reasons for why they came (or invent a fitting one in the same spirit) and weave it naturally into their background: ${opts.adventure.hooks.join(" | ")}`
-        : "",
+    opts.adventure?.hooks?.length
+      ? `Example reasons for "${hookLabel}" (pick one, adapt it, or invent an original one in the same spirit): ${opts.adventure.hooks.join(" | ")}`
+      : "",
     opts.avoidNames?.length ? `Do not reuse any of these names already at the table: ${opts.avoidNames.join(", ")}.` : "",
     WORLD,
     "Return:",
     `- name: a grounded, memorable medieval fantasy full name fitting their species${opts.gender ? " and gender" : ""} (no clichés, no titles like 'The Brave').`,
-    "- background: two to four vivid sentences describing who they are, their past, and why they have come on this adventure. No numbers or game mechanics.",
+    "- background: two to four vivid sentences describing who they are, where they come from, and what shaped them. No numbers or game mechanics.",
+    wantsHook ? `- hook: one concise, vivid sentence answering "${hookLabel}" that fits their background.` : "",
   ]
     .filter(Boolean)
     .join("\n")
 }
 
-/** Uses the game master's LLM to generate a starting name and background for a chosen species, class, and optional gender. */
+/** Uses the game master's LLM to generate a starting name, background, and optional adventure hook. */
 export async function draftHeroConcept(
   llm: Llm,
   opts: { race: string; archetype: string; gender?: string; adventure?: HeroAdventure; hook?: string; avoidNames?: string[] }

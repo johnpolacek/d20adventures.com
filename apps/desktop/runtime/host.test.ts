@@ -509,7 +509,11 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
       generateObject: async ({ prompt }: { prompt: string }) => {
         seenPrompt = prompt
         return {
-          object: { name: "Elowen Moss", background: "A frontier scout tracking stolen Valkaran relics toward Kordavos." },
+          object: {
+            name: "Elowen Moss",
+            background: "A frontier scout raised along the northern timberline who knows every smuggling trail in the March.",
+            hook: "Tracking stolen Valkaran relics rumored to be changing hands at the Harvest Festival.",
+          },
         }
       },
     } as typeof failLlm
@@ -526,7 +530,8 @@ test("hostLoop runs a heroIdea job through the host's LLM and finishes with hero
     assert.match(seenPrompt, /Female Elf Ranger/)
     assert.deepEqual(finishedReport?.heroConcept, {
       name: "Elowen Moss",
-      background: "A frontier scout tracking stolen Valkaran relics toward Kordavos.",
+      background: "A frontier scout raised along the northern timberline who knows every smuggling trail in the March.",
+      hook: "Tracking stolen Valkaran relics rumored to be changing hands at the Harvest Festival.",
     })
   } finally {
     cleanup()

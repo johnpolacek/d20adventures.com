@@ -12,7 +12,7 @@ export type HeroCreation = { options: HeroOptions; adventure?: HeroAdventure & {
 export async function heroCreation(planId?: string): Promise<HeroCreation> {
   if (planId && isLocalWikiAdventure(SETTING, planId)) {
     const m = (await loadWikiAdventureRuntime(SETTING, planId)).artifacts.manifest
-    if (m.availableCharacterOptions) return { options: m.availableCharacterOptions, adventure: { planId, title: m.title, teaser: m.teaser, hooks: m.heroHooks } }
+    if (m.availableCharacterOptions) return { options: m.availableCharacterOptions, adventure: { planId, title: m.title, teaser: m.teaser, hooks: m.heroHooks, hookPrompt: m.heroHookPrompt } }
   }
   const all = await Promise.all(getLocalWikiAdventuresForSetting(SETTING).map((d) => loadWikiAdventureRuntime(SETTING, d.planId)))
   const options = all.flatMap((r) => (r.artifacts.manifest.availableCharacterOptions ? [r.artifacts.manifest.availableCharacterOptions] : []))

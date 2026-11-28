@@ -583,7 +583,7 @@ export function DesktopGame() {
           key={creator.n}
           open={creator.open}
           options={creator.editing || screen !== "new" ? options : (chosen?.options ?? options)}
-          adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks } : undefined}
+          adventure={screen === "new" && chosen ? { id: chosen.id, hooks: chosen.hooks, hookPrompt: chosen.hookPrompt } : undefined}
           editing={creator.editing}
           painted={creator.editing ? art[creator.editing.id] : undefined}
           busy={working}

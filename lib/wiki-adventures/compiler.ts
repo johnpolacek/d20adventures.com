@@ -32,6 +32,7 @@ const adventureFrontmatterSchema = z.object({
   level: z.number().int().min(1).max(20).optional(),
   playerDeath: z.boolean().optional(),
   strangers: z.boolean().optional(),
+  heroHookPrompt: z.string().min(1).optional(),
   rescue: z.object({ encounter: z.string().min(1) }).optional(),
 })
 
@@ -275,6 +276,7 @@ export function compileAdventureSourceTree(files: SourceFile[], options: Compile
     summary: adventureFile?.sections.summary,
     premise: adventureFile?.sections.premise,
     heroHooks: listItems(adventureFile?.sections.heroHooks),
+    heroHookPrompt: adventure?.heroHookPrompt,
     image: adventure?.image,
     startEncounterId: adventure?.startEncounter ?? "",
     recommendedPlayers: adventure?.recommendedPlayers,

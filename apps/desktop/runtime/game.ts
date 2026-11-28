@@ -53,6 +53,7 @@ export const adventureList = (packs: Packs) =>
       options: m.availableCharacterOptions ?? null,
       // Why a hero made for it may have come, offered in the hero creator.
       hooks: m.heroHooks ?? [],
+      hookPrompt: m.heroHookPrompt,
       premades: premades.map((s) => ({ id: s.id, name: s.name, race: s.race, archetype: s.archetype, gender: s.gender })),
       party: suggestedParty(id, m.premadeCharacterIds, m.maxPlayers ?? m.premadeCharacterIds.length),
       // The adventure the story goes on to, which the ending offers.

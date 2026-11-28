@@ -177,7 +177,11 @@ export function NewHero({
   const creator = (
     <HeroCreator
       options={creation.options}
-      adventure={creation.adventure?.hooks?.length ? { id: creation.adventure.planId, hooks: creation.adventure.hooks } : undefined}
+      adventure={
+        creation.adventure && (creation.adventure.hooks?.length || creation.adventure.hookPrompt)
+          ? { id: creation.adventure.planId, hooks: creation.adventure.hooks ?? [], hookPrompt: creation.adventure.hookPrompt }
+          : undefined
+      }
       figures={false}
       inline={inline}
       saveLabel={lobby ? "Save & Join Table" : "Save Hero"}

@@ -8,6 +8,7 @@ level: 2
 minPlayers: 3
 maxPlayers: 5
 strangers: true
+heroHookPrompt: "Why They Came to Kordavos"
 premadeCharacters:
   - "branka-stoneveil"
   - "milos-radan"

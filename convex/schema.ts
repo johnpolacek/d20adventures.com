@@ -168,7 +168,7 @@ export default defineSchema({
     second: v.optional(v.number()),
     take: v.optional(v.boolean()),
     suggestions: v.optional(v.array(v.object({ label: v.string(), text: v.string() }))),
-    heroConcept: v.optional(v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string() })),
+    heroConcept: v.optional(v.object({ name: v.string(), gender: v.optional(v.string()), background: v.string(), hook: v.optional(v.string()) })),
     // Which pictures a running paint job has uploaded so far; all three must be present before finishing.
     uploadedKinds: v.optional(v.array(v.union(v.literal("front"), v.literal("back"), v.literal("portrait")))),
     status: v.union(v.literal("queued"), v.literal("running"), v.literal("done"), v.literal("failed")),

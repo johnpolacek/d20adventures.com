@@ -22,7 +22,7 @@ export async function generateHeroIdea(input: { planId?: string; race: string; a
       race,
       archetype,
       gender: clip(input.gender, 40) || undefined,
-      adventure: adventure && { title: adventure.title, teaser: adventure.teaser, hooks: adventure.hooks },
+      adventure: adventure && { title: adventure.title, teaser: adventure.teaser, hooks: adventure.hooks, hookPrompt: adventure.hookPrompt },
       hook: clip(input.hook, 300) || undefined,
     })
     return { concept }
