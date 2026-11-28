@@ -36,6 +36,7 @@ import { served } from "./served"
 import { clearView, type ViewCost } from "./spec/view"
 import { doorways, onFootprint, reachOver, routeOver, standingRoom } from "./spec/walk"
 import { Floor } from "./surface"
+import { RoomLightingController } from "./room-lighting"
 import { StageLifecycleController } from "./stage-lifecycle"
 import { driftIn, fitView, minFov, type Spot, type TripodPoint, tripodView, type View } from "./tripod"
 
@@ -211,9 +212,8 @@ export class Stage {
   private hemisphere: THREE.HemisphereLight
   private fill: THREE.PointLight | null = null
   private lamps: THREE.PointLight[] = []
-  // How far the camera is into a room (0 outside, 1 in), which room, and the room whose light is up.
-  private indoors = 0
-  private room: SetSpec["rooms"][number] | null = null
+  // Room-to-room and outdoors-to-room lighting crossfade state machine.
+  private readonly roomLighting: RoomLightingController
   // The room the camera is in, for its sound.
   private heard: SetSpec["rooms"][number] | null = null
   // The set's open water as outlines on the ground (x, z), how near the camera last was to it, and when it was last
@@ -221,7 +221,6 @@ export class Stage {
   private waters: [number, number][][] | null = null
   private wet = -1
   private sinceWet = 0
-  private lit: SetSpec["rooms"][number] | null = null
   private extras: THREE.Object3D[] = []
   private life: (LifeUpdate & Disposable)[] = []
   private disposables: Disposable[] = []
@@ -321,6 +320,7 @@ export class Stage {
     this.tier = o.tier && o.tier !== "auto" ? o.tier : autoTier(renderer.getContext())
 
     const A = set.atmosphere
+    this.roomLighting = new RoomLightingController(A)
     this.shared = createShared()
     // The sky draws the sun (or moon) at `disc` when set, a painter's cheat: the moon shows ahead while it lights the scene
     // from where `direction` says.
@@ -1812,32 +1812,23 @@ void main(){ float z = texture2D(tDepth, vUv).x * 2.0 - 1.0; float d = min(2.0 *
     this.wet = near
     for (const l of this.effectListeners) l({ type: "place", water: near })
   }
-  // Inside a room the sky's light fades and the room's lamps take over: the set's lamps dim out, then the room's come up,
-  // over about half a second as the camera passes the wall.
+  // Inside a room the sky's light fades and the room's lamps take over: the outgoing lamps dim out, then the incoming
+  // ones come up, over about a third of a second as the camera passes the wall (including directly between two rooms).
   private lightRoom(dt: number) {
     const { x, y, z } = this.camera.position
-    const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5])
+    const inside = this.set.rooms.find(({ box: b }) => x > b[0] && y > b[1] && z > b[2] && x < b[3] && y < b[4] && z < b[5]) ?? null
     // A room with beds of its own is heard from the moment the camera is in it.
-    if ((inside ?? null) !== this.heard) {
-      this.heard = inside ?? null
+    if (inside !== this.heard) {
+      this.heard = inside
       for (const l of this.effectListeners) l({ type: "room", ambience: inside?.ambience })
     }
-    if (inside) this.room = inside
-    const want = inside ? 1 : 0
-    // Straight from one room into another (the inn's common room to its backroom), the new room's light takes over.
-    if ((want === this.indoors && (!inside || inside === this.lit)) || !this.room) return
-    this.indoors = this.motion ? THREE.MathUtils.clamp(this.indoors + Math.sign(want - this.indoors) * dt * 3, 0, 1) : want
-    const m = this.indoors
-    const r = this.room
-    const A = this.set.atmosphere
-    const mix = (a: number, b: number) => a + (b - a) * m
-    this.hemisphere.intensity = mix(A.hemisphere.intensity, A.hemisphere.intensity * r.ambient)
-    this.scene.environmentIntensity = mix(A.environment, A.environment * r.ambient)
-    if (this.fill && A.fill) this.fill.intensity = mix(A.fill.intensity, r.fill ?? A.fill.intensity * r.ambient)
-    this.renderer.toneMappingExposure = mix(A.exposure, r.exposure ?? A.exposure)
-    if (m < 0.5) this.light(A.lights, 1 - 2 * m)
-    else this.light(r.lights, 2 * m - 1)
-    this.lit = m >= 0.5 ? r : null
+    const sample = this.roomLighting.step(inside, dt, this.motion)
+    if (!sample) return
+    this.hemisphere.intensity = sample.hemisphereIntensity
+    this.scene.environmentIntensity = sample.environmentIntensity
+    if (this.fill && sample.fillIntensity !== null) this.fill.intensity = sample.fillIntensity
+    this.renderer.toneMappingExposure = sample.exposure
+    this.light(sample.lights, sample.lightScale)
   }
   render() {
     this.renderer.info.reset()
