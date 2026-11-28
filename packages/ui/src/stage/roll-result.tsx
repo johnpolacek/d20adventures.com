@@ -21,6 +21,7 @@ import { D20Solid } from "./d20"
 import { rattle, verdict as sound, type Verdict } from "../sound/dice"
 import { eyebrow, useShort } from "./hud"
 import type { RollPace } from "./roll-pace"
+import type { RollPhase } from "./roll-phase"
 import { DeathSaveMarks, RollDetails } from "./roll-parts"
 import { againstLabel, askSpeech, isCritical, marginText, modeName, type RollAsk, type RollView, rollHeading, rollNeed, rollSpeech, verdictOf } from "./roll-view"
 import { ROLL_CRITICAL, ROLL_FAILURE, ROLL_SUCCESS, ROLL_WAITING } from "./roll-tones"
@@ -74,7 +75,7 @@ export function RollResult({
   const crit = made ? isCritical(made) : false
   // A roll the player made here keeps its modifier in view from the start.
   const [asked] = useState(!made)
-  const [step, setStep] = useState(0)
+  const [phase, setPhase] = useState<RollPhase>("rolling")
   const [tumble, setTumble] = useState(0)
   const verdictRef = useRef(onVerdict)
   verdictRef.current = onVerdict
@@ -93,12 +94,13 @@ export function RollResult({
     () => {
       if (natural === undefined || total === undefined) return
       const done = () => {
-        setStep(3)
+        setPhase("verdict")
         sound(cue.current)
         verdictRef.current?.()
       }
       // Nothing is hidden first, and the die shows its face itself when there is no tumble.
       if (prefersReducedMotion()) return done()
+      setPhase("rolling")
       setTumble((k) => k + 1)
       const hush = rattle()
       const q = gsap.utils.selector(root)
@@ -109,7 +111,7 @@ export function RollResult({
       tl.addLabel("land", LAND)
         .call(
           () => {
-            setStep(1)
+            setPhase("landed")
             hush()
             // A Critical Hit is given its full time from here.
             if (critNow.current) tl.timeScale(1)
@@ -121,7 +123,7 @@ export function RollResult({
         .fromTo(q("[data-roll=kept]"), { scale: 1.16 }, { scale: 1, duration: 0.34, ease: "back.out(2.6)", clearProps: "transform" }, "land")
       const count = { n: natural }
       tl.addLabel("total", TOTAL)
-        .call(() => setStep(2), [], "total")
+        .call(() => setPhase("totalled"), [], "total")
         .to(q("[data-late=term]"), { autoAlpha: 1, duration: 0.3, ease: "power1.out", clearProps: "opacity,visibility" }, "total")
         .fromTo(q("[data-roll=total]"), { y: 6, scale: 0.9 }, { y: 0, scale: 1, duration: 0.35, ease: "back.out(1.7)", clearProps: "transform" }, "total")
         .to(count, { n: total, duration: 0.3, ease: "none", onUpdate: () => setCounted(Math.round(count.n)) }, "total")
@@ -144,7 +146,8 @@ export function RollResult({
   )
   // Rays fade in behind a Critical Hit and turn a little way, slowing to a stop. With reduced motion they are there
   // and still.
-  const shining = crit && step >= 3
+  const verdictIn = phase === "verdict"
+  const shining = crit && verdictIn
   useGSAP(
     () => {
       const rays = gsap.utils.toArray<HTMLElement>("[data-roll=rays]", root.current)
@@ -165,7 +168,7 @@ export function RollResult({
   const verdict = made ? verdictOf(made) : ""
   const margin = made ? marginText(made) : ""
   const tone = crit ? CRITICAL : made?.success ? ROLL_SUCCESS : ROLL_FAILURE
-  const landed = step >= 1
+  const landed = phase !== "rolling"
   const two = dice.length > 1
   const size = two ? (compact ? 56 : row ? 84 : 104) : compact ? 72 : row ? 112 : 132
   const mod = roll.modifier ?? 0
@@ -175,7 +178,7 @@ export function RollResult({
   const need = made ? null : rollNeed(roll)
   const waiting = !made && Boolean(onRoll)
   // A Death Saving Throw's marks: the saves so far before the roll, and after it once the verdict is in.
-  const saves = roll.kind === "death" ? (made ? (step >= 3 ? made.deathSaves : undefined) : roll.deathSaves) : undefined
+  const saves = roll.kind === "death" ? (made ? (verdictIn ? made.deathSaves : undefined) : roll.deathSaves) : undefined
   // A `late` term arrives with the total.
   const term = (sign: string, n: number, label?: string, late = true) => (
     <span data-late={late ? "term" : undefined}>
@@ -236,7 +239,7 @@ export function RollResult({
                   <span className="absolute bottom-2.5 left-1/2 h-4 -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,#000d,transparent)]" style={{ width: size * 0.8 }} />
                 </>
               )}
-              {gold && step >= 3 && <span data-roll="rays" className="roll-rays absolute -inset-6 rounded-full" />}
+              {gold && verdictIn && <span data-roll="rays" className="roll-rays absolute -inset-6 rounded-full" />}
               {waiting && <span className="roll-pulse pointer-events-none absolute top-0 left-0 rounded-full border border-accent/55" style={{ width: size, height: size }} />}
               {made && i === kept && <span data-late="shock" className="pointer-events-none absolute top-0 left-0 rounded-full border-2" style={{ width: size, height: size, borderColor: tone }} />}
               <span data-roll={i === kept ? "kept" : undefined} className="absolute top-0 left-0 transition-[filter] duration-500" style={{ filter: `${glow}drop-shadow(0 3px 6px #000c)` }}>
@@ -275,7 +278,7 @@ export function RollResult({
               <span data-late="term">
                 <span className={cn("text-muted-foreground", compact ? "text-sm" : "text-base")}>=</span>
                 <span data-roll="total" className={cn("ml-2 inline-block font-bold text-accent", compact ? "text-2xl" : "text-4xl")}>
-                  {step >= 3 ? total : (counted ?? natural)}
+                  {verdictIn ? total : (counted ?? natural)}
                 </span>
               </span>
             </>
@@ -312,7 +315,7 @@ export function RollResult({
             <DeathSaveMarks saves={saves} compact={compact} />
           </div>
         )}
-        {made && step >= 3 && <RollDetails roll={made} compact={compact} className={cn("enter-fade", compact ? "mt-1" : row ? "mt-2" : "mt-1.5 items-center")} />}
+        {made && verdictIn && <RollDetails roll={made} compact={compact} className={cn("enter-fade", compact ? "mt-1" : row ? "mt-2" : "mt-1.5 items-center")} />}
       </div>
     </div>
   )

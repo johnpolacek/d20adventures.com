@@ -6,7 +6,7 @@
 // the end of the encounter.
 
 import { ArrowUp } from "lucide-react"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from "react"
 import { Button } from "../button"
 import { gsap, prefersReducedMotion } from "../motion"
 import { Presence, Swap } from "../presence"
@@ -17,6 +17,7 @@ import { D20Solid } from "./d20"
 import { rattle } from "../sound/dice"
 import { Chevron, eyebrow, Pill } from "./hud"
 import type { RollPace } from "./roll-pace"
+import { contestReducer, initialContestPhase, type SingleDieState } from "./roll-phase"
 import { RollResult } from "./roll-result"
 import { type DeathSavesView, keptDie, modeName, type RollAsk, type RollKind, type RollMode, type RollView, thrownView } from "./roll-view"
 import { type Standing, standingWords } from "./standing"
@@ -198,9 +199,7 @@ function D20({
   onStart?: () => void
   dropped?: boolean
 }) {
-  // The face the die is rolling to, picked as it is thrown, and whether it has landed.
-  const [face, setFace] = useState<number | null>(null)
-  const [done, setDone] = useState(false)
+  const [dieState, setDieState] = useState<SingleDieState>({ kind: "ready" })
   const [tumble, setTumble] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const started = useRef(false)
@@ -217,14 +216,14 @@ function D20({
     started.current = true
     onStart?.()
     const n = land ?? 1 + Math.floor(Math.random() * 20)
-    setFace(n)
     const settle = () => {
-      setDone(true)
+      setDieState({ kind: "landed", face: n })
       hush.current()
       onRoll(n)
     }
     // With reduced motion the die shows its face at once.
     if (prefersReducedMotion()) return settle()
+    setDieState({ kind: "rolling", face: n })
     setTumble((k) => k + 1)
     hush.current = rattle()
     timer.current = setTimeout(settle, 1200)
@@ -238,7 +237,9 @@ function D20({
   useEffect(() => {
     if (go) roll()
   }, [go])
-  const rolling = face !== null && !done
+  const face = dieState.kind === "ready" ? null : dieState.face
+  const rolling = dieState.kind === "rolling"
+  const done = dieState.kind === "landed"
   return (
     <Button
       variant="plain"
@@ -373,21 +374,23 @@ function ContestRoll({
   forced?: number[]
   onRoll: (dice: number[]) => void
 }) {
-  const [theirs, setTheirs] = useState<number | null>(null)
-  const [mine, setMine] = useState<number[] | null>(null)
-  const [thrown, setThrown] = useState(false)
-  const landed = useRef<number[]>([])
+  const [contest, dispatch] = useReducer(contestReducer, Boolean(roll.versus), initialContestPhase)
+  const reported = useRef(false)
+  const onRollRef = useRef(onRoll)
+  onRollRef.current = onRoll
   const count = roll.mode ? 2 : 1
+  useEffect(() => {
+    if (contest.kind === "resolved" && !reported.current) {
+      reported.current = true
+      onRollRef.current(contest.mine)
+    }
+  }, [contest])
+  const theirs = contest.kind === "gm_rolling" ? null : contest.theirs
+  const mine = contest.kind === "resolved" ? contest.mine : null
+  const thrown = contest.kind === "player_rolling" || contest.kind === "resolved"
   const natural = mine === null ? null : keptDie(roll.mode, mine)
   const keep = mine === null ? -1 : mine.indexOf(natural ?? 0)
   const total = natural === null ? null : natural + roll.modifier
-  const land = (i: number, n: number) => {
-    landed.current[i] = n
-    const dice = Array.from({ length: count }, (_, j) => landed.current[j])
-    if (!dice.every((d) => d !== undefined)) return
-    setMine(dice)
-    onRoll(dice)
-  }
   const side = (name: string, skill: string, detail: string) => (
     <>
       <div className="text-4xs tracking-label text-accent uppercase">{name}</div>
@@ -404,7 +407,7 @@ function ContestRoll({
           <>
             <div className="flex flex-col items-center">
               {side(roll.versus.name, roll.versus.skill, `the GM rolls · ${signed(roll.versus.modifier)}`)}
-              <D20 auto land={roll.versus.natural} compact={compact} onRoll={setTheirs} />
+              <D20 auto land={roll.versus.natural} compact={compact} onRoll={(natural) => dispatch({ type: "gm_landed", natural })} />
               <Total natural={theirs} modifier={roll.versus.modifier} />
             </div>
             <div className={cn("self-center font-display text-muted-foreground", compact ? "text-sm" : "text-lg")}>vs</div>
@@ -424,11 +427,11 @@ function ContestRoll({
                 key={i}
                 land={forced?.[i]}
                 compact={compact}
-                disabled={theirs === null}
+                disabled={contest.kind === "gm_rolling"}
                 go={thrown}
-                onStart={() => setThrown(true)}
+                onStart={() => dispatch({ type: "player_started", count })}
                 dropped={count > 1 && keep !== -1 && i !== keep}
-                onRoll={(n) => land(i, n)}
+                onRoll={(n) => dispatch({ type: "player_die_landed", index: i, natural: n, count })}
               />
             ))}
           </div>
