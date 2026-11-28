@@ -2,7 +2,7 @@
 
 import { Heading } from "@d20/ui/typography/heading"
 import { SignInButton, useUser } from "@clerk/nextjs"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { eyebrow, Pill, panel } from "@d20/ui/stage/hud"
 import { Button } from "@d20/ui/button"
 import Image from "@d20/ui/native-image"
@@ -14,6 +14,11 @@ import { served } from "@/lib/served"
 
 type Pending = { deviceName: string; approved: boolean }
 type Device = { id: string; name: string; createdAt: number; lastSeenAt?: number }
+type LinkStep =
+  | { kind: "enter_code"; error: string | null }
+  | { kind: "looking_up" }
+  | { kind: "confirm"; deviceName: string; approving: boolean; error: string | null }
+  | { kind: "linked"; deviceName: string }
 
 const clean = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g, "")
 const formatCode = (code: string) => {
@@ -46,13 +51,18 @@ function CodeTiles({ code }: { code: string }) {
 export function LinkDesktop({ initialCode }: { initialCode: string }) {
   const { isSignedIn, isLoaded } = useUser()
   const [code, setCode] = useState(formatCode(initialCode))
-  const [pending, setPending] = useState<Pending | null>(null)
-  const [linked, setLinked] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [step, setStep] = useState<LinkStep>({ kind: "enter_code", error: null })
   const [devices, setDevices] = useState<Device[]>([])
   // An unlinked computer stays in the list while it animates out.
   const [unlinked, setUnlinked] = useState<string[]>([])
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current)
+    },
+    []
+  )
 
   const loadDevices = useCallback(async () => {
     const res = await fetch("/api/desktop/devices")
@@ -60,12 +70,19 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
   }, [])
 
   const lookup = useCallback(async (value: string) => {
-    setError(null)
-    setPending(null)
-    const res = await fetch(`/api/desktop/link/approve?code=${encodeURIComponent(value)}`)
-    const data = await res.json()
-    if (res.ok) setPending(data as Pending)
-    else setError(data.error ?? "This code is invalid or has expired.")
+    setStep({ kind: "looking_up" })
+    try {
+      const res = await fetch(`/api/desktop/link/approve?code=${encodeURIComponent(value)}`)
+      const data = await res.json()
+      if (res.ok) {
+        const pending = data as Pending
+        setStep({ kind: "confirm", deviceName: pending.deviceName, approving: false, error: null })
+      } else {
+        setStep({ kind: "enter_code", error: data.error ?? "This code is invalid or has expired." })
+      }
+    } catch {
+      setStep({ kind: "enter_code", error: "Could not verify that code. Please try again." })
+    }
   }, [])
 
   useEffect(() => {
@@ -75,17 +92,24 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
   }, [isSignedIn, initialCode, lookup, loadDevices])
 
   const approve = async () => {
-    setBusy(true)
-    setError(null)
+    if (step.kind !== "confirm" || step.approving) return
+    const { deviceName } = step
+    setStep({ kind: "confirm", deviceName, approving: true, error: null })
     try {
       const res = await fetch("/api/desktop/link/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) })
       const data = await res.json()
-      if (!res.ok) return setError(data.error ?? "This code is invalid or has expired.")
-      setLinked(data.deviceName)
-      setPending(null)
-      setTimeout(loadDevices, 4000)
-    } finally {
-      setBusy(false)
+      if (!res.ok) {
+        setStep({ kind: "confirm", deviceName, approving: false, error: data.error ?? "This code is invalid or has expired." })
+        return
+      }
+      setStep({ kind: "linked", deviceName: data.deviceName })
+      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current)
+      refreshTimerRef.current = setTimeout(() => {
+        refreshTimerRef.current = null
+        void loadDevices()
+      }, 4000)
+    } catch {
+      setStep({ kind: "confirm", deviceName, approving: false, error: "Could not link this computer. Please try again." })
     }
   }
 
@@ -95,6 +119,8 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
   }
 
   const listed = devices.filter((device) => !unlinked.includes(device.id))
+  const error = step.kind === "enter_code" || step.kind === "confirm" ? step.error : null
+  const swapId = !isSignedIn ? "sign-in" : step.kind === "linked" ? "linked" : step.kind === "confirm" ? "pending" : "code"
 
   return (
     <section className="relative grid min-h-screen place-items-center overflow-hidden px-4 pt-28 pb-16">
@@ -103,10 +129,10 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
       <Presence show={isLoaded} asChild>
         <div className={cn(panel, "relative w-full max-w-md px-8 py-9 text-center text-foreground")}>
           <div className={eyebrow}>D20 Adventures · Desktop</div>
-          <Heading variant="h2" as="h1" className="mt-3">{linked ? "Linked" : "Link This Computer"}</Heading>
+          <Heading variant="h2" as="h1" className="mt-3">{step.kind === "linked" ? "Linked" : "Link This Computer"}</Heading>
           <div className="mx-auto mt-5 mb-7 h-px w-32 bg-gradient-to-r from-transparent via-accent/80 to-transparent" />
 
-          <Swap id={!isSignedIn ? "sign-in" : linked ? "linked" : pending ? "pending" : "code"} motion="rise" exit="fade">
+          <Swap id={swapId} motion="rise" exit="fade">
             {!isSignedIn ? (
               <div className="space-y-6">
                 <p className="font-serif text-foreground/85">Sign in to link the app to your account.</p>
@@ -114,20 +140,20 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                   <Button variant="epic">Sign in</Button>
                 </SignInButton>
               </div>
-            ) : linked ? (
+            ) : step.kind === "linked" ? (
               <div className="space-y-2 font-serif">
-                <p className="text-lg">{linked}</p>
+                <p className="text-lg">{step.deviceName}</p>
                 <p className="text-foreground/75">Return to the app. Your adventures download there.</p>
               </div>
-            ) : pending ? (
+            ) : step.kind === "confirm" ? (
               <div className="space-y-6">
                 <CodeTiles code={code} />
                 <div>
                   <div className={eyebrow}>Computer</div>
-                  <p className="mt-1 font-serif text-lg">{pending.deviceName}</p>
+                  <p className="mt-1 font-serif text-lg">{step.deviceName}</p>
                 </div>
-                <Button variant="epic" onClick={approve} disabled={busy}>
-                  {busy ? "Linking..." : "Link"}
+                <Button variant="epic" onClick={approve} disabled={step.approving}>
+                  {step.approving ? "Linking..." : "Link"}
                 </Button>
               </div>
             ) : (
@@ -151,8 +177,8 @@ export function LinkDesktop({ initialCode }: { initialCode: string }) {
                   spellCheck={false}
                   className="stage-parchment w-full rounded-hud px-4 py-3 text-center font-display text-2xl tracking-label text-background uppercase placeholder:text-background/30 focus:outline-none focus:ring-2 focus:ring-accent"
                 />
-                <Button type="submit" variant="epic" disabled={clean(code).length !== 8}>
-                  Continue
+                <Button type="submit" variant="epic" disabled={clean(code).length !== 8 || step.kind === "looking_up"}>
+                  {step.kind === "looking_up" ? "Checking..." : "Continue"}
                 </Button>
               </form>
             )}
